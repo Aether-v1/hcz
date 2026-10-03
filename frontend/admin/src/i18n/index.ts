@@ -18,6 +18,9 @@ const messages = {
     },
     order: {
       status: {
+        pending_recharge: '待充值',
+        processing: '处理中',
+        failed: '失败',
         pending_payment: '待支付',
         paid: '已支付',
         fulfilling: '交付中',
@@ -4467,6 +4470,9 @@ const messages = {
     },
     order: {
       status: {
+        pending_recharge: '待儲值',
+        processing: '處理中',
+        failed: '失敗',
         pending_payment: '待付款',
         paid: '已付款',
         fulfilling: '交付中',
@@ -8916,6 +8922,9 @@ const messages = {
     },
     order: {
       status: {
+        pending_recharge: 'Pending Recharge',
+        processing: 'Processing',
+        failed: 'Failed',
         pending_payment: 'Pending',
         paid: 'Paid',
         fulfilling: 'Fulfilling',

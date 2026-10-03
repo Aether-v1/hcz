@@ -7,6 +7,7 @@ import (
 
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
+	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	"github.com/Aether-v1/hcz/internal/logger"
@@ -133,7 +134,8 @@ func (s *OrderService) CancelOrder(orderID uint, userID uint) (*orderdomain.Orde
 	if order == nil {
 		return nil, ErrOrderNotFound
 	}
-	if order.Status != constants.OrderStatusPendingPayment {
+	// P0-3: User 只能取消待充值单（pending_recharge -> canceled），其余状态拒绝。
+	if !ordermachine.AllowedByUser(ordermachine.Normalize(order.Status).Status, constants.OrderStatusCanceled) {
 		return nil, ErrOrderCancelNotAllowed
 	}
 	// 未支付订单取消时同步回滚优惠券用量
@@ -176,6 +178,13 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 	// 管理端通用状态接口不得绕过支付事实直接触发库存、累计消费和交付副作用。
 	if target == constants.OrderStatusPaid {
 		return nil, ErrOrderStatusInvalid
+	}
+	// P0-3: 统一合法性校验交给状态机（归一当前/目标后判断）。
+	// 旧退款主状态(partially_refunded/refunded)有独立退款链路，不经过五态机，豁免。
+	if target != constants.OrderStatusPartiallyRefunded && target != constants.OrderStatusRefunded {
+		if cur := ordermachine.Normalize(order.Status); !ordermachine.CanTransition(cur.Status, ordermachine.Normalize(target).Status) {
+			return nil, ErrOrderStatusInvalid
+		}
 	}
 	isParent := order.ParentID == nil && len(order.Children) > 0
 	if isParent {
@@ -286,7 +295,7 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 		updates["canceled_at"] = now
 	}
 
-	if target == constants.OrderStatusCanceled {
+	if target == constants.OrderStatusCanceled || target == constants.OrderStatusFailed {
 		err = s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
 			return s.cancelSingleOrderInTx(tx, order, target, updates)
 		})
@@ -296,7 +305,7 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 	if err != nil {
 		return nil, ErrOrderUpdateFailed
 	}
-	if target == constants.OrderStatusCanceled && s.affiliateSvc != nil {
+	if (target == constants.OrderStatusCanceled || target == constants.OrderStatusFailed) && s.affiliateSvc != nil {
 		if err := s.affiliateSvc.HandleOrderCanceled(order.ID, "order_canceled_by_admin"); err != nil {
 			logger.Warnw("affiliate_handle_order_canceled_failed",
 				"order_id", order.ID,

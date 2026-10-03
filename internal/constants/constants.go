@@ -13,6 +13,21 @@ const (
 	OrderStatusRefunded           = "refunded"
 )
 
+// HCZ P0-3 Business Order 五主状态（人工履约模式）。
+// pending_recharge 指平台充值业务订单等待人工处理，非钱包充值支付状态。
+const (
+	OrderStatusPendingRecharge = "pending_recharge"
+	OrderStatusProcessing       = "processing"
+	OrderStatusFailed           = "failed"
+)
+
+// 独立退款子状态（不进主状态）。
+const (
+	OrderRefundStatusNone   = "none"
+	OrderRefundStatusPartial = "partial"
+	OrderRefundStatusFull   = "full"
+)
+
 // 订单退款常量
 
 const (

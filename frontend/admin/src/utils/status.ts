@@ -3,14 +3,17 @@ export type TranslateFn = (...args: any[]) => string
 export const orderStatusLabel = (t: TranslateFn, status?: string) => {
   if (!status) return '-'
   const map: Record<string, string> = {
+    pending_recharge: t('order.status.pending_recharge'),
+    processing: t('order.status.processing'),
+    failed: t('order.status.failed'),
+    completed: t('order.status.completed'),
+    canceled: t('order.status.canceled'),
     pending_payment: t('order.status.pending_payment'),
     paid: t('order.status.paid'),
     fulfilling: t('order.status.fulfilling'),
     partially_delivered: t('order.status.partially_delivered'),
     partially_refunded: t('order.status.partially_refunded'),
     delivered: t('order.status.delivered'),
-    completed: t('order.status.completed'),
-    canceled: t('order.status.canceled'),
     refunded: t('order.status.refunded'),
   }
   return map[status] || status
@@ -18,6 +21,14 @@ export const orderStatusLabel = (t: TranslateFn, status?: string) => {
 
 export const orderStatusClass = (status?: string) => {
   switch (status) {
+    case 'pending_recharge':
+      return 'text-amber-700 border-amber-200 bg-amber-50'
+    case 'processing':
+      return 'text-blue-700 border-blue-200 bg-blue-50'
+    case 'completed':
+      return 'text-emerald-700 border-emerald-200 bg-emerald-50'
+    case 'failed':
+      return 'text-rose-700 border-rose-200 bg-rose-50'
     case 'pending_payment':
       return 'text-amber-700 border-amber-200 bg-amber-50'
     case 'paid':

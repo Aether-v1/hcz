@@ -1114,6 +1114,9 @@
   },
   "order": {
     "status": {
+      "pending_recharge": "待儲值",
+      "processing": "處理中",
+      "failed": "失敗",
       "pending_payment": "待支付",
       "paid": "已支付",
       "fulfilling": "處理中",

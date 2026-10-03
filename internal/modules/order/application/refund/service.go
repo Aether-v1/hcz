@@ -326,8 +326,10 @@ func (s *Service) AdminManualRefund(input AdminManualRefundInput) (*orderdomain.
 		markRefunded := newRefunded.GreaterThanOrEqual(paidBase.Round(2))
 		if markRefunded {
 			updates["status"] = constants.OrderStatusRefunded
+			updates["refund_status"] = constants.OrderRefundStatusFull
 		} else {
 			updates["status"] = constants.OrderStatusPartiallyRefunded
+			updates["refund_status"] = constants.OrderRefundStatusPartial
 		}
 		if err := orders.UpdateFields(order.ID, updates); err != nil {
 			return ErrOrderUpdateFailed

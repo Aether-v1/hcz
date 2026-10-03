@@ -1114,6 +1114,9 @@
   },
   "order": {
     "status": {
+      "pending_recharge": "Pending Recharge",
+      "processing": "Processing",
+      "failed": "Failed",
       "pending_payment": "Pending Payment",
       "paid": "Paid",
       "fulfilling": "Processing",

@@ -6,6 +6,7 @@ import (
 
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
+	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"github.com/Aether-v1/hcz/internal/shared/jsonslice"
@@ -48,7 +49,7 @@ type OrderSummary struct {
 func NewOrderSummary(o *orderdomain.Order) OrderSummary {
 	s := OrderSummary{
 		OrderNo:                 o.OrderNo,
-		Status:                  o.Status,
+		Status:                  ordermachine.Normalize(o.Status).Status,
 		Currency:                o.Currency,
 		DiscountAmount:          o.DiscountAmount,
 		MemberDiscountAmount:    o.MemberDiscountAmount,
@@ -84,6 +85,7 @@ type OrderDetail struct {
 	GuestEmail               string            `json:"guest_email,omitempty"`
 	GuestLocale              string            `json:"guest_locale,omitempty"`
 	Status                   string            `json:"status"`
+	RefundStatus             string            `json:"refund_status"`
 	Currency                 string            `json:"currency"`
 	OriginalAmount           money.Amount      `json:"original_amount"`
 	DiscountAmount           money.Amount      `json:"discount_amount"`
@@ -123,12 +125,14 @@ type OrderRefundResp struct {
 // NewOrderDetail 从 orderdomain.Order 构造 OrderDetail，
 // 内部自动处理 upstream 类型伪装和成本价清除。
 func NewOrderDetail(o *orderdomain.Order) OrderDetail {
+	view := ordermachine.Normalize(o.Status)
 	d := OrderDetail{
 		OrderNo:                 o.OrderNo,
 		GuestEmail:              o.GuestEmail,
 		GuestLocale:             o.GuestLocale,
-		Status:                  o.Status,
-		Currency:                o.Currency,
+		Status:                  view.Status,
+		RefundStatus:             o.RefundStatus,
+		Currency:                 o.Currency,
 		OriginalAmount:          o.OriginalAmount,
 		DiscountAmount:          o.DiscountAmount,
 		MemberDiscountAmount:    o.MemberDiscountAmount,
@@ -147,6 +151,9 @@ func NewOrderDetail(o *orderdomain.Order) OrderDetail {
 		PaidAt:                  o.PaidAt,
 		CanceledAt:              o.CanceledAt,
 		CreatedAt:               o.CreatedAt,
+	}
+	if d.RefundStatus == "" {
+		d.RefundStatus = view.RefundStatus
 	}
 	paid := o.PaidAt != nil
 	for _, item := range o.Items {
