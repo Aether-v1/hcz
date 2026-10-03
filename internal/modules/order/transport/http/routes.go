@@ -58,6 +58,31 @@ func RegisterUserCancelRoute(user gin.IRoutes, handler *UserHandler) {
 	user.POST("/orders/:order_no/cancel", handler.CancelOrder)
 }
 
+// RegisterUserAfterSaleRoutes 注册前台用户售后路由（需 JWT）。
+func RegisterUserAfterSaleRoutes(user gin.IRoutes, handler *AfterSaleHandler) {
+	if user == nil || handler == nil {
+		panic("order user after-sale routes: required dependency is nil")
+	}
+	user.POST("/orders/:id/after-sale", handler.UserCreateAfterSale)
+	user.GET("/orders/:id/after-sale", handler.UserGetAfterSale)
+}
+
+// RegisterAdminAfterSaleRoutes 注册后台售后只读路由。
+func RegisterAdminAfterSaleRoutes(authorized gin.IRoutes, handler *AfterSaleHandler) {
+	if authorized == nil || handler == nil {
+		panic("order admin after-sale routes: required dependency is nil")
+	}
+	authorized.GET("/orders/:id/after-sale", handler.AdminGetAfterSale)
+}
+
+// RegisterAdminAfterSaleWriteRoutes 注册后台售后写操作路由（退款触发钱包 credit，需 paymentProtected）。
+func RegisterAdminAfterSaleWriteRoutes(paymentProtected gin.IRoutes, handler *AfterSaleHandler) {
+	if paymentProtected == nil || handler == nil {
+		panic("order admin after-sale write routes: required dependency is nil")
+	}
+	paymentProtected.POST("/orders/:id/after-sale/action", handler.AdminAfterSaleAction)
+}
+
 // RegisterGuestReadRoutes 注册前台游客订单只读路由。
 func RegisterGuestReadRoutes(guest gin.IRoutes, handler *GuestHandler) {
 	if guest == nil || handler == nil {

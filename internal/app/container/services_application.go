@@ -19,6 +19,7 @@ import (
 	giftcardsettingscurrency "github.com/Aether-v1/hcz/internal/modules/giftcard/infrastructure/settingscurrency"
 	memberlevelapp "github.com/Aether-v1/hcz/internal/modules/memberlevel/application"
 	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
+	"github.com/Aether-v1/hcz/internal/modules/order/application/aftersale"
 	orderrefund "github.com/Aether-v1/hcz/internal/modules/order/application/refund"
 	orderqueue "github.com/Aether-v1/hcz/internal/modules/order/infrastructure/queueadapter"
 	orderriskapp "github.com/Aether-v1/hcz/internal/modules/orderrisk/application"
@@ -84,6 +85,11 @@ func (c *Container) initApplicationServices() {
 		c.SettingService,
 		c.WalletService,
 		c.PaymentStore,
+	)
+	// P1 after-sale：与订单共享 OrderStore 事务，退款走 WalletRefunderAdapter→AdminRefundToWalletInTx。
+	c.AfterSaleService = aftersale.NewService(
+		c.OrderStore,
+		aftersale.NewWalletRefunderAdapter(c.OrderRefundService),
 	)
 	c.MemberLevelService = memberlevelapp.NewService(c.MemberLevelRepo, c.MemberLevelPriceRepo, c.MemberLevelUserRepo)
 	c.OrderRiskControlService = orderriskapp.NewService(orderriskapp.Options{

@@ -9,6 +9,7 @@ import (
 type Handlers struct {
 	Admin       *ordertransport.AdminHandler
 	AdminRefund *ordertransport.AdminRefundHandler
+	AfterSale   *ordertransport.AfterSaleHandler
 	User        *ordertransport.UserHandler
 	Guest       *ordertransport.GuestHandler
 	Preview     *ordertransport.PreviewHandler
@@ -27,6 +28,10 @@ func New(c *container.Container) Handlers {
 			orderAdminPaymentChannelAdapter{channels: c.PaymentChannelStore},
 		),
 		AdminRefund: NewAdminRefundHandler(c),
+		AfterSale: ordertransport.NewAfterSaleHandler(
+			c.AfterSaleService,
+			orderAdminOrderLookupAdapter{orders: c.OrderStore},
+		),
 		User: ordertransport.NewUserHandler(
 			orderUserQueryAdapter{orders: c.OrderService},
 			orderUserPaymentChannelAdapter{payments: c.PaymentService},

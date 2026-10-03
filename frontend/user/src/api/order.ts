@@ -51,6 +51,9 @@ export const userOrderAPI = {
     detail: (orderNo: string, options?: any) => userApi.get(`/orders/${encodeURIComponent(orderNo)}`, options),
     cancel: (orderNo: string) => userApi.post(`/orders/${encodeURIComponent(orderNo)}/cancel`),
     downloadFulfillment: (orderNo: string) => userApi.get(`/orders/${encodeURIComponent(orderNo)}/fulfillment/download`, { blob: true }),
+    createAfterSale: (orderId: number, data: { type: string; reason: string; description?: string }) =>
+        userApi.post(`/orders/${orderId}/after-sale`, data),
+    getAfterSale: (orderId: number) => userApi.get(`/orders/${orderId}/after-sale`),
 }
 
 export const guestOrderAPI = {

@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
-
 	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	usercontract "github.com/Aether-v1/hcz/internal/modules/identity/user/contract"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
@@ -288,106 +286,11 @@ func (s *Service) AdminManualRefund(input AdminManualRefundInput) (*orderdomain.
 	}
 
 	if err := s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
-		orders := tx.Orders()
-		locked, err := orders.GetByIDForUpdate(input.OrderID)
+		rec, err := s.adminManualRefundInTx(tx, input, cfg, feeSnapshot, recordRemark)
 		if err != nil {
 			return err
 		}
-		if locked == nil {
-			return ErrOrderNotFound
-		}
-		order := *locked
-		if order.PaidAt == nil {
-			return ErrOrderStatusInvalid
-		}
-		if settingsapp.IsOrderRefundWindowExpired(order.CreatedAt, order.PaidAt, cfg.MaxRefundDays, time.Now()) {
-			return ErrOrderRefundExpired
-		}
-		// P0-2: USDT 结算单按 WalletPaidAmount(USDT) 计算可退额与全额判定。
-		paidBase := order.TotalAmount.Decimal
-		if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
-			paidBase = order.WalletPaidAmount.Decimal
-		}
-		if paidBase.LessThanOrEqual(decimal.Zero) {
-			return ErrOrderStatusInvalid
-		}
-		refundedBefore := order.RefundedAmount.Decimal.Round(2)
-		refundable := paidBase.Sub(refundedBefore).Round(2)
-		if amount.GreaterThan(refundable) {
-			return walletcontract.ErrRefundExceeded
-		}
-
-		newRefunded := refundedBefore.Add(amount).Round(2)
-		now := time.Now()
-		updates := map[string]interface{}{
-			"refunded_amount": money.FromDecimal(newRefunded),
-			"updated_at":      now,
-		}
-		markRefunded := newRefunded.GreaterThanOrEqual(paidBase.Round(2))
-		if markRefunded {
-			updates["status"] = constants.OrderStatusRefunded
-			updates["refund_status"] = constants.OrderRefundStatusFull
-		} else {
-			updates["status"] = constants.OrderStatusPartiallyRefunded
-			updates["refund_status"] = constants.OrderRefundStatusPartial
-		}
-		if err := orders.UpdateFields(order.ID, updates); err != nil {
-			return ErrOrderUpdateFailed
-		}
-		if order.ParentID == nil {
-			targetStatus := constants.OrderStatusPartiallyRefunded
-			if markRefunded {
-				targetStatus = constants.OrderStatusRefunded
-			}
-			if err := applyParentRefundChildStatusUpdates(orders, order.ID, targetStatus, now); err != nil {
-				return ErrOrderUpdateFailed
-			}
-		}
-		if order.ParentID != nil {
-			if _, err := orderapp.SyncParentStatus(orders, *order.ParentID, now); err != nil {
-				return ErrOrderUpdateFailed
-			}
-		}
-		feeRefundedAmount := money.FromDecimal(decimal.Zero)
-		if input.PaymentFeeRefunded {
-			if paymentFeeRefundRootOrderID(&order) != feeSnapshot.rootOrderID {
-				return ErrOrderFetchFailed
-			}
-			feeRefundedAmount, err = resolvePaymentFeeRefundAmount(orders, feeSnapshot, amount, 0)
-			if err != nil {
-				return err
-			}
-		}
-		record, err := s.createRefundRecordTx(
-			orders,
-			&order,
-			constants.OrderRefundTypeManual,
-			amount,
-			recordRemark,
-			input.PaymentFeeRefunded,
-			feeRefundedAmount,
-			now,
-		)
-		if err != nil {
-			return err
-		}
-		createdRecord = record
-		if s.affiliateRefund != nil && order.UserID > 0 {
-			if err := s.affiliateRefund.HandleOrderRefunded(
-				tx.Affiliates(),
-				&order,
-				amount,
-				refundedBefore,
-				"order_refunded_manual",
-			); err != nil {
-				return err
-			}
-		}
-		if s.resellerAccounting != nil {
-			if err := s.resellerAccounting.HandleRefundDeduct(tx.ResellerAccounting(), &order, record, refundedBefore); err != nil {
-				return err
-			}
-		}
+		createdRecord = rec
 		return nil
 	}); err != nil {
 		return nil, nil, err
@@ -401,6 +304,142 @@ func (s *Service) AdminManualRefund(input AdminManualRefundInput) (*orderdomain.
 		return nil, nil, ErrOrderNotFound
 	}
 	return order, createdRecord, nil
+}
+
+// AdminManualRefundInTx 在调用方提供的事务内执行退款核心，不自己开启事务。
+// 唯一退款核心：order 状态/refunded_amount/refund_status、退款记录、affiliate、reseller。
+// 注意：本函数不 credit wallet；需要钱包入账请用 AdminRefundToWallet(InTx)。
+func (s *Service) AdminManualRefundInTx(tx ordercontract.Transaction, input AdminManualRefundInput) (*orderdomain.OrderRefundRecord, error) {
+	if input.OrderID == 0 {
+		return nil, ErrOrderNotFound
+	}
+	amount := input.Amount.Decimal.Round(2)
+	if amount.LessThanOrEqual(decimal.Zero) {
+		return nil, walletcontract.ErrInvalidAmount
+	}
+	if s == nil || s.orderStore == nil {
+		return nil, ErrOrderFetchFailed
+	}
+	cfg := settingsapp.DefaultOrderRefundConfig()
+	if s.settingService != nil {
+		cfgLoaded, cfgErr := s.settingService.GetOrderRefundConfig()
+		if cfgErr != nil {
+			return nil, cfgErr
+		}
+		cfg = cfgLoaded
+	}
+	initialOrder, err := tx.Orders().GetByID(input.OrderID)
+	if err != nil {
+		return nil, ErrOrderFetchFailed
+	}
+	if initialOrder == nil {
+		return nil, ErrOrderNotFound
+	}
+	feeSnapshot := paymentFeeRefundSnapshot{rootOrderID: paymentFeeRefundRootOrderID(initialOrder)}
+	if input.PaymentFeeRefunded {
+		feeSnapshot, err = s.loadPaymentFeeRefundSnapshot(initialOrder)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.adminManualRefundInTx(tx, input, cfg, feeSnapshot, strings.TrimSpace(input.Remark))
+}
+
+// adminManualRefundInTx 是唯一退款核心实现，假设已在事务内且已完成前置校验。
+func (s *Service) adminManualRefundInTx(
+	tx ordercontract.Transaction,
+	input AdminManualRefundInput,
+	cfg settingsapp.OrderRefundConfig,
+	feeSnapshot paymentFeeRefundSnapshot,
+	recordRemark string,
+) (*orderdomain.OrderRefundRecord, error) {
+	amount := input.Amount.Decimal.Round(2)
+	orders := tx.Orders()
+	locked, err := orders.GetByIDForUpdate(input.OrderID)
+	if err != nil {
+		return nil, err
+	}
+	if locked == nil {
+		return nil, ErrOrderNotFound
+	}
+	order := *locked
+	if order.PaidAt == nil {
+		return nil, ErrOrderStatusInvalid
+	}
+	if settingsapp.IsOrderRefundWindowExpired(order.CreatedAt, order.PaidAt, cfg.MaxRefundDays, time.Now()) {
+		return nil, ErrOrderRefundExpired
+	}
+	// P0-2: USDT 结算单按 WalletPaidAmount(USDT) 计算可退额与全额判定。
+	paidBase := order.TotalAmount.Decimal
+	if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+		paidBase = order.WalletPaidAmount.Decimal
+	}
+	if paidBase.LessThanOrEqual(decimal.Zero) {
+		return nil, ErrOrderStatusInvalid
+	}
+	refundedBefore := order.RefundedAmount.Decimal.Round(2)
+	refundable := paidBase.Sub(refundedBefore).Round(2)
+	if amount.GreaterThan(refundable) {
+		return nil, walletcontract.ErrRefundExceeded
+	}
+
+	newRefunded := refundedBefore.Add(amount).Round(2)
+	now := time.Now()
+	updates := map[string]interface{}{
+		"refunded_amount": money.FromDecimal(newRefunded),
+		"updated_at":      now,
+	}
+	// P0 合同修复：Refund Service 只写 refund_status，永不写 Business Order 主状态。
+	markRefunded := newRefunded.GreaterThanOrEqual(paidBase.Round(2))
+	if markRefunded {
+		updates["refund_status"] = constants.OrderRefundStatusFull
+	} else {
+		updates["refund_status"] = constants.OrderRefundStatusPartial
+	}
+	if err := orders.UpdateFields(order.ID, updates); err != nil {
+		return nil, ErrOrderUpdateFailed
+	}
+	// parent/child 主状态由 ordermachine 决定，退款不再驱动子订单主状态。
+	feeRefundedAmount := money.FromDecimal(decimal.Zero)
+	if input.PaymentFeeRefunded {
+		if paymentFeeRefundRootOrderID(&order) != feeSnapshot.rootOrderID {
+			return nil, ErrOrderFetchFailed
+		}
+		feeRefundedAmount, err = resolvePaymentFeeRefundAmount(orders, feeSnapshot, amount, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
+	record, err := s.createRefundRecordTx(
+		orders,
+		&order,
+		constants.OrderRefundTypeManual,
+		amount,
+		recordRemark,
+		input.PaymentFeeRefunded,
+		feeRefundedAmount,
+		now,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if s.affiliateRefund != nil && order.UserID > 0 {
+		if err := s.affiliateRefund.HandleOrderRefunded(
+			tx.Affiliates(),
+			&order,
+			amount,
+			refundedBefore,
+			"order_refunded_manual",
+		); err != nil {
+			return nil, err
+		}
+	}
+	if s.resellerAccounting != nil {
+		if err := s.resellerAccounting.HandleRefundDeduct(tx.ResellerAccounting(), &order, record, refundedBefore); err != nil {
+			return nil, err
+		}
+	}
+	return record, nil
 }
 
 // ListAdminRefundRecords 管理端退款记录列表

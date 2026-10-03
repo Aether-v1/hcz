@@ -11,6 +11,7 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	"github.com/Aether-v1/hcz/internal/logger"
+	"github.com/shopspring/decimal"
 )
 
 // cancelOrderWithChildren 取消父订单并级联子订单
@@ -37,6 +38,10 @@ func (s *OrderService) cancelOrderWithChildren(order *orderdomain.Order, rollbac
 		updates := map[string]interface{}{
 			"canceled_at": now,
 			"updated_at":  now,
+		}
+		// P0 一致性：父单已扣 USDT 时，父子单 refund_status 同步为 full（子单虽不独立扣款，但属于同一笔已付订单）。
+		if order.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
+			updates["refund_status"] = constants.OrderRefundStatusFull
 		}
 		if err := orderStore.UpdateStatus(order.ID, constants.OrderStatusCanceled, updates); err != nil {
 			return ErrOrderUpdateFailed
@@ -283,9 +288,8 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 			return nil, ErrOrderStatusInvalid
 		}
 	}
-	if !IsTransitionAllowed(order.Status, target) {
-		return nil, ErrOrderStatusInvalid
-	}
+	// P0-3: 合法性已由上方 ordermachine.Normalize + CanTransition 统一校验（line 189-193）。
+	// 旧 IsTransitionAllowed（9 态 map）不含新五态，会误拒 pending_recharge→failed 等合法迁移，已移除。
 
 	now := time.Now()
 	updates := map[string]interface{}{
@@ -389,6 +393,10 @@ func (s *OrderService) cancelSingleOrderInTx(tx ordercontract.Transaction, order
 	orderStore := tx.Orders()
 	productRepo := tx.Products()
 	productSKURepo := tx.ProductSKUs()
+	// P0 一致性：已扣 USDT 的订单 canceled/failed 时同步 refund_status=full。
+	if order.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
+		updates["refund_status"] = constants.OrderRefundStatusFull
+	}
 	if err := orderStore.UpdateStatus(order.ID, target, updates); err != nil {
 		return ErrOrderUpdateFailed
 	}

@@ -1727,6 +1727,26 @@
     "authInvalid": "資訊不匹配，請重新輸入",
     "authSubmit": "保存並查詢",
     "authClear": "清除已保存資訊"
+  },
+  "afterSale": {
+    "title": "售後",
+    "notReceived": "未收到",
+    "notReceivedHint": "如未收到充值，可發起售後申請",
+    "reason": "原因",
+    "reasonPlaceholder": "請簡要說明未收到的情況",
+    "reasonRequired": "請填寫原因",
+    "description": "詳細說明",
+    "descriptionPlaceholder": "可選，補充更多資訊",
+    "adminNote": "處理備註",
+    "statusPending": "處理中",
+    "statusResolved": "已解決",
+    "statusRejected": "已駁回",
+    "refundAmount": "退款金額",
+    "createdAt": "發起時間",
+    "resolvedAt": "處理時間",
+    "submitted": "售後申請已提交",
+    "submitFailed": "提交失敗，請稍後重試",
+    "submitting": "提交中..."
   }
 }
 

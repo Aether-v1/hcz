@@ -75,6 +75,9 @@
               <Button v-if="order.status === 'pending_payment'" variant="destructive" size="sm" @click="cancelOrder">
                 {{ t('orderDetail.cancel') }}
               </Button>
+              <Button v-if="afterSaleCanInitiate(order.status)" variant="outline" size="sm" @click="afterSaleOpenForm()">
+                {{ t('afterSale.notReceived') }}
+              </Button>
             </div>
           </div>
         </div>
@@ -415,6 +418,55 @@
           <div v-else class="text-sm text-muted-foreground">{{ t('orderDetail.refundRecordsEmpty') }}</div>
         </div>
 
+        <!-- After-Sale 售后 -->
+        <div v-if="afterSaleTicket || afterSaleCanInitiate(order.status)" class="rounded-2xl border bg-card shadow-sm p-6">
+          <h2 class="text-lg font-bold mb-4">{{ t('afterSale.title') }}</h2>
+          <div v-if="afterSaleTicket" class="space-y-3">
+            <div class="flex items-center gap-3">
+              <Badge :variant="afterSaleTicket.status === 'pending' ? 'warning' : afterSaleTicket.status === 'resolved' ? 'success' : 'destructive'" size="sm">
+                {{ afterSaleStatusLabel(afterSaleTicket.status) }}
+              </Badge>
+              <span v-if="afterSaleTicket.refund_amount" class="text-sm font-semibold text-foreground">
+                {{ t('afterSale.refundAmount') }}：{{ afterSaleTicket.refund_amount }} {{ afterSaleTicket.refund_currency }}
+              </span>
+            </div>
+            <div class="text-sm text-muted-foreground">
+              <div>{{ t('afterSale.reason') }}：{{ afterSaleTicket.reason }}</div>
+              <div v-if="afterSaleTicket.description" class="mt-1">{{ t('afterSale.description') }}：{{ afterSaleTicket.description }}</div>
+              <div v-if="afterSaleTicket.admin_note" class="mt-1">{{ t('afterSale.adminNote') }}：{{ afterSaleTicket.admin_note }}</div>
+              <div class="mt-1 text-xs">{{ t('afterSale.createdAt') }}：{{ formatDate(afterSaleTicket.created_at) }}</div>
+              <div v-if="afterSaleTicket.resolved_at" class="text-xs">{{ t('afterSale.resolvedAt') }}：{{ formatDate(afterSaleTicket.resolved_at) }}</div>
+            </div>
+          </div>
+          <div v-else-if="afterSaleCanInitiate(order.status)" class="flex items-center justify-between">
+            <span class="text-sm text-muted-foreground">{{ t('afterSale.notReceivedHint') }}</span>
+            <Button variant="outline" size="sm" @click="afterSaleOpenForm()">{{ t('afterSale.notReceived') }}</Button>
+          </div>
+        </div>
+
+        <!-- After-Sale Form Modal -->
+        <div v-if="afterSaleShowForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="afterSaleCloseForm()">
+          <div class="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl">
+            <h3 class="text-lg font-bold mb-4">{{ t('afterSale.notReceived') }}</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1">{{ t('afterSale.reason') }} *</label>
+                <input v-model="afterSaleForm.reason" type="text" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" :placeholder="t('afterSale.reasonPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1">{{ t('afterSale.description') }}</label>
+                <textarea v-model="afterSaleForm.description" rows="3" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" :placeholder="t('afterSale.descriptionPlaceholder')"></textarea>
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+              <Button variant="outline" size="sm" @click="afterSaleCloseForm()" :disabled="afterSaleSubmitting">{{ t('common.cancel') }}</Button>
+              <Button size="sm" @click="afterSaleSubmit()" :disabled="afterSaleSubmitting">
+                {{ afterSaleSubmitting ? t('afterSaleSubmitting') : t('common.confirm') }}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div v-if="showTimeCard" class="rounded-2xl border bg-card shadow-sm p-6">
           <h2 class="text-lg font-bold mb-4">{{ t('orderDetail.timeTitle') }}</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -442,6 +494,7 @@
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue'
 import { Copy, Check, Download, Info } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@/components/ui/badge'
@@ -451,6 +504,7 @@ import EmptyState from '../components/EmptyState.vue'
 import BreadcrumbNav from '../components/BreadcrumbNav.vue'
 import SmartImage from '../components/SmartImage.vue'
 import { useOrderDetail } from '../composables/useOrderDetail'
+import { useAfterSale } from '../composables/useAfterSale'
 
 const { t } = useI18n()
 
@@ -464,5 +518,22 @@ const {
   fulfillmentDeliveryLines, instructionBlocks, isFulfillmentTruncated,
   fulfillmentCopied, handleCopyFulfillment, fulfillmentDownloading, handleDownloadFulfillment,
 } = useOrderDetail()
+
+const afterSale = useAfterSale(() => order.value?.id ?? null)
+const {
+  ticket: afterSaleTicket,
+  showForm: afterSaleShowForm,
+  form: afterSaleForm,
+  submitting: afterSaleSubmitting,
+  canInitiate: afterSaleCanInitiate,
+  openForm: afterSaleOpenForm,
+  closeForm: afterSaleCloseForm,
+  submit: afterSaleSubmit,
+  statusLabel: afterSaleStatusLabel,
+} = afterSale
+
+watch(() => order.value?.id, (id) => {
+  if (id) afterSale.loadTicket()
+})
 </script>
 

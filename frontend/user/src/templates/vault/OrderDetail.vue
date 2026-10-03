@@ -43,6 +43,7 @@
             <RouterLink :to="`/pay?order_no=${order.order_no}`">{{ t('orderDetail.payNow') }}</RouterLink>
           </Button>
           <Button v-if="order.status === 'pending_payment'" type="button" variant="outline" size="sm" class="rounded-full border-destructive text-destructive hover:bg-destructive/10" @click="cancelOrder">{{ t('orderDetail.cancel') }}</Button>
+          <Button v-if="afterSaleCanInitiate(order.status)" type="button" variant="outline" size="sm" class="rounded-full" @click="afterSaleOpenForm()">{{ t('afterSale.notReceived') }}</Button>
         </div>
       </div>
 
@@ -52,17 +53,65 @@
         :fulfillment-downloading="fulfillmentDownloading"
         @download="handleDownloadFulfillment"
       />
+
+      <!-- After-Sale -->
+      <div v-if="afterSaleTicket || afterSaleCanInitiate(order.status)" class="mt-[18px] rounded-xl border bg-card p-[22px]">
+        <h2 class="mb-3 text-lg font-bold">{{ t('afterSale.title') }}</h2>
+        <div v-if="afterSaleTicket" class="space-y-2 text-sm">
+          <div class="flex items-center gap-2.5">
+            <Badge :variant="afterSaleTicket.status === 'pending' ? 'warning' : afterSaleTicket.status === 'resolved' ? 'success' : 'destructive'" class="rounded-full">
+              {{ afterSaleStatusLabel(afterSaleTicket.status) }}
+            </Badge>
+            <span v-if="afterSaleTicket.refund_amount" class="font-semibold">{{ t('afterSale.refundAmount') }}：{{ afterSaleTicket.refund_amount }} {{ afterSaleTicket.refund_currency }}</span>
+          </div>
+          <div class="text-muted-foreground">
+            <div>{{ t('afterSale.reason') }}：{{ afterSaleTicket.reason }}</div>
+            <div v-if="afterSaleTicket.description">{{ t('afterSale.description') }}：{{ afterSaleTicket.description }}</div>
+            <div v-if="afterSaleTicket.admin_note">{{ t('afterSale.adminNote') }}：{{ afterSaleTicket.admin_note }}</div>
+            <div class="text-xs">{{ t('afterSale.createdAt') }}：{{ formatDate(afterSaleTicket.created_at) }}</div>
+          </div>
+        </div>
+        <div v-else class="flex items-center justify-between">
+          <span class="text-sm text-muted-foreground">{{ t('afterSale.notReceivedHint') }}</span>
+          <Button variant="outline" size="sm" class="rounded-full" @click="afterSaleOpenForm()">{{ t('afterSale.notReceived') }}</Button>
+        </div>
+      </div>
+
+      <!-- After-Sale Form Modal -->
+      <div v-if="afterSaleShowForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="afterSaleCloseForm()">
+        <div class="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl">
+          <h3 class="text-lg font-bold mb-4">{{ t('afterSale.notReceived') }}</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">{{ t('afterSale.reason') }} *</label>
+              <input v-model="afterSaleForm.reason" type="text" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" :placeholder="t('afterSale.reasonPlaceholder')" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">{{ t('afterSale.description') }}</label>
+              <textarea v-model="afterSaleForm.description" rows="3" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" :placeholder="t('afterSale.descriptionPlaceholder')"></textarea>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-3">
+            <Button variant="outline" size="sm" @click="afterSaleCloseForm()" :disabled="afterSaleSubmitting">{{ t('common.cancel') }}</Button>
+            <Button size="sm" @click="afterSaleSubmit()" :disabled="afterSaleSubmitting">
+              {{ afterSaleSubmitting ? t('afterSaleSubmitting') : t('common.confirm') }}
+            </Button>
+          </div>
+        </div>
+      </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import VaultOrderBody from './components/VaultOrderBody.vue'
 import { useOrderDetail } from '../../composables/useOrderDetail'
+import { useAfterSale } from '../../composables/useAfterSale'
 
 const { t } = useI18n()
 
@@ -70,5 +119,22 @@ const {
   loading, order, debouncedLoadOrder, cancelOrder, fulfillmentDownloading, handleDownloadFulfillment,
   statusLabel, statusVariant, formatDate, formatMoney,
 } = useOrderDetail()
+
+const afterSale = useAfterSale(() => order.value?.id ?? null)
+const {
+  ticket: afterSaleTicket,
+  showForm: afterSaleShowForm,
+  form: afterSaleForm,
+  submitting: afterSaleSubmitting,
+  canInitiate: afterSaleCanInitiate,
+  openForm: afterSaleOpenForm,
+  closeForm: afterSaleCloseForm,
+  submit: afterSaleSubmit,
+  statusLabel: afterSaleStatusLabel,
+} = afterSale
+
+watch(() => order.value?.id, (id) => {
+  if (id) afterSale.loadTicket()
+})
 </script>
 

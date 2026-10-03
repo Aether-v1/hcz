@@ -157,6 +157,109 @@ Gateway 自己的 exchange_rate 仅用于充值换算，**与 Global Rate 完全
 
 ---
 
+## 7. After-Sale 售后（P1）
+
+售后独立于订单五主状态。售后期间 `orders.status` 始终保持 `completed`，使用独立 `after_sale_status`（none/pending/resolved/rejected）和 `refund_status`（none/partial/full）。
+
+### POST /api/v1/orders/{order_id}/after-sale
+用户发起"未收到"。需 User JWT，仅本人 completed 订单。
+
+**Request**
+```json
+{ "type": "not_received", "reason": "未收到充值", "description": "可选详细说明" }
+```
+
+**Response**（AfterSaleDTO）
+```json
+{
+  "id": 1,
+  "order_id": 123,
+  "type": "not_received",
+  "status": "pending",
+  "reason": "未收到充值",
+  "description": "",
+  "admin_note": "",
+  "refund_amount": "",
+  "refund_currency": "USDT",
+  "order_status": "completed",
+  "refund_status": "none",
+  "created_at": "2026-10-04T03:00:00Z",
+  "updated_at": "2026-10-04T03:00:00Z",
+  "resolved_at": null
+}
+```
+
+**错误**
+- 非本人 / 订单不存在 → business code 404
+- 非 completed → business code 400 (`error.after_sale_order_not_completed`)
+- 已有 pending 售后 → business code 400 (`error.after_sale_pending_exists`)
+- type 非 not_received → business code 400
+
+### GET /api/v1/orders/{order_id}/after-sale
+用户查询自己的售后工单。需 User JWT。返回 AfterSaleDTO（同上）。无工单时 business code 404。
+
+### GET /api/admin/v1/orders/{order_id}/after-sale
+Admin 查询售后工单。需 Admin JWT + RBAC（support / finance 角色）。返回 AfterSaleDTO。
+
+### POST /api/admin/v1/orders/{order_id}/after-sale/action
+Admin 处理售后。需 Admin JWT + RBAC + Payment Compliance（paymentProtected 组）。
+
+**Request**
+```json
+{ "action": "reject", "admin_note": "已核实正常到账" }
+```
+```json
+{ "action": "resolve", "admin_note": "已解决" }
+```
+```json
+{ "action": "partial_refund", "refund_amount": "3.00", "admin_note": "部分退款" }
+```
+```json
+{ "action": "full_refund", "admin_note": "全额退款" }
+```
+
+**action 说明**
+| action | 效果 | refund_amount |
+|--------|------|---------------|
+| reject | ticket=rejected, after_sale_status=rejected | 不退款 |
+| resolve | ticket=resolved, after_sale_status=resolved | 不退款 |
+| partial_refund | 按指定 USDT 金额退款，ticket=resolved, refund_status=partial | 必填，>0，USDT |
+| full_refund | 按剩余可退款 USDT 全额退款，ticket=resolved, refund_status=full | 后端计算，前端不传 |
+
+**Response**：AfterSaleDTO（含更新后 status / refund_amount / refund_status）。
+
+**资金规则**
+- partial/full_refund 复用 P0-2 已冻结 USDT 退款链（AdminRefundToWalletInTx）
+- 退款金额 = USDT，使用订单 wallet_paid_amount snapshot
+- 不读取当前汇率，不走 Gateway Refund
+- 退款成功后 Wallet credit USDT + Ledger + refund_status 联动
+- 订单主状态始终保持 completed
+
+**错误**
+- 无 pending ticket → business code 400 (`error.after_sale_invalid_action`)
+- partial_refund 金额非法/超额 → business code 400
+- action 非法 → business code 400
+
+### AfterSaleDTO 字段说明
+| 字段 | 类型 | nullable | 说明 |
+|------|------|----------|------|
+| id | uint | 否 | 工单 ID |
+| order_id | uint | 否 | 订单 ID |
+| type | string | 否 | 固定 not_received |
+| status | string | 否 | pending / resolved / rejected |
+| reason | string | 否 | 用户原因 |
+| description | string | 否 | 用户详细说明 |
+| admin_note | string | 否 | Admin 备注 |
+| refund_amount | string | 是 | 退款金额（USDT，2dp），无退款时为空字符串 |
+| refund_currency | string | 否 | 固定 "USDT" |
+| order_status | string | 否 | 订单主状态（始终 completed） |
+| refund_status | string | 否 | none / partial / full |
+| created_at | time | 否 | 创建时间 |
+| updated_at | time | 否 | 更新时间 |
+| resolved_at | time | 是 | 处理时间，pending 时为 null |
+
+---
+
 ## 前端禁止项
 - 禁止用 site_config.currency 格式化钱包/退款/返利金额。
 - 禁止前端把 CNY 金额当 USDT 显示。

@@ -3,6 +3,7 @@ package application
 import (
 	"time"
 
+	"github.com/Aether-v1/hcz/internal/constants"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 
@@ -108,9 +109,13 @@ func ReleaseWalletBalance(
 			Remark:           remark,
 		},
 		func(now time.Time) (bool, error) {
+			// P0 一致性：canceled/failed 全额退 USDT 后，同步写 refund_status=full + refunded_amount。
+			// UpdateFieldsWhereWalletPaid 仅当 wallet_paid_amount>0 时生效，天然幂等（重复请求不会双退）。
 			affected, updateErr := tx.Orders().UpdateFieldsWhereWalletPaid(order.ID, map[string]interface{}{
 				"wallet_paid_amount": money.FromDecimal(decimal.Zero),
 				"online_paid_amount": money.FromDecimal(order.TotalAmount.Decimal.Round(2)),
+				"refund_status":      constants.OrderRefundStatusFull,
+				"refunded_amount":    order.WalletPaidAmount,
 				"updated_at":         now,
 			})
 			if updateErr != nil {

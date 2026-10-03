@@ -81,6 +81,7 @@ func NewOrderSummaryList(orders []orderdomain.Order) []OrderSummary {
 
 // OrderDetail 订单详情响应（完整字段）
 type OrderDetail struct {
+	ID                       uint              `json:"id"`
 	OrderNo                  string            `json:"order_no"`
 	GuestEmail               string            `json:"guest_email,omitempty"`
 	GuestLocale              string            `json:"guest_locale,omitempty"`
@@ -127,6 +128,7 @@ type OrderRefundResp struct {
 func NewOrderDetail(o *orderdomain.Order) OrderDetail {
 	view := ordermachine.Normalize(o.Status)
 	d := OrderDetail{
+		ID:                      o.ID,
 		OrderNo:                 o.OrderNo,
 		GuestEmail:              o.GuestEmail,
 		GuestLocale:             o.GuestLocale,

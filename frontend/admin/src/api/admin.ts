@@ -520,6 +520,9 @@ export const adminAPI = {
   getOrderRefund: (id: number) => api.get(`/admin/order-refunds/${id}`),
   updateOrderRefundPaymentFee: (id: number, data: AdminUpdateRefundPaymentFeePayload) =>
     api.patch(`/admin/order-refunds/${id}/payment-fee`, data),
+  getOrderAfterSale: (orderId: number) => api.get(`/admin/orders/${orderId}/after-sale`),
+  actionOrderAfterSale: (orderId: number, data: { action: string; refund_amount?: string; admin_note?: string }) =>
+    api.post(`/admin/orders/${orderId}/after-sale/action`, data),
   createCoupon: (data: Partial<AdminCoupon>) => api.post('/admin/coupons', data),
   getCoupons: (params?: Record<string, unknown>) => api.get('/admin/coupons', { params }),
   updateCoupon: (id: number, data: Partial<AdminCoupon>) => api.put(`/admin/coupons/${id}`, data),

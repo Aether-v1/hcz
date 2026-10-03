@@ -253,11 +253,19 @@ func assertWalletMixedChildrenRefundStatus(t *testing.T, fixture walletMixedChil
 	if err != nil {
 		t.Fatalf("admin refund failed: %v", err)
 	}
-	if updatedOrder.Status != fixture.expectedParentStatus {
-		t.Fatalf("expected parent status %s, got: %s", fixture.expectedParentStatus, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change parent main status, expected completed, got: %s", updatedOrder.Status)
 	}
-	assertWalletOrderStatus(t, db, manualChild.ID, "manual child", fixture.expectedChildStatus)
-	assertWalletOrderStatus(t, db, autoChild.ID, "auto child", fixture.expectedChildStatus)
+	expectedRefundStatus := constants.OrderRefundStatusPartial
+	if fixture.refundAmount.GreaterThanOrEqual(decimal.NewFromInt(100)) {
+		expectedRefundStatus = constants.OrderRefundStatusFull
+	}
+	if updatedOrder.RefundStatus != expectedRefundStatus {
+		t.Fatalf("expected parent refund_status %s, got: %s", expectedRefundStatus, updatedOrder.RefundStatus)
+	}
+	// 退款不再驱动子订单主状态，子单保持原状态。
+	assertWalletOrderStatus(t, db, manualChild.ID, "manual child", constants.OrderStatusPaid)
+	assertWalletOrderStatus(t, db, autoChild.ID, "auto child", constants.OrderStatusCompleted)
 }
 
 func assertWalletOrderStatus(t *testing.T, db *gorm.DB, orderID uint, label, expected string) {
@@ -435,8 +443,11 @@ func TestWalletServiceAdminRefundToWallet(t *testing.T) {
 	if !updatedOrder.RefundedAmount.Decimal.Equal(decimal.NewFromInt(15)) {
 		t.Fatalf("unexpected refunded amount: %s", updatedOrder.RefundedAmount.String())
 	}
-	if updatedOrder.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected status partially_refunded, got: %s", updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusPaid {
+		t.Fatalf("refund must not change main status, expected paid, got: %s", updatedOrder.Status)
+	}
+	if updatedOrder.RefundStatus != constants.OrderRefundStatusPartial {
+		t.Fatalf("expected refund_status partial, got: %s", updatedOrder.RefundStatus)
 	}
 	var refundRecord orderdomain.OrderRefundRecord
 	if err := db.Where("order_id = ? AND type = ?", order.ID, constants.OrderRefundTypeWallet).
@@ -537,8 +548,11 @@ func TestWalletServiceAdminRefundToWalletNoLimitWhenZero(t *testing.T) {
 	if txn == nil {
 		t.Fatalf("expected transaction, got nil")
 	}
-	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected partially_refunded order, got %+v", updatedOrder)
+	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change main status, expected completed, got %+v", updatedOrder)
+	}
+	if updatedOrder.RefundStatus != constants.OrderRefundStatusPartial {
+		t.Fatalf("expected refund_status partial, got: %s", updatedOrder.RefundStatus)
 	}
 }
 
@@ -583,8 +597,11 @@ func TestWalletServiceAdminRefundToWalletCompletedOrderPartialSetsPartiallyRefun
 	if !updatedOrder.RefundedAmount.Decimal.Equal(decimal.NewFromInt(10)) {
 		t.Fatalf("unexpected refunded amount: %s", updatedOrder.RefundedAmount.String())
 	}
-	if updatedOrder.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected status partially_refunded, got: %s", updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change main status, expected completed, got: %s", updatedOrder.Status)
+	}
+	if updatedOrder.RefundStatus != constants.OrderRefundStatusPartial {
+		t.Fatalf("expected refund_status partial, got: %s", updatedOrder.RefundStatus)
 	}
 	var refreshedProc procurementdomain.Order
 	if err := db.First(&refreshedProc, proc.ID).Error; err != nil {
@@ -639,8 +656,18 @@ func TestWalletServiceAdminRefundToWalletFullRefundUpdatesChildrenStatus(t *test
 	if err := db.First(&refreshedChild, child.ID).Error; err != nil {
 		t.Fatalf("reload child order failed: %v", err)
 	}
-	if refreshedChild.Status != constants.OrderStatusRefunded {
-		t.Fatalf("expected child status refunded, got: %s", refreshedChild.Status)
+	if refreshedChild.Status != constants.OrderStatusFulfilling {
+		t.Fatalf("refund must not change child main status, expected fulfilling, got: %s", refreshedChild.Status)
+	}
+	var refreshedParent orderdomain.Order
+	if err := db.First(&refreshedParent, parent.ID).Error; err != nil {
+		t.Fatalf("reload parent failed: %v", err)
+	}
+	if refreshedParent.Status != constants.OrderStatusDelivered {
+		t.Fatalf("refund must not change parent main status, expected delivered, got: %s", refreshedParent.Status)
+	}
+	if refreshedParent.RefundStatus != constants.OrderRefundStatusFull {
+		t.Fatalf("expected parent refund_status full, got: %s", refreshedParent.RefundStatus)
 	}
 }
 

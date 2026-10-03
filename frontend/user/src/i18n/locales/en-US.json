@@ -1727,6 +1727,26 @@
     "authInvalid": "Credentials mismatch, please try again",
     "authSubmit": "Save and search",
     "authClear": "Clear saved info"
+  },
+  "afterSale": {
+    "title": "After-Sale",
+    "notReceived": "Not Received",
+    "notReceivedHint": "If you have not received the recharge, submit an after-sale request",
+    "reason": "Reason",
+    "reasonPlaceholder": "Briefly describe the issue",
+    "reasonRequired": "Please enter a reason",
+    "description": "Details",
+    "descriptionPlaceholder": "Optional, add more information",
+    "adminNote": "Admin Note",
+    "statusPending": "Processing",
+    "statusResolved": "Resolved",
+    "statusRejected": "Rejected",
+    "refundAmount": "Refund Amount",
+    "createdAt": "Submitted",
+    "resolvedAt": "Resolved At",
+    "submitted": "After-sale request submitted",
+    "submitFailed": "Submit failed, please try again",
+    "submitting": "Submitting..."
   }
 }
 

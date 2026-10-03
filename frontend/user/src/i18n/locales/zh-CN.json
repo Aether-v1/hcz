@@ -1727,6 +1727,26 @@
     "label": "购买身份",
     "member": "会员购买",
     "guest": "游客可购"
+  },
+  "afterSale": {
+    "title": "售后",
+    "notReceived": "未收到",
+    "notReceivedHint": "如未收到充值，可发起售后申请",
+    "reason": "原因",
+    "reasonPlaceholder": "请简要说明未收到的情况",
+    "reasonRequired": "请填写原因",
+    "description": "详细说明",
+    "descriptionPlaceholder": "可选，补充更多信息",
+    "adminNote": "处理备注",
+    "statusPending": "处理中",
+    "statusResolved": "已解决",
+    "statusRejected": "已驳回",
+    "refundAmount": "退款金额",
+    "createdAt": "发起时间",
+    "resolvedAt": "处理时间",
+    "submitted": "售后申请已提交",
+    "submitFailed": "提交失败，请稍后重试",
+    "submitting": "提交中..."
   }
 }
 

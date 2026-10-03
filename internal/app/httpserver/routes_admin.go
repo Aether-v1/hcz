@@ -58,6 +58,7 @@ func registerAdminRoutes(
 	adminFulfillmentHandler *fulfillmenttransport.AdminHandler,
 	adminOrderHandler *ordertransport.AdminHandler,
 	adminOrderRefundHandler *ordertransport.AdminRefundHandler,
+	afterSaleHandler *ordertransport.AfterSaleHandler,
 	adminContentHandler *contenttransport.AdminHandler,
 	adminDashboardHandler *dashboardtransport.AdminHandler,
 	adminMemberLevelHandler *memberleveltransport.AdminHandler,
@@ -160,6 +161,8 @@ func registerAdminRoutes(
 	ordertransport.RegisterAdminRoutes(authorized, adminOrderHandler)
 	ordertransport.RegisterAdminRefundWriteRoutes(authorized, adminOrderRefundHandler)
 	ordertransport.RegisterAdminRefundRoutes(authorized, adminOrderRefundHandler)
+	ordertransport.RegisterAdminAfterSaleRoutes(authorized, afterSaleHandler)
+	ordertransport.RegisterAdminAfterSaleWriteRoutes(paymentProtected, afterSaleHandler)
 	fulfillmenttransport.RegisterAdminRoutes(authorized, adminFulfillmentHandler)
 	cardsecrettransport.RegisterAdminRoutes(authorized, adminCardSecretHandler)
 	giftcardtransport.RegisterAdminRoutes(authorized, adminGiftCardHandler)

@@ -62,6 +62,12 @@ type Store interface {
 	ListRefundRecordsByOrderIDs(orderIDs []uint) ([]orderdomain.OrderRefundRecord, error)
 	ListRefundRecordsAdmin(filter RefundRecordListFilter) ([]orderdomain.OrderRefundRecord, int64, error)
 
+	// P1 after-sale：与订单共享同一事务抽象，禁止独立 gorm.DB 事务。
+	CreateAfterSaleTicket(t *orderdomain.AfterSaleTicket) error
+	GetAfterSaleTicketByOrderID(orderID uint) (*orderdomain.AfterSaleTicket, error)
+	LockAfterSalePendingByOrderIDForUpdate(orderID uint) (*orderdomain.AfterSaleTicket, error)
+	UpdateAfterSaleTicket(id uint, updates map[string]interface{}) error
+
 	WithinTransaction(fn func(Transaction) error) error
 }
 

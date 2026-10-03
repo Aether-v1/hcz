@@ -140,8 +140,11 @@ func TestOrderRefundServiceAdminManualRefundGuestCreatesRecord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("admin manual refund failed: %v", err)
 	}
-	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected partially_refunded order, got %+v", updatedOrder)
+	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change main status, expected completed, got %+v", updatedOrder)
+	}
+	if updatedOrder.RefundStatus != constants.OrderRefundStatusPartial {
+		t.Fatalf("expected refund_status partial, got: %s", updatedOrder.RefundStatus)
 	}
 	if createdRecord == nil || createdRecord.ID == 0 {
 		t.Fatalf("expected created refund record, got %+v", createdRecord)
@@ -421,8 +424,11 @@ func TestOrderRefundServiceAdminManualRefundNoLimitWhenZero(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no-limit refund success, got: %v", err)
 	}
-	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected partially_refunded order, got %+v", updatedOrder)
+	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change main status, expected completed, got %+v", updatedOrder)
+	}
+	if updatedOrder.RefundStatus != constants.OrderRefundStatusPartial {
+		t.Fatalf("expected refund_status partial, got: %s", updatedOrder.RefundStatus)
 	}
 }
 
@@ -543,11 +549,18 @@ func assertOrderManualRefundMixedChildrenStatus(t *testing.T, fixture orderManua
 	if err != nil {
 		t.Fatalf("admin manual refund failed: %v", err)
 	}
-	if updatedOrder == nil || updatedOrder.Status != fixture.expectedParentStatus {
-		t.Fatalf("expected parent %s, got %+v", fixture.expectedParentStatus, updatedOrder)
+	if updatedOrder == nil || updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Fatalf("refund must not change parent main status, expected completed, got %+v", updatedOrder)
 	}
-	assertOrderRefundOrderStatus(t, db, manualChild.ID, "manual child", fixture.expectedChildStatus)
-	assertOrderRefundOrderStatus(t, db, autoChild.ID, "auto child", fixture.expectedChildStatus)
+	expectedRefundStatus := constants.OrderRefundStatusPartial
+	if fixture.refundAmount.GreaterThanOrEqual(decimal.NewFromInt(100)) {
+		expectedRefundStatus = constants.OrderRefundStatusFull
+	}
+	if updatedOrder.RefundStatus != expectedRefundStatus {
+		t.Fatalf("expected parent refund_status %s, got: %s", expectedRefundStatus, updatedOrder.RefundStatus)
+	}
+	assertOrderRefundOrderStatus(t, db, manualChild.ID, "manual child", constants.OrderStatusPaid)
+	assertOrderRefundOrderStatus(t, db, autoChild.ID, "auto child", constants.OrderStatusCompleted)
 }
 
 func assertOrderRefundOrderStatus(t *testing.T, db *gorm.DB, orderID uint, label, expected string) {

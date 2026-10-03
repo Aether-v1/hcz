@@ -54,6 +54,7 @@ import (
 	notificationgormstore "github.com/Aether-v1/hcz/internal/modules/notification/infrastructure/gormstore"
 	notificationsmtp "github.com/Aether-v1/hcz/internal/modules/notification/infrastructure/smtp"
 	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
+	"github.com/Aether-v1/hcz/internal/modules/order/application/aftersale"
 	orderrefund "github.com/Aether-v1/hcz/internal/modules/order/application/refund"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderriskapp "github.com/Aether-v1/hcz/internal/modules/orderrisk/application"
@@ -156,6 +157,7 @@ type Container struct {
 	CartService                   *cartapp.Service
 	WalletService                 *walletapp.Service
 	OrderRefundService            *orderrefund.Service
+	AfterSaleService              *aftersale.Service
 	OrderService                  *orderapp.OrderService
 	FulfillmentService            *fulfillmentapp.Service
 	CouponAdminService            *couponapp.AdminService

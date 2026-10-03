@@ -62,6 +62,18 @@ const manualRefundForm = reactive({
   paymentFeeRefunded: true,
 })
 
+// After-Sale 售后
+const afterSaleLoading = ref(false)
+const afterSaleTicket = ref<any>(null)
+const afterSaleSubmitting = ref(false)
+const afterSaleError = ref('')
+const afterSaleSuccess = ref('')
+const afterSaleForm = reactive({
+  action: '' as '' | 'reject' | 'resolve' | 'partial_refund' | 'full_refund',
+  refundAmount: '',
+  adminNote: '',
+})
+
 
 const userDetailLink = (userId: number) => adminUrl(`/users/${userId}`)
 const productLink = (productId: number) => adminUrl(`/products?product_id=${productId}`)
@@ -514,6 +526,57 @@ const resetManualRefundForm = () => {
   manualRefundSuccess.value = ''
 }
 
+// After-Sale functions
+const fetchAfterSale = async (orderId: number) => {
+  afterSaleLoading.value = true
+  afterSaleTicket.value = null
+  try {
+    const res = await adminAPI.getOrderAfterSale(orderId)
+    afterSaleTicket.value = res.data.data
+  } catch {
+    afterSaleTicket.value = null
+  } finally {
+    afterSaleLoading.value = false
+  }
+}
+
+const resetAfterSaleForm = () => {
+  afterSaleForm.action = ''
+  afterSaleForm.refundAmount = ''
+  afterSaleForm.adminNote = ''
+  afterSaleError.value = ''
+  afterSaleSuccess.value = ''
+}
+
+const submitAfterSaleAction = async (action: 'reject' | 'resolve' | 'partial_refund' | 'full_refund') => {
+  if (!selectedOrder.value || afterSaleSubmitting.value) return
+  afterSaleError.value = ''
+  afterSaleSuccess.value = ''
+  const payload: Record<string, unknown> = { action, admin_note: afterSaleForm.adminNote.trim() || undefined }
+  if (action === 'partial_refund') {
+    const amt = afterSaleForm.refundAmount.trim()
+    const val = Number(amt)
+    if (!amt || Number.isNaN(val) || val <= 0) {
+      afterSaleError.value = t('admin.orders.afterSaleInvalidAmount')
+      return
+    }
+    payload.refund_amount = amt
+  }
+  afterSaleSubmitting.value = true
+  try {
+    await adminAPI.actionOrderAfterSale(Number(selectedOrder.value.id), payload as any)
+    afterSaleSuccess.value = t('admin.orders.afterSaleActionSuccess')
+    resetAfterSaleForm()
+    await fetchAfterSale(Number(selectedOrder.value.id))
+    await fetchOrderDetail(Number(selectedOrder.value.id))
+    emit('refresh')
+  } catch (err: any) {
+    afterSaleError.value = err?.response?.data?.msg || err?.message || t('admin.orders.afterSaleActionFailed')
+  } finally {
+    afterSaleSubmitting.value = false
+  }
+}
+
 const formatFeeRate = (channel: AdminPayment | { fee_rate: number | string; fixed_fee?: number | string }) => {
   const feeRate = channel.fee_rate
   const fixedFee = channel.fixed_fee
@@ -547,8 +610,10 @@ const fetchOrderDetail = async (orderId: number) => {
   procurementOrder.value = null
   try {
     const response = await adminAPI.getOrder(orderId)
-    selectedOrder.value = response.data.data
-    ensureRefundTabAvailable(selectedOrder.value)
+    const orderData = response.data.data
+    selectedOrder.value = orderData
+    ensureRefundTabAvailable(orderData)
+    fetchAfterSale(Number(orderData.id))
     try {
       const procRes = await adminAPI.getProcurementOrders({ order_no: selectedOrder.value?.order_no, page_size: 1 })
       const procList = procRes.data.data
@@ -648,6 +713,8 @@ const handleClose = () => {
   refundTab.value = 'wallet'
   resetRefundForm()
   resetManualRefundForm()
+  resetAfterSaleForm()
+  afterSaleTicket.value = null
 }
 
 const handleOpenFulfillment = (order: AdminOrder, parentId?: number) => {
@@ -1286,6 +1353,63 @@ watch(
               {{ manualRefundSuccess }}
             </div>
           </div>
+        </div>
+
+        <!-- After-Sale 售后 -->
+        <div v-if="afterSaleTicket || selectedOrder?.status === 'completed'" class="mt-4 rounded-xl border border-border bg-muted/20 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-foreground">{{ t('admin.orders.afterSaleTitle') }}</h3>
+            <span v-if="afterSaleTicket" class="text-xs">
+              <span :class="{
+                'text-yellow-600': afterSaleTicket.status === 'pending',
+                'text-emerald-600': afterSaleTicket.status === 'resolved',
+                'text-red-600': afterSaleTicket.status === 'rejected',
+              }">{{ afterSaleTicket.status === 'pending' ? t('admin.orders.afterSaleStatusPending') : afterSaleTicket.status === 'resolved' ? t('admin.orders.afterSaleStatusResolved') : t('admin.orders.afterSaleStatusRejected') }}</span>
+            </span>
+          </div>
+
+          <div v-if="afterSaleLoading" class="text-xs text-muted-foreground">{{ t('admin.orders.loading') }}...</div>
+
+          <div v-else-if="afterSaleTicket" class="space-y-2 text-xs">
+            <div class="grid grid-cols-2 gap-2">
+              <div><span class="text-muted-foreground">{{ t('admin.orders.afterSaleReason') }}：</span>{{ afterSaleTicket.reason }}</div>
+              <div><span class="text-muted-foreground">{{ t('admin.orders.afterSaleType') }}：</span>{{ afterSaleTicket.type }}</div>
+              <div v-if="afterSaleTicket.description" class="col-span-2"><span class="text-muted-foreground">{{ t('admin.orders.afterSaleDescription') }}：</span>{{ afterSaleTicket.description }}</div>
+              <div v-if="afterSaleTicket.admin_note" class="col-span-2"><span class="text-muted-foreground">{{ t('admin.orders.afterSaleAdminNote') }}：</span>{{ afterSaleTicket.admin_note }}</div>
+              <div v-if="afterSaleTicket.refund_amount"><span class="text-muted-foreground">{{ t('admin.orders.afterSaleRefundAmount') }}：</span><span class="font-semibold">{{ afterSaleTicket.refund_amount }} {{ afterSaleTicket.refund_currency }}</span></div>
+              <div><span class="text-muted-foreground">{{ t('admin.orders.afterSaleCreatedAt') }}：</span>{{ formatDate(afterSaleTicket.created_at) }}</div>
+              <div v-if="afterSaleTicket.resolved_at"><span class="text-muted-foreground">{{ t('admin.orders.afterSaleResolvedAt') }}：</span>{{ formatDate(afterSaleTicket.resolved_at) }}</div>
+            </div>
+
+            <!-- Pending actions -->
+            <div v-if="afterSaleTicket.status === 'pending'" class="mt-3 space-y-3 border-t border-border pt-3">
+              <div class="flex flex-wrap gap-2">
+                <Button size="sm" variant="destructive" :disabled="afterSaleSubmitting" @click="submitAfterSaleAction('reject')">{{ t('admin.orders.afterSaleReject') }}</Button>
+                <Button size="sm" variant="outline" :disabled="afterSaleSubmitting" @click="submitAfterSaleAction('resolve')">{{ t('admin.orders.afterSaleResolve') }}</Button>
+                <Button size="sm" variant="outline" :disabled="afterSaleSubmitting" @click="afterSaleForm.action = afterSaleForm.action === 'partial_refund' ? '' : 'partial_refund'">{{ t('admin.orders.afterSalePartialRefund') }}</Button>
+                <Button size="sm" :disabled="afterSaleSubmitting" @click="submitAfterSaleAction('full_refund')">{{ t('admin.orders.afterSaleFullRefund') }}</Button>
+              </div>
+
+              <div v-if="afterSaleForm.action === 'partial_refund'" class="space-y-2 rounded-lg border border-border bg-background p-3">
+                <div class="flex items-end gap-2">
+                  <div class="flex-1">
+                    <label class="mb-1 block text-xs font-medium text-foreground">{{ t('admin.orders.afterSaleRefundAmount') }} (USDT)</label>
+                    <Input v-model="afterSaleForm.refundAmount" type="text" placeholder="0.00" class="h-8 text-sm" />
+                  </div>
+                  <Button size="sm" :disabled="afterSaleSubmitting" @click="submitAfterSaleAction('partial_refund')">{{ t('admin.orders.confirm') }}</Button>
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-foreground">{{ t('admin.orders.afterSaleAdminNote') }}</label>
+                  <Input v-model="afterSaleForm.adminNote" type="text" :placeholder="t('admin.orders.afterSaleAdminNotePlaceholder')" class="h-8 text-sm" />
+                </div>
+              </div>
+
+              <div v-if="afterSaleError" class="text-xs text-red-600">{{ afterSaleError }}</div>
+              <div v-if="afterSaleSuccess" class="text-xs text-emerald-600">{{ afterSaleSuccess }}</div>
+            </div>
+          </div>
+
+          <div v-else class="text-xs text-muted-foreground">{{ t('admin.orders.afterSaleNone') }}</div>
         </div>
       </div>
     </DialogScrollContent>

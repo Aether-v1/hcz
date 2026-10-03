@@ -54,6 +54,7 @@ func registerStorefrontRoutes(
 	publicConfigHandler *publicconfigtransport.Handler,
 	userCartHandler *carttransport.UserHandler,
 	userOrderHandler *ordertransport.UserHandler,
+	afterSaleHandler *ordertransport.AfterSaleHandler,
 	guestOrderHandler *ordertransport.GuestHandler,
 	orderPreviewHandler *ordertransport.PreviewHandler,
 	orderCreateHandler *ordertransport.CreateHandler,
@@ -126,6 +127,7 @@ func registerStorefrontRoutes(
 		ordertransport.RegisterUserPaymentChannelsRoute(user, userOrderHandler)
 		ordertransport.RegisterUserReadRoutes(user, userOrderHandler)
 		ordertransport.RegisterUserCancelRoute(user, userOrderHandler)
+		ordertransport.RegisterUserAfterSaleRoutes(user, afterSaleHandler)
 		paymenttransport.RegisterUserWriteRoutes(user, paymentWriteHandler)
 		paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)
 		wallettransport.RegisterUserRoutes(user, userWalletHandler)

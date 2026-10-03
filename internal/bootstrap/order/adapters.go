@@ -280,6 +280,10 @@ func (a orderAdminOrderLookupAdapter) GetByID(id uint) (*orderdomain.Order, erro
 	return a.orders.GetByID(id)
 }
 
+func (a orderAdminOrderLookupAdapter) GetByIDAndUser(id, userID uint) (*orderdomain.Order, error) {
+	return a.orders.GetByIDAndUser(id, userID)
+}
+
 type orderAdminStatusEmailAdapter struct {
 	queue *queue.Client
 }
