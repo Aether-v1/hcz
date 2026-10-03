@@ -84,4 +84,3 @@ func isUploadValidationError(err error) bool {
 	var marker interface{ UploadValidationError() }
 	return errors.As(err, &marker)
 }
-

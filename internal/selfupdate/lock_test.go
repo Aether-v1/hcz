@@ -121,4 +121,3 @@ func TestManagerAcquireIsExclusive(t *testing.T) {
 	}
 	m.releaseBusy()
 }
-

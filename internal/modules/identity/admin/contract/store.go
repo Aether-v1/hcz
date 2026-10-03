@@ -20,4 +20,3 @@ type Store interface {
 	ClearTOTP(uint) error
 	UpdatePassword(uint, string) error
 }
-

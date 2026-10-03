@@ -107,4 +107,3 @@ func TestEpusdtAdapter_MapEpusdtError(t *testing.T) {
 		})
 	}
 }
-

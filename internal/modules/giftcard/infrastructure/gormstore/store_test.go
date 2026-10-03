@@ -83,4 +83,3 @@ func TestGiftCardStoreSoftDeleteHidesCardFromEveryReadAndWritePath(t *testing.T)
 		t.Fatalf("deleted card status changed to %s", raw.Status)
 	}
 }
-

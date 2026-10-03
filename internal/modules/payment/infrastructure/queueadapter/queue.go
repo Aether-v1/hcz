@@ -62,4 +62,3 @@ func (q *Queue) EnqueueWalletRechargeExpire(paymentID uint, delay time.Duration)
 	}
 	return q.client.EnqueueWalletRechargeExpire(queue.WalletRechargeExpirePayload{PaymentID: paymentID}, delay)
 }
-

@@ -81,4 +81,3 @@ type AdminWithdrawListFilter struct {
 	Status             string
 	Keyword            string
 }
-

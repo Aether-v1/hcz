@@ -299,4 +299,3 @@ func (r *ProductStore) ReleaseManualStock(productID uint, quantity int) (int64, 
 func (r *ProductStore) ConsumeManualStock(productID uint, quantity int) (int64, error) {
 	return gormutil.ConsumeManualStock(r.db, &productdomain.Product{}, productID, quantity)
 }
-

@@ -42,4 +42,3 @@ func PickFirstNonEmpty(values ...string) string {
 	}
 	return ""
 }
-

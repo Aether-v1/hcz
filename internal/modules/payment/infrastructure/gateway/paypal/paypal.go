@@ -723,4 +723,3 @@ func readArray(raw map[string]interface{}, path ...string) []interface{} {
 	}
 	return arr
 }
-

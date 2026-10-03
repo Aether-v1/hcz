@@ -38,4 +38,3 @@ func (r *Store) GetTopChannels(startAt, endAt time.Time, limit int) ([]dashboard
 	}
 	return rows, nil
 }
-

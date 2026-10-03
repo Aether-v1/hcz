@@ -42,4 +42,3 @@ type Transaction interface {
 	Payments() Store
 	PaymentChannels() ChannelStore
 }
-

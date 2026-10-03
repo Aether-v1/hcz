@@ -301,4 +301,3 @@ func (s *Service) ensureTelegramVirtualEmailState(user *userdomain.User) error {
 	user.UpdatedAt = time.Now()
 	return s.userRepo.Update(user)
 }
-

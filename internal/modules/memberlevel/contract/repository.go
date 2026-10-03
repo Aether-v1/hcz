@@ -44,4 +44,3 @@ type UserRepository interface {
 	UpdateMemberLevelIfCurrent(userID, currentLevelID, nextLevelID uint) (int64, error)
 	AssignDefaultMemberLevel(defaultLevelID uint) (int64, error)
 }
-

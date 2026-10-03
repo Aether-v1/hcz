@@ -247,4 +247,3 @@ func NewTelegramBroadcastTask(payload TelegramBroadcastPayload) (*asynq.Task, er
 	}
 	return asynq.NewTask(TaskTelegramBroadcast, body), nil
 }
-

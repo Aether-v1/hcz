@@ -366,4 +366,3 @@ func newBepusdtCreatePaymentServer(t *testing.T, wantTradeType string) *httptest
 		}`))
 	}))
 }
-

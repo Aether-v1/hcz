@@ -642,4 +642,3 @@ func isValidResellerSubdomainLabel(label string) bool {
 	}
 	return true
 }
-

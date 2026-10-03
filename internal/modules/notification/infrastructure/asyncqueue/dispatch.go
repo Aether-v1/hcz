@@ -26,4 +26,3 @@ func (c *Client) EnqueueNotificationDispatch(payload queue.NotificationDispatchP
 }
 
 var _ contract.DispatchQueue = (*Client)(nil)
-

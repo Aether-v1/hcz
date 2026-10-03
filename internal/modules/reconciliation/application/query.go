@@ -28,4 +28,3 @@ func (s *Service) ResolveItem(itemID, adminID uint, remark string) error {
 	item.Resolved, item.ResolvedBy, item.ResolvedAt, item.Remark = true, &adminID, &now, remark
 	return s.items.Update(item)
 }
-

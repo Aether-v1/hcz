@@ -55,4 +55,3 @@ func md5Hex(data []byte) string {
 	h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
 }
-

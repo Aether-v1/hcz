@@ -219,4 +219,3 @@ func (h *AdminHandler) CancelProcurementOrder(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"ok": true})
 }
-

@@ -439,4 +439,3 @@ func TestLatestPaymentRestoreExcludesLegacyFeeLinksAndSupersededRows(t *testing.
 		t.Fatalf("unexpected superseded payment: %+v", stored)
 	}
 }
-

@@ -8,4 +8,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.PUT("/coupons/:id", handler.UpdateCoupon)
 	admin.DELETE("/coupons/:id", handler.DeleteCoupon)
 }
-

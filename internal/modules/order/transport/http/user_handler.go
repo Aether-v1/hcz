@@ -433,4 +433,3 @@ func collectFulfillmentPayload(order *orderdomain.Order) string {
 	}
 	return strings.Join(parts, "\n")
 }
-

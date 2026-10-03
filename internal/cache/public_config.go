@@ -20,4 +20,3 @@ func DelAllPublicConfig(ctx context.Context) error {
 	}
 	return DelPattern(ctx, PublicConfigCachePrefix+":*")
 }
-

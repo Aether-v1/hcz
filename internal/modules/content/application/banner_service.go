@@ -238,4 +238,3 @@ func normalizeMultiLangJSON(raw map[string]interface{}) jsonmap.JSON {
 	}
 	return result
 }
-

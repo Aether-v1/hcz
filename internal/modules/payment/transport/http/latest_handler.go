@@ -154,4 +154,3 @@ func (h *LatestHandler) respondLatestPayment(c *gin.Context, order *orderdomain.
 
 	response.Success(c, paymentpresenter.NewLatestPaymentResp(payment, order.OrderNo))
 }
-

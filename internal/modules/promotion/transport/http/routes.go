@@ -12,4 +12,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.PUT("/promotions/:id", handler.UpdatePromotion)
 	admin.DELETE("/promotions/:id", handler.DeletePromotion)
 }
-

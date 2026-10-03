@@ -20,4 +20,3 @@ type Identity struct {
 func (Identity) TableName() string {
 	return "user_oauth_identities"
 }
-

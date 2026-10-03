@@ -8,4 +8,3 @@ var (
 	ErrUpdateFailed = errors.New("promotion update failed")
 	ErrDeleteFailed = errors.New("promotion delete failed")
 )
-

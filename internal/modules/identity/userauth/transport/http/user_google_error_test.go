@@ -739,4 +739,3 @@ func assertGoogleRedirectSecurityHeaders(t *testing.T, recorder *httptest.Respon
 		}
 	}
 }
-

@@ -551,4 +551,3 @@ func findProductSKU(items []productdomain.ProductSKU, skuID uint) *productdomain
 	}
 	return nil
 }
-

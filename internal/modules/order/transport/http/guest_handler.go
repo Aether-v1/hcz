@@ -144,4 +144,3 @@ func (h *GuestHandler) DownloadGuestFulfillment(c *gin.Context) {
 	}
 	respondFulfillmentDownload(c, order)
 }
-

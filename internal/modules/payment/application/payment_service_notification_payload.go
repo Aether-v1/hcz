@@ -190,4 +190,3 @@ func notificationPayloadString(payload map[string]interface{}, key string) strin
 	}
 	return strings.TrimSpace(fmt.Sprint(value))
 }
-

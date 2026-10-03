@@ -343,4 +343,3 @@ func mapOrderErrorToResponse(c *gin.Context, err error) {
 		errorResponse(c, http.StatusInternalServerError, "internal_error", "failed to create order")
 	}
 }
-

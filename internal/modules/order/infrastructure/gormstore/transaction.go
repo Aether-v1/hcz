@@ -120,4 +120,3 @@ func (s *Store) WithinTransaction(fn func(ordercontract.Transaction) error) erro
 		return fn(useTransaction(tx, s.guestCredentialSecret))
 	})
 }
-

@@ -100,4 +100,3 @@ func repeatLikeArgs(like string, count int) []interface{} {
 	}
 	return args
 }
-

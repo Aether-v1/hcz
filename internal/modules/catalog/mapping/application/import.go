@@ -610,4 +610,3 @@ func (s *Service) ListUpstreamCategories(connectionID uint) ([]upstream.Upstream
 
 	return result.Categories, result.Supported, nil
 }
-

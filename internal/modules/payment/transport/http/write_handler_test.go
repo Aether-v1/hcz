@@ -109,4 +109,3 @@ func assertErrorResponse(t *testing.T, recorder *httptest.ResponseRecorder, want
 		t.Fatalf("msg = %q, want %q; body=%s", body.Msg, wantMsg, recorder.Body.String())
 	}
 }
-

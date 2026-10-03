@@ -358,4 +358,3 @@ func splitTelegramName(name string) (string, string) {
 	}
 	return name, ""
 }
-

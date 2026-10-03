@@ -120,4 +120,3 @@ func TestPatchSMTPSettingKeepsPasswordWhenEmpty(t *testing.T) {
 func ptrString(value string) *string {
 	return &value
 }
-

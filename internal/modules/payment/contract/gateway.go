@@ -103,4 +103,3 @@ type GatewayCallbackVerifier interface {
 type GatewayRegistry interface {
 	Lookup(providerType, channelType string) (GatewayProvider, bool)
 }
-

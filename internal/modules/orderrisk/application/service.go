@@ -300,4 +300,3 @@ func (s *Service) isIPInBlacklist(clientIP string, blacklist []string) bool {
 	}
 	return false
 }
-

@@ -22,4 +22,3 @@ func TestMapInventoryAlertsPreservesLocalizedAndSKUFields(t *testing.T) {
 		t.Fatalf("unexpected mapping: %+v", items)
 	}
 }
-

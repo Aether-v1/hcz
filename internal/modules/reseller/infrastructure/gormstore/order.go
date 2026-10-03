@@ -251,4 +251,3 @@ func resellerOrderItemsFromParentOrChildren(order orderdomain.Order) []orderdoma
 	}
 	return items
 }
-

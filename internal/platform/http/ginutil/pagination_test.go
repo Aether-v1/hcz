@@ -153,4 +153,3 @@ func TestParsePaginationWithBoundsFallsBackWhenPageSizeOutOfRange(t *testing.T) 
 		})
 	}
 }
-

@@ -237,4 +237,3 @@ func mapDujiaoPayError(err error) error {
 		return err
 	}
 }
-

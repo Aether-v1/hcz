@@ -96,4 +96,3 @@ func normalizeReplyTo(raw string) string {
 	}
 	return addr.Address
 }
-

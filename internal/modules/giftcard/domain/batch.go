@@ -26,4 +26,3 @@ type GiftCardBatch struct {
 func (GiftCardBatch) TableName() string {
 	return "gift_card_batches"
 }
-

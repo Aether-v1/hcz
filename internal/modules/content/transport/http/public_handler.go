@@ -115,4 +115,3 @@ func (h *PublicHandler) GetPostCategories(c *gin.Context) {
 	}
 	response.Success(c, newPostCategoryDTOs(categories))
 }
-

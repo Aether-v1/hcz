@@ -132,4 +132,3 @@ func EncodeDashboardSetting(setting DashboardSetting) jsonmap.JSON {
 func NormalizeDashboardSettingJSON(raw jsonmap.JSON) jsonmap.JSON {
 	return EncodeDashboardSetting(DecodeDashboardSetting(raw, DefaultDashboardSetting()))
 }
-

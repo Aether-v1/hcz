@@ -86,4 +86,3 @@ func (s *Service) Dispatch(ctx context.Context, payload queue.NotificationDispat
 	}
 	return s.dispatchSingleEvent(ctx, setting, payload)
 }
-

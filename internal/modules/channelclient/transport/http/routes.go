@@ -12,4 +12,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.POST("/channel-clients/:id/reset-secret", handler.ResetChannelClientSecret)
 	admin.DELETE("/channel-clients/:id", handler.DeleteChannelClient)
 }
-

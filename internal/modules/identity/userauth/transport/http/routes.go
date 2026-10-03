@@ -140,4 +140,3 @@ func RegisterUserGoogleRoutes(user gin.IRoutes, handler *UserGoogleHandler, bind
 	user.POST("/me/google/redirect/exchange", handler.ExchangeGoogleRedirectBind)
 	user.DELETE("/me/google/unbind", handler.UnbindMyGoogle)
 }
-

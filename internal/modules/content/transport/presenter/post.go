@@ -76,4 +76,3 @@ func NewPostRespList(posts []contentdomain.Post) []PostResp {
 	}
 	return result
 }
-

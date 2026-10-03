@@ -125,4 +125,3 @@ func TestNormalizeTelegramBotConfigNormalizesHelpTexts(t *testing.T) {
 		t.Fatalf("expected trimmed help summary, got=%q", summary["zh-CN"])
 	}
 }
-

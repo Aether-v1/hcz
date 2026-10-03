@@ -21,4 +21,3 @@ type MemberLevelPrice struct {
 func (MemberLevelPrice) TableName() string {
 	return "member_level_prices"
 }
-

@@ -113,4 +113,3 @@ func DecodeGoogleAuthSetting(raw jsonmap.JSON, fallback GoogleAuthSetting) Googl
 func NormalizeGoogleAuthSettingJSON(raw jsonmap.JSON) jsonmap.JSON {
 	return EncodeGoogleAuthSetting(DecodeGoogleAuthSetting(raw, DefaultGoogleAuthSetting(config.GoogleAuthConfig{})))
 }
-

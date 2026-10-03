@@ -54,4 +54,3 @@ func mapFulfillmentTransportError(err error) error {
 	}
 	return err
 }
-

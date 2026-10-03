@@ -99,4 +99,3 @@ func marshalResult(value any) string {
 	encoded, _ := json.Marshal(value)
 	return string(encoded)
 }
-

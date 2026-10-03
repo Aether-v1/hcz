@@ -258,4 +258,3 @@ func TestMediaServiceDeleteKeepsBestEffortFileFailureSemantics(t *testing.T) {
 		t.Fatalf("soft-deleted media row should remain unscoped, count=%d", unscoped)
 	}
 }
-

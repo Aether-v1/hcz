@@ -222,4 +222,3 @@ func (h *AdminHandler) UpdateSiteConnectionStatus(c *gin.Context) {
 
 	response.Success(c, gin.H{"updated": true})
 }
-

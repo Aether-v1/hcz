@@ -18,4 +18,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 func RegisterChannelRoutes(channel gin.IRoutes, handler *ChannelHandler) {
 	channel.POST("/wallet/gift-card/redeem", handler.Redeem)
 }
-

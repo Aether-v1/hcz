@@ -28,4 +28,3 @@ func IsStatusConsistent(localStatus, upstreamStatus string) bool {
 		return localStatus == upstreamStatus
 	}
 }
-

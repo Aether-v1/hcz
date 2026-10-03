@@ -60,4 +60,3 @@ func (r *LogStore) ListAdmin(filter contract.LogListFilter) ([]domain.Notificati
 }
 
 var _ contract.LogRepository = (*LogStore)(nil)
-

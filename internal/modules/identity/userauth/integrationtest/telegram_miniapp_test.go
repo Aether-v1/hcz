@@ -102,4 +102,3 @@ func TestLoginWithTelegramMiniAppCreatesUserIdentityAndToken(t *testing.T) {
 		t.Fatalf("identity username mismatch: %s", identity.Username)
 	}
 }
-

@@ -26,4 +26,3 @@ type UpsertItemInput struct {
 	Quantity        int
 	FulfillmentType string
 }
-

@@ -1149,4 +1149,3 @@ func normalizeLocale(locale string) string {
 		return LocaleZH
 	}
 }
-

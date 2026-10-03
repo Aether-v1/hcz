@@ -326,4 +326,3 @@ func ValidGoogleRedirectHandle(value string) bool {
 		len(decoded) == 32 &&
 		base64.RawURLEncoding.EncodeToString(decoded) == value
 }
-

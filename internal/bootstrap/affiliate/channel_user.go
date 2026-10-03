@@ -26,4 +26,3 @@ func (a affiliateChannelUserAdapter) ProvisionUserID(identity affiliatetransport
 	}
 	return user.ID, nil
 }
-

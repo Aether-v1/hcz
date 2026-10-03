@@ -32,4 +32,3 @@ func mapInventoryAlerts(items []dashboardcontract.InventoryAlertRow) []inventory
 	}
 	return result
 }
-

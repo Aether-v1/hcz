@@ -627,4 +627,3 @@ func NewResellerDashboardResp(opened bool, profile *resellerdomain.Profile, bala
 		WithdrawDisabledReason: withdrawDisabledReason,
 	}
 }
-

@@ -325,4 +325,3 @@ func validateWalletChannelEligibility(channel paymentdomain.PaymentChannel, user
 	}
 	return nil
 }
-

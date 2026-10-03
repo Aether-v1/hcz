@@ -119,4 +119,3 @@ func resolvePaymentOrderAlertTypeKey(data map[string]interface{}) string {
 	}
 	return ""
 }
-

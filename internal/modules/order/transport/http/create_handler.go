@@ -339,4 +339,3 @@ func requestSchemeFromContext(c *gin.Context) string {
 	}
 	return "http"
 }
-

@@ -156,4 +156,3 @@ func TestProductServiceCreateRollsBackProductAndSKUWhenWholesaleValidationFails(
 		t.Fatalf("transaction must roll back default SKU, got %d rows", skuCount)
 	}
 }
-

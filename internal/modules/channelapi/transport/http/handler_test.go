@@ -494,4 +494,3 @@ func TestBuildChannelPaymentResponse_USDTQRExposesWalletFields(t *testing.T) {
 		t.Fatalf("interaction_mode: got %v want qr", got)
 	}
 }
-

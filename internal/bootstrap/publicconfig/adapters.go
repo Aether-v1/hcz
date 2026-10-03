@@ -143,4 +143,3 @@ type publicConfigResellerOverlayAdapter struct {
 func (a publicConfigResellerOverlayAdapter) ApplyPublicConfigOverlay(ctx context.Context, tenant resellercontract.TenantContext, base map[string]interface{}) (map[string]interface{}, error) {
 	return a.svc.ApplyPublicConfigOverlay(ctx, tenant, base)
 }
-

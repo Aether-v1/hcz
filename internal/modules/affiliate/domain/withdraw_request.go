@@ -30,4 +30,3 @@ type WithdrawRequest struct {
 func (WithdrawRequest) TableName() string {
 	return "affiliate_withdraw_requests"
 }
-

@@ -45,4 +45,3 @@ func RefreshBalanceAccount(store resellercontract.BalanceAccountStore, resellerI
 	account.UpdatedAt = now
 	return store.UpdateBalanceAccount(account)
 }
-

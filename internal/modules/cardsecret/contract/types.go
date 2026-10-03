@@ -26,4 +26,3 @@ type SKUStockCount struct {
 	Status    string `gorm:"column:status"`
 	Total     int64  `gorm:"column:total"`
 }
-

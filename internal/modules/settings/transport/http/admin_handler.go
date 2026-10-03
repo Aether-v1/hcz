@@ -85,4 +85,3 @@ func (h *AdminHandler) Update(c *gin.Context) {
 	}
 	response.Success(c, result.Value)
 }
-

@@ -29,4 +29,3 @@ type ApiCredential struct {
 func (ApiCredential) TableName() string {
 	return "api_credentials"
 }
-

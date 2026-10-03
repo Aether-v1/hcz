@@ -163,4 +163,3 @@ func (r *Store) DecrementUsedCount(id uint, delta int) error {
 }
 
 var _ couponcontract.Repository = (*Store)(nil)
-

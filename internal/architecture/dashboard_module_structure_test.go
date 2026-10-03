@@ -123,4 +123,3 @@ func assertDirectoryGoFileBudget(t *testing.T, directory string, maximum int) {
 		t.Errorf("%s exceeds Go file budget %d: %d files (%v)", directory, maximum, len(files), files)
 	}
 }
-

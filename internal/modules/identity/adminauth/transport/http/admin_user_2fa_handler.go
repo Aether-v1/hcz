@@ -68,4 +68,3 @@ func (h *AdminUser2FAHandler) ResetUser2FA(c *gin.Context) {
 
 	response.Success(c, nil)
 }
-

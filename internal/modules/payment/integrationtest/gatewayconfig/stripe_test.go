@@ -55,4 +55,3 @@ func TestValidateChannelStripeInvalidInteractionMode(t *testing.T) {
 		t.Fatalf("expected invalid interaction mode error")
 	}
 }
-

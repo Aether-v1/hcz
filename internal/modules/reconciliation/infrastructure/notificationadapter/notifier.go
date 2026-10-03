@@ -34,4 +34,3 @@ func (n *Notifier) NotifyMismatch(job *reconciliationdomain.Job) error {
 		},
 	})
 }
-

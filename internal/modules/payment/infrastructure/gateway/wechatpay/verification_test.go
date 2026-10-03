@@ -428,4 +428,3 @@ func buildSignedWechatPayNotification(
 		"Wechatpay-Signature-Type": "WECHATPAY2-SHA256-RSA2048",
 	}, body
 }
-

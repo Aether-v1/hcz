@@ -106,4 +106,3 @@ func TestAuthzServiceRecordValidatesAndNormalizes(t *testing.T) {
 		t.Fatalf("expected method and request id normalization: %#v", repo.created)
 	}
 }
-

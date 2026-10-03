@@ -94,4 +94,3 @@ func (s *Service) CancelManual(id uint) error {
 	)
 	return nil
 }
-

@@ -31,4 +31,3 @@ type Banner struct {
 func (Banner) TableName() string {
 	return "banners"
 }
-

@@ -336,4 +336,3 @@ func buildTestConfig(gatewayURL string) *Config {
 		SignType:        "RSA2",
 	}
 }
-

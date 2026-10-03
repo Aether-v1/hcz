@@ -68,4 +68,3 @@ func TestApplicationTransactionsDoNotCallGORMMethods(t *testing.T) {
 		t.Fatalf("inspect application transactions: %v", err)
 	}
 }
-

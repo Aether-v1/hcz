@@ -32,4 +32,3 @@ type SettingsProvider interface {
 	GetUpstreamSyncConfig(fallbackInterval string) (settingsintegration.UpstreamSyncConfig, error)
 	GetUpstreamSyncInterval(fallbackInterval string) (time.Duration, error)
 }
-

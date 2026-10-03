@@ -166,4 +166,3 @@ func TestSettingRegistryUsesModuleOwnedTypedJSONNormalizers(t *testing.T) {
 		}
 	}
 }
-

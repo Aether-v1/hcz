@@ -99,4 +99,3 @@ func (s *Service) calculateUnitPrice(base money.Amount, promotion *promotiondoma
 		return money.Amount{}, promotioncontract.ErrInvalid
 	}
 }
-

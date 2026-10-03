@@ -27,4 +27,3 @@ type Promotion struct {
 func (Promotion) TableName() string {
 	return "promotions"
 }
-

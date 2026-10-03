@@ -116,4 +116,3 @@ func createProductTestPaymentChannel(t *testing.T, db *gorm.DB, name string, act
 	}
 	return channel
 }
-

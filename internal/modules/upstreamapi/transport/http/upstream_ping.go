@@ -62,4 +62,3 @@ func (h *Handler) Ping(c *gin.Context) {
 		"member_level":     memberLevel,
 	})
 }
-

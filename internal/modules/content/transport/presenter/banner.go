@@ -42,4 +42,3 @@ func NewBannerRespList(banners []contentdomain.Banner) []BannerResp {
 	}
 	return result
 }
-

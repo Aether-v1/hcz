@@ -196,4 +196,3 @@ func paymentLogger(kv ...interface{}) *zap.SugaredLogger {
 	}
 	return logger.SW(kv...)
 }
-

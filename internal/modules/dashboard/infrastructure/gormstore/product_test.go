@@ -187,4 +187,3 @@ func TestGetTopProductsGroupsBySKU(t *testing.T) {
 		t.Fatalf("second row want skuA got %+v", rows[1])
 	}
 }
-

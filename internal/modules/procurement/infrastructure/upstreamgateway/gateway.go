@@ -93,4 +93,3 @@ func fromUpstreamFulfillment(value *upstream.UpstreamFulfillment) *procurementco
 		DeliveryData: value.DeliveryData, DeliveredAt: value.DeliveredAt,
 	}
 }
-

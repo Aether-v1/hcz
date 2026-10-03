@@ -253,4 +253,3 @@ func expandPublicCategoryIDs(categoryRepo CategoryRepository, categoryID string)
 	}
 	return categoryIDs, nil
 }
-

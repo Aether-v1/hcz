@@ -50,4 +50,3 @@ func TestClientMapsRejectedToken(t *testing.T) {
 		t.Fatalf("rejected token error got %v", err)
 	}
 }
-

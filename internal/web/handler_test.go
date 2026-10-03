@@ -397,4 +397,3 @@ func TestCacheControlHeaders(t *testing.T) {
 		})
 	}
 }
-

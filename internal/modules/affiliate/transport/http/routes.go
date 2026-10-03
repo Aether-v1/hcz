@@ -40,4 +40,3 @@ func RegisterChannelRoutes(channel gin.IRoutes, handler *ChannelHandler) {
 	channel.GET("/affiliate/withdraws", handler.ListAffiliateWithdraws)
 	channel.POST("/affiliate/withdraws", handler.ApplyAffiliateWithdraw)
 }
-

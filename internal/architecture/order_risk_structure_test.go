@@ -54,4 +54,3 @@ func TestOrderRiskUsesCompleteVerticalLayout(t *testing.T) {
 		}
 	}
 }
-

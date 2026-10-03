@@ -25,4 +25,3 @@ func RegisterRoutes(channel gin.IRoutes, handler *Handler) {
 	channel.GET("/payments/:id", handler.GetPaymentDetail)
 	channel.POST("/payments", handler.CreatePayment)
 }
-

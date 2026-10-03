@@ -283,4 +283,3 @@ func (s *Service) fillUpstreamRefundRecordsForProcurementOrders(orders []procure
 		s.fillUpstreamRefundRecordsForProcurementOrder(&orders[i])
 	}
 }
-

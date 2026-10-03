@@ -189,4 +189,3 @@ func TestWebhookEventHelpersCaptureAmountFallback(t *testing.T) {
 		t.Fatalf("unexpected fallback amount info: %s %s", value, currency)
 	}
 }
-

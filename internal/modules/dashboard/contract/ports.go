@@ -116,4 +116,3 @@ type ChannelRankingRow struct {
 	FailedCount   int64
 	SuccessAmount float64
 }
-

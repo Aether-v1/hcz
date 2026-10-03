@@ -38,4 +38,3 @@ type RefundRecordListFilter struct {
 	CreatedFrom    *time.Time
 	CreatedTo      *time.Time
 }
-

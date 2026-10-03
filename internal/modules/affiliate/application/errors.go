@@ -15,4 +15,3 @@ var (
 	// ErrUserDisabled 开通推广时目标用户已禁用（与用户域共用同一文案哨兵）。
 	ErrUserDisabled = errors.New("user disabled")
 )
-

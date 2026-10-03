@@ -147,4 +147,3 @@ func normalizeAffiliateWithdrawChannels(channels []string) []string {
 	}
 	return result
 }
-

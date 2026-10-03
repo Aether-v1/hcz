@@ -104,4 +104,3 @@ func (s *adminMediaUseCasesStub) Delete(context.Context, uint) error         { r
 func (s *adminMediaUseCasesStub) BatchDelete(context.Context, []uint) (int, []uint) {
 	return 0, []uint{}
 }
-

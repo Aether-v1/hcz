@@ -32,4 +32,3 @@ func (handler *PublicHandler) List(c *gin.Context) {
 	}
 	response.Success(c, categorypresenter.List(categories))
 }
-

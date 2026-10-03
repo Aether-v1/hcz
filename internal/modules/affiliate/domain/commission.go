@@ -34,4 +34,3 @@ type Commission struct {
 func (Commission) TableName() string {
 	return "affiliate_commissions"
 }
-

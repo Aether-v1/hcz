@@ -53,4 +53,3 @@ func TestTenantContextMainAndReseller(t *testing.T) {
 		t.Fatalf("reseller user id mismatch: %d", resellerCtx.ResellerUserID)
 	}
 }
-

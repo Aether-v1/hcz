@@ -763,4 +763,3 @@ func (s *Service) syncProductFromData(mapping *mappingdomain.Mapping, conn *site
 	mapping.LastSyncedAt = now
 	_ = s.mappings.Update(mapping)
 }
-

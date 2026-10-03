@@ -295,4 +295,3 @@ func DecodeTelegramAuthSetting(raw jsonmap.JSON, fallback TelegramAuthSetting) T
 func NormalizeTelegramAuthSettingJSON(raw jsonmap.JSON) jsonmap.JSON {
 	return EncodeTelegramAuthSetting(DecodeTelegramAuthSetting(raw, DefaultTelegramAuthSetting(config.TelegramAuthConfig{})))
 }
-

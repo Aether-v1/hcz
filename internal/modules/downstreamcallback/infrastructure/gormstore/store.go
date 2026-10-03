@@ -100,4 +100,3 @@ func (s *Store) ListByCredentialID(credentialID uint, filter downstreamcontract.
 	}
 	return refs, total, nil
 }
-

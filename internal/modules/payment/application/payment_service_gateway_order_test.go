@@ -1408,4 +1408,3 @@ func TestSupersededPaymentLateSuccessIsRecordedWithoutDuplicateFulfillment(t *te
 		t.Fatalf("duplicate payment was not flagged: %+v", duplicate)
 	}
 }
-

@@ -316,4 +316,3 @@ func (h *AdminHandler) Export(c *gin.Context) {
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Data(http.StatusOK, contentType, content)
 }
-

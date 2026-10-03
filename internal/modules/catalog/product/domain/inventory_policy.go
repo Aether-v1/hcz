@@ -53,4 +53,3 @@ func ShouldEnforceManualSKUStock(product *Product, sku *ProductSKU) bool {
 	}
 	return hasMultipleActiveSKUs(product)
 }
-

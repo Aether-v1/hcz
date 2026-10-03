@@ -213,4 +213,3 @@ func TestUserLoginStep1RejectsInvalidCredentials(t *testing.T) {
 		t.Fatalf("expected invalid creds for missing user, got %v", err)
 	}
 }
-

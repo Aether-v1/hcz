@@ -63,4 +63,3 @@ func (tx *transaction) CreditWallet(input giftcardcontract.WalletCreditInput) (*
 
 var _ giftcardcontract.RedeemTransactionRunner = (*Runner)(nil)
 var _ giftcardcontract.RedeemTransaction = (*transaction)(nil)
-

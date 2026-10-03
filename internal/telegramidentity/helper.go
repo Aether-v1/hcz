@@ -44,4 +44,3 @@ func ResolveDisplayName(providerUserID, username, firstName, lastName string) st
 	}
 	return defaultDisplayName
 }
-

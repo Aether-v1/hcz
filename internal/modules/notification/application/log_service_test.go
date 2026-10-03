@@ -248,4 +248,3 @@ func TestServiceDispatchSingleEventSendsFeishuAndRecordsEachRecipient(t *testing
 		t.Fatalf("unexpected feishu log statuses: %#v", statuses)
 	}
 }
-

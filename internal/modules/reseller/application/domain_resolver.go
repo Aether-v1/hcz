@@ -88,4 +88,3 @@ func (r *DomainResolver) ResolveHost(ctx context.Context, rawHost string) (resel
 	_ = cache.SetResellerDomain(ctx, host, value)
 	return resellercontract.ResellerTenantContext(host, domain.ResellerID, domain.Profile.UserID, primaryDomain), nil
 }
-

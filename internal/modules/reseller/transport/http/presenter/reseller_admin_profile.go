@@ -117,4 +117,3 @@ func NewAdminResellerProfileDetailResp(
 		RecentWithdraws:     NewResellerWithdrawRespList(recentWithdraws),
 	}
 }
-

@@ -358,4 +358,3 @@ func TestCheckOrderAllowed_GuestReturnsExpiryOverride(t *testing.T) {
 		t.Fatalf("expected guest expiry 8, got %d", result.PaymentExpireMinutes)
 	}
 }
-

@@ -347,4 +347,3 @@ func isResellerOrderContext(tenant resellercontract.TenantContext) bool {
 func resellerSnapshotDomain(tenant resellercontract.TenantContext) string {
 	return resellercontract.SnapshotDomain(tenant)
 }
-

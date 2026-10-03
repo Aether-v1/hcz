@@ -84,4 +84,3 @@ func TestStoreListPagination(t *testing.T) {
 		t.Fatalf("soft-deleted broadcast must be excluded: %#v", deletedRow)
 	}
 }
-

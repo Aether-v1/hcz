@@ -46,4 +46,3 @@ func NormalizeRiskIP(raw string) string {
 	}
 	return network.String() + "/64"
 }
-

@@ -239,4 +239,3 @@ func (fr *FulfillmentResp) truncatePayload(maxLines int) {
 		fr.Payload = strings.Join(lines[:maxLines], "\n")
 	}
 }
-

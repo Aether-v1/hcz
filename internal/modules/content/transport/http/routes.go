@@ -37,4 +37,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.PUT("/media/:id", handler.UpdateMedia)
 	admin.DELETE("/media/:id", handler.DeleteMedia)
 }
-

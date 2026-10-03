@@ -120,4 +120,3 @@ func TestInitDefaultAdminLeavesOtherExistingAdminsUnchanged(t *testing.T) {
 		t.Fatalf("count = %d, want 1", count)
 	}
 }
-

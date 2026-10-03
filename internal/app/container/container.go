@@ -193,4 +193,3 @@ type Container struct {
 
 	PaymentProviderRegistry *paymentprovider.Registry
 }
-

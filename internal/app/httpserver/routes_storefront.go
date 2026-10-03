@@ -161,4 +161,3 @@ func registerPaymentCallbackRoutes(apiV1 *gin.RouterGroup, callbackHandler *paym
 	paymentcallbacktransport.RegisterRoutes(callbacks, callbackHandler)
 	paymenttransport.RegisterWebhookRoutes(callbacks, webhookHandler)
 }
-

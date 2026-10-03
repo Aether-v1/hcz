@@ -173,4 +173,3 @@ func (h *AdminSiteConfigHandler) recordAudit(c *gin.Context, action, object, met
 		Detail:           detail,
 	})
 }
-

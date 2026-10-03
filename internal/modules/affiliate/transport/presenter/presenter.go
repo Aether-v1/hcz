@@ -95,4 +95,3 @@ func NewWithdrawList(withdraws []affiliatedomain.WithdrawRequest) []Withdraw {
 	}
 	return result
 }
-

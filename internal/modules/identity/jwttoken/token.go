@@ -16,4 +16,3 @@ func IsAccessType(tokenType string) bool {
 func NewHS256Parser() *jwt.Parser {
 	return jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 }
-

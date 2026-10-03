@@ -93,4 +93,3 @@ func isGiftCardExpired(expiresAt *time.Time, now time.Time) bool {
 	}
 	return expiresAt.Before(now)
 }
-

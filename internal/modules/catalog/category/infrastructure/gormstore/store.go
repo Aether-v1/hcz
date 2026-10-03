@@ -149,4 +149,3 @@ func (r *CategoryStore) CountActiveProducts(categoryID string) (int64, error) {
 	}
 	return count, nil
 }
-

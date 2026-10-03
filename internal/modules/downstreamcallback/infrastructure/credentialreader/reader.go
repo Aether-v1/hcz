@@ -35,4 +35,3 @@ func (r *Reader) GetByID(id uint) (*downstreamcontract.Credential, error) {
 		APISecret: credential.ApiSecret,
 	}, nil
 }
-

@@ -28,4 +28,3 @@ type Transaction struct {
 func (Transaction) TableName() string {
 	return "wallet_transactions"
 }
-

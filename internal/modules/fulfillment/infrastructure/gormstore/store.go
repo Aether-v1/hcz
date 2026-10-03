@@ -49,4 +49,3 @@ func (r *Store) FindByOrderIDForUpdate(orderID uint) (*fulfillmentdomain.Fulfill
 	}
 	return &existing, true, nil
 }
-

@@ -94,4 +94,3 @@ func (r *Store) ListWithdrawRequests(filter resellercontract.WithdrawListFilter)
 	}
 	return rows, total, nil
 }
-

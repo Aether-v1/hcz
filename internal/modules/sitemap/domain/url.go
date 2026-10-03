@@ -7,4 +7,3 @@ type URL struct {
 	ChangeFrequency string
 	Priority        string
 }
-

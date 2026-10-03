@@ -175,4 +175,3 @@ func TestRecoveryMiddleware_PanicValueTypes(t *testing.T) {
 		})
 	}
 }
-

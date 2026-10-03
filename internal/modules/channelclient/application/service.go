@@ -421,4 +421,3 @@ func (s *Service) GetActiveEndpoint(channelType string) (*ActiveEndpoint, error)
 		ChannelSecret: secret,
 	}, nil
 }
-

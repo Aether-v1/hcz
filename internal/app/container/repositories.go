@@ -84,4 +84,3 @@ func (c *Container) initRepositories() error {
 	c.MemberLevelUserRepo = memberlevelgormstore.NewUserStore(db)
 	return nil
 }
-

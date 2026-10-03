@@ -669,4 +669,3 @@ func collectRefundItems(order *orderdomain.Order) []orderdomain.OrderItem {
 	}
 	return result
 }
-

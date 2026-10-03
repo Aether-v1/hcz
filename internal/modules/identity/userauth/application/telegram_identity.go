@@ -172,4 +172,3 @@ func applyTelegramIdentity(verified *telegramauthapp.IdentityVerified, identity 
 	}
 	return changed
 }
-

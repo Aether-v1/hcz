@@ -67,4 +67,3 @@ func Decrypt(key []byte, ciphertextHex string) (string, error) {
 
 	return string(plaintext), nil
 }
-

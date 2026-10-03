@@ -479,4 +479,3 @@ func NormalizeObject(object string) string {
 func NormalizeAction(action string) string {
 	return strings.ToUpper(strings.TrimSpace(action))
 }
-

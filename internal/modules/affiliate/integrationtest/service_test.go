@@ -206,4 +206,3 @@ func createAffiliateTestClick(t *testing.T, db *gorm.DB, profileID uint, visitor
 		t.Fatalf("create affiliate click failed: %v", err)
 	}
 }
-

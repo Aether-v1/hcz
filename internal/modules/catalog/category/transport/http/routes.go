@@ -20,4 +20,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminCategoryHandler) {
 	admin.PATCH("/categories/:id/active", handler.PatchCategoryActive)
 	admin.DELETE("/categories/:id", handler.DeleteCategory)
 }
-

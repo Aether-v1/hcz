@@ -192,4 +192,3 @@ func TestStoreSoftDeleteExcludesUserFromReadsListsAndMutations(t *testing.T) {
 		t.Fatalf("deleted user was mutated: %#v", persisted)
 	}
 }
-

@@ -105,4 +105,3 @@ func (h *AdminHandler) AcknowledgeCompliance(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"already_acknowledged": false})
 }
-

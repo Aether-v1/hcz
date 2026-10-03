@@ -161,4 +161,3 @@ func TestParseQueryBoolDefaultsMissingAndBlankToFalse(t *testing.T) {
 		})
 	}
 }
-

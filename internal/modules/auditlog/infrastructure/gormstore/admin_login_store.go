@@ -54,4 +54,3 @@ func (r *AdminLoginStore) List(filter contract.AdminLoginFilter) ([]domain.Admin
 }
 
 var _ contract.AdminLoginRepository = (*AdminLoginStore)(nil)
-

@@ -42,4 +42,3 @@ func TestLogStoreListAdminFiltersStatusChannelAndTestFlag(t *testing.T) {
 		t.Fatalf("unexpected result total=%d rows=%#v", total, rows)
 	}
 }
-

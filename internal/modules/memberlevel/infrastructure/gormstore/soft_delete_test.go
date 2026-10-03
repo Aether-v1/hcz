@@ -123,4 +123,3 @@ func TestPriceStoreSoftDeleteHidesPriceFromEveryReadPath(t *testing.T) {
 		t.Fatal("deleted price must retain a non-nil deleted_at marker")
 	}
 }
-

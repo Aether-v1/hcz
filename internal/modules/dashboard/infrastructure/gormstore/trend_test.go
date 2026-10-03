@@ -109,4 +109,3 @@ func TestTrendQueriesBucketByRequestedTimezone(t *testing.T) {
 		t.Fatalf("unexpected second payment trend row: %+v", paymentRows[1])
 	}
 }
-

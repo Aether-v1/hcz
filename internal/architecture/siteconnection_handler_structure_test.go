@@ -38,4 +38,3 @@ func TestSiteConnectionOwnsCompleteVerticalSlice(t *testing.T) {
 	assertDirectoryGoFileBudget(t, storeRoot, 2)
 	assertDirectoryGoFileBudget(t, transportRoot, 3)
 }
-

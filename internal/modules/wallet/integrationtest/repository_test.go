@@ -284,4 +284,3 @@ func TestWalletStoreExcludesSoftDeletedRecords(t *testing.T) {
 		t.Fatalf("soft-deleted recharge leaked: %+v", foundRecharge)
 	}
 }
-

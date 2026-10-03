@@ -25,4 +25,3 @@ func TestAffiliateApplicationOwnsUseCasesAndContracts(t *testing.T) {
 	assertFileDeclaresTypes(t, filepath.Join(transportRoot, "channel_handler.go"), []string{"ChannelHandler"})
 	assertDirectoryGoFileBudget(t, transportRoot, 4)
 }
-

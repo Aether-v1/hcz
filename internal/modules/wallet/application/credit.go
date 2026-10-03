@@ -162,4 +162,3 @@ func ensureAccountForUpdate(repository walletcontract.Repository, userID uint, n
 	}
 	return account, nil
 }
-

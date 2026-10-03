@@ -26,4 +26,3 @@ type ChannelListFilter struct {
 	ChannelType  string
 	ActiveOnly   bool
 }
-

@@ -95,4 +95,3 @@ func toString(value interface{}) string {
 	}
 	return strings.TrimSpace(fmt.Sprintf("%v", value))
 }
-

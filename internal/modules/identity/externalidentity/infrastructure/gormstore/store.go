@@ -148,4 +148,3 @@ func (r *Store) DeleteByID(id uint) error {
 	}
 	return r.db.Delete(&externalidentitydomain.Identity{}, id).Error
 }
-

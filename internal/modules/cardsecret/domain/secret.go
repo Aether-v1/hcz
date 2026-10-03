@@ -32,4 +32,3 @@ type Secret struct {
 func (Secret) TableName() string {
 	return "card_secrets"
 }
-

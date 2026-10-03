@@ -218,4 +218,3 @@ func canApplyWalletRechargeCallback(paymentStatus string, rechargeStatus string,
 	}
 	return true
 }
-

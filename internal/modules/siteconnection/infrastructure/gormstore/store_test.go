@@ -79,4 +79,3 @@ func TestStoreDeleteHidesConnectionFromEveryReadPath(t *testing.T) {
 		t.Fatal("delete must persist deleted_at instead of physically removing the row")
 	}
 }
-

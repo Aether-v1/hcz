@@ -42,4 +42,3 @@ func TestNewPaymentProviderRegistryRegistersEveryAdapter(t *testing.T) {
 		t.Fatal("official provider must not fall back across channel types")
 	}
 }
-

@@ -63,4 +63,3 @@ func (s *HTTPService) Stop(ctx context.Context) error {
 	}
 	return s.server.Shutdown(ctx)
 }
-

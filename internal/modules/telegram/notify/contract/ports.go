@@ -16,4 +16,3 @@ type SettingReader interface {
 type Sender interface {
 	SendWithBotToken(ctx context.Context, botToken string, options SendOptions) error
 }
-

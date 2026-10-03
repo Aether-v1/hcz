@@ -20,4 +20,3 @@ func NewChannelHandler(c *container.Container) *affiliatetransport.ChannelHandle
 		c.SettingService,
 	)
 }
-

@@ -12,4 +12,3 @@ type Store interface {
 	MarkVerified(id uint, verifiedAt time.Time) error
 	IncrementAttempt(id uint) error
 }
-

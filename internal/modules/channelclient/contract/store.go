@@ -16,4 +16,3 @@ type Store interface {
 	UpdateLastUsed(uint, time.Time) error
 	Delete(uint, time.Time) error
 }
-

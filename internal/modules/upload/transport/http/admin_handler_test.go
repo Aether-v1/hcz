@@ -208,4 +208,3 @@ func TestIsUploadValidationErrorRecognizesMarker(t *testing.T) {
 		t.Fatal("unexpected match for plain error")
 	}
 }
-

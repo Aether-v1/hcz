@@ -12,4 +12,3 @@ var (
 	ErrInvalid       = errors.New("captcha invalid")
 	ErrVerifyFailed  = errors.New("captcha verify failed")
 )
-

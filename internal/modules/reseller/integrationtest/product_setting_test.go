@@ -285,4 +285,3 @@ func TestResellerProductSettingServiceRequiresActiveProfile(t *testing.T) {
 		t.Fatalf("expected inactive profile, got %v product=%d", err, product.ID)
 	}
 }
-

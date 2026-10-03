@@ -39,4 +39,3 @@ func NewService(options Options) *Service {
 		botNotifier: options.BotNotifier, notifications: options.Notifications,
 	}
 }
-

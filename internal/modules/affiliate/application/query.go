@@ -215,4 +215,3 @@ func calcAffiliateConversion(validOrders, clicks int64) float64 {
 	value := (float64(validOrders) / float64(clicks)) * 100
 	return math.Round(value*100) / 100
 }
-

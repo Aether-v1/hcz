@@ -71,4 +71,3 @@ func (h *AdminHandler) PostAdImpression(c *gin.Context) {
 
 	response.Success(c, nil)
 }
-

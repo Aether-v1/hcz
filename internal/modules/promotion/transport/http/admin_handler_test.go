@@ -89,4 +89,3 @@ func TestBuildCreatePromotionInputFromRequestRejectsInvalidTime(t *testing.T) {
 		t.Fatalf("expected invalid time error")
 	}
 }
-

@@ -179,4 +179,3 @@ func TestStoreWithinTransactionRollsBack(t *testing.T) {
 		t.Fatalf("transaction committed %d profile rows", count)
 	}
 }
-

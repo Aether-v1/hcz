@@ -64,4 +64,3 @@ func TestGoogleAuthHandlerUpdateAppliesRuntimeSetting(t *testing.T) {
 		t.Fatalf("response body = %s", recorder.Body.String())
 	}
 }
-

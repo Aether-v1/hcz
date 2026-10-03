@@ -101,4 +101,3 @@ func TestTenantReturnPathDefaults(t *testing.T) {
 		t.Fatalf("root path want /pay got %q", got)
 	}
 }
-

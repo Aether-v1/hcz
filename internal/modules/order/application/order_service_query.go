@@ -562,4 +562,3 @@ func (s *OrderService) GetOrderForAdmin(orderID uint) (*orderdomain.Order, error
 	FillOrderItemsFromChildren(order)
 	return order, nil
 }
-

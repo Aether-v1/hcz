@@ -8,4 +8,3 @@ type Queue interface {
 	EnqueueTimeoutCancel(orderID uint, delay time.Duration) error
 	EnqueueStatusEmail(orderID uint, status string) error
 }
-

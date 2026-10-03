@@ -32,4 +32,3 @@ func (a *Adapter) EnqueueCallback(refID uint, delay time.Duration) error {
 		DownstreamOrderRefID: refID,
 	}, options...)
 }
-

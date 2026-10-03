@@ -107,4 +107,3 @@ func TestPaymentCallbackTransportDoesNotLogRawAuthenticationMaterial(t *testing.
 		}
 	}
 }
-

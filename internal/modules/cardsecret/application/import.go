@@ -234,4 +234,3 @@ func generateBatchNo() string {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("BATCH-%s-%04d", now, rng.Intn(10000))
 }
-

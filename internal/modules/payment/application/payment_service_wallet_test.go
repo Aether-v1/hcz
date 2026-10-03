@@ -1416,4 +1416,3 @@ func TestStripeExchangeRateUnderpaidCallbackRejected(t *testing.T) {
 		t.Fatalf("rejected stripe gbp payment must not fulfill order, got status=%s paid_at=%v", reloadedOrder.Status, reloadedOrder.PaidAt)
 	}
 }
-

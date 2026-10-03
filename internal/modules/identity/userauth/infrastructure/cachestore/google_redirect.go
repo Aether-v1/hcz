@@ -83,4 +83,3 @@ func googleRedirectIntentKey(state string) string {
 func googleRedirectHandoffKey(handle string) string {
 	return fmt.Sprintf("%s:handoff:%s", googleRedirectKeyPrefix, handle)
 }
-

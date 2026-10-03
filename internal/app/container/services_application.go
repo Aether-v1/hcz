@@ -139,4 +139,3 @@ func (c *Container) initApplicationServices() {
 		contentapp.SystemClock{},
 	)
 }
-

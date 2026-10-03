@@ -42,4 +42,3 @@ func (c *ExchangeRateConfig) ConvertAmount(amount, currency string, precision in
 	converted := amountDec.Mul(rate).Round(precision)
 	return converted.String(), c.TargetCurrency, nil
 }
-

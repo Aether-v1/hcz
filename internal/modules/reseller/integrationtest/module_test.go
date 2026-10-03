@@ -65,4 +65,3 @@ func NewResellerSiteConfigService(store *resellergormstore.Store) *resellermodul
 func NewResellerOrderService(store *resellergormstore.Store) *resellermodule.OrderQueryService {
 	return resellermodule.NewOrderQueryService(store)
 }
-

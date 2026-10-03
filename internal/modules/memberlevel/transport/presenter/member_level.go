@@ -14,4 +14,3 @@ type MemberLevel struct {
 	IsDefault         bool         `json:"is_default"`
 	SortOrder         int          `json:"sort_order"`
 }
-

@@ -65,4 +65,3 @@ func Run(opts Options) error {
 	opts.Logger.Infow("app_start", "addr", addr, "mode", opts.Mode)
 	return RunWithOptions(runner, opts)
 }
-

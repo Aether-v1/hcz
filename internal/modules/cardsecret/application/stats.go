@@ -125,4 +125,3 @@ func (s *Service) ListBatches(productID, skuID uint, page, pageSize int) ([]Card
 	}
 	return result, total, nil
 }
-

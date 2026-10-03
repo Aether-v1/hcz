@@ -108,4 +108,3 @@ func TestResolverFailsClosedOnResellerConfigReadError(t *testing.T) {
 		t.Fatalf("error result should remain tenant-safe: %+v", got)
 	}
 }
-

@@ -74,4 +74,3 @@ func TestAdminResellerSiteConfigResetAndList(t *testing.T) {
 		t.Fatalf("expected 200, got %d body=%s", recorder.Code, recorder.Body.String())
 	}
 }
-

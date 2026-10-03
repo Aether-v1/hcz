@@ -7,4 +7,3 @@ func RegisterChannelBotRoutes(channel gin.IRoutes, handler *ChannelBotHandler) {
 	channel.GET("/telegram/config", handler.GetBotConfig)
 	channel.POST("/telegram/heartbeat", handler.ReportHeartbeat)
 }
-

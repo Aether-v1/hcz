@@ -21,4 +21,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/upstream-categories", handler.ListUpstreamCategories)
 	admin.POST("/product-mappings/batch-import-by-category", handler.BatchImportByCategory)
 }
-

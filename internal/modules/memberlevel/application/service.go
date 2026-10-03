@@ -354,4 +354,3 @@ func (s *Service) BackfillDefaultLevel() (int64, error) {
 	}
 	return s.userRepo.AssignDefaultMemberLevel(defaultLevel.ID)
 }
-

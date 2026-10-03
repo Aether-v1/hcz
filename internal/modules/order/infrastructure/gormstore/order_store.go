@@ -868,4 +868,3 @@ func (r *Store) GetByIDForUpdateWithChildren(id uint) (*orderdomain.Order, error
 	}
 	return &order, nil
 }
-

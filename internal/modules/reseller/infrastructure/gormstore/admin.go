@@ -151,4 +151,3 @@ func (r *Store) applyAdminResellerProfileFilters(query *gorm.DB, table string, r
 	}
 	return query.Where("("+strings.Join(conditions, " OR ")+")", args...)
 }
-

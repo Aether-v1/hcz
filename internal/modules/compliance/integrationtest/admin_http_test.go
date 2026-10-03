@@ -151,4 +151,3 @@ func TestGetComplianceStatus(t *testing.T) {
 	assert.True(t, strings.Contains(body, "\"acknowledged\":true"))
 	assert.True(t, strings.Contains(body, "\"acknowledged_by_username\":\"admin\""))
 }
-

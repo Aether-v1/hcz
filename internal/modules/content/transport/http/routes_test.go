@@ -52,4 +52,3 @@ func TestContentRouteRegistrationContract(t *testing.T) {
 		t.Fatalf("route contract mismatch\nwant:\n%s\ngot:\n%s", strings.Join(want, "\n"), strings.Join(got, "\n"))
 	}
 }
-

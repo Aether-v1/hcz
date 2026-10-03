@@ -106,4 +106,3 @@ func (registry Registry) Keys() []string {
 	sort.Strings(keys)
 	return keys
 }
-

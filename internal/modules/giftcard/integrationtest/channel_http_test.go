@@ -281,4 +281,3 @@ func TestRedeemGiftCardChannelHandlerReturnsMappedRedeemedError(t *testing.T) {
 		t.Fatalf("expected no wallet account created on redeemed error, got %d", walletCount)
 	}
 }
-

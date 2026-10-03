@@ -37,4 +37,3 @@ func buildUserAuthTestTelegramMiniAppInitData(t *testing.T, botToken string, aut
 	values.Set("hash", hex.EncodeToString(hashMac.Sum(nil)))
 	return values.Encode()
 }
-

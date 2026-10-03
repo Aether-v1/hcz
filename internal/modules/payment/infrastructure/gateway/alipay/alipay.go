@@ -633,4 +633,3 @@ func (c *Config) Normalize() {
 	}
 	c.ExchangeRateConfig.NormalizeExchangeRate()
 }
-

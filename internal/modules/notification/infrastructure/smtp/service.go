@@ -762,4 +762,3 @@ func isEmailRecipientRejected(err error) bool {
 	}
 	return false
 }
-

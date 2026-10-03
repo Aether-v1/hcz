@@ -23,4 +23,3 @@ func TestSystemHTTPLivesInTransport(t *testing.T) {
 		t.Fatalf("stat legacy system handler: %v", err)
 	}
 }
-

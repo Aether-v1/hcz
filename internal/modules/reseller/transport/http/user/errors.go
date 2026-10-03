@@ -124,4 +124,3 @@ func respondUserOrderError(c *gin.Context, err error, fallbackKey string) {
 	}
 	ginutil.RespondError(c, response.CodeInternal, fallbackKey, err)
 }
-

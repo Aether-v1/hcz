@@ -33,4 +33,3 @@ func (s *Service) GetOrderRiskControlConfig() (settingssecurity.OrderRiskControl
 	}
 	return settingssecurity.DecodeOrderRiskControlConfig(value, fallback), nil
 }
-

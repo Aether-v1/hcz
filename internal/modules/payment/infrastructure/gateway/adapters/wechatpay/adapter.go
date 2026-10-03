@@ -245,4 +245,3 @@ func mapWechatpayError(err error) error {
 		return err
 	}
 }
-

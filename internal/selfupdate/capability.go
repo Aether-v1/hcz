@@ -375,4 +375,3 @@ func PlatformAssetSuffix() string {
 func backupPath(execPath string) string {
 	return execPath + ".backup"
 }
-

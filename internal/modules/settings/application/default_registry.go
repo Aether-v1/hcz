@@ -89,4 +89,3 @@ var defaultSettingRegistry = MustNewRegistry(
 		Normalize: NormalizePaymentFeeConfig,
 	},
 )
-

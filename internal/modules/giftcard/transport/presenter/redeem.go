@@ -52,4 +52,3 @@ func NewGiftCardRedeemResp(card *giftcarddomain.GiftCard, account *walletdomain.
 		WalletDelta: card.Amount,
 	}
 }
-

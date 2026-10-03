@@ -162,4 +162,3 @@ func TestRegistryKeysAreSortedAndDetached(t *testing.T) {
 		t.Fatalf("registry keys leaked mutable state: %#v", got)
 	}
 }
-

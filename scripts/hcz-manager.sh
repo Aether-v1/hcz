@@ -4,7 +4,7 @@ set -Eeuo pipefail
 umask 077
 
 readonly MANAGER_VERSION="1.0.0"
-readonly GITHUB_REPOSITORY="hcz/hcz"
+readonly GITHUB_REPOSITORY="Aether-v1/hcz"
 readonly GITHUB_API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest"
 readonly MANAGER_SOURCE_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/scripts/hcz-manager.sh"
 readonly SERVICE_USER="hcz"
@@ -323,7 +323,7 @@ archive_name_for() {
 
 validate_download_url() {
   local url=$1
-  [[ "$url" =~ ^https://github\.com/hcz/hcz/releases/download/[^/]+/[^/?#]+$ ]]
+  [[ "$url" =~ ^https://github\.com/Aether-v1/hcz/releases/download/[^/]+/[^/?#]+$ ]]
 }
 
 validate_effective_download_url() {

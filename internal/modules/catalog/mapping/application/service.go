@@ -130,4 +130,3 @@ func (s *Service) GetSKUMappings(mappingID uint) ([]mappingdomain.SKUMapping, er
 func (s *Service) GetMappedUpstreamIDs(connectionID uint) ([]uint, error) {
 	return s.mappings.ListUpstreamIDsByConnection(connectionID)
 }
-

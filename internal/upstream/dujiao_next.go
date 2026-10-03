@@ -300,4 +300,3 @@ func (a *DujiaoNextAdapter) doRequest(ctx context.Context, method, path string, 
 
 	return nil
 }
-

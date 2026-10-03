@@ -69,4 +69,3 @@ func randomHex(n int) string {
 	}
 	return hex.EncodeToString(buf)
 }
-

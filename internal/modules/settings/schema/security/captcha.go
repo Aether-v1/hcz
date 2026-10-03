@@ -440,4 +440,3 @@ func ApplyCaptchaSettingPatch(current CaptchaSetting, patch CaptchaSettingPatch)
 func (s CaptchaSceneSetting) anyEnabled() bool {
 	return s.Login || s.RegisterSendCode || s.ResetSendCode || s.GuestCreateOrder || s.GiftCardRedeem
 }
-

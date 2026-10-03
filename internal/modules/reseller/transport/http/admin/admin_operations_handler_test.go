@@ -83,4 +83,3 @@ func TestAdminOperationsHandlerFinanceMapsInvalidRange(t *testing.T) {
 		t.Fatalf("expected bad request for invalid range, got %+v body=%s", resp, w.Body.String())
 	}
 }
-

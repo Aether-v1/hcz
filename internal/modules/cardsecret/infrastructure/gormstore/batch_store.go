@@ -89,4 +89,3 @@ func (r *BatchStore) DeleteByProduct(productID uint) error {
 		Where("product_id = ? AND deleted_at IS NULL", productID).
 		Updates(map[string]interface{}{"deleted_at": now, "updated_at": now}).Error
 }
-

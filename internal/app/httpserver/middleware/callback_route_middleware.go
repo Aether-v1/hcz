@@ -115,4 +115,3 @@ func CallbackRouteMiddleware(
 		c.Next()
 	}
 }
-

@@ -104,4 +104,3 @@ func TestGetImageCaptchaMapsUnknownErrors(t *testing.T) {
 		t.Fatalf("status want internal got %d", got.StatusCode)
 	}
 }
-

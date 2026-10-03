@@ -512,4 +512,3 @@ func decodeRoleParam(value string) string {
 	}
 	return strings.TrimSpace(decoded)
 }
-

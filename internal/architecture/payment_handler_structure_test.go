@@ -102,4 +102,3 @@ func TestPaymentCallbackHTTPLivesInFocusedTransportPackage(t *testing.T) {
 		t.Fatalf("legacy public payment callback Go files must stay removed: %v", legacyFiles)
 	}
 }
-

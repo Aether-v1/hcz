@@ -133,4 +133,3 @@ func (s *Service) UpdateCardSecret(id uint, secret, status string) (*cardsecretd
 	}
 	return item, nil
 }
-

@@ -298,4 +298,3 @@ func orderSnapshotStringValue(value interface{}) string {
 	}
 	return ""
 }
-

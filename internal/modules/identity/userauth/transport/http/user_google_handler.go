@@ -748,4 +748,3 @@ func (h *UserGoogleHandler) UnbindMyGoogle(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"unbound": true})
 }
-

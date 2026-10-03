@@ -317,4 +317,3 @@ func hmacSHA256HexUpper(base string, token string) string {
 	mac.Write([]byte(base))
 	return strings.ToUpper(hex.EncodeToString(mac.Sum(nil)))
 }
-

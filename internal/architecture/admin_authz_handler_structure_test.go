@@ -44,4 +44,3 @@ func TestAdminAuthzHTTPLivesInTransport(t *testing.T) {
 	}
 	assertDirectoryGoFileBudget(t, filepath.Join(repositoryRoot, "internal", "bootstrap", "adminauthz"), 4)
 }
-

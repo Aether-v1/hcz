@@ -306,4 +306,3 @@ func (h *AdminHandler) BackfillMemberLevels(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"affected": affected})
 }
-

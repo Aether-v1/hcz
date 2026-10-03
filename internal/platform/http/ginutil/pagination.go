@@ -50,4 +50,3 @@ func NormalizePagination(page, pageSize int) (int, int) {
 	}
 	return page, pageSize
 }
-

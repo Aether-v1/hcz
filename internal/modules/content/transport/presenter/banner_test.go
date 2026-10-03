@@ -51,4 +51,3 @@ func TestBannerRespOmitsSensitiveFields(t *testing.T) {
 		t.Error("link_type should appear")
 	}
 }
-

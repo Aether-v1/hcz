@@ -214,4 +214,3 @@ func hasFile(fsys fs.FS, name string) bool {
 	}
 	return !stat.IsDir()
 }
-

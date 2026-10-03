@@ -293,4 +293,3 @@ func TestValidateAndNormalizeManualFormRegexLiteralIgnoreCase(t *testing.T) {
 		t.Fatalf("unexpected code value: %v", normalizedSubmission["code"])
 	}
 }
-

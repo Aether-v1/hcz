@@ -126,4 +126,3 @@ type ProductSettingStore interface {
 	ListAdminSettings(filter ProductSettingAdminListFilter) ([]resellerdomain.ProductSetting, int64, error)
 	SummarizeByResellerID(resellerID uint) (ProductSettingSummary, error)
 }
-

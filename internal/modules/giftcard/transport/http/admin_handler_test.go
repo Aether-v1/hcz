@@ -32,4 +32,3 @@ func TestUpdateRequestClearExpiresAtConvention(t *testing.T) {
 		t.Fatalf("expected empty expires_at to signal clear")
 	}
 }
-

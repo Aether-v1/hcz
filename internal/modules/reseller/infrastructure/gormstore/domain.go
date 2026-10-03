@@ -205,4 +205,3 @@ func (r *Store) ListDomains(filter resellercontract.DomainListFilter) ([]reselle
 func normalizeDomainForRepository(raw string) string {
 	return strings.TrimSuffix(strings.ToLower(strings.TrimSpace(raw)), ".")
 }
-

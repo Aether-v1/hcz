@@ -141,4 +141,3 @@ func (c *Container) initIntegrationServices() {
 		telegramNotifyService,
 	)
 }
-

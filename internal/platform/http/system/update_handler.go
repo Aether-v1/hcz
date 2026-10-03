@@ -110,4 +110,3 @@ func logOperation(c *gin.Context, action string, kv ...any) {
 	fields := append([]any{"admin_id", adminID, "client_ip", c.ClientIP()}, kv...)
 	ginutil.RequestLog(c).Infow(action, fields...)
 }
-

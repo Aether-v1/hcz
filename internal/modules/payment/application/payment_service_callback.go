@@ -486,4 +486,3 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 	}
 	return nil
 }
-

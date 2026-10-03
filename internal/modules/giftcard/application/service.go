@@ -29,4 +29,3 @@ func NewService(opts Options) *Service {
 		redeemer: opts.Redeemer,
 	}
 }
-

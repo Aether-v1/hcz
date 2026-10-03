@@ -45,4 +45,3 @@ func (store *Store) IncrementAttempt(id uint) error {
 		Where("id = ? AND deleted_at IS NULL", id).
 		UpdateColumn("attempt_count", gorm.Expr("attempt_count + 1")).Error
 }
-

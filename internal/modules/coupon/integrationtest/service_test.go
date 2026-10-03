@@ -289,4 +289,3 @@ func TestCouponServiceApplyCouponPercentIgnoresPerItemDiscount(t *testing.T) {
 		t.Fatalf("expected percent discount 30, got %s", discount.String())
 	}
 }
-

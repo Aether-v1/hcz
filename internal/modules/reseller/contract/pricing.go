@@ -226,4 +226,3 @@ func SnapshotDomain(tenant TenantContext) string {
 	}
 	return NormalizeHost(tenant.Host)
 }
-

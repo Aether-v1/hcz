@@ -752,4 +752,3 @@ func (h *AdminProductHandler) DeleteProduct(c *gin.Context) {
 
 	response.Success(c, nil)
 }
-

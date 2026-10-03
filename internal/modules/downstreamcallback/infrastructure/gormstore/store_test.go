@@ -82,4 +82,3 @@ func TestStoreFiltersPendingAndCredentialLists(t *testing.T) {
 		t.Fatalf("credential list mismatch: total=%d refs=%#v", total, listed)
 	}
 }
-

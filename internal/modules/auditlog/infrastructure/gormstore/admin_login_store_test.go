@@ -64,4 +64,3 @@ func TestAdminLoginLogRepository_CreateAndList(t *testing.T) {
 		t.Fatalf("expected 1 failed record, got %d/%d", total, len(failed))
 	}
 }
-

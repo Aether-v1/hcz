@@ -57,4 +57,3 @@ type SKUMapping struct {
 func (SKUMapping) TableName() string {
 	return "sku_mappings"
 }
-

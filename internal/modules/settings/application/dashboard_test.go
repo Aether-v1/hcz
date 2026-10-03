@@ -113,4 +113,3 @@ func assertSettingBoolValue(t *testing.T, data map[string]interface{}, key strin
 		t.Fatalf("unexpected value for %s, expected %t got %t", key, expected, parsed)
 	}
 }
-

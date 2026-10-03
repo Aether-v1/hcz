@@ -349,4 +349,3 @@ func ApplySMTPSettingPatch(current SMTPSetting, patch SMTPSettingPatch) (SMTPSet
 	}
 	return normalized, nil
 }
-

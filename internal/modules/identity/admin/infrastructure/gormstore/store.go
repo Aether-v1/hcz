@@ -150,4 +150,3 @@ func (r *Store) UpdatePassword(adminID uint, passwordHash string) error {
 		"token_invalid_before": now,
 	}).Error
 }
-

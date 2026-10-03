@@ -115,4 +115,3 @@ func (h *SMTPHandler) TestSMTP(c *gin.Context) {
 
 	response.Success(c, gin.H{"sent": true})
 }
-

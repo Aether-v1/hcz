@@ -14,4 +14,3 @@ var (
 	ErrDeleteFailed      = errors.New("gift card delete failed")
 	ErrBatchCreateFailed = errors.New("gift card batch create failed")
 )
-

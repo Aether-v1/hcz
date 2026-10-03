@@ -198,4 +198,3 @@ func respondWeakPassword(c *gin.Context, err error) {
 	}
 	ginutil.RespondError(c, response.CodeBadRequest, "error.password_weak", nil)
 }
-

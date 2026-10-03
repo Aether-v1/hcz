@@ -63,4 +63,3 @@ func CalculateMarkedUpPrice(upstreamPrice, markupPercent decimal.Decimal, roundi
 		return result.Round(roundScale)
 	}
 }
-

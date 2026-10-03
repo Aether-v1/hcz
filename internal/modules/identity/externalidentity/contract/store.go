@@ -37,4 +37,3 @@ type Store interface {
 	Update(*externalidentitydomain.Identity) error
 	DeleteByID(id uint) error
 }
-

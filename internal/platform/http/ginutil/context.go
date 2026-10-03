@@ -54,4 +54,3 @@ func GetContextUintWithKeys(c *gin.Context, key, invalidKey, typeInvalidKey stri
 		return 0, false
 	}
 }
-

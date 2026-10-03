@@ -234,4 +234,3 @@ func (s *Service) calculateDiscount(coupon *coupondomain.Coupon, eligibility cou
 		return money.Amount{}, couponcontract.ErrInvalid
 	}
 }
-

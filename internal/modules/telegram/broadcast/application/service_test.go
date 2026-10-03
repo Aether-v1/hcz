@@ -216,4 +216,3 @@ func TestServiceProcessBroadcastUpdatesStats(t *testing.T) {
 		t.Fatalf("expected 2 send calls, got %d", len(sender.calls))
 	}
 }
-

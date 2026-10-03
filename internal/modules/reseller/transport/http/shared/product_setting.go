@@ -107,4 +107,3 @@ func decimalMapToStringMap(input map[uint]decimal.Decimal) map[uint]string {
 	}
 	return out
 }
-

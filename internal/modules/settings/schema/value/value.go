@@ -113,4 +113,3 @@ func NormalizeStringList(value interface{}) []string {
 		return nil
 	}
 }
-

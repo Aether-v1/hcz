@@ -238,4 +238,3 @@ func EncodeOrderRiskControlConfig(cfg OrderRiskControlConfig) jsonmap.JSON {
 func NormalizeOrderRiskControlConfigJSON(value jsonmap.JSON) jsonmap.JSON {
 	return EncodeOrderRiskControlConfig(DecodeOrderRiskControlConfig(value, DefaultOrderRiskControlConfig()))
 }
-

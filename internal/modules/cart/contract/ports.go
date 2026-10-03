@@ -34,4 +34,3 @@ type SKUReader interface {
 type CurrencyReader interface {
 	GetSiteCurrency(defaultCurrency string) (string, error)
 }
-

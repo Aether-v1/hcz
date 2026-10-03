@@ -42,4 +42,3 @@ func TestReportingUsesCompleteVerticalLayout(t *testing.T) {
 		}
 	}
 }
-

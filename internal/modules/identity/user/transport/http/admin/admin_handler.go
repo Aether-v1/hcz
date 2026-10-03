@@ -665,4 +665,3 @@ func (h *AdminHandler) BatchUpdateUserStatus(c *gin.Context) {
 
 	response.Success(c, gin.H{"updated": len(req.UserIDs)})
 }
-

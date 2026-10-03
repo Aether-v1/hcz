@@ -120,4 +120,3 @@ func TestSenderReturnsClientError(t *testing.T) {
 		t.Fatalf("expected client error, got %v", err)
 	}
 }
-

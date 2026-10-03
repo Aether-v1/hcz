@@ -261,4 +261,3 @@ func (s *PaymentService) enqueueManualFulfillmentPendingAsync(order *orderdomain
 		)
 	}
 }
-

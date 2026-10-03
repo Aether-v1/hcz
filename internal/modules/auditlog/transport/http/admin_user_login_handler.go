@@ -55,4 +55,3 @@ func (h *AdminHandler) GetUserLoginLogs(c *gin.Context) {
 	pagination := response.BuildPagination(page, pageSize, total)
 	response.SuccessWithPage(c, logs, pagination)
 }
-

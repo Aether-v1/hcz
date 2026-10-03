@@ -115,4 +115,3 @@ func RegisterGuestCreateAndPayRoute(guest gin.IRoutes, handler *CreateHandler) {
 	}
 	guest.POST("/orders/create-and-pay", handler.CreateGuestOrderAndPay)
 }
-

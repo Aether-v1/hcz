@@ -525,4 +525,3 @@ func mapOrderTransportError(err error) error {
 	}
 	return err
 }
-

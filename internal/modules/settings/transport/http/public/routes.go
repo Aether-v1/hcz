@@ -9,4 +9,3 @@ func RegisterPublicRoutes(public gin.IRoutes, handler *Handler) {
 	}
 	public.GET("/config", handler.GetConfig)
 }
-

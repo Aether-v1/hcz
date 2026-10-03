@@ -13,4 +13,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.PUT("/site-connections/:id/status", handler.UpdateSiteConnectionStatus)
 	admin.POST("/site-connections/:id/reapply-markup", handler.ReapplyConnectionMarkup)
 }
-

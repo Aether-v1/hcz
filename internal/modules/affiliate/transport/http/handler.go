@@ -185,4 +185,3 @@ func (h *Handler) ApplyAffiliateWithdraw(c *gin.Context) {
 	}
 	response.Success(c, affiliatepresenter.NewWithdraw(row))
 }
-

@@ -51,4 +51,3 @@ func TestCreateForOrder_IdempotentSkipsDuplicate(t *testing.T) {
 		t.Errorf("expected ErrExists on duplicate, got: %v", err)
 	}
 }
-

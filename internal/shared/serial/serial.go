@@ -28,4 +28,3 @@ func randomNumeric(length int) string {
 	}
 	return result.String()
 }
-

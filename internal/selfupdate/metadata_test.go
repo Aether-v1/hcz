@@ -596,4 +596,3 @@ func TestStartupGuardNoBackupIsNoop(t *testing.T) {
 		t.Error("normal startup without update state must not create a binary lock")
 	}
 }
-

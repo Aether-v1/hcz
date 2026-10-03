@@ -440,4 +440,3 @@ func newHS256JWTParser() *jwt.Parser {
 func isActiveUserStatus(status string) bool {
 	return strings.ToLower(strings.TrimSpace(status)) == constants.UserStatusActive
 }
-

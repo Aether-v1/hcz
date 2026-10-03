@@ -147,4 +147,3 @@ func TestExecuteOpensUpstreamOnceAndPersistsMismatch(t *testing.T) {
 		t.Fatalf("expected one mismatch notification, got %d", notifier.calls)
 	}
 }
-

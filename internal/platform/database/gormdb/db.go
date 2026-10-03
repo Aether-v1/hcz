@@ -108,4 +108,3 @@ func applyDBPool(sqlDB *sql.DB, pool DBPoolConfig) {
 		sqlDB.SetConnMaxIdleTime(time.Duration(pool.ConnMaxIdleTimeSeconds) * time.Second)
 	}
 }
-

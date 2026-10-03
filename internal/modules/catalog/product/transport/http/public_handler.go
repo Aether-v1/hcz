@@ -230,4 +230,3 @@ func (h *PublicHandler) loadRelatedPostCards(ctx context.Context, productID uint
 	}
 	return result, nil
 }
-

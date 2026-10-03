@@ -57,4 +57,3 @@ type DeliveryRequest struct {
 	APISecret string
 	Payload   CallbackPayload
 }
-

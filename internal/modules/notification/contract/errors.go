@@ -15,4 +15,3 @@ var (
 	ErrEmailNotConfigured     = errors.New("email service not configured")
 	ErrEmailRecipientRejected = errors.New("email recipient rejected")
 )
-

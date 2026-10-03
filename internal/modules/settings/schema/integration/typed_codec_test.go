@@ -156,4 +156,3 @@ func TestTypedSettingJSONNormalizersComposeDefaultDecodeAndEncode(t *testing.T) 
 		t.Fatalf("upstream JSON normalizer did not restore minimum: %#v", upstream)
 	}
 }
-

@@ -30,4 +30,3 @@ func takeOIDCState(ctx context.Context, key string) (string, bool, error) {
 	_ = cache.Del(ctx, key)
 	return value, true, nil
 }
-

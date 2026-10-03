@@ -61,4 +61,3 @@ func TestSitemapHTTPLivesInTransport(t *testing.T) {
 		t.Fatalf("stat legacy sitemap service: %v", err)
 	}
 }
-

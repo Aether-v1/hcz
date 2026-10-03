@@ -148,4 +148,3 @@ func TestExtractCryptoWalletInfo_DujiaoPayWrappedPayload(t *testing.T) {
 		t.Fatalf("unexpected info: %+v", info)
 	}
 }
-

@@ -110,4 +110,3 @@ func (s *Client) ReportImpression(ctx context.Context, payload json.RawMessage) 
 	}
 	return nil
 }
-

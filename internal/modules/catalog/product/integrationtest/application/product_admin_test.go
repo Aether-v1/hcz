@@ -295,4 +295,3 @@ func assertProductRelationCount(t *testing.T, db *gorm.DB, model interface{}, qu
 		t.Fatalf("expected relation count %d after rollback, got %d", expected, count)
 	}
 }
-

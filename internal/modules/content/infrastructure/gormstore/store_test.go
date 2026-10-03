@@ -320,4 +320,3 @@ func TestLocalizedSearchDialectExpressions(t *testing.T) {
 		t.Fatalf("sqlite localized search expression mismatch args=%d sql=%s", sqliteArgs, sqliteCondition)
 	}
 }
-

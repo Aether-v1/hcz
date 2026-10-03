@@ -83,4 +83,3 @@ func (s *Service) UpdateWithEffects(key string, value map[string]interface{}) (U
 		Effects: s.registry.Effects(key),
 	}, nil
 }
-

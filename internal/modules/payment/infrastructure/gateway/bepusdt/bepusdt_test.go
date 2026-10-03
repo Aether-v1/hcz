@@ -92,4 +92,3 @@ func TestToPaymentStatus(t *testing.T) {
 		})
 	}
 }
-

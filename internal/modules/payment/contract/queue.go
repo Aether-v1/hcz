@@ -28,4 +28,3 @@ type Queue interface {
 	EnqueueBotNotification(input BotNotification) error
 	EnqueueWalletRechargeExpire(paymentID uint, delay time.Duration) error
 }
-

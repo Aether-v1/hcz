@@ -21,4 +21,3 @@ func TestResolveLocalizedJSONPrefersLocaleThenDefault(t *testing.T) {
 		t.Fatalf("empty map: got %q", got)
 	}
 }
-

@@ -73,4 +73,3 @@ func checkSingle(ctx context.Context, client *redis.Client, key string, config s
 	}
 	return &orderriskcontract.RateLimitedError{RetryAfter: ttl}
 }
-

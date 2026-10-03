@@ -6,4 +6,3 @@ import "fmt"
 func ItemKey(productID, skuID uint) string {
 	return fmt.Sprintf("%d:%d", productID, skuID)
 }
-

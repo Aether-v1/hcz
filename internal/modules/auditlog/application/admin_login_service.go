@@ -54,4 +54,3 @@ func (s *AdminLoginService) List(filter contract.AdminLoginFilter) ([]domain.Adm
 	}
 	return s.repo.List(filter)
 }
-

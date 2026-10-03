@@ -65,4 +65,3 @@ func TestBuildPaymentReturnQueryForRecharge(t *testing.T) {
 		t.Fatalf("guest should be absent: %#v", params)
 	}
 }
-

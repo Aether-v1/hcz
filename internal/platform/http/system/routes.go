@@ -11,4 +11,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.POST("/system/update/rollback", handler.RollbackUpdate)
 	admin.POST("/system/restart", handler.RestartService)
 }
-

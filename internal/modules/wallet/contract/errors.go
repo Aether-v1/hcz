@@ -16,4 +16,3 @@ var (
 	ErrOnlyPaymentRequired     = errors.New("wallet only payment required")
 	ErrTransactionRequired     = errors.New("wallet transaction required")
 )
-

@@ -173,4 +173,3 @@ func TestUserJWTMiddlewareRejectsCustomTypValue(t *testing.T) {
 		t.Fatalf("expected 401 for unknown typ, got %d", got)
 	}
 }
-

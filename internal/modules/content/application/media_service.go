@@ -208,4 +208,3 @@ func filenameWithoutExtension(filename string) string {
 	}
 	return filename
 }
-

@@ -111,4 +111,3 @@ type Clock interface {
 type WarningLogger interface {
 	Warnw(message string, keysAndValues ...interface{})
 }
-

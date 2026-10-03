@@ -209,4 +209,3 @@ func (h *UserLoginHandler) UserLogin(c *gin.Context) {
 		"expires_at":    res.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
 	})
 }
-

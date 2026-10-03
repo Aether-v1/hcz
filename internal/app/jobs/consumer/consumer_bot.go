@@ -164,4 +164,3 @@ func (c *Consumer) handleTelegramBroadcast(ctx context.Context, task *asynq.Task
 	}
 	return c.TelegramBroadcastService.ProcessBroadcast(ctx, payload.BroadcastID)
 }
-

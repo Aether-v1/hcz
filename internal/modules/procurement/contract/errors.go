@@ -9,4 +9,3 @@ var (
 	ErrOrderNotFound      = errors.New("order not found")
 	ErrConnectionNotFound = errors.New("site connection not found")
 )
-

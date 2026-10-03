@@ -322,4 +322,3 @@ func TestResellerPricingRepositoryRelatedAccountAndSnapshot(t *testing.T) {
 		t.Fatalf("missing snapshot should be nil, got %+v", missing)
 	}
 }
-

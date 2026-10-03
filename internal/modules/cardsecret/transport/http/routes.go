@@ -18,4 +18,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/card-secrets/batches", handler.GetCardSecretBatches)
 	admin.GET("/card-secrets/template", handler.GetCardSecretTemplate)
 }
-

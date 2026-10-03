@@ -19,4 +19,3 @@ var (
 	ErrProductHasOrderRecord        = errors.New("product has order record")
 	ErrResellerProductNotListed     = errors.New("reseller product not listed")
 )
-

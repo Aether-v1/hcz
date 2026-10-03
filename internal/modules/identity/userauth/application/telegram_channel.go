@@ -260,4 +260,3 @@ func normalizeTelegramChannelIdentityInput(input TelegramChannelIdentityInput) (
 		AuthAt:         time.Now(),
 	}, nil
 }
-

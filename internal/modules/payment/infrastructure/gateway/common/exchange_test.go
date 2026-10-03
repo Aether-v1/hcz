@@ -125,4 +125,3 @@ func TestConvertAmount(t *testing.T) {
 		})
 	}
 }
-

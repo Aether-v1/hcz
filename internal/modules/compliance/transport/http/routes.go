@@ -7,4 +7,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/compliance/status", handler.GetComplianceStatus)
 	admin.POST("/compliance/acknowledge", handler.AcknowledgeCompliance)
 }
-

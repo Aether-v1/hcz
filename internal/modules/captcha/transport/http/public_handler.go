@@ -47,4 +47,3 @@ func (h *PublicHandler) GetImageCaptcha(c *gin.Context) {
 		"image_base64": challenge.ImageBase64,
 	})
 }
-

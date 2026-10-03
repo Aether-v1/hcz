@@ -909,4 +909,3 @@ func ensureCategoryParentMigration() error {
 	}
 	return gormdb.DB.Save(&doneMarker).Error
 }
-

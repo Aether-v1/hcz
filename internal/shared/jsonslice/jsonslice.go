@@ -48,4 +48,3 @@ func (items *Uints) Scan(value interface{}) error {
 	}
 	return json.Unmarshal(data, items)
 }
-

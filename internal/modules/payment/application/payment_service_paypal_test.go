@@ -128,4 +128,3 @@ func TestIsOrderFullyAutoFulfill(t *testing.T) {
 		t.Fatalf("order without items or children should not be fully auto")
 	}
 }
-

@@ -429,4 +429,3 @@ func TestResellerOrderServiceRejectsInactiveProfile(t *testing.T) {
 		t.Fatalf("expected ErrResellerProfileInactive, got %v", err)
 	}
 }
-

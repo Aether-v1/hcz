@@ -486,4 +486,3 @@ func applyOrderEmailSceneTemplatePatch(target *OrderEmailSceneTemplate, patch *O
 		}
 	}
 }
-

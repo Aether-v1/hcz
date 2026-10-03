@@ -52,4 +52,3 @@ func (s *session) Get(ctx context.Context, upstreamOrderID uint) (*reconciliatio
 	}
 	return &reconciliationcontract.UpstreamOrder{Status: detail.Status, Amount: detail.Amount}, nil
 }
-

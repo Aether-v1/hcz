@@ -70,4 +70,3 @@ func TestUserOrderHandlerMapsProfileInactive(t *testing.T) {
 		t.Fatalf("expected bad request, body=%s", recorder.Body.String())
 	}
 }
-

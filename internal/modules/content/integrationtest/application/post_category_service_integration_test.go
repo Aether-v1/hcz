@@ -175,4 +175,3 @@ func TestPostCategoryServiceListTreeIncludesDisabledChildren(t *testing.T) {
 		t.Fatalf("disabled child should remain visible in admin tree: %#v", tree[0].Children)
 	}
 }
-

@@ -33,4 +33,3 @@ type Connection struct {
 func (Connection) TableName() string {
 	return "site_connections"
 }
-

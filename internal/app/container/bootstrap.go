@@ -68,4 +68,3 @@ func newPaymentProviderRegistry() *paymentprovider.Registry {
 	registry.Register(constants.PaymentProviderOkpay, "", okpayadapter.NewOkpayAdapter())
 	return registry
 }
-

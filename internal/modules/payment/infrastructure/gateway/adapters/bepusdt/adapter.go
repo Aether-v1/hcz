@@ -337,4 +337,3 @@ func mapBepusdtError(err error) error {
 		return err
 	}
 }
-

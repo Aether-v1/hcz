@@ -403,4 +403,3 @@ func TestBackfillGuestCredentialHashesOnPostgres(t *testing.T) {
 		t.Fatalf("migrated credential should still authenticate, got order=%v err=%v", got, err)
 	}
 }
-

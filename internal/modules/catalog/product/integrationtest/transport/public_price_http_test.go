@@ -124,4 +124,3 @@ func TestPublicProductHTTPPromotionUsesDisplayPrice(t *testing.T) {
 		t.Fatalf("expected promotion display price %s, got %s", expectedPromotion, envelope.Data.PromotionPriceAmount.String())
 	}
 }
-

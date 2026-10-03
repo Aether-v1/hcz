@@ -72,4 +72,3 @@ func MapOrder(order orderdomain.Order) procurementdomain.LocalOrder {
 	}
 	return result
 }
-

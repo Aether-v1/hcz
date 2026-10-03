@@ -21,4 +21,3 @@ type CouponUsage struct {
 func (CouponUsage) TableName() string {
 	return "coupon_usages"
 }
-

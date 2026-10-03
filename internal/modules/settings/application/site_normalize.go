@@ -494,4 +494,3 @@ func normalizeRegistrationSetting(value map[string]interface{}) jsonmap.JSON {
 
 	return normalized
 }
-

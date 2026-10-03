@@ -65,4 +65,3 @@ func TestTokenpayAdapter_MapTokenpayError(t *testing.T) {
 		})
 	}
 }
-

@@ -86,4 +86,3 @@ func TestResellerOperationsServiceFinanceFormatsCurrencyRows(t *testing.T) {
 }
 
 var _ resellercontract.OperationsStore = operationsStoreStub{}
-

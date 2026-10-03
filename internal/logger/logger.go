@@ -223,4 +223,3 @@ func normalizePositiveInt(value int, fallback int) int {
 	}
 	return fallback
 }
-

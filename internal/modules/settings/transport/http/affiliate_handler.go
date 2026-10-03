@@ -58,4 +58,3 @@ func (h *AffiliateHandler) UpdateAffiliate(c *gin.Context) {
 	}
 	response.Success(c, setting)
 }
-

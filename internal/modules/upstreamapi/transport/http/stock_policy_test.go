@@ -23,4 +23,3 @@ func TestComputeSKUStockUsesRemainingManualStockWithoutSubtractingLockedAgain(t 
 		t.Fatalf("upstream API threshold should classify quantity 5 as low_stock, got %q", status)
 	}
 }
-

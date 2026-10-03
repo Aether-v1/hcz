@@ -272,4 +272,3 @@ func TestUserProfileHTTPLivesInTransport(t *testing.T) {
 		t.Fatalf("stat retired captcha wiring: %v", err)
 	}
 }
-

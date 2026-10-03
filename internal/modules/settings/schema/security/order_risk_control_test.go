@@ -155,4 +155,3 @@ func TestIsValidIPOrCIDR(t *testing.T) {
 		}
 	}
 }
-

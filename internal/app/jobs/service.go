@@ -150,4 +150,3 @@ func (s *Service) Stop(ctx context.Context) error {
 	s.server.Shutdown()
 	return nil
 }
-

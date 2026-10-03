@@ -20,4 +20,3 @@ type Click struct {
 func (Click) TableName() string {
 	return "affiliate_clicks"
 }
-

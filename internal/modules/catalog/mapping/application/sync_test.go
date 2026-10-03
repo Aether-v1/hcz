@@ -50,4 +50,3 @@ func TestComputeFullSyncIntervalWithoutSettings(t *testing.T) {
 		t.Fatalf("expected floor when settings=nil, got %v", got)
 	}
 }
-

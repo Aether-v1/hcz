@@ -319,4 +319,3 @@ func TestCanCompleteParentOrderRejectInvalidChild(t *testing.T) {
 		t.Fatalf("expected parent order with paid child to be rejected")
 	}
 }
-

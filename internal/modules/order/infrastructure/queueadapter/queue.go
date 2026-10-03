@@ -40,4 +40,3 @@ func (q *Queue) EnqueueStatusEmail(orderID uint, status string) error {
 		Status:  strings.TrimSpace(status),
 	})
 }
-

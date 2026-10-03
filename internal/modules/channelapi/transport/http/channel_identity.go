@@ -207,4 +207,3 @@ func buildChannelIdentityResponse(bound, created bool, user *userdomain.User, id
 	}
 	return resp
 }
-

@@ -395,4 +395,3 @@ func concatMappedErrors(groups ...[]mappedError) []mappedError {
 	}
 	return result
 }
-

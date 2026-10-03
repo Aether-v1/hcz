@@ -49,4 +49,3 @@ func TestServiceDelegatesAdUseCasesToGateway(t *testing.T) {
 		t.Fatalf("impression payload mismatch: got %s want %s", gateway.impression, payload)
 	}
 }
-

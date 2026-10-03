@@ -93,4 +93,3 @@ func TestResolveManualFormSubmissionFallbackLegacyProductKey(t *testing.T) {
 		t.Fatalf("expected legacy product key value, got: %+v", got)
 	}
 }
-

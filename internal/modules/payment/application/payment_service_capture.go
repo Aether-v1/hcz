@@ -138,4 +138,3 @@ func mapProviderErrorToService(err error) error {
 		return fmt.Errorf("%w: %v", ErrPaymentGatewayRequestFailed, err)
 	}
 }
-

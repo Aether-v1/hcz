@@ -17,4 +17,3 @@ const (
 
 // IsReleaseBuild 判断当前二进制是否为 CI 正式发布产物。
 func IsReleaseBuild() bool { return BuildType == BuildTypeRelease }
-

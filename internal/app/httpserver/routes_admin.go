@@ -197,4 +197,3 @@ func registerAdminRoutes(
 	// Telegram Bot 群发
 	broadcasthttp.RegisterAdminRoutes(authorized, broadcasthttp.NewAdminHandler(c.TelegramBroadcastService))
 }
-

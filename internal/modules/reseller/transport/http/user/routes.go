@@ -50,4 +50,3 @@ func RegisterUserOrderRoutes(console gin.IRoutes, handler *UserOrderHandler) {
 	console.GET("/orders/stats", handler.GetOrderStats)
 	console.GET("/orders/:order_no", handler.GetOrderDetail)
 }
-

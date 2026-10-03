@@ -60,4 +60,3 @@ func projectOrder(order *orderdomain.Order) *downstreamcontract.OrderSnapshot {
 	}
 	return projection
 }
-

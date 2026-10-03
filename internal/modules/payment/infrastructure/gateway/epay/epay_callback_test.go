@@ -137,4 +137,3 @@ func signEpayV2CallbackForm(t *testing.T, cfg *Config, params map[string]string)
 	form["sign"] = []string{sign}
 	return form
 }
-

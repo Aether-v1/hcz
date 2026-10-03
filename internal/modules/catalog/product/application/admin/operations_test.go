@@ -219,4 +219,3 @@ func (repository productMappingDeleteStub) DeleteByLocalProduct(uint) error {
 	repository.deleted["product_mappings"]++
 	return nil
 }
-

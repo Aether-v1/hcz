@@ -182,4 +182,3 @@ func (s *WriteService) Update(id string, input CreateProductInput) (*productdoma
 	}
 	return s.products.GetByID(id)
 }
-

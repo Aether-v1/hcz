@@ -42,4 +42,3 @@ var (
 	ErrResellerMarkupExceeded     = resellercontract.ErrMarkupExceeded
 	ErrResellerPricingModeInvalid = resellercontract.ErrPricingModeInvalid
 )
-

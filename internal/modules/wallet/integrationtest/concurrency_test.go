@@ -83,4 +83,3 @@ func TestWalletTransactionsDoNotRequestASecondConnection(t *testing.T) {
 		}
 	}
 }
-

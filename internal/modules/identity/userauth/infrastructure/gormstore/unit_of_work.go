@@ -201,4 +201,3 @@ func (t *transaction) DeleteIdentityByID(identityID uint) error {
 
 var _ userauthapp.AuthUnitOfWork = (*UnitOfWork)(nil)
 var _ userauthapp.AuthTransaction = (*transaction)(nil)
-

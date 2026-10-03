@@ -109,4 +109,3 @@ func TestCardSecretUsesCompleteVerticalLayout(t *testing.T) {
 		}
 	}
 }
-

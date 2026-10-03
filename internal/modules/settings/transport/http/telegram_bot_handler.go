@@ -63,4 +63,3 @@ func (h *TelegramBotHandler) GetTelegramBotRuntimeStatus(c *gin.Context) {
 	}
 	response.Success(c, status)
 }
-

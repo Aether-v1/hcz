@@ -186,4 +186,3 @@ func respondCartItemUpdateError(c *gin.Context, err error) {
 		ginutil.RespondError(c, response.CodeInternal, "error.order_update_failed", err)
 	}
 }
-

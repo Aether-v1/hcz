@@ -48,4 +48,3 @@ func RequireMainTenantForResellerConsole() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

@@ -177,4 +177,3 @@ func validateActivationCategory(categoryRepo CategoryRepository, categoryID uint
 	}
 	return nil
 }
-

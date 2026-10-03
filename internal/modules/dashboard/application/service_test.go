@@ -222,4 +222,3 @@ func TestDashboardProfitCombinesRefundCostReversalAndPaymentFees(t *testing.T) {
 
 var _ dashboardcontract.Repository = dashboardServiceRepoStub{}
 var _ dashboardcontract.SettingReader = dashboardSettingReaderStub{}
-

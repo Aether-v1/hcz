@@ -180,4 +180,3 @@ func MaskSoldCount(mode string, value int) int {
 	}
 	return 0
 }
-

@@ -583,4 +583,3 @@ const (
 	BannerLinkTypeInternal = "internal"
 	BannerLinkTypeExternal = "external"
 )
-

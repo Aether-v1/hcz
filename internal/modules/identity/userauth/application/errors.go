@@ -36,4 +36,3 @@ var (
 
 var errExternalIdentityUnbindLocked = errors.New("external identity unbind would lock account")
 var errGoogleLoginMappingChanged = errors.New("google identity mapping changed during login")
-

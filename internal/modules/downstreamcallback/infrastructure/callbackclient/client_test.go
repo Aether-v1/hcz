@@ -106,4 +106,3 @@ func TestIsPublicIP(t *testing.T) {
 		}
 	}
 }
-

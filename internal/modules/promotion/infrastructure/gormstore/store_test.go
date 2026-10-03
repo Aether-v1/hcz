@@ -125,4 +125,3 @@ func TestPromotionRepositorySoftDeleteHidesPromotionFromEveryReadPath(t *testing
 		t.Fatal("deleted promotion must retain a non-nil deleted_at marker")
 	}
 }
-

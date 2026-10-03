@@ -27,4 +27,3 @@ func TestMapAdminUserTransportErrorMapsGoogleUnbindErrors(t *testing.T) {
 		})
 	}
 }
-

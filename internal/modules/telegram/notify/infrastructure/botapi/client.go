@@ -228,4 +228,3 @@ func isTelegramPhotoAttachment(rawURL, displayName string) bool {
 
 	return false
 }
-

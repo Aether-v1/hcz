@@ -72,4 +72,3 @@ func TestMemberLevelLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

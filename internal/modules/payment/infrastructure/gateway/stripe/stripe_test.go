@@ -284,4 +284,3 @@ func TestMapCheckoutSessionStatus(t *testing.T) {
 		})
 	}
 }
-

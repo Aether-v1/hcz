@@ -50,4 +50,3 @@ func TestUploadAdminHTTPLivesInTransport(t *testing.T) {
 		}
 	}
 }
-

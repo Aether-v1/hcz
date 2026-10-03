@@ -10,4 +10,3 @@ var (
 	ErrSKUInvalid              = errors.New("product sku invalid")
 	ErrManualStockInsufficient = errors.New("manual stock insufficient")
 )
-

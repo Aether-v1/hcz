@@ -3,4 +3,3 @@
 package adgateway
 
 const ServerURL = "http://localhost:9098"
-

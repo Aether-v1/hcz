@@ -9,4 +9,3 @@ func (c *Container) wireServiceDependencies() {
 	c.PaymentService.SetDownstreamCallbackService(c.DownstreamCallbackService)
 	c.FulfillmentService.SetDownstreamCallbackService(c.DownstreamCallbackService)
 }
-

@@ -365,4 +365,3 @@ func (s *Service) UpdateTelegramBotRuntimeStatus(status settingsmessaging.Telegr
 	_, err := s.Update(constants.SettingKeyTelegramBotRuntimeStatus, settingsmessaging.EncodeTelegramBotRuntimeStatus(status))
 	return err
 }
-

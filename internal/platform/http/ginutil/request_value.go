@@ -76,4 +76,3 @@ func ParseOptionalBoolValue(raw string) (*bool, error) {
 	}
 	return &parsed, nil
 }
-

@@ -90,4 +90,3 @@ func respondWechatCallback(c *gin.Context, success bool) {
 	}
 	c.JSON(http.StatusBadRequest, gin.H{"code": wechatCallbackRespCodeFail, "message": wechatCallbackRespMsgFail})
 }
-

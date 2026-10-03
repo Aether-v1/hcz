@@ -11,4 +11,3 @@ func NewAdminHandler(c *container.Container) *fulfillmenttransport.AdminHandler 
 		fulfillmentAdminOrderAdapter{orders: c.OrderService},
 	)
 }
-

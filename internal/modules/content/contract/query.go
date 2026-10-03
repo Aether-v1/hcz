@@ -34,4 +34,3 @@ type MediaQuery struct {
 	Scene    string
 	Search   string
 }
-

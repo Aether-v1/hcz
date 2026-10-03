@@ -141,4 +141,3 @@ func TestManagerStartRejectsMalformedReleaseVersion(t *testing.T) {
 	}
 	unlock()
 }
-

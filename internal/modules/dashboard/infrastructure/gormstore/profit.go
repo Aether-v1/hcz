@@ -244,4 +244,3 @@ func (r *Store) GetProfitTrends(startAt, endAt time.Time) ([]dashboard.ProfitTre
 	})
 	return merged, nil
 }
-

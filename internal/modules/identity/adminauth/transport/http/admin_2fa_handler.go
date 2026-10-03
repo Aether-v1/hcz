@@ -404,4 +404,3 @@ func (h *Admin2FAHandler) ResetTargetAdmin2FA(c *gin.Context) {
 	h.writeLoginLog(c, targetID, username, constants.AdminLoginEvent2FAResetByAdmin, constants.AdminLoginStatusSuccess, "", &op)
 	response.Success(c, nil)
 }
-

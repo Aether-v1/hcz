@@ -150,4 +150,3 @@ func TestCreateAutoFulfillmentRespectsSKUBoundary(t *testing.T) {
 		t.Fatalf("order status want completed got %s", orderAfter.Status)
 	}
 }
-

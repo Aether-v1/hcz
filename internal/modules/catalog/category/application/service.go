@@ -164,4 +164,3 @@ func (service *Service) validateParent(category *categorydomain.Category, parent
 	}
 	return nil
 }
-

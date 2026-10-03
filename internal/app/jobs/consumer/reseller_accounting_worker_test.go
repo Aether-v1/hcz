@@ -72,4 +72,3 @@ func TestResellerConfirmLedgerWorkerSkipNilService(t *testing.T) {
 		t.Fatalf("nil service should be skipped, got %v", err)
 	}
 }
-

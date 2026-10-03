@@ -62,4 +62,3 @@ func optionalUintOrZero(value *uint) uint {
 	}
 	return *value
 }
-

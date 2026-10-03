@@ -9,4 +9,3 @@ func normalizeOrderAmount(amount decimal.Decimal) decimal.Decimal {
 	}
 	return normalized
 }
-

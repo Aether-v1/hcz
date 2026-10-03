@@ -211,4 +211,3 @@ func mapStripeError(err error) error {
 		return err
 	}
 }
-

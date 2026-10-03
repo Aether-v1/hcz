@@ -41,4 +41,3 @@ type Store interface {
 	UpdateRecoveryCodes(uint, string) error
 	ClearTOTP(uint) error
 }
-

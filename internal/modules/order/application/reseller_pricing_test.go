@@ -646,4 +646,3 @@ func TestResellerPricingResolverDisplayHidesInvalidSKUWithoutFailing(t *testing.
 		t.Fatalf("expected display fall back to valid sku 11@130, got %+v", result)
 	}
 }
-

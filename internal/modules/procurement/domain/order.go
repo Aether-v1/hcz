@@ -89,4 +89,3 @@ type LocalOrderItem struct {
 	FulfillmentType          string       `json:"fulfillment_type"`
 	ManualFormSubmissionJSON jsonmap.JSON `json:"manual_form_submission"`
 }
-

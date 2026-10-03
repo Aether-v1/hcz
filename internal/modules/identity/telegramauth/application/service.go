@@ -417,4 +417,3 @@ func (s *Service) markTelegramReplay(ctx context.Context, userID int64, hash str
 	}
 	return nil
 }
-

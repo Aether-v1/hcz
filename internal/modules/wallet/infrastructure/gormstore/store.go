@@ -344,4 +344,3 @@ func (s *Store) GetRechargeOrdersByPaymentIDs(paymentIDs []uint) ([]walletdomain
 	}
 	return orders, nil
 }
-

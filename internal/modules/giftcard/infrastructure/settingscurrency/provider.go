@@ -25,4 +25,3 @@ func (provider Provider) SiteCurrency() string {
 	}
 	return currency
 }
-

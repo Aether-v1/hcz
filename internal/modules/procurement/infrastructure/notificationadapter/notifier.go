@@ -33,4 +33,3 @@ func (n *Notifier) NotifyFailure(order *procurementdomain.Order, message string)
 		},
 	})
 }
-

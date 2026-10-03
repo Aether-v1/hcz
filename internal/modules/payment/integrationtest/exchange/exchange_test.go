@@ -569,4 +569,3 @@ func TestProviderPayloadRetainsOriginalAfterConversion(t *testing.T) {
 		t.Errorf("exchange_rate = %v, want 7.2", dbPayment.ProviderPayload["exchange_rate"])
 	}
 }
-

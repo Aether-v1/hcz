@@ -490,4 +490,3 @@ func seedResellerProductSettingProductForAdminHandler(t *testing.T, db *gorm.DB)
 	}
 	return product, skus
 }
-

@@ -158,4 +158,3 @@ func (r *siteConnectionRepoStub) ListActive() ([]siteconnectiondomain.Connection
 	}
 	return []siteconnectiondomain.Connection{*r.conn}, nil
 }
-

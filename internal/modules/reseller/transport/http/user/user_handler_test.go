@@ -149,4 +149,3 @@ func TestUserHandlerSiteConfigUpdateAndGet(t *testing.T) {
 		t.Fatalf("unexpected get body: %s", recorder.Body.String())
 	}
 }
-

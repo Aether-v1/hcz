@@ -211,4 +211,3 @@ func formatChannelFieldError(locale string, fieldError validator.FieldError) str
 	}
 	return field + ": " + tag
 }
-

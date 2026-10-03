@@ -69,4 +69,3 @@ func TestRegistry_Miss(t *testing.T) {
 		t.Fatalf("expected miss for nonexistent:x")
 	}
 }
-

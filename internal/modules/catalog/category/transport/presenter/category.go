@@ -33,4 +33,3 @@ func List(categories []categorydomain.Category) []Category {
 	}
 	return result
 }
-

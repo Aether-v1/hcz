@@ -254,4 +254,3 @@ func TestGetInventoryAlertItemsFallsBackToProductLevelWhenOnlyInactiveAutoSKUHas
 		t.Fatalf("fallback row alert type want low_stock_products got %s", rows[0].AlertType)
 	}
 }
-

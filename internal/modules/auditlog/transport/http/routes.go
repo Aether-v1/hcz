@@ -10,4 +10,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 func RegisterUserRoutes(user gin.IRoutes, handler *UserHandler) {
 	user.GET("/me/login-logs", handler.GetMyLoginLogs)
 }
-

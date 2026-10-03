@@ -194,4 +194,3 @@ func TestPrepareTOTPEnableReturnsEncryptedSecretRecoveryCodesAndEnabledAt(t *tes
 		t.Fatalf("expected 3 recovery code hashes, got %d", len(entries))
 	}
 }
-

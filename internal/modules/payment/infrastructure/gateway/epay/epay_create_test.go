@@ -101,4 +101,3 @@ func TestCreatePaymentV2HandlesDoubleEncodedJSON(t *testing.T) {
 		t.Fatalf("raw response should be decoded into object, got %#v", result.Raw)
 	}
 }
-

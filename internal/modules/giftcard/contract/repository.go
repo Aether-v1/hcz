@@ -71,4 +71,3 @@ type UserDirectory interface {
 type CurrencyProvider interface {
 	SiteCurrency() string
 }
-

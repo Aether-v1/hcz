@@ -311,4 +311,3 @@ func normalizeCouponMemberLevels(raw []uint) jsonslice.Uints {
 	}
 	return normalized
 }
-

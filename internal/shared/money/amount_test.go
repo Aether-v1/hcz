@@ -49,4 +49,3 @@ func TestAmountDatabaseValueAndScanRoundTrip(t *testing.T) {
 		t.Fatalf("round trip = %q, want 123.46", decoded.String())
 	}
 }
-

@@ -114,4 +114,3 @@ func (h *ChannelBotHandler) ReportHeartbeat(c *gin.Context) {
 
 	channelresponse.Success(c, gin.H{"config_version": updated.ConfigVersion})
 }
-

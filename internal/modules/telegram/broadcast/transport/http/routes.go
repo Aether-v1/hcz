@@ -8,4 +8,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.POST("/telegram-bot/broadcasts", handler.Create)
 	admin.GET("/telegram-bot/users", handler.ListUsers)
 }
-

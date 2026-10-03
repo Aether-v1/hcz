@@ -23,4 +23,3 @@ type Batch struct {
 func (Batch) TableName() string {
 	return "card_secret_batches"
 }
-

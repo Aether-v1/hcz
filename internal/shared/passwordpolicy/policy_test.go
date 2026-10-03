@@ -40,4 +40,3 @@ func TestValidateEnforcesEveryCharacterClass(t *testing.T) {
 		})
 	}
 }
-

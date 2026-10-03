@@ -75,4 +75,3 @@ func TestUnbindAdminUserGoogle(t *testing.T) {
 		})
 	}
 }
-

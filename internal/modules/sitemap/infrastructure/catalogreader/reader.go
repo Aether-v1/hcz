@@ -51,4 +51,3 @@ func (r *Reader) ListActiveProducts(limit int) ([]contract.Product, error) {
 	}
 	return result, nil
 }
-

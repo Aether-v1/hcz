@@ -229,4 +229,3 @@ func mapError(err error) error {
 	}
 	return channeltransport.WithRetryAfter(err, orderriskcontract.GetRetryAfter(err))
 }
-

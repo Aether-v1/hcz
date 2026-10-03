@@ -105,4 +105,3 @@ type ChannelRanking struct {
 	SuccessAmount string `json:"success_amount"`
 	SuccessRate   string `json:"success_rate"`
 }
-

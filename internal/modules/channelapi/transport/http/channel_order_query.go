@@ -368,4 +368,3 @@ func channelOrderFulfillmentType(order *orderdomain.Order) string {
 	}
 	return ""
 }
-

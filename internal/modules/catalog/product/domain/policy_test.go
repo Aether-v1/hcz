@@ -125,4 +125,3 @@ func TestValidateCategoryAssignmentPreservesCompatibilityError(t *testing.T) {
 		t.Fatalf("keeping current parent assignment must remain valid, got %v", err)
 	}
 }
-

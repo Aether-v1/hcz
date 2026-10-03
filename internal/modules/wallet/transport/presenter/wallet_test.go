@@ -130,4 +130,3 @@ func TestWalletRechargePaymentPayloadOmitsSensitiveFields(t *testing.T) {
 		t.Error("recharge_no should appear")
 	}
 }
-

@@ -712,4 +712,3 @@ func TestUpdateTelegramAuthSettingNormalized(t *testing.T) {
 		t.Fatalf("unexpected replay_ttl_seconds: %v", result["replay_ttl_seconds"])
 	}
 }
-

@@ -80,4 +80,3 @@ func TestLoadRuntimeSettingsGoogleAuthThreeStateFailClosed(t *testing.T) {
 		})
 	}
 }
-

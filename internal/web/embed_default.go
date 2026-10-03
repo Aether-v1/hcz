@@ -12,4 +12,3 @@ func AdminFS() fs.FS { return nil }
 
 // UserFS 默认构建模式下返回 nil。
 func UserFS() fs.FS { return nil }
-

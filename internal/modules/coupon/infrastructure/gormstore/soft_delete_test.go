@@ -119,4 +119,3 @@ func TestCouponUsageStoreSoftDeleteHidesUsageFromEveryReadPath(t *testing.T) {
 		t.Fatal("deleted usage must retain a non-nil deleted_at marker")
 	}
 }
-

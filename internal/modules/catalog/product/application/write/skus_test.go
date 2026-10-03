@@ -202,4 +202,3 @@ func newSyncSingleSKURepo(t *testing.T) SKURepository {
 	t.Helper()
 	return &memorySKURepository{}
 }
-

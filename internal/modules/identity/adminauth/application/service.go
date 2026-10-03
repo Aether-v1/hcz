@@ -280,4 +280,3 @@ func (s *Service) ChangePassword(adminID uint, oldPassword, newPassword string) 
 	_ = cache.SetAdminAuthState(context.Background(), cache.BuildAdminAuthState(admin))
 	return nil
 }
-

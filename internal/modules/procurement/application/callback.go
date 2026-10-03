@@ -172,4 +172,3 @@ func isUpstreamTransitionAllowed(current, upstreamStatus string) bool {
 	}
 	return true
 }
-

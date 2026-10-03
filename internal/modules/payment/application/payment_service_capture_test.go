@@ -66,4 +66,3 @@ func TestCaptureViaRegistry_PassesInteractionModeNotChannelType(t *testing.T) {
 		t.Fatalf("regression: ValidateConfig received channel.ChannelType=%q", cap.receivedMode)
 	}
 }
-

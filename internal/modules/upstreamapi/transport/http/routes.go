@@ -14,4 +14,3 @@ func RegisterAuthenticatedRoutes(upstream gin.IRoutes, handler *Handler) {
 	upstream.GET("/orders/:id", handler.GetOrder)
 	upstream.POST("/orders/:id/cancel", handler.CancelOrder)
 }
-

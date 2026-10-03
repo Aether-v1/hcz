@@ -171,4 +171,3 @@ func TestSKUStoreDeleteByProductHidesRowsAndRejectsStockMutations(t *testing.T) 
 		}
 	}
 }
-

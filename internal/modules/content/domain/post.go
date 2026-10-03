@@ -40,4 +40,3 @@ type PostProduct struct {
 func (PostProduct) TableName() string {
 	return "post_products"
 }
-

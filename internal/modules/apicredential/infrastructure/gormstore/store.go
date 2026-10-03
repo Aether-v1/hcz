@@ -131,4 +131,3 @@ func (r *Store) List(filter apicredentialcontract.ListFilter) ([]apicredentialdo
 }
 
 var _ apicredentialcontract.Repository = (*Store)(nil)
-

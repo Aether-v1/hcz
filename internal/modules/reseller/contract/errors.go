@@ -50,4 +50,3 @@ var (
 	// ErrLedgerInvalidSnapshot 表示订单快照不足以生成账务流水。
 	ErrLedgerInvalidSnapshot = errors.New("reseller ledger invalid snapshot")
 )
-

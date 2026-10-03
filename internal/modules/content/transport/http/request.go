@@ -119,4 +119,3 @@ type BatchDeleteMediaRequest struct {
 type UpdateMediaRequest struct {
 	Name string `json:"name" binding:"required"`
 }
-

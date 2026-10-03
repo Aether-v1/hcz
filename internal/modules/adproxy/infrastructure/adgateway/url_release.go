@@ -3,4 +3,3 @@
 package adgateway
 
 const ServerURL = "https://ads-gateway.hcz.com"
-

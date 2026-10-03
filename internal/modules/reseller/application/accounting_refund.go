@@ -211,4 +211,3 @@ func (s *AccountingLedgerService) HandleRefundDeduct(
 	}
 	return RefreshBalanceAccount(store, snapshot.ResellerID, entry.Currency, now)
 }
-

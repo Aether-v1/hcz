@@ -94,4 +94,3 @@ func channelLocaleValue(c *gin.Context, explicit string) string {
 	}
 	return i18n.ResolveLocale(c)
 }
-

@@ -116,4 +116,3 @@ func TestOrderAdminHTTPLivesInTransport(t *testing.T) {
 	}
 	assertDirectoryGoFileBudget(t, wiringRoot, 4)
 }
-

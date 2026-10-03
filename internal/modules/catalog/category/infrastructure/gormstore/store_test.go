@@ -121,4 +121,3 @@ func TestCategoryStoreRestoreRevivesSoftDeletedSlug(t *testing.T) {
 		t.Fatalf("expected exactly 1 visible row for slug after restore, got %d", count)
 	}
 }
-

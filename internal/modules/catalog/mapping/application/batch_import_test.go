@@ -113,4 +113,3 @@ func TestFindOrCreateLocalCategoryRequiresCreatorForNewSlug(t *testing.T) {
 		t.Fatalf("expected category service not available error, got %v", err)
 	}
 }
-

@@ -78,4 +78,3 @@ func (accountingWithdrawStoreStub) GetWithdrawRequestByIDForUpdate(id uint) (*re
 func (accountingWithdrawStoreStub) UpdateWithdrawRequest(req *resellerdomain.WithdrawRequest) error {
 	return nil
 }
-

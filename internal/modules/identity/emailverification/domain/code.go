@@ -21,4 +21,3 @@ type Code struct {
 func (Code) TableName() string {
 	return "email_verify_codes"
 }
-

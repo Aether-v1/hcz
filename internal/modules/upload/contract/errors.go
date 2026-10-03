@@ -9,4 +9,3 @@ func (e *ValidationError) Error() string { return e.Message }
 
 // UploadValidationError 供 HTTP 边界识别可安全展示的校验错误。
 func (e *ValidationError) UploadValidationError() {}
-

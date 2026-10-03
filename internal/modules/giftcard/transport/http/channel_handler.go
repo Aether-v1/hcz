@@ -119,4 +119,3 @@ func respondChannelGiftCardError(c *gin.Context, err error) {
 		channelresponse.Error(c, http.StatusInternalServerError, response.CodeInternal, "gift_card_redeem_failed", "error.gift_card_redeem_failed", err)
 	}
 }
-

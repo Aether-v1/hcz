@@ -62,4 +62,3 @@ func NewAdminRefundHandler(c *container.Container) *ordertransport.AdminRefundHa
 		orderAdminStatusEmailAdapter{queue: c.QueueClient},
 	)
 }
-

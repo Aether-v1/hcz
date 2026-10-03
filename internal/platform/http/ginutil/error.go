@@ -104,4 +104,3 @@ func RespondErrorWithMsg(c *gin.Context, code int, msg string, err error) {
 	}
 	response.Error(c, appErr.Code, appErr.Message)
 }
-

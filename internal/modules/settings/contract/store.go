@@ -9,4 +9,3 @@ type Store interface {
 	GetByKey(key string) (value jsonmap.JSON, found bool, err error)
 	Upsert(key string, value jsonmap.JSON) (jsonmap.JSON, error)
 }
-

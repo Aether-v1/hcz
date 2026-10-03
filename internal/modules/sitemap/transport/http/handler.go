@@ -85,4 +85,3 @@ func (h *Handler) resolveBaseURL(c *gin.Context) string {
 	}
 	return scheme + "://" + host
 }
-

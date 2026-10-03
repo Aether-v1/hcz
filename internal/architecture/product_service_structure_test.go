@@ -115,4 +115,3 @@ func declaredFunctionNames(parsed *ast.File) []string {
 	}
 	return functions
 }
-

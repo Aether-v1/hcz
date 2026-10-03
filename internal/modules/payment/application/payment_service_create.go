@@ -371,4 +371,3 @@ func (s *PaymentService) CreatePayment(input CreatePaymentInput) (*CreatePayment
 		OnlinePayAmount:  order.OnlinePaidAmount,
 	}, nil
 }
-

@@ -15,4 +15,3 @@ func RegisterAdminRoutes(authorized gin.IRoutes, handler *AdminHandler) {
 	authorized.PUT("/users/:id", handler.UpdateAdminUser)
 	authorized.GET("/users/:id/coupon-usages", handler.GetAdminUserCouponUsages)
 }
-

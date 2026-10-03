@@ -36,4 +36,3 @@ type Coupon struct {
 func (Coupon) TableName() string {
 	return "coupons"
 }
-

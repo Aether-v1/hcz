@@ -145,4 +145,3 @@ func TestRiskGateSerializesConcurrentGuestQuotaChecks(t *testing.T) {
 }
 
 var errQuotaReached = errors.New("quota reached")
-

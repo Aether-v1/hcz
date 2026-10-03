@@ -69,4 +69,3 @@ func TestDownstreamCallbackLivesInCompleteVertical(t *testing.T) {
 		}
 	}
 }
-

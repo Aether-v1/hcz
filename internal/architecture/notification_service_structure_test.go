@@ -63,4 +63,3 @@ func TestNotificationLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

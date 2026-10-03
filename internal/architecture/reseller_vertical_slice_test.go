@@ -38,4 +38,3 @@ func TestResellerModuleOwnsCompleteVerticalSlice(t *testing.T) {
 	assertDirectoryGoFileBudget(t, filepath.Join(transportRoot, "presenter"), 4)
 	assertDirectoryGoFileBudget(t, filepath.Join(transportRoot, "shared"), 1)
 }
-

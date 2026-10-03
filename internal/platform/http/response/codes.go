@@ -9,4 +9,3 @@ const (
 	CodeTooManyRequests = 429
 	CodeInternal        = 500
 )
-

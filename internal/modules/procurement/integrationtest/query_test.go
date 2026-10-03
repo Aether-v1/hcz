@@ -436,4 +436,3 @@ func TestProcurement_GetByID_WithoutUpstreamRefundOmitsRefundFields(t *testing.T
 		t.Fatalf("expected upstream_order_id to be omitted from procurement payload, payload=%s", string(payload))
 	}
 }
-

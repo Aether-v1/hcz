@@ -22,4 +22,3 @@ type ActiveEndpoint struct {
 	CallbackURL   string
 	ChannelSecret string
 }
-

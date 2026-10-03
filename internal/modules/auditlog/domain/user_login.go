@@ -21,4 +21,3 @@ type UserLoginLog struct {
 func (UserLoginLog) TableName() string {
 	return "user_login_logs"
 }
-

@@ -159,4 +159,3 @@ func TestIsUpstreamTransitionAllowed(t *testing.T) {
 		}
 	}
 }
-

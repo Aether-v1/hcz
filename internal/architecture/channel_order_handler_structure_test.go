@@ -104,4 +104,3 @@ func TestChannelOrderHandlerIsSplitByResponsibility(t *testing.T) {
 	}
 	assertDirectoryGoFileBudget(t, wiringDirectory, 3)
 }
-

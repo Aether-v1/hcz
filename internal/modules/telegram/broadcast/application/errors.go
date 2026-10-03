@@ -8,4 +8,3 @@ var (
 	ErrNoRecipients     = errors.New("telegram broadcast no recipients")
 	ErrTokenUnavailable = errors.New("telegram bot token unavailable")
 )
-

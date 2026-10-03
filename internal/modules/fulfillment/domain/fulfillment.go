@@ -53,4 +53,3 @@ func (f *Fulfillment) TruncatePayload(maxLines int) {
 func (Fulfillment) TableName() string {
 	return "fulfillments"
 }
-

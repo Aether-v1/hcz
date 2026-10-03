@@ -45,4 +45,3 @@ func registerChannelRoutes(
 		giftcardtransport.RegisterChannelRoutes(channelAPI, channelGiftCardHandler)
 	}
 }
-

@@ -527,4 +527,3 @@ func FillOrdersItemsFromChildren(orders []orderdomain.Order) {
 		FillOrderItemsFromChildren(&orders[i])
 	}
 }
-

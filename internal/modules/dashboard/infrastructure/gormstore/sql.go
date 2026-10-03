@@ -82,4 +82,3 @@ func timeRangeQuery(db *gorm.DB, column string, startAt, endAt time.Time) (strin
 		return fmt.Sprintf("datetime(%s) >= datetime(?) AND datetime(%s) < datetime(?)", column, column), []interface{}{startAt.Format(time.RFC3339Nano), endAt.Format(time.RFC3339Nano)}
 	}
 }
-

@@ -37,4 +37,3 @@ func TestConvertUpstreamWholesalePricesDropsUnmappedUpstreamSKUID(t *testing.T) 
 		t.Fatalf("expected unmapped upstream sku_id tier to be dropped, got %+v", tiers)
 	}
 }
-

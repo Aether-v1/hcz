@@ -248,4 +248,3 @@ func TestMemberLevelServiceUpdateLevelRejectsActiveSortOrderConflict(t *testing.
 		t.Fatalf("expected active sort_order conflict to be rejected")
 	}
 }
-

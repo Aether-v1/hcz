@@ -189,4 +189,3 @@ func (h *AdminProductSettingHandler) recordAudit(c *gin.Context, action, object,
 		Detail:           detail,
 	})
 }
-

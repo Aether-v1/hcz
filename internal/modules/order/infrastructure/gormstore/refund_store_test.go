@@ -287,4 +287,3 @@ func TestOrderRefundRecordRepositoryGetByID(t *testing.T) {
 		t.Fatalf("missing record should be nil, got %+v", missing)
 	}
 }
-

@@ -98,4 +98,3 @@ func TestServiceSendMessagePropagatesSettingReadFailure(t *testing.T) {
 		t.Fatalf("sender must not be called after a setting error, got %d calls", sender.calls)
 	}
 }
-

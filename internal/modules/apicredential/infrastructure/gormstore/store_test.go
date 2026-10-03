@@ -60,4 +60,3 @@ func TestApiCredentialStoreSoftDeleteVisibilityAndRestorePath(t *testing.T) {
 		t.Fatalf("GetByID after restore = (%v, %v), want visible row", got, err)
 	}
 }
-

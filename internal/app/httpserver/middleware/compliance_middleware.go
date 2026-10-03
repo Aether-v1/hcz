@@ -26,4 +26,3 @@ func PaymentComplianceRequired(cs *complianceapp.Service) gin.HandlerFunc {
 		c.Abort()
 	}
 }
-

@@ -113,4 +113,3 @@ func respondFetchError(c *gin.Context, err error) {
 	}
 	ginutil.RespondError(c, response.CodeInternal, "error.dashboard_fetch_failed", err)
 }
-

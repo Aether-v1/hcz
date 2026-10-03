@@ -189,4 +189,3 @@ func (h *UserTelegramOIDCHandler) TelegramOIDCBindCallback(c *gin.Context) {
 	}
 	response.Success(c, userpresenter.NewTelegramBindingResp(identity))
 }
-

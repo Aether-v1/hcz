@@ -54,4 +54,3 @@ func TestAdProxyHTTPLivesInTransport(t *testing.T) {
 		t.Fatalf("stat legacy ad proxy service: %v", err)
 	}
 }
-

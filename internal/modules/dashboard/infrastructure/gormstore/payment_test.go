@@ -229,4 +229,3 @@ func TestGetPaymentOrderAlertCountsExcludesChildOrdersAndWalletPayments(t *testi
 		t.Fatalf("payments failed want 1 got %d", counts.PaymentsFailed)
 	}
 }
-

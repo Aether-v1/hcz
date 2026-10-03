@@ -22,4 +22,3 @@ func (p SimpleProvisioner) ProvisionUserID(channelUserID string) (uint, error) {
 	}
 	return user.ID, nil
 }
-

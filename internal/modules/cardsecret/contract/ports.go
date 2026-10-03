@@ -56,4 +56,3 @@ type ProductSKURepository interface {
 	GetByID(id uint) (*productdomain.ProductSKU, error)
 	GetByProductAndCode(productID uint, skuCode string) (*productdomain.ProductSKU, error)
 }
-

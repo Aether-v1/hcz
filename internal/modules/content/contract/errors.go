@@ -14,4 +14,3 @@ var (
 	ErrMediaNotFound                 = errors.New("media not found")
 	ErrMediaNameEmpty                = errors.New("media name empty")
 )
-

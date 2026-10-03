@@ -27,4 +27,3 @@ func New(client Client) reconciliationcontract.Enqueuer {
 func (e *Enqueuer) Enqueue(jobID uint) error {
 	return e.client.EnqueueReconciliationRun(queue.ReconciliationRunPayload{JobID: jobID})
 }
-

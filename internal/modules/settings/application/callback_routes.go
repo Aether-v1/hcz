@@ -67,4 +67,3 @@ func (s *Service) GetCallbackRoutes() *settingsintegration.CallbackRoutesSetting
 	}
 	return &setting
 }
-

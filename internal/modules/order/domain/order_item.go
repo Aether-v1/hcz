@@ -42,4 +42,3 @@ type OrderItem struct {
 func (OrderItem) TableName() string {
 	return "order_items"
 }
-

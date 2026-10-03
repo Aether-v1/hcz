@@ -64,4 +64,3 @@ func TestResolvePasswordChangeMode(t *testing.T) {
 		t.Fatalf("unexpected mode for normal user: %s", mode)
 	}
 }
-

@@ -39,4 +39,3 @@ func (r *Reader) ListByConnectionAndTimeRange(connectionID uint, start, end time
 	}
 	return result, nil
 }
-

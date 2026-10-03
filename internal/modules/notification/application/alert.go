@@ -59,4 +59,3 @@ func (s *Service) dispatchExceptionAlertCheck(ctx context.Context, setting setti
 	}
 	return firstErr
 }
-

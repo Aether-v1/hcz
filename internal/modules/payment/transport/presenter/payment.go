@@ -130,4 +130,3 @@ func NewLatestPaymentResp(payment *paymentdomain.Payment, orderNo string) Latest
 	// 排除：OrderID、FeeRate、FixedFee、Currency、Status、
 	// ProviderRef、GatewayOrderNo、ProviderPayload、CreatedAt、UpdatedAt、PaidAt、CallbackAt
 }
-

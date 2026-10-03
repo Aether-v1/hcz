@@ -301,4 +301,3 @@ func (s *Service) normalizeExchangeRate(rate float64) decimal.Decimal {
 	}
 	return decimal.NewFromFloat(rate)
 }
-

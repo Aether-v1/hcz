@@ -78,4 +78,3 @@ func (s *Service) Generate(input GenerateInput) (*giftcarddomain.GiftCardBatch, 
 
 	return batch, input.Quantity, nil
 }
-

@@ -7,4 +7,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/ads/render/:slotCode", handler.GetAdRender)
 	admin.POST("/ads/impression", handler.PostAdImpression)
 }
-

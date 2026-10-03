@@ -119,4 +119,3 @@ func (r *Store) List(filter promotioncontract.ListFilter) ([]promotiondomain.Pro
 }
 
 var _ promotioncontract.Repository = (*Store)(nil)
-

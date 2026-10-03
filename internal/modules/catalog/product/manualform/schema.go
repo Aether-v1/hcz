@@ -690,4 +690,3 @@ func sanitizeManualFormText(raw string) string {
 	}
 	return html.EscapeString(trimmed)
 }
-

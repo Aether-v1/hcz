@@ -49,4 +49,3 @@ const (
 	RelatedAccountStatusActive   = "active"
 	RelatedAccountStatusDisabled = "disabled"
 )
-

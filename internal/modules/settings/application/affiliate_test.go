@@ -73,4 +73,3 @@ func TestUpdateAffiliateSettingNormalize(t *testing.T) {
 		t.Fatalf("expected saved commission rate 100, got %v", saved["commission_rate"])
 	}
 }
-

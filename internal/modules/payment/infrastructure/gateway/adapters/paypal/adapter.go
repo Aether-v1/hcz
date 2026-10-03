@@ -225,4 +225,3 @@ func mapPaypalError(err error) error {
 		return err
 	}
 }
-

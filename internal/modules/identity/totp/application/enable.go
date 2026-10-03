@@ -128,4 +128,3 @@ func PrepareEnable(input EnableInput) (*EnableResult, error) {
 		EnabledAt:         now(),
 	}, nil
 }
-

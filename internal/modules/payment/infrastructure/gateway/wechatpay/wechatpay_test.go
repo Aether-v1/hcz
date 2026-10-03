@@ -360,4 +360,3 @@ func buildTestPrivateKey() string {
 	}
 	return string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateKeyDER}))
 }
-

@@ -404,4 +404,3 @@ func TestLoginWithTelegramAssignsDefaultMemberLevel(t *testing.T) {
 		t.Fatalf("persisted user member level = %d, want %d (被零值覆盖)", persisted.MemberLevelID, defaultLevel.ID)
 	}
 }
-

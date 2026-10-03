@@ -142,4 +142,3 @@ func TestStoreSoftDeleteExcludesAdminFromReadsAndMutations(t *testing.T) {
 		t.Fatalf("deleted admin was mutated: %#v", persisted)
 	}
 }
-

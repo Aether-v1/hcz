@@ -157,4 +157,3 @@ func TestResellerOperationsRepositoryFinanceSplitsPeriodAndCurrentCurrencyRows(t
 		t.Fatalf("unexpected current money row: %+v", current)
 	}
 }
-

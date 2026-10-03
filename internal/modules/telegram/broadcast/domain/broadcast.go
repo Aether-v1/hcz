@@ -32,4 +32,3 @@ type Broadcast struct {
 func (Broadcast) TableName() string {
 	return "telegram_broadcasts"
 }
-

@@ -96,4 +96,3 @@ func ValidateUnitAmount(profile *resellerdomain.Profile, sku *productdomain.Prod
 	}
 	return nil
 }
-

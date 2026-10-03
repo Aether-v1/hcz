@@ -158,4 +158,3 @@ func localizedNotificationText(locale, zhCN, zhTW, enUS string) string {
 		return zhCN
 	}
 }
-

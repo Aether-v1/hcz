@@ -48,4 +48,3 @@ type UsageRepository interface {
 	ListByUser(filter UsageListFilter) ([]coupondomain.CouponUsage, int64, error)
 	DeleteByOrderID(orderID uint) error
 }
-

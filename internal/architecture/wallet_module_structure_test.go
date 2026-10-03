@@ -147,4 +147,3 @@ func TestWalletOwnsCompleteVerticalSlice(t *testing.T) {
 		}
 	}
 }
-

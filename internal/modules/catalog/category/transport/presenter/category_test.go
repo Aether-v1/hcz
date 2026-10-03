@@ -41,4 +41,3 @@ func TestCategoryRespListEmpty(t *testing.T) {
 		t.Errorf("expected empty list, got %d", len(result))
 	}
 }
-

@@ -96,4 +96,3 @@ func TestGenerateCachesRenderedDocument(t *testing.T) {
 		t.Fatalf("cache miss source calls: catalog=%d posts=%d", catalog.calls, posts.calls)
 	}
 }
-

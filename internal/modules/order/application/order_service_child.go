@@ -471,4 +471,3 @@ func IsTransitionAllowed(current, target string) bool {
 	}
 	return nexts[target]
 }
-

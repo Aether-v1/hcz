@@ -206,4 +206,3 @@ func TestSendCallbackReturnsStableNotFoundSentinel(t *testing.T) {
 		t.Fatalf("error = %v, want ErrRefNotFound", err)
 	}
 }
-

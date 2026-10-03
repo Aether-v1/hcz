@@ -150,4 +150,3 @@ func (r *Store) GetTotalUserBalance() (float64, error) {
 	}
 	return total, nil
 }
-

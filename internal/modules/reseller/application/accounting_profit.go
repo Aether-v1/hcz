@@ -139,4 +139,3 @@ func (s *AccountingLedgerService) ConfirmDueLedgerEntries(now time.Time) (int64,
 	}
 	return affected, nil
 }
-

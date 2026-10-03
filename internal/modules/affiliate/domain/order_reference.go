@@ -10,4 +10,3 @@ type OrderReference struct {
 func (OrderReference) TableName() string {
 	return "orders"
 }
-

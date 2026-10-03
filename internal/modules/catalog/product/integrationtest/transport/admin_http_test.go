@@ -460,4 +460,3 @@ func TestAdminProductListFiltersByActiveState(t *testing.T) {
 		t.Fatalf("is_active=0 + non-matching search should be empty, got %+v", got)
 	}
 }
-

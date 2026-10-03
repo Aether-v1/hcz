@@ -156,4 +156,3 @@ func (s *Service) ResolveRedeemedUsers(cards []giftcarddomain.GiftCard) (map[uin
 	}
 	return result, nil
 }
-

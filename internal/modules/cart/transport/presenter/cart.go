@@ -31,4 +31,3 @@ type CartItemResp struct {
 	Currency        string          `json:"currency"`
 	Product         CartProductResp `json:"product"`
 }
-

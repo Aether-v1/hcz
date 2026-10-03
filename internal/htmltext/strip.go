@@ -58,4 +58,3 @@ func StripToPlainText(raw string) string {
 	}
 	return strings.TrimSpace(strings.Join(cleaned, "\n"))
 }
-

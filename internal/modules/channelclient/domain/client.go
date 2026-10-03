@@ -22,4 +22,3 @@ type Client struct {
 func (Client) TableName() string {
 	return "channel_clients"
 }
-

@@ -50,4 +50,3 @@ func TestDeriveKeyDeterministic(t *testing.T) {
 		t.Fatalf("expected 32 bytes, got %d", len(k1))
 	}
 }
-

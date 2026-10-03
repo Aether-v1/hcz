@@ -30,4 +30,3 @@ func (a settingsGoogleAuthAdapter) ApplyRuntime(setting settingssecurity.GoogleA
 		a.googleAuth.SetConfig(runtimeCfg)
 	}
 }
-

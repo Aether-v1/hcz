@@ -891,4 +891,3 @@ func TestExportAvailableCardSecretsDeletesAfterExport(t *testing.T) {
 		t.Fatalf("unexpected remaining rows: %+v", rows)
 	}
 }
-

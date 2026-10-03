@@ -46,4 +46,3 @@ func ReadMap(raw map[string]interface{}, key string) map[string]interface{} {
 	}
 	return nil
 }
-

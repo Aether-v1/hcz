@@ -204,4 +204,3 @@ func mapProcurementUpstreamStatus(status string) string {
 		return normalized
 	}
 }
-

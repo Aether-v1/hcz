@@ -60,4 +60,3 @@ type SKURepository interface {
 	ReleaseManualStock(skuID uint, quantity int) (int64, error)
 	ConsumeManualStock(skuID uint, quantity int) (int64, error)
 }
-

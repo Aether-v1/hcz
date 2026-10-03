@@ -447,4 +447,3 @@ func TestPostServiceListPostsForProductFiltersTypeAndPublication(t *testing.T) {
 		t.Fatalf("expected first related published blog, got %#v", limited)
 	}
 }
-

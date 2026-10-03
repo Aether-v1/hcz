@@ -108,4 +108,3 @@ func TestUnsafeBootstrapAdminPasswordRejectsDefaultsAndPolicyViolations(t *testi
 		t.Fatal("empty bootstrap password should keep the skip-initialization behavior")
 	}
 }
-

@@ -392,4 +392,3 @@ func resolveDefaultAdminCredentials(cfg *config.Config) (string, string) {
 	}
 	return user, pass
 }
-

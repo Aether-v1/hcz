@@ -238,4 +238,3 @@ func TestNewOrderDetailNilSafety(t *testing.T) {
 		t.Error("expected nil items")
 	}
 }
-

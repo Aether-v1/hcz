@@ -224,4 +224,3 @@ func validateCallbackURL(rawURL string) error {
 	}
 	return nil
 }
-

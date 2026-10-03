@@ -19,4 +19,3 @@ func (v Verifier) Verify(scene string, payload CaptchaPayloadRequest, clientIP s
 	}
 	return v.service.Verify(scene, payload.ToCaptchaPayload(), clientIP)
 }
-

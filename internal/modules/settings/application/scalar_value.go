@@ -55,4 +55,3 @@ func normalizeSiteCurrency(raw interface{}) string {
 func IsCurrencyCode(value string) bool {
 	return settingCurrencyCodePattern.MatchString(strings.ToUpper(strings.TrimSpace(value)))
 }
-

@@ -117,4 +117,3 @@ func applyManualStockByItems(
 	}
 	return nil
 }
-

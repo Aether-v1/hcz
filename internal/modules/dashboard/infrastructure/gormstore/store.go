@@ -40,4 +40,3 @@ func onlinePaymentBase(db *gorm.DB, startAt, endAt time.Time) *gorm.DB {
 }
 
 var _ dashboard.Repository = (*Store)(nil)
-

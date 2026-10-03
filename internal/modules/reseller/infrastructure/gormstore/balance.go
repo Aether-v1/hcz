@@ -84,4 +84,3 @@ func (r *Store) UpdateBalanceAccount(account *resellerdomain.BalanceAccount) err
 		Select("*").
 		Updates(account).Error
 }
-

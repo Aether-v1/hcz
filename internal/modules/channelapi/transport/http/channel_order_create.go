@@ -218,4 +218,3 @@ func buildChannelOrderPreviewResponse(preview *OrderPreview, locale string) gin.
 		"validation_errors":  []string{},
 	}
 }
-

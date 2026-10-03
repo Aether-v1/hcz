@@ -27,4 +27,3 @@ type MemberLevel struct {
 func (MemberLevel) TableName() string {
 	return "member_levels"
 }
-

@@ -250,4 +250,3 @@ func sanityCheckPassword(pwd string) error {
 	}
 	return nil
 }
-

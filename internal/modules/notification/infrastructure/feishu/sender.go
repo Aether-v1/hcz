@@ -149,4 +149,3 @@ func (c *sdkMessageClient) SendText(ctx context.Context, receiveIDType, receiveI
 	}
 	return nil
 }
-

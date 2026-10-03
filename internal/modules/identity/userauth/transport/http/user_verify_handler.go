@@ -148,4 +148,3 @@ func respondCaptchaError(c *gin.Context, err error) {
 		ginutil.RespondError(c, response.CodeInternal, "error.captcha_verify_failed", err)
 	}
 }
-

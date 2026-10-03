@@ -122,4 +122,3 @@ func (r *LevelStore) ClearDefault(excludeID uint) error {
 }
 
 var _ memberlevelcontract.LevelRepository = (*LevelStore)(nil)
-

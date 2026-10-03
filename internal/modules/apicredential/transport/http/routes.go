@@ -17,4 +17,3 @@ func RegisterUserRoutes(user gin.IRoutes, handler *UserHandler) {
 	user.POST("/api-credential/regenerate", handler.RegenerateMyApiCredential)
 	user.PUT("/api-credential/status", handler.UpdateMyApiCredentialStatus)
 }
-

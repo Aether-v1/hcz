@@ -235,4 +235,3 @@ func generateRandomHex(byteLen int) (string, error) {
 	}
 	return hex.EncodeToString(b), nil
 }
-

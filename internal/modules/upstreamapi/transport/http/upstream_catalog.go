@@ -326,4 +326,3 @@ func computeSKUStock(p productdomain.Product, s productdomain.ProductSKU) (statu
 	}
 	return domaincatalog.UpstreamStockPolicy().Status(available), int(available)
 }
-

@@ -222,4 +222,3 @@ func (s *PostStore) ListPostsForProduct(ctx context.Context, productID uint, pos
 	}
 	return result, nil
 }
-

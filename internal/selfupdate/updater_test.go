@@ -66,10 +66,10 @@ func TestSelectAssetsIgnoresOtherProjects(t *testing.T) {
 func TestIsChecksumAsset(t *testing.T) {
 	cases := map[string]bool{
 		"hcz_1.3.1_checksums.txt":        true, // goreleaser 默认模板
-		"checksums.txt":                          true, // 显式配置成裸文件名
-		"dujiao-all_1.3.1_checksums.txt":         false,
+		"checksums.txt":                  true, // 显式配置成裸文件名
+		"dujiao-all_1.3.1_checksums.txt": false,
 		"hcz_v1.3.1_Linux_x86_64.tar.gz": false,
-		"notes.txt":                              false,
+		"notes.txt":                      false,
 	}
 	for name, want := range cases {
 		if got := isChecksumAsset(name); got != want {
@@ -371,4 +371,3 @@ func writeTarGz(t *testing.T, path string, entries map[string]string) {
 		}
 	}
 }
-

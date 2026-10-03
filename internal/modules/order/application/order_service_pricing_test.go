@@ -709,4 +709,3 @@ func TestBuildOrderResultRejectsZeroTotalAmountAfterCoupon(t *testing.T) {
 		t.Fatalf("expected invalid order amount, got: %v", err)
 	}
 }
-

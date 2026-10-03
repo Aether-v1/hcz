@@ -176,4 +176,3 @@ func (r *MappingStore) ListUpstreamIDsByConnection(connectionID uint) ([]uint, e
 	}
 	return ids, nil
 }
-

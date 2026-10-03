@@ -25,4 +25,3 @@ type PostCategory struct {
 func (PostCategory) TableName() string {
 	return "post_categories"
 }
-

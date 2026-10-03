@@ -102,4 +102,3 @@ func (r *Runner) Run(ctx context.Context, stopTimeout time.Duration, logger *zap
 	}
 	return runErr
 }
-

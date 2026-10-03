@@ -218,4 +218,3 @@ func (h *AdminHandler) PayAffiliateWithdraw(c *gin.Context) {
 	}
 	response.Success(c, row)
 }
-

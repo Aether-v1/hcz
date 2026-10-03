@@ -148,4 +148,3 @@ func ActiveHomeAnnouncement(value jsonmap.JSON, now time.Time) (jsonmap.JSON, bo
 		"version": homeAnnouncementVersion(annType, title, content),
 	}, true
 }
-

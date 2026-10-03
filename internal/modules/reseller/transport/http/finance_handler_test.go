@@ -129,4 +129,3 @@ func TestAdminFinanceHandlerMapsNotFound(t *testing.T) {
 		t.Fatalf("expected not found, body=%s", recorder.Body.String())
 	}
 }
-

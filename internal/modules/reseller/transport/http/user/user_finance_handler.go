@@ -156,4 +156,3 @@ func (h *UserFinanceHandler) ApplyWithdraw(c *gin.Context) {
 	}
 	response.Success(c, dto.NewResellerWithdrawResp(row))
 }
-

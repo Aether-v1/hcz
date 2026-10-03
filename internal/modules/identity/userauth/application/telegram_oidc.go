@@ -85,4 +85,3 @@ func (s *Service) BindTelegramOIDC(input BindTelegramOIDCInput) (*externalidenti
 	}
 	return s.bindVerifiedTelegram(input.UserID, verified)
 }
-

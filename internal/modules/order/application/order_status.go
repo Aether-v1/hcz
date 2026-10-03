@@ -99,4 +99,3 @@ func CalcParentStatus(children []orderdomain.Order, currentStatus string) string
 	}
 	return currentStatus
 }
-

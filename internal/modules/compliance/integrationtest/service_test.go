@@ -143,4 +143,3 @@ func TestComplianceService_LoadFromExistingSetting(t *testing.T) {
 	status, _ := svc2.Status()
 	assert.Equal(t, "root", status.AcknowledgedByUsername)
 }
-

@@ -21,4 +21,3 @@ func TestParseQuery(t *testing.T) {
 		t.Fatalf("unexpected query: %+v", query)
 	}
 }
-

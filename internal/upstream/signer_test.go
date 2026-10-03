@@ -83,4 +83,3 @@ func TestParseTimestamp(t *testing.T) {
 		t.Fatal("expected error for non-numeric string")
 	}
 }
-

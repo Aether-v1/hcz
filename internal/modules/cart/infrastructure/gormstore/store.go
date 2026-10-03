@@ -109,4 +109,3 @@ func (r *Store) ClearByUser(userID uint) error {
 func (r *Store) softDelete(query *gorm.DB) error {
 	return query.Model(&domain.Item{}).Update("deleted_at", r.db.NowFunc()).Error
 }
-

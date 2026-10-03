@@ -192,4 +192,3 @@ func (a exceptionAlerterAdapter) EnqueuePaymentExceptionAlert(method, path, clie
 		Data:      payload,
 	})
 }
-

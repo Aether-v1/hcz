@@ -236,4 +236,3 @@ func TestProductServiceGetAdminByIDIncludesInactiveSKUs(t *testing.T) {
 		t.Fatalf("expected second sku to be inactive INACTIVE, got %+v", got.SKUs[1])
 	}
 }
-

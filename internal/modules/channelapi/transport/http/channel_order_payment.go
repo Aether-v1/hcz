@@ -352,4 +352,3 @@ func buildChannelPaymentResponse(order *orderdomain.Order, payment *paymentdomai
 	}
 	return resp
 }
-

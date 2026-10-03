@@ -243,4 +243,3 @@ func (r *Store) SummarizeByResellerID(resellerID uint) (resellercontract.Product
 	}
 	return summary, nil
 }
-

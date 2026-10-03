@@ -102,4 +102,3 @@ func NewResellerOrderStatsResp(stats resellermodule.OrderStats) ResellerOrderSta
 		ByCurrency: stats.ByCurrency,
 	}
 }
-

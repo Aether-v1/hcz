@@ -39,4 +39,3 @@ func GetGuestCredentials(c *gin.Context) (string, string, bool) {
 	}
 	return email, password, true
 }
-

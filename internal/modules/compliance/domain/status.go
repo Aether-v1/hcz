@@ -8,4 +8,3 @@ type Status struct {
 	AcknowledgedByUsername string
 	Version                string
 }
-

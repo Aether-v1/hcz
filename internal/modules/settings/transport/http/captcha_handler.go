@@ -65,4 +65,3 @@ func (h *CaptchaHandler) UpdateCaptcha(c *gin.Context) {
 	_ = cache.DelAllPublicConfig(c.Request.Context())
 	response.Success(c, settingssecurity.MaskCaptchaSettingForAdmin(setting))
 }
-

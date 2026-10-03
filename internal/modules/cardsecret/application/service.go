@@ -114,4 +114,3 @@ func normalizeCardSecretIDs(ids []uint) []uint {
 	}
 	return result
 }
-

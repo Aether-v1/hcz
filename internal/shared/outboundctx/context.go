@@ -30,4 +30,3 @@ func WithDefaultTimeout(ctx context.Context) (context.Context, context.CancelFun
 	}
 	return context.WithTimeout(ctx, DefaultTimeout)
 }
-

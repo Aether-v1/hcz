@@ -260,4 +260,3 @@ func TestAdminContentHandlersValidationAndDomainErrorContracts(t *testing.T) {
 		})
 	}
 }
-

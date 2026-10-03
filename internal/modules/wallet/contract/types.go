@@ -83,4 +83,3 @@ type OrderReleaseInput struct {
 	TransactionType  string
 	Remark           string
 }
-

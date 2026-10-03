@@ -273,4 +273,3 @@ func newContentRouteAccessRouter(adminRepo admincontract.Store, authzService *au
 	contenttransport.RegisterAdminRoutes(admin, contenttransport.NewAdminHandler(nil, nil, nil, nil))
 	return router
 }
-

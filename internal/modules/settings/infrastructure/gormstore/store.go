@@ -62,4 +62,3 @@ func (store *Store) Upsert(key string, value jsonmap.JSON) (jsonmap.JSON, error)
 	}
 	return record.ValueJSON, nil
 }
-

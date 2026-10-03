@@ -206,4 +206,3 @@ func (s *Store) attachLocalOrders(orders []procurementdomain.Order) error {
 	}
 	return nil
 }
-

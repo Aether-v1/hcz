@@ -234,4 +234,3 @@ func wholesaleTierMatchPriority(tier *WholesalePriceTier, skuID uint, skuCode st
 	}
 	return 0
 }
-

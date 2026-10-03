@@ -38,4 +38,3 @@ func EncodePaymentChannelIDs(ids []uint) string {
 	}
 	return string(payload)
 }
-

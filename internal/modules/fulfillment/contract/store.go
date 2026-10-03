@@ -8,4 +8,3 @@ type Store interface {
 	GetByOrderID(orderID uint) (*fulfillmentdomain.Fulfillment, error)
 	FindByOrderIDForUpdate(orderID uint) (*fulfillmentdomain.Fulfillment, bool, error)
 }
-

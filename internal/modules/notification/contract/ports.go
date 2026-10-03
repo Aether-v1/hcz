@@ -101,4 +101,3 @@ type TestSendInput struct {
 type TestSender interface {
 	SendTest(context.Context, TestSendInput) error
 }
-

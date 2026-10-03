@@ -210,4 +210,3 @@ func TestProductServiceGetPublicBySlugForTenantRejectsHiddenProduct(t *testing.T
 		t.Fatalf("expected productcontract.ErrNotFound for hidden detail, got %v", err)
 	}
 }
-

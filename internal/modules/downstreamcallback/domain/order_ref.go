@@ -29,4 +29,3 @@ type OrderRef struct {
 func (OrderRef) TableName() string {
 	return "downstream_order_refs"
 }
-

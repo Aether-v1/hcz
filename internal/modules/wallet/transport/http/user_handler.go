@@ -385,4 +385,3 @@ func respondPaymentError(c *gin.Context, err error, fallbackCode int, fallbackKe
 		ginutil.RespondError(c, fallbackCode, fallbackKey, err)
 	}
 }
-

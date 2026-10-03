@@ -7,4 +7,3 @@ var (
 	ErrItemNotFound = errors.New("reconciliation item not found")
 	ErrJobRunning   = errors.New("reconciliation job is already running")
 )
-

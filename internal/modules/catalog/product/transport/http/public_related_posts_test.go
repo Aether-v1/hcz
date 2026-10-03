@@ -57,4 +57,3 @@ func TestLoadRelatedPostCardsReturnsReaderErrorForBestEffortCaller(t *testing.T)
 		t.Fatalf("error = %v, want %v", err, wantErr)
 	}
 }
-

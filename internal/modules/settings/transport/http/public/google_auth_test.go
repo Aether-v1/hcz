@@ -45,4 +45,3 @@ func TestResolveGoogleAuthPublicConfig(t *testing.T) {
 		})
 	}
 }
-

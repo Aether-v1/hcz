@@ -77,4 +77,3 @@ func TestAuditLogLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

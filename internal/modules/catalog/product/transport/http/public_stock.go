@@ -198,4 +198,3 @@ func (h *PublicHandler) decorateUpstreamStock(product *productdomain.Product, it
 	item.StockStatus = domaincatalog.StorefrontStockPolicy().Status(int64(totalStock))
 	item.IsSoldOut = item.StockStatus == constants.ProductStockStatusOutOfStock
 }
-

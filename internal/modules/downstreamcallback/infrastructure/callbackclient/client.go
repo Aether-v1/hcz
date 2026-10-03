@@ -67,4 +67,3 @@ func (c *Client) Send(ctx context.Context, request downstreamcontract.DeliveryRe
 	}
 	return fmt.Errorf("callback returned %d: %s", response.StatusCode, strings.TrimSpace(string(body)))
 }
-

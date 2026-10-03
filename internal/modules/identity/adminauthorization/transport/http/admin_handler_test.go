@@ -79,4 +79,3 @@ func TestBuildAuthzRoleListPayloadKeepsLegacyStringShape(t *testing.T) {
 		t.Fatalf("metadata payload = %#v, want role descriptors", metadata)
 	}
 }
-

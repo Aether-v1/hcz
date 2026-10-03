@@ -37,4 +37,3 @@ func (r *SKUReader) FindUpstreamSKUID(skuID uint) (uint, bool, error) {
 	}
 	return mapping.UpstreamSKUID, true, nil
 }
-

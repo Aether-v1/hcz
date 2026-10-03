@@ -26,4 +26,3 @@ func registerUpstreamRoutes(
 	// 上游回调接收（本站作为 A 站点，接收 B 的回调）
 	apiV1.POST("/upstream/callback", middleware.RateLimitMiddleware(redisClient, callbackRule, middleware.KeyByIP), upstreamHandler.HandleCallback)
 }
-

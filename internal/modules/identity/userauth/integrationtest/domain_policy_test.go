@@ -159,4 +159,3 @@ func TestSendVerifyCodePropagatesRequestTenantBrandToSender(t *testing.T) {
 		t.Fatalf("resolved brand did not reach sender: %+v", sender.brand)
 	}
 }
-

@@ -253,4 +253,3 @@ func formatOperationsDecimal(value decimal.Decimal) string {
 func normalizeOperationsCurrency(currency string) string {
 	return strings.ToUpper(strings.TrimSpace(currency))
 }
-

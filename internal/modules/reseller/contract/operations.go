@@ -83,4 +83,3 @@ type OperationsFinanceRowSet struct {
 	PeriodCurrencyRows  []OperationsPeriodCurrencyRow
 	CurrentCurrencyRows []OperationsCurrentCurrencyRow
 }
-

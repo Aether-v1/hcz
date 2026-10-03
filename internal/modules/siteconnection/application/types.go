@@ -41,4 +41,3 @@ type PingResult struct {
 	Currency        string                 `json:"currency"`
 	MemberLevel     map[string]interface{} `json:"member_level,omitempty"`
 }
-

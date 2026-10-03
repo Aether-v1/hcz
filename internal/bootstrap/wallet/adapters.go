@@ -158,4 +158,3 @@ func mapWalletTransportError(err error) error {
 	}
 	return err
 }
-

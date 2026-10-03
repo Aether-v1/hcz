@@ -224,4 +224,3 @@ func respondBodyCallback(c *gin.Context, callback bodyCallback, success bool) {
 	}
 	c.String(http.StatusOK, body)
 }
-

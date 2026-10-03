@@ -67,4 +67,3 @@ func (m *Amount) Scan(value any) error {
 func (m Amount) String() string {
 	return m.Decimal.Round(2).StringFixed(2)
 }
-

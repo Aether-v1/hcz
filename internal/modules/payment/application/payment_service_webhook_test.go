@@ -56,4 +56,3 @@ func TestHandlePaypalWebhookRequiresChannelID(t *testing.T) {
 		t.Fatalf("expected ErrPaymentInvalid for paypal without channel_id, got: %v", err)
 	}
 }
-

@@ -162,4 +162,3 @@ func ReadUintList(source map[string]interface{}, key string, fallback []uint) []
 		return CloneUintSlice(fallback)
 	}
 }
-

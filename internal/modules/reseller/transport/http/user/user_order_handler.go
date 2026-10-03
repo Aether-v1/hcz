@@ -135,4 +135,3 @@ func parseOrderTimeQuery(raw string, endOfDay bool) (*time.Time, error) {
 	}
 	return &parsed, nil
 }
-

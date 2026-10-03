@@ -13,4 +13,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.POST("/procurement-orders/:id/retry", handler.RetryProcurementOrder)
 	admin.POST("/procurement-orders/:id/cancel", handler.CancelProcurementOrder)
 }
-

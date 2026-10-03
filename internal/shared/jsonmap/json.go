@@ -32,4 +32,3 @@ func (value *JSON) Scan(source interface{}) error {
 	}
 	return json.Unmarshal(bytes, value)
 }
-

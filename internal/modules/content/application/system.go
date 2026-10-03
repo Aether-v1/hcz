@@ -17,4 +17,3 @@ type WarningLoggerFunc func(message string, keysAndValues ...interface{})
 func (f WarningLoggerFunc) Warnw(message string, keysAndValues ...interface{}) {
 	f(message, keysAndValues...)
 }
-

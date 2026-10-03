@@ -104,4 +104,3 @@ func (s *Service) TrackClick(input TrackClickInput) error {
 	}
 	return s.repo.CreateClick(click)
 }
-

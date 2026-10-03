@@ -806,4 +806,3 @@ func validateGuestPassword(password string) error {
 	}
 	return nil
 }
-

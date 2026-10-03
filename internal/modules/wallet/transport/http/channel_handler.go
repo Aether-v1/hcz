@@ -212,4 +212,3 @@ func (h *ChannelHandler) CreateWalletRecharge(c *gin.Context) {
 		"payment":     paymentBlock,
 	})
 }
-

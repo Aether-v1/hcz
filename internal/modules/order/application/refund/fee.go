@@ -211,4 +211,3 @@ func refundablePaymentFeeSnapshot(payments []paymentdomain.Payment, currency str
 	}
 	return paymentAmount.Round(2), paymentFee.Round(2)
 }
-

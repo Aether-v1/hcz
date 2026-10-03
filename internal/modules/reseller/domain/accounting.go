@@ -75,4 +75,3 @@ type BalanceAccount struct {
 }
 
 func (BalanceAccount) TableName() string { return "reseller_balance_accounts" }
-

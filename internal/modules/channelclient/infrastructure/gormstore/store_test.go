@@ -67,4 +67,3 @@ func TestStorePreservesSoftDeleteAndLastUsedSemantics(t *testing.T) {
 		t.Fatalf("soft-deleted client must be absent from list: %#v", items)
 	}
 }
-

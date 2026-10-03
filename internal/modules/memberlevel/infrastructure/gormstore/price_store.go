@@ -106,4 +106,3 @@ func (r *PriceStore) DeleteByProductInTx(tx *gorm.DB, productID uint) error {
 }
 
 var _ memberlevelcontract.PriceRepository = (*PriceStore)(nil)
-

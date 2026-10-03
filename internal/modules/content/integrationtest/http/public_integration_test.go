@@ -230,4 +230,3 @@ func TestPublicContentHandlersPreserveRepositoryErrorMapping(t *testing.T) {
 		t.Fatalf("category repository error should be observable as internal error, got %#v", categories)
 	}
 }
-

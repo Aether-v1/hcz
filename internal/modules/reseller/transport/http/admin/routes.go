@@ -71,4 +71,3 @@ func RegisterFinanceRoutes(admin gin.IRoutes, handler *AdminFinanceHandler) {
 	admin.POST("/resellers/withdraws/:id/reject", handler.RejectWithdraw)
 	admin.POST("/resellers/withdraws/:id/pay", handler.PayWithdraw)
 }
-

@@ -6,4 +6,3 @@ var (
 	ErrNotifyConfigInvalid = notificationcontract.ErrConfigInvalid
 	ErrNotifySendFailed    = notificationcontract.ErrSendFailed
 )
-

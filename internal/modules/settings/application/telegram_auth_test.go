@@ -173,4 +173,3 @@ func TestTelegramAuthSettingPatchClearingRedirectAlsoClearsClientSecret(t *testi
 		t.Fatalf("updating (not clearing) redirect should keep client_secret, got %q", next2.ClientSecret)
 	}
 }
-

@@ -8,4 +8,3 @@ var (
 	ErrNotApproved  = errors.New("api credential is not approved")
 	ErrPendingExist = errors.New("pending application already exists")
 )
-

@@ -98,4 +98,3 @@ func TestJWTAuthMiddlewareMissingSecret(t *testing.T) {
 		t.Fatalf("status_code want 401 got %d", resp.StatusCode)
 	}
 }
-

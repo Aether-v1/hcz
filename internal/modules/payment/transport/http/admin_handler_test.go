@@ -616,4 +616,3 @@ func TestGetAdminPaymentsBadQueryReturnsBadRequestCode(t *testing.T) {
 		t.Fatalf("status_code want 400 got %d", resp.StatusCode)
 	}
 }
-

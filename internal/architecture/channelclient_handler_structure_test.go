@@ -38,4 +38,3 @@ func TestChannelClientHTTPLivesInTransport(t *testing.T) {
 		}
 	}
 }
-

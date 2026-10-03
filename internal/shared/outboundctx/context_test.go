@@ -29,4 +29,3 @@ func TestDetachOutboundRequestContextIgnoresParentCancel(t *testing.T) {
 		t.Fatalf("expected detached context deadline to be in the future, got %v", deadline)
 	}
 }
-

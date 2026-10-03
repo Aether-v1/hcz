@@ -381,4 +381,3 @@ func (s *Service) BumpEnableFailure(userID uint) {
 func (s *Service) VerifyEnableCode(secret, code string) bool {
 	return s.verifyCode(secret, code)
 }
-

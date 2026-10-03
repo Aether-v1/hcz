@@ -245,4 +245,3 @@ func TestTelegramNotifyServiceSendWithBotTokenSendsRemotePhoto(t *testing.T) {
 		t.Fatalf("send with remote photo failed: %v", err)
 	}
 }
-

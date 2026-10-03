@@ -14,4 +14,3 @@ type SettingReader interface {
 type TurnstileVerifier interface {
 	Verify(cfg settingssecurity.CaptchaTurnstileSetting, token, clientIP string) error
 }
-

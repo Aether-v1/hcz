@@ -121,4 +121,3 @@ func NewUserAuthBriefResp(user *userdomain.User) UserAuthBriefResp {
 		EmailVerifiedAt: user.EmailVerifiedAt,
 	}
 }
-

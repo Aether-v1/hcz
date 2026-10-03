@@ -21,4 +21,3 @@ func RegisterAdminRoutes(authorized gin.IRoutes, handler *AdminHandler) {
 	authorized.GET("/authz/admins/:id/roles", handler.GetAuthzAdminRoles)
 	authorized.PUT("/authz/admins/:id/roles", handler.SetAuthzAdminRoles)
 }
-

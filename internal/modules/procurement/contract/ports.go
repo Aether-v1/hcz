@@ -57,4 +57,3 @@ type BotFulfillmentNotifier interface {
 type FailureNotifier interface {
 	NotifyFailure(order *procurementdomain.Order, message string) error
 }
-

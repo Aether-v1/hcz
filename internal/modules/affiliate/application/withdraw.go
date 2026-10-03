@@ -213,4 +213,3 @@ func containsWithdrawChannel(channels []string, channel string) bool {
 	}
 	return false
 }
-

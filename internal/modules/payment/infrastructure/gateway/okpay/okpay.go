@@ -582,4 +582,3 @@ func isSupportedCoin(coin string) bool {
 		return false
 	}
 }
-

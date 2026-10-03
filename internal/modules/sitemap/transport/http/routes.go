@@ -7,4 +7,3 @@ func RegisterRoutes(engine gin.IRoutes, handler *Handler) {
 	engine.GET("/sitemap.xml", handler.GetSitemap)
 	engine.GET("/robots.txt", handler.GetRobots)
 }
-

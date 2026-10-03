@@ -19,4 +19,3 @@ type Account struct {
 func (Account) TableName() string {
 	return "wallet_accounts"
 }
-

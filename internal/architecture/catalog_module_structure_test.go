@@ -435,4 +435,3 @@ func TestCatalogProductLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

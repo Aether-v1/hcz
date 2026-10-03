@@ -100,4 +100,3 @@ func normalizeNotificationInventoryAlertInterval(seconds int) int {
 func normalizeNotificationPaymentOrderAlertInterval(seconds int) int {
 	return settingsmessaging.NormalizeNotificationPaymentOrderAlertInterval(seconds)
 }
-

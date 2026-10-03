@@ -54,4 +54,3 @@ func TestHomeAnnouncementActiveOK(t *testing.T) {
 		t.Fatalf("expected 8-char version, got %q", version)
 	}
 }
-

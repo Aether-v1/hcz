@@ -6,4 +6,3 @@ import "github.com/gin-gonic/gin"
 func RegisterPublicRoutes(public gin.IRoutes, handler *PublicHandler) {
 	public.GET("/captcha/image", handler.GetImageCaptcha)
 }
-

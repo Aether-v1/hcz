@@ -258,4 +258,3 @@ func buildRedisOpt(cfg *config.QueueConfig) asynq.RedisClientOpt {
 		DB:       db,
 	}
 }
-

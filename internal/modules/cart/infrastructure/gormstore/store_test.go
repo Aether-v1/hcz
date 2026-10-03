@@ -163,4 +163,3 @@ func TestCartRepositoryUpsertUsesProductAndSKUDimension(t *testing.T) {
 		t.Fatalf("second sku quantity should keep 2 got %d", gotSecond.Quantity)
 	}
 }
-

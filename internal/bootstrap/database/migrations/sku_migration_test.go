@@ -633,4 +633,3 @@ func TestAutoMigrateReplacesSupersededProcurementConstraintName(t *testing.T) {
 		t.Errorf("procurement index repair removed canonical constraint %s", procurementOrderForeignKeyConstraint)
 	}
 }
-

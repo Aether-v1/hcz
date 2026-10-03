@@ -130,4 +130,3 @@ func newTestProcurementService(db *gorm.DB, connections *siteconnectionapp.Servi
 		OrderLifecycle:  procurementgormstore.NewLifecycle(db, nil, nil, config.EmailConfig{}),
 	})
 }
-

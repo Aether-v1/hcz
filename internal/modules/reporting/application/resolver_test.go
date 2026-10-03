@@ -30,4 +30,3 @@ func TestResolveRejectsOversizedCustomRange(t *testing.T) {
 		t.Fatalf("want ErrRangeInvalid, got %v", err)
 	}
 }
-

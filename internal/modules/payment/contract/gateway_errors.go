@@ -11,4 +11,3 @@ var (
 	ErrGatewayUnsupportedChannel = errors.New("payment channel type not supported by provider")
 	ErrGatewayProviderNotFound   = errors.New("payment provider not found in registry")
 )
-

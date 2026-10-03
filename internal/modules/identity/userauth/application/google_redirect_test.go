@@ -362,4 +362,3 @@ func redirectExchangeFixture(
 	}
 	return service, store, handle
 }
-

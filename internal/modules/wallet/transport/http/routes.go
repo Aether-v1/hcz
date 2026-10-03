@@ -37,4 +37,3 @@ func RegisterChannelRoutes(channel gin.IRoutes, handler *ChannelHandler) {
 	channel.GET("/wallet/transactions", handler.GetWalletTransactions)
 	channel.POST("/wallet/recharge", handler.CreateWalletRecharge)
 }
-

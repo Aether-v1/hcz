@@ -169,4 +169,3 @@ func (s *WriteService) Create(input CreateProductInput) (*productdomain.Product,
 	}
 	return s.products.GetByID(strconv.FormatUint(uint64(product.ID), 10))
 }
-

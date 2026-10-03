@@ -25,4 +25,3 @@ type StoreInput struct {
 type Store interface {
 	Save(input StoreInput) (publicURL string, err error)
 }
-

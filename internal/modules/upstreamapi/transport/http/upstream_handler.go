@@ -203,4 +203,3 @@ func successResponse(c *gin.Context, data interface{}) {
 func errorResponse(c *gin.Context, status int, code, message string) {
 	c.JSON(status, gin.H{"ok": false, "error_code": code, "error_message": message})
 }
-

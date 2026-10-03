@@ -27,4 +27,3 @@ func (a settingsTelegramAuthAdapter) ApplyRuntime(setting settingssecurity.Teleg
 		a.telegramAuth.SetConfig(a.cfg.TelegramAuth)
 	}
 }
-

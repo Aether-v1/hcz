@@ -541,4 +541,3 @@ func TestIsSMTPAlreadyClosedError(t *testing.T) {
 		})
 	}
 }
-

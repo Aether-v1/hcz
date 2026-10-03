@@ -116,4 +116,3 @@ func complianceJSONString(j jsonmap.JSON, key string) string {
 	v, _ := j[key].(string)
 	return v
 }
-

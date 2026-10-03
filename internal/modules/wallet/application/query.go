@@ -92,4 +92,3 @@ func (s *Service) GetBalancesByUserIDs(userIDs []uint) (map[uint]money.Amount, e
 	}
 	return result, nil
 }
-

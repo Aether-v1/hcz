@@ -49,4 +49,3 @@ func keyFor(providerType, channelType string) string {
 	c := strings.ToLower(strings.TrimSpace(channelType))
 	return p + ":" + c
 }
-

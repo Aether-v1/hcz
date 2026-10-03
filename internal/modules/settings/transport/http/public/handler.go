@@ -261,4 +261,3 @@ func resolveGoogleAuthPublicConfig(source GoogleAuthPublic, fallback GoogleAuthF
 		"client_id": clientID,
 	}
 }
-

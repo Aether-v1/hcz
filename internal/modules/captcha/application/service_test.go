@@ -74,4 +74,3 @@ func TestVerifySkipsDisabledScene(t *testing.T) {
 		t.Fatalf("disabled scene must skip captcha, got %v", err)
 	}
 }
-

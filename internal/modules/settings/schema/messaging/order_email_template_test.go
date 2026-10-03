@@ -25,4 +25,3 @@ func TestOrderEmailTemplateSettingDoesNotExposeCanceledScene(t *testing.T) {
 		t.Fatalf("legacy canceled email scene must be discarded")
 	}
 }
-

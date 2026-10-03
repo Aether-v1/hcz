@@ -237,4 +237,3 @@ func (m *Manager) Running() bool {
 	defer m.mu.Unlock()
 	return m.running
 }
-

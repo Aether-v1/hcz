@@ -23,4 +23,3 @@ func (r Reader) GetSiteURL() (string, error) {
 	}
 	return brand.SiteURL, nil
 }
-

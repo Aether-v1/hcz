@@ -31,4 +31,3 @@ func (s *Service) ApplyRechargePayment(
 	})
 	return transaction, err
 }
-

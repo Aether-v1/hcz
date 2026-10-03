@@ -671,4 +671,3 @@ func TestBuildOrderResultSKUWholesaleDoesNotFallbackToUniversalTier(t *testing.T
 		t.Fatalf("expected skuB to use universal tier: unit=%s wholesale=%s", item.UnitPrice.String(), item.WholesaleDiscount.String())
 	}
 }
-

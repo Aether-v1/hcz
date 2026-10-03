@@ -45,4 +45,3 @@ func TestCalculatePaymentFeeRefundAmountCapsAtOriginalFee(t *testing.T) {
 		t.Fatalf("capped fee refund = %s, want 0.60", got)
 	}
 }
-

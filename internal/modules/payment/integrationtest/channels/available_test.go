@@ -271,4 +271,3 @@ func indexAvailableChannelsByID(t *testing.T, channels []map[string]interface{})
 	}
 	return indexed
 }
-

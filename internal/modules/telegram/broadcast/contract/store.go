@@ -13,4 +13,3 @@ type Store interface {
 	List(filter ListFilter) ([]broadcastdomain.Broadcast, int64, error)
 	Update(broadcast *broadcastdomain.Broadcast) error
 }
-

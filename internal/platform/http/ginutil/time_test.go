@@ -52,4 +52,3 @@ func TestParseQueryTimeRangeRejectsInvalidBound(t *testing.T) {
 		t.Fatalf("expected invalid time error")
 	}
 }
-

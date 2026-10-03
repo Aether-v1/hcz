@@ -10,4 +10,3 @@ var (
 	ErrMediaRecorderRequired     = errors.New("product mapping media recorder is required")
 	ErrUpstreamStockInsufficient = errors.New("upstream stock insufficient")
 )
-

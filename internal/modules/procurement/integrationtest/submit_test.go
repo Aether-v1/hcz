@@ -235,4 +235,3 @@ func TestHandleSubmitFailure_MaxRetriesExhausted(t *testing.T) {
 		t.Errorf("expected order status %q, got %q", constants.OrderStatusPaid, updatedOrder.Status)
 	}
 }
-

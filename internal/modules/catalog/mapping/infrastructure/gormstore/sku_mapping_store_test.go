@@ -61,4 +61,3 @@ func TestSKUMappingStoreDeleteHidesRowsAndPersistsMarker(t *testing.T) {
 		t.Fatal("DeleteByProductMapping must persist deleted_at")
 	}
 }
-

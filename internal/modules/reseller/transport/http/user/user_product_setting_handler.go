@@ -155,4 +155,3 @@ func (h *UserProductSettingHandler) ResetProductSetting(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"deleted": true})
 }
-

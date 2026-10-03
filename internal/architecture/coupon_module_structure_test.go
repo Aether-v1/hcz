@@ -65,4 +65,3 @@ func TestCouponLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

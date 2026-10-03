@@ -113,4 +113,3 @@ func TestMoneyFieldsRoundTrip(t *testing.T) {
 		t.Fatalf("amount should round to 12.35, got %s", got.Amount.String())
 	}
 }
-

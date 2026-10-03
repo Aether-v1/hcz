@@ -198,4 +198,3 @@ func (s *Service) getSetting() (settingssecurity.CaptchaSetting, error) {
 	s.mu.Unlock()
 	return setting, nil
 }
-

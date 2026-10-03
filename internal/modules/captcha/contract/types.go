@@ -12,4 +12,3 @@ type ImageChallenge struct {
 	CaptchaID   string
 	ImageBase64 string
 }
-

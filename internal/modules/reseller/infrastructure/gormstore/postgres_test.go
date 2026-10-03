@@ -108,4 +108,3 @@ func TestResellerRepositoryPostgresWithdrawLocksSameRows(t *testing.T) {
 		t.Fatalf("transaction failed: %v", err)
 	}
 }
-

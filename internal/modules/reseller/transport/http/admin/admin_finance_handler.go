@@ -180,4 +180,3 @@ func parseFinanceTimePointer(raw string) *time.Time {
 	}
 	return nil
 }
-

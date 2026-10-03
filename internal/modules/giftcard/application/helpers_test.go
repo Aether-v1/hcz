@@ -19,4 +19,3 @@ func TestNormalizeExpireAtUTC(t *testing.T) {
 		t.Fatalf("expected UTC expire at, got %#v", got)
 	}
 }
-

@@ -66,4 +66,3 @@ func TestCartHTTPLivesInTransport(t *testing.T) {
 		}
 	}
 }
-

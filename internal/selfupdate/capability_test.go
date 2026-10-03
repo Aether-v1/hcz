@@ -166,4 +166,3 @@ func TestBackupPath(t *testing.T) {
 		t.Errorf("backupPath = %q", got)
 	}
 }
-

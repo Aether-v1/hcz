@@ -55,4 +55,3 @@ func (r *Store) GetPaymentTrends(startAt, endAt time.Time) ([]dashboard.PaymentT
 	}
 	return rows, nil
 }
-

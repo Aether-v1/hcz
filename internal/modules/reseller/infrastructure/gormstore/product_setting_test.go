@@ -257,4 +257,3 @@ func TestResellerProductSettingRepositoryGetProductSettings(t *testing.T) {
 		t.Fatalf("unexpected detail row: %+v", row)
 	}
 }
-

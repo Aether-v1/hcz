@@ -19,4 +19,3 @@ type Repository interface {
 	GetBySlugUnscoped(slug string) (*categorydomain.Category, error)
 	Restore(category *categorydomain.Category) error
 }
-

@@ -654,4 +654,3 @@ func setProductsUnlimited(products []productdomain.Product, ftMap map[uint]strin
 		}
 	}
 }
-

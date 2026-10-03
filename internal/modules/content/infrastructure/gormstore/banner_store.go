@@ -110,4 +110,3 @@ func (s *BannerStore) Delete(ctx context.Context, id string) error {
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", s.db.NowFunc()).Error
 }
-

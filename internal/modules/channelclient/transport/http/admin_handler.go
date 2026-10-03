@@ -192,4 +192,3 @@ func (h *AdminHandler) DeleteChannelClient(c *gin.Context) {
 
 	response.Success(c, nil)
 }
-

@@ -405,4 +405,3 @@ func parseTimePointer(raw string) *time.Time {
 	}
 	return nil
 }
-

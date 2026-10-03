@@ -82,4 +82,3 @@ func CalculatePaymentFeeRefundAmount(
 	}
 	return current
 }
-

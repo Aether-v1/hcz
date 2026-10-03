@@ -61,4 +61,3 @@ func normalizeBootstrapUsername(username string) string {
 	}
 	return trimmed
 }
-

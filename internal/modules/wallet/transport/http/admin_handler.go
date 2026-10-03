@@ -385,4 +385,3 @@ func (h *AdminHandler) AdjustUserWallet(c *gin.Context) {
 		"transaction": txn,
 	})
 }
-

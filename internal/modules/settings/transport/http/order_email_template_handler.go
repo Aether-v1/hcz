@@ -71,4 +71,3 @@ func (h *OrderEmailTemplateHandler) ResetOrderEmailTemplate(c *gin.Context) {
 	}
 	response.Success(c, settingsmessaging.MaskOrderEmailTemplateSettingForAdmin(setting))
 }
-

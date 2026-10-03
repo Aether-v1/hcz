@@ -82,4 +82,3 @@ type UseCase interface {
 	RetryManual(id uint) error
 	CancelManual(id uint) error
 }
-

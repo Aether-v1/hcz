@@ -28,4 +28,3 @@ type ProductSetting struct {
 }
 
 func (ProductSetting) TableName() string { return "reseller_product_settings" }
-

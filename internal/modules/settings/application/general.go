@@ -457,4 +457,3 @@ func (s *Service) GetWalletRechargeChannelIDs() []uint {
 	}
 	return result
 }
-

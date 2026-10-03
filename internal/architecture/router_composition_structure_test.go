@@ -63,4 +63,3 @@ func TestBootstrapPackagesStayFocused(t *testing.T) {
 		})
 	}
 }
-

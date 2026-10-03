@@ -324,4 +324,3 @@ func canExpireWalletRechargePayment(payment *paymentdomain.Payment, recharge *wa
 	}
 	return payment.Status == constants.PaymentStatusInitiated || payment.Status == constants.PaymentStatusPending
 }
-

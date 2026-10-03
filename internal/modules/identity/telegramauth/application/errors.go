@@ -17,4 +17,3 @@ var (
 	ErrTelegramOIDCTokenExchange    = errors.New("telegram oidc token exchange failed")
 	ErrTelegramOIDCIDTokenInvalid   = errors.New("telegram oidc id token invalid")
 )
-

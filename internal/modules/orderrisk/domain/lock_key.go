@@ -9,4 +9,3 @@ type LockKey struct {
 }
 
 func (LockKey) TableName() string { return "order_risk_lock_keys" }
-

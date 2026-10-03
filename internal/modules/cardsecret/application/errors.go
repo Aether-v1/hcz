@@ -19,4 +19,3 @@ var (
 	ErrProductSKURequired = errors.New("product sku required")
 	ErrProductSKUInvalid  = errors.New("product sku invalid")
 )
-

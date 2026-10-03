@@ -23,4 +23,3 @@ func FormToJSON(form map[string][]string) jsonmap.JSON {
 	}
 	return out
 }
-

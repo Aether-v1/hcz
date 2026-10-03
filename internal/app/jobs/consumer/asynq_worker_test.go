@@ -374,4 +374,3 @@ func TestBuildOrderFulfillmentEmailPayloadFromChildren(t *testing.T) {
 		t.Fatalf("unexpected payload, want %q, got %q", want, got)
 	}
 }
-

@@ -43,4 +43,3 @@ func (r *Store) GetTopProducts(startAt, endAt time.Time, limit int) ([]dashboard
 	}
 	return rows, nil
 }
-

@@ -296,4 +296,3 @@ func TestGetProductDetailIncludesStockDisplayMetadataAndKeepsRealStockCount(t *t
 		t.Fatalf("expected sku stock_status=low_stock at storefront threshold, got %v", lowStockSKU["stock_status"])
 	}
 }
-

@@ -99,4 +99,3 @@ func TestCreatePayment(t *testing.T) {
 		t.Fatalf("signature should not be empty")
 	}
 }
-

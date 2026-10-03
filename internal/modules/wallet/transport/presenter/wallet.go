@@ -157,4 +157,3 @@ func NewWalletRechargePaymentPayload(recharge *walletdomain.RechargeOrder, payme
 	// 排除 Payment 的：OrderID、ChannelID、Amount、FeeRate、FixedFee、FeeAmount、Currency、
 	// ProviderRef、GatewayOrderNo、ProviderPayload、CreatedAt、UpdatedAt、PaidAt、CallbackAt
 }
-

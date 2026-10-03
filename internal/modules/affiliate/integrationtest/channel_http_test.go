@@ -512,4 +512,3 @@ func TestChannelAffiliateApplyWithdraw(t *testing.T) {
 		t.Fatalf("expected 1 withdraw request, got %d", withdrawCount)
 	}
 }
-

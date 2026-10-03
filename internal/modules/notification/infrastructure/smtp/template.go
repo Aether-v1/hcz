@@ -27,4 +27,3 @@ func renderTemplate(tmpl string, variables map[string]interface{}) string {
 		return strings.TrimSpace(fmt.Sprintf("%v", value))
 	})
 }
-

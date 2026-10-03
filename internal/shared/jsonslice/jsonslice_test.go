@@ -35,4 +35,3 @@ func TestUintsValueAndScan(t *testing.T) {
 		t.Fatalf("unexpected uints: %#v", decoded)
 	}
 }
-

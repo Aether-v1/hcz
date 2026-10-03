@@ -73,4 +73,3 @@ func TestUpdateUpstreamSyncConfigClampsAboveMaximum(t *testing.T) {
 	maximum := settingsintegration.NormalizeUpstreamSyncConfig(settingsintegration.UpstreamSyncConfig{IntervalMinutes: 99999}).IntervalMinutes
 	assertSettingIntValue(t, result, "interval_minutes", maximum)
 }
-

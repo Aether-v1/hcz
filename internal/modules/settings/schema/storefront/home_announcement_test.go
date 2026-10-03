@@ -71,4 +71,3 @@ func TestHomeAnnouncementSchedule(t *testing.T) {
 		t.Fatalf("expected active within window")
 	}
 }
-

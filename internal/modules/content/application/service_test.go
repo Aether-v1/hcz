@@ -212,4 +212,3 @@ var _ contract.WarningLogger = (*warningLoggerStub)(nil)
 func (l *warningLoggerStub) Warnw(message string, _ ...interface{}) {
 	l.message = message
 }
-

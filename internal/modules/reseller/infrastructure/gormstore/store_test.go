@@ -368,4 +368,3 @@ func TestResellerRepositoryUpdateProfileAndDomain(t *testing.T) {
 		t.Fatalf("domain was not updated: %+v", loadedDomain)
 	}
 }
-

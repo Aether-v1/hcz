@@ -345,4 +345,3 @@ func TestEnsurePaymentChannelBepusdtConfigMigration_NormalizesLegacyChannels(t *
 		t.Fatalf("unexpected marker: %v", marker.ValueJSON)
 	}
 }
-

@@ -147,4 +147,3 @@ func (s *Service) ReleaseOrderBalance(
 	}
 	return transaction.Amount, nil
 }
-

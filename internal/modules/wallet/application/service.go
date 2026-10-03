@@ -81,4 +81,3 @@ func uniqueReference(prefix string, id uint) string {
 	}
 	return fmt.Sprintf("%s:%d:%d", normalized, id, time.Now().UnixNano())
 }
-

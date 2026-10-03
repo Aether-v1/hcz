@@ -27,4 +27,3 @@ type Profile struct {
 }
 
 func (Profile) TableName() string { return "reseller_profiles" }
-

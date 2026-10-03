@@ -216,4 +216,3 @@ func mapAlipayError(err error) error {
 		return err
 	}
 }
-

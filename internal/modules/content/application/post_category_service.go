@@ -194,4 +194,3 @@ func normalizeParentID(parentID *uint) *uint {
 	}
 	return parentID
 }
-

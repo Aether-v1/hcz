@@ -43,4 +43,3 @@ func parseSettingBool(raw interface{}) bool {
 		return false
 	}
 }
-

@@ -64,4 +64,3 @@ type UseCase interface {
 // ReleaseClaim atomically clears the order-side wallet allocation before the
 // wallet credit is written. Returning false means another attempt already won.
 type ReleaseClaim func(now time.Time) (bool, error)
-

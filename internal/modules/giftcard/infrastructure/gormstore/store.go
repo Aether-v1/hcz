@@ -204,4 +204,3 @@ func (r *Store) BatchUpdateStatus(ids []uint, status string, updatedAt time.Time
 }
 
 var _ giftcardcontract.Repository = (*Store)(nil)
-

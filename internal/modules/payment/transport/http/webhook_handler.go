@@ -284,4 +284,3 @@ var paymentCallbackErrorRules = concatMappedErrors(
 	},
 	paymentProviderGatewayErrorRules,
 )
-

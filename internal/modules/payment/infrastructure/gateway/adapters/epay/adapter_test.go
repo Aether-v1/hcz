@@ -198,4 +198,3 @@ func md5Hex(content string) string {
 	sum := md5.Sum([]byte(content))
 	return strings.ToLower(hex.EncodeToString(sum[:]))
 }
-

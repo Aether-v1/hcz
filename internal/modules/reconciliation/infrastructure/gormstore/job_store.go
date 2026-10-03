@@ -59,4 +59,3 @@ func (s *JobStore) List(filter reconciliationcontract.JobListFilter) ([]reconcil
 	}
 	return jobs, total, nil
 }
-

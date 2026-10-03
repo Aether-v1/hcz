@@ -143,4 +143,3 @@ func legacyProcurementPaths() []string {
 		"internal/integration/procurement",
 	}
 }
-

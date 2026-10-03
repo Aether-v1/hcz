@@ -32,4 +32,3 @@ type RechargeOrder struct {
 func (RechargeOrder) TableName() string {
 	return "wallet_recharge_orders"
 }
-

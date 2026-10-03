@@ -324,4 +324,3 @@ func (g *StartupGuard) Release() {
 		g.unlock()
 	}
 }
-

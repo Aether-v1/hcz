@@ -92,4 +92,3 @@ func readContainerSource(t *testing.T, path string) string {
 	}
 	return string(raw)
 }
-

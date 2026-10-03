@@ -183,4 +183,3 @@ type AccountingLedgerStore interface {
 	SumLedgerAmountByOrderAndType(orderID uint, ledgerType string) (decimal.Decimal, error)
 	GetLedgerEntryByIdempotencyKey(key string) (*resellerdomain.LedgerEntry, error)
 }
-

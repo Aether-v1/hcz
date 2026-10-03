@@ -659,4 +659,3 @@ func NormalizeLocalizedText(lt LocalizedText) LocalizedText {
 func NormalizeTelegramBotConfigJSON(raw jsonmap.JSON) jsonmap.JSON {
 	return jsonmap.JSON(normalizeTelegramBotConfigMap(raw))
 }
-

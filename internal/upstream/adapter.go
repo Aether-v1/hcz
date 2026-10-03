@@ -182,4 +182,3 @@ func NewAdapter(conn *siteconnectiondomain.Connection, uploadsDir string) (Adapt
 		return nil, fmt.Errorf("unsupported protocol: %s", conn.Protocol)
 	}
 }
-

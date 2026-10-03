@@ -69,4 +69,3 @@ func TestUpdateSettingsInvalidatesCallbackRoutesFromRegistryEffect(t *testing.T)
 		t.Fatalf("callback cache was not refreshed after update: %#v", cached)
 	}
 }
-

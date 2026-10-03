@@ -33,4 +33,3 @@ type RenderResponse struct {
 	Slot  RenderSlot   `json:"slot"`
 	Items []RenderItem `json:"items"`
 }
-

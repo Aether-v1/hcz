@@ -34,4 +34,3 @@ const (
 	AdminLoginFailInternal            = "internal_error"
 	AdminLoginFailAlreadyEnabled      = "already_enabled"
 )
-

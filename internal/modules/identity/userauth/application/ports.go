@@ -56,4 +56,3 @@ type GoogleRedirectHandoff struct {
 	Identity  googleauthapp.VerifiedIdentity
 	CreatedAt time.Time
 }
-

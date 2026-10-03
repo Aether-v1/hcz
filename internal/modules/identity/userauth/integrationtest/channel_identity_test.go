@@ -240,4 +240,3 @@ func TestBindTelegramChannelByEmailCodeRebindsPlaceholderIdentity(t *testing.T) 
 		t.Fatalf("expected verify code verified_at to be set")
 	}
 }
-

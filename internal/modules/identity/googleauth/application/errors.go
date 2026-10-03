@@ -10,4 +10,3 @@ var (
 	ErrGoogleEmailUnverified   = errors.New("google email unverified")
 	ErrGoogleJWKSUnavailable   = errors.New("google jwks unavailable")
 )
-

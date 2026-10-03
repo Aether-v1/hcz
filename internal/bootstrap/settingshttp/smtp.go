@@ -52,4 +52,3 @@ func (a settingsSMTPAdapter) SendTest(setting settingsmessaging.SMTPSetting, toE
 		return err
 	}
 }
-

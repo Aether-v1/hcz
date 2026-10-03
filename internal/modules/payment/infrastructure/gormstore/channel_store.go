@@ -93,4 +93,3 @@ func (r *ChannelStore) List(filter paymentcontract.ChannelListFilter) ([]payment
 	}
 	return channels, total, nil
 }
-

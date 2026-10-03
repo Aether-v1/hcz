@@ -289,4 +289,3 @@ func TestResellerManagementDisablePrimaryDomainPromotesNextActiveVerifiedDomain(
 		t.Fatalf("expected active verified secondary domain to become primary: %+v", loadedSecondary)
 	}
 }
-

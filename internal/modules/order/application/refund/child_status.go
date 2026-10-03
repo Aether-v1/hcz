@@ -36,4 +36,3 @@ func applyParentRefundChildStatusUpdates(orderStore ordercontract.Store, parentO
 	}
 	return nil
 }
-

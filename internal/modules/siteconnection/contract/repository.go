@@ -19,4 +19,3 @@ type Repository interface {
 	List(filter ListFilter) ([]siteconnectiondomain.Connection, int64, error)
 	ListActive() ([]siteconnectiondomain.Connection, error)
 }
-

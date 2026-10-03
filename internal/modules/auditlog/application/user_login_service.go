@@ -107,4 +107,3 @@ func normalizeEmail(email string) (string, error) {
 	}
 	return normalized, nil
 }
-

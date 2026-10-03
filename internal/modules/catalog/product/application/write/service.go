@@ -169,4 +169,3 @@ func (s *WriteService) filterAvailablePaymentChannelIDs(ids []uint) ([]uint, err
 	}
 	return filtered, nil
 }
-

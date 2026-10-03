@@ -364,4 +364,3 @@ func TestUserTOTPAdminResetRequiresOperatorID(t *testing.T) {
 		t.Fatalf("expected error when operatorID=0")
 	}
 }
-

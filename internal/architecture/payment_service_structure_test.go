@@ -110,4 +110,3 @@ func declaredTypeNames(parsed *ast.File) []string {
 	}
 	return types
 }
-

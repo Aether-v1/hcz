@@ -224,4 +224,3 @@ func legacyPublicContentMethods() map[string]struct{} {
 		"GetPostCategories": {},
 	}
 }
-

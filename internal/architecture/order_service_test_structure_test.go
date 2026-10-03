@@ -90,4 +90,3 @@ func TestOrderServiceTestFixtureLivesWithPricingTests(t *testing.T) {
 		t.Fatalf("orderPurchaseQuantityLimitFixture must live in pricing tests, got %q", got)
 	}
 }
-

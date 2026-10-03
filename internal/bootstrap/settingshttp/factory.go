@@ -29,4 +29,3 @@ func NewGoogleAuthHandler(c *container.Container, cfg *config.Config) *settingst
 		settings: c.SettingService, cfg: cfg, googleAuth: c.GoogleAuthService,
 	})
 }
-

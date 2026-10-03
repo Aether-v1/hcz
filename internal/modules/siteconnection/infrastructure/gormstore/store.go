@@ -97,4 +97,3 @@ func (r *Store) ListActive() ([]siteconnectiondomain.Connection, error) {
 	}
 	return conns, nil
 }
-

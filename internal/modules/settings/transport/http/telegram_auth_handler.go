@@ -64,4 +64,3 @@ func (h *TelegramAuthHandler) UpdateTelegramAuth(c *gin.Context) {
 	_ = cache.DelAllPublicConfig(c.Request.Context())
 	response.Success(c, settingssecurity.MaskTelegramAuthSettingForAdmin(setting))
 }
-

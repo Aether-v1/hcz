@@ -93,4 +93,3 @@ func cloneNotificationLogJSON(data jsonmap.JSON) jsonmap.JSON {
 	}
 	return result
 }
-

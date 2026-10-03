@@ -533,4 +533,3 @@ func extractBinary(archivePath, dest string) error {
 		return nil
 	}
 }
-

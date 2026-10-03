@@ -400,4 +400,3 @@ func TestParseWebhookRejectsProcessableEventWithoutBoundIdentifiers(t *testing.T
 		t.Fatalf("processable event without order binding must fail with ErrResponseInvalid, got %v", err)
 	}
 }
-

@@ -231,4 +231,3 @@ func (s *Service) handleCallbackFailure(ref *downstreamdomain.OrderRef, now time
 
 	return s.references.Update(ref)
 }
-

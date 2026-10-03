@@ -110,4 +110,3 @@ func TestGetRobotsFallsBackWhenGeneratorMissing(t *testing.T) {
 		t.Fatalf("unexpected robots body %q", w.Body.String())
 	}
 }
-

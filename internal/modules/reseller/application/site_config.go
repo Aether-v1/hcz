@@ -559,4 +559,3 @@ func announcementVersion(annType string, title, content map[string]interface{}) 
 	}
 	return fmt.Sprintf("%08x", hasher.Sum32())
 }
-

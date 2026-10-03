@@ -25,4 +25,3 @@ func (Cache) GetString(ctx context.Context, key string) (string, error) {
 func (Cache) SetString(ctx context.Context, key, value string, ttl time.Duration) error {
 	return cache.SetString(ctx, key, value, ttl)
 }
-

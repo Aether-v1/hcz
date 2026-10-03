@@ -8,4 +8,3 @@ var (
 	ErrSignatureInvalid = errors.New("channel signature invalid")
 	ErrTimestampExpired = errors.New("channel timestamp expired")
 )
-

@@ -98,4 +98,3 @@ type ImportRepositories struct {
 type UnitOfWork interface {
 	WithinTransaction(fn func(ImportRepositories) error) error
 }
-

@@ -382,4 +382,3 @@ func buildDashboardAlerts(overview dashboardcontract.OverviewRow, stockStats das
 	}
 	return alerts
 }
-

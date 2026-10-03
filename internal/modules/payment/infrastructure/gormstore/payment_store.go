@@ -303,4 +303,3 @@ func (r *Store) GetByIDForUpdate(id uint) (*paymentdomain.Payment, error) {
 	}
 	return &payment, nil
 }
-

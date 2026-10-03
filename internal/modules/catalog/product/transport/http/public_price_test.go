@@ -184,4 +184,3 @@ func TestDecoratePublicProductForTenantInvalidDisplayPricingIsHidden(t *testing.
 		})
 	}
 }
-

@@ -116,4 +116,3 @@ func TestResellerSiteConfigRespUsesSafeFields(t *testing.T) {
 		t.Fatalf("expected footer links unwrapped, got %+v", resp.FooterLinks)
 	}
 }
-

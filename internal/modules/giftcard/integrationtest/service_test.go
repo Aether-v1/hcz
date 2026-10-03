@@ -312,4 +312,3 @@ func TestGiftCardServiceBatchUpdateStatusSkipsRedeemed(t *testing.T) {
 		t.Fatalf("expected redeemed card status unchanged, got: %s", checkRedeemed.Status)
 	}
 }
-

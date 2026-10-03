@@ -27,4 +27,3 @@ type AuthzAuditLog struct {
 func (AuthzAuditLog) TableName() string {
 	return "authz_audit_logs"
 }
-

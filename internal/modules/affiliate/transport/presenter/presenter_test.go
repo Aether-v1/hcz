@@ -100,4 +100,3 @@ func ptrUint(v uint) *uint {
 func newMoney(raw string) money.Amount {
 	return money.FromDecimal(decimal.RequireFromString(raw))
 }
-

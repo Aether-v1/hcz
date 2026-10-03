@@ -38,4 +38,3 @@ func TestMoneyString(t *testing.T) {
 		t.Fatalf("unexpected money string: %s", got)
 	}
 }
-

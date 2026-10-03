@@ -29,4 +29,3 @@ func (n *BotNotifier) EnqueueOrderFulfilled(telegramUserID string, orderID uint)
 		TelegramUserID: strings.TrimSpace(telegramUserID),
 	})
 }
-

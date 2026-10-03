@@ -280,4 +280,3 @@ func sameOptionalUint(left, right *uint) bool {
 	}
 	return *left == *right
 }
-

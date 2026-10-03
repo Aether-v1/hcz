@@ -315,4 +315,3 @@ func resolvePublicDisplaySKUID(product *productdomain.Product) uint {
 	}
 	return 0
 }
-

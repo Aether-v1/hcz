@@ -64,4 +64,3 @@ func TestApiCredentialLegacyFlatFilesStayRemoved(t *testing.T) {
 		}
 	}
 }
-

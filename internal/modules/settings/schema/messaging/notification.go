@@ -798,4 +798,3 @@ func applyNotificationLocalizedTemplatePatch(target *NotificationLocalizedTempla
 		target.Body = strings.TrimSpace(*patch.Body)
 	}
 }
-

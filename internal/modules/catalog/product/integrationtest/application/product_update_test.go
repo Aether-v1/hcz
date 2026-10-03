@@ -172,4 +172,3 @@ func TestProductServiceUpdateRejectsInvalidPurchaseLimits(t *testing.T) {
 		t.Fatalf("expected productcontract.ErrProductPurchaseLimitInvalid on update, got %v", err)
 	}
 }
-

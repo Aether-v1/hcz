@@ -9,4 +9,3 @@ type SendOptions struct {
 	AttachmentURL         string
 	AttachmentDisplayName string
 }
-

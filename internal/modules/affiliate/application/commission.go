@@ -339,4 +339,3 @@ func buildSplitCommissionType(sourceID uint) string {
 	}
 	return result
 }
-

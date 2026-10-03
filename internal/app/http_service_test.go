@@ -17,4 +17,3 @@ func TestNewHTTPServiceConfiguresDefensiveTimeouts(t *testing.T) {
 		t.Fatalf("MaxHeaderBytes = %d, want %d", service.server.MaxHeaderBytes, httpMaxHeaderBytes)
 	}
 }
-

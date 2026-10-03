@@ -138,4 +138,3 @@ func (c *Container) initIdentityAndCatalogServices() {
 	c.ProductAdminService = productServices.Admin
 	c.ProductWriteService = productServices.Write
 }
-

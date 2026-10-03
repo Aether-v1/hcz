@@ -61,4 +61,3 @@ func TestAdminHandlerRejectsGoogleAuthOnGenericUpdate(t *testing.T) {
 		t.Fatalf("unexpected rejection message: %q", body.Msg)
 	}
 }
-

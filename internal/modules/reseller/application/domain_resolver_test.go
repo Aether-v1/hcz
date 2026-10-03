@@ -146,4 +146,3 @@ func TestResellerDomainResolverRepoError(t *testing.T) {
 		t.Fatal("expected repository error")
 	}
 }
-

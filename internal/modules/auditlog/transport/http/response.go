@@ -37,4 +37,3 @@ func newUserLoginResponseList(logs []domain.UserLoginLog) []UserLoginResponse {
 	}
 	return result
 }
-

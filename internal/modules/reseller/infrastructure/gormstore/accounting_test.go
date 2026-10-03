@@ -416,4 +416,3 @@ func TestResellerAccountingRepositoryListAdminWithdrawRequestsFiltersAndPreloads
 		t.Fatalf("expected processor preload, got %+v", got[0].Processor)
 	}
 }
-

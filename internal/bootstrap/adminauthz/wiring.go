@@ -14,4 +14,3 @@ func NewHandler(c *container.Container) *adminauthztransport.AdminHandler {
 		adminAuthzAuditAdapter{svc: c.AuthzAuditService},
 	)
 }
-

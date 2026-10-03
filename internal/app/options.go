@@ -38,4 +38,3 @@ func normalizeOptions(opts Options) Options {
 	}
 	return opts
 }
-

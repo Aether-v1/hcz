@@ -332,4 +332,3 @@ func toInt64(value interface{}) (int64, bool) {
 		return 0, false
 	}
 }
-

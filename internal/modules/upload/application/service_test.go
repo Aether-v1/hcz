@@ -232,4 +232,3 @@ func createMultipartFile(t *testing.T, filename string, content []byte) *multipa
 	}
 	return files[0]
 }
-

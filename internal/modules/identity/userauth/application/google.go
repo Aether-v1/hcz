@@ -744,4 +744,3 @@ func truncateRunes(value string, limit int) string {
 	runes := []rune(value)
 	return string(runes[:limit])
 }
-

@@ -377,4 +377,3 @@ func resolveRefundRecordID(record *orderdomain.OrderRefundRecord) uint {
 	}
 	return record.ID
 }
-

@@ -10,4 +10,3 @@ var (
 	ErrOrderUpdateFailed        = orderapp.ErrOrderUpdateFailed
 	ErrRefundRecordCreateFailed = orderapp.ErrRefundRecordCreateFailed
 )
-

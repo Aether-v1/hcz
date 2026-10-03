@@ -26,4 +26,3 @@ type Repository interface {
 	Delete(id uint) error
 	List(filter ListFilter) ([]apicredentialdomain.ApiCredential, int64, error)
 }
-

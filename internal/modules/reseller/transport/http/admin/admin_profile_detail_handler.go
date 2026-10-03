@@ -145,4 +145,3 @@ func respondAdminProfileDetailError(c *gin.Context, err error) {
 		ginutil.RespondError(c, response.CodeInternal, "error.user_fetch_failed", err)
 	}
 }
-

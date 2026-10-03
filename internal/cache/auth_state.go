@@ -134,4 +134,3 @@ func DelAdminAuthState(ctx context.Context, adminID uint) error {
 	}
 	return Del(ctx, adminAuthStateKey(adminID))
 }
-

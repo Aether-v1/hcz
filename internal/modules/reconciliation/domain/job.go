@@ -27,4 +27,3 @@ type Job struct {
 }
 
 func (Job) TableName() string { return "reconciliation_jobs" }
-

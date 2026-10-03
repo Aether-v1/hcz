@@ -250,4 +250,3 @@ func extractAdminRoutesFromFile(path string) ([]adminRoute, error) {
 	}
 	return routes, nil
 }
-

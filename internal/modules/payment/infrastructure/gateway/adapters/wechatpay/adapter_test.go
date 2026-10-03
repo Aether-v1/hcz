@@ -268,4 +268,3 @@ func TestWechatpayAdapter_MapWechatpayError(t *testing.T) {
 		})
 	}
 }
-

@@ -62,4 +62,3 @@ func EnqueueStatusEmailTaskIfEligible(
 	}
 	return false, nil
 }
-

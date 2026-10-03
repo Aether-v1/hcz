@@ -152,4 +152,3 @@ func (h *AdminHandler) TestNotificationCenterSettings(c *gin.Context) {
 	}
 	response.Success(c, gin.H{"sent": true})
 }
-

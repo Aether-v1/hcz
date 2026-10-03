@@ -551,4 +551,3 @@ func TestProductServiceUpdateWholesalePricesReturnsNotFound(t *testing.T) {
 		t.Fatalf("expected productcontract.ErrNotFound, got %v", err)
 	}
 }
-

@@ -77,4 +77,3 @@ func TestWorkerConsumerIsSplitByJobDomain(t *testing.T) {
 	assertFileDeclaresTypes(t, filepath.Join(jobsDirectory, "service.go"), []string{"Service"})
 	assertFileDeclaresFunctions(t, filepath.Join(jobsDirectory, "service.go"), []string{"NewService"})
 }
-

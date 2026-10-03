@@ -60,4 +60,3 @@ func (h *AdminHandler) CheckSystemUpdate(c *gin.Context) {
 
 	response.Success(c, result)
 }
-

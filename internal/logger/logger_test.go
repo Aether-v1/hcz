@@ -78,4 +78,3 @@ func TestNewDebugDoesNotWriteFile(t *testing.T) {
 		t.Fatalf("debug mode should not create log file")
 	}
 }
-

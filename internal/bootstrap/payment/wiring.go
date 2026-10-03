@@ -55,4 +55,3 @@ func New(c *container.Container) Handlers {
 		),
 	}
 }
-

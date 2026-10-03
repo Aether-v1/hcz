@@ -69,4 +69,3 @@ func TestWithdrawAvailabilityProfileInactive(t *testing.T) {
 		t.Fatalf("unexpected availability: ok=%v reason=%s", ok, reason)
 	}
 }
-

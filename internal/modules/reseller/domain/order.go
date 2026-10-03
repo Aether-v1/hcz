@@ -33,4 +33,3 @@ type OrderSnapshot struct {
 }
 
 func (OrderSnapshot) TableName() string { return "reseller_order_snapshots" }
-

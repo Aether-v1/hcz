@@ -304,4 +304,3 @@ func TestCreateOrderSerializesCouponPerUserLimit(t *testing.T) {
 		couponcontract.ErrPerUserLimit,
 	)
 }
-

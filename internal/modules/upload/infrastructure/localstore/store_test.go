@@ -33,4 +33,3 @@ func TestStoreSavesFileUnderConfiguredRoot(t *testing.T) {
 		t.Fatalf("saved content got %q", data)
 	}
 }
-

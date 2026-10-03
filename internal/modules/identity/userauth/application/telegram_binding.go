@@ -165,4 +165,3 @@ func (s *Service) GetTelegramBinding(userID uint) (*TelegramBinding, error) {
 	}
 	return result, nil
 }
-

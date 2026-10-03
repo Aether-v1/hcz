@@ -286,4 +286,3 @@ func TestBatchImportUpstreamProductsRestoresSoftDeletedAutoCategory(t *testing.T
 		t.Fatalf("expected restored category name to be refreshed, got %+v", restored.NameJSON)
 	}
 }
-

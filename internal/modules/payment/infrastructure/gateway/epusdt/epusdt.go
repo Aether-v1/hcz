@@ -387,4 +387,3 @@ func VerifyCallback(cfg *Config, data *CallbackData) error {
 	}
 	return nil
 }
-

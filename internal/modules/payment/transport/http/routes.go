@@ -68,4 +68,3 @@ func RegisterWebhookRoutes(api gin.IRoutes, handler *WebhookHandler) {
 	api.POST("/payments/webhook/paypal", handler.PaypalWebhook)
 	api.POST("/payments/webhook/stripe", handler.StripeWebhook)
 }
-

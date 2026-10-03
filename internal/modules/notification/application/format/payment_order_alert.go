@@ -107,4 +107,3 @@ func formatPaymentOrderAlertInterval(locale string, seconds int) string {
 		return localizedNotificationText(locale, fmt.Sprintf("%d 秒", seconds), fmt.Sprintf("%d 秒", seconds), fmt.Sprintf("%d seconds", seconds))
 	}
 }
-

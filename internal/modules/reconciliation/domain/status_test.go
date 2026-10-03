@@ -26,4 +26,3 @@ func TestStatusConsistencyRefundWindows(t *testing.T) {
 		})
 	}
 }
-

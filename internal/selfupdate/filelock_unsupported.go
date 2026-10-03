@@ -7,4 +7,3 @@ package selfupdate
 func acquireBinaryLock(string) (func(), error) {
 	return func() {}, nil
 }
-

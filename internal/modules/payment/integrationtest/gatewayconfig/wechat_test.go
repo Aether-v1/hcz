@@ -102,4 +102,3 @@ func buildWechatTestPrivateKey() string {
 	}
 	return string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateKeyDER}))
 }
-

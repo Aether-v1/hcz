@@ -78,4 +78,3 @@ func TestStockQuantityAndMasking(t *testing.T) {
 		t.Fatalf("masked sold count want 0 got %d", got)
 	}
 }
-

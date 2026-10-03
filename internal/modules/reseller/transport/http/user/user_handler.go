@@ -220,4 +220,3 @@ func (h *UserHandler) UploadImage(c *gin.Context) {
 		"size":     result.Size,
 	})
 }
-

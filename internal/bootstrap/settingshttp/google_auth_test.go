@@ -117,4 +117,3 @@ func TestSettingsGoogleAuthAdapterKeepsStartupFallbackImmutable(t *testing.T) {
 		t.Fatalf("runtime config = %#v", got)
 	}
 }
-

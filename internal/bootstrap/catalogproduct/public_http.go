@@ -62,4 +62,3 @@ func NewPublicHTTP(dependencies PublicHTTPDependencies) *producthttp.PublicHandl
 		dependencies.RelatedPosts,
 	)
 }
-

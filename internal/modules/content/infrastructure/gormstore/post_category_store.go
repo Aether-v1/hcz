@@ -121,4 +121,3 @@ func (s *PostCategoryStore) CountPostsByCategory(ctx context.Context, categoryID
 	err := withContext(s.db, ctx).Model(&domain.Post{}).Where("category_id = ? AND deleted_at IS NULL", categoryID).Count(&count).Error
 	return count, err
 }
-

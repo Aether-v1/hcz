@@ -96,4 +96,3 @@ func TestPaymentComplianceRequired_NilService(t *testing.T) {
 	assert.Contains(t, body, "compliance_required_by_super_admin")
 	assert.NotContains(t, body, "\"ok\":true")
 }
-

@@ -423,4 +423,3 @@ var guestOrderPreviewExtraErrorRules = []mappedError{
 	{target: couponcontract.ErrWholesaleDisabled, code: response.CodeBadRequest, key: "error.coupon_wholesale_disabled"},
 	{target: promotioncontract.ErrInvalid, code: response.CodeBadRequest, key: "error.promotion_invalid"},
 }
-

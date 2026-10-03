@@ -15,4 +15,3 @@ func FailureKey(jti string) string {
 func RevocationKey(jti string) string {
 	return "2fa:user:challenge:" + jti + ":revoked"
 }
-

@@ -177,4 +177,3 @@ func TestCategoryServiceListSortOrderDescending(t *testing.T) {
 		t.Fatalf("expected high sort_order first, got %s then %s", rows[0].Slug, rows[1].Slug)
 	}
 }
-

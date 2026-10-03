@@ -654,4 +654,3 @@ func randomNumericCode(length int) (string, error) {
 	}
 	return b.String(), nil
 }
-

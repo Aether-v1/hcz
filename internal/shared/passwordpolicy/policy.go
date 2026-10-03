@@ -67,4 +67,3 @@ func Validate(policy Policy, password string) error {
 	}
 	return nil
 }
-

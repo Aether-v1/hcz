@@ -46,4 +46,3 @@ func RegisterAdminUser2FARoutes(authorized gin.IRoutes, handler *AdminUser2FAHan
 	}
 	authorized.DELETE("/users/:id/2fa", handler.ResetUser2FA)
 }
-

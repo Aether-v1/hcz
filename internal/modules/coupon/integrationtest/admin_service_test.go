@@ -150,4 +150,3 @@ func TestCouponAdminServiceIgnoresPerItemDiscountForPercentCoupon(t *testing.T) 
 		t.Fatalf("per_item_discount should be false after percent coupon update")
 	}
 }
-

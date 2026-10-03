@@ -64,4 +64,3 @@ func resolveProductOrderSKU(productSKURepo productcontract.SKURepository, produc
 	}
 	return nil, ErrProductSKURequired
 }
-

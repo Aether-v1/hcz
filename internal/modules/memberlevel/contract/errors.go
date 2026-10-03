@@ -9,4 +9,3 @@ var (
 	ErrDeleteDefault = errors.New("member_level_cannot_delete_default")
 	ErrUserNotFound  = errors.New("user_not_found")
 )
-

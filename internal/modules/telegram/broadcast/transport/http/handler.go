@@ -134,4 +134,3 @@ func (h *AdminHandler) ListUsers(c *gin.Context) {
 	}
 	response.SuccessWithPage(c, items, response.BuildPagination(page, pageSize, total))
 }
-

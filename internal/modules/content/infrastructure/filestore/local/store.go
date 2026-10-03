@@ -32,4 +32,3 @@ func (Store) Open(name string) (io.ReadCloser, error) {
 func (Store) Remove(name string) error {
 	return os.Remove(name)
 }
-

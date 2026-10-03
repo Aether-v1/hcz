@@ -132,4 +132,3 @@ type MemberLevelPrice struct {
 	SKUID         uint         `json:"sku_id"`
 	PriceAmount   money.Amount `json:"price_amount"`
 }
-

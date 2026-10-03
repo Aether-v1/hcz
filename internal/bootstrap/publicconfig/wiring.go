@@ -47,4 +47,3 @@ func NewHandler(c *container.Container) *publicconfigtransport.Handler {
 		overlay,
 	)
 }
-

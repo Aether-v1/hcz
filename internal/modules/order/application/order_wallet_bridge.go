@@ -118,4 +118,3 @@ func ReleaseWalletBalance(
 	}
 	return amount.Decimal.Round(2), nil
 }
-

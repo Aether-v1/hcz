@@ -276,4 +276,3 @@ func TestOrderStoreExcludesSoftDeletedAggregatesAndAssociations(t *testing.T) {
 		t.Fatalf("soft-deleted fulfillment must not preload, got %+v", got.Fulfillment)
 	}
 }
-

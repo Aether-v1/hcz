@@ -9,4 +9,3 @@ func (c *Container) initServices() {
 	c.initIntegrationServices()
 	c.wireServiceDependencies()
 }
-

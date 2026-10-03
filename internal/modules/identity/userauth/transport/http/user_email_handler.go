@@ -155,4 +155,3 @@ func (h *UserEmailHandler) changeEmailProfileResponse(user *userdomain.User) (us
 	}
 	return userpresenter.NewUserProfileResp(user, emailMode, passwordMode), nil
 }
-

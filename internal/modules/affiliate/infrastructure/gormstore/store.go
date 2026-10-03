@@ -623,4 +623,3 @@ func applyPagination(query *gorm.DB, page, pageSize int) *gorm.DB {
 }
 
 var _ affiliatecontract.Store = (*Store)(nil)
-

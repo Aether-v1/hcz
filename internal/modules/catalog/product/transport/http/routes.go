@@ -27,4 +27,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminProductHandler) {
 	admin.POST("/products/batch-category", handler.BatchUpdateProductCategory)
 	admin.POST("/products/batch-delete", handler.BatchDeleteProducts)
 }
-

@@ -80,4 +80,3 @@ func TestAdminIdentityPersistenceLivesInVerticalModule(t *testing.T) {
 	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "contract"), 1)
 	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "infrastructure", "gormstore"), 2)
 }
-

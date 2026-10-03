@@ -102,4 +102,3 @@ func normalizePanic(r interface{}) error {
 		return fmt.Errorf("panic: %v (type=%T)", v, v)
 	}
 }
-

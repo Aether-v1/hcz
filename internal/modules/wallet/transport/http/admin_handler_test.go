@@ -29,4 +29,3 @@ func TestAdjustUserWalletRequiresRemarkWithDedicatedMessage(t *testing.T) {
 		t.Fatalf("expected dedicated remark validation message, got %s", recorder.Body.String())
 	}
 }
-

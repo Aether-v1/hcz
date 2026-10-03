@@ -30,4 +30,3 @@ func (s *Service) RenderSlot(ctx context.Context, slotCode string, params map[st
 func (s *Service) ReportImpression(ctx context.Context, payload json.RawMessage) error {
 	return s.gateway.ReportImpression(ctx, payload)
 }
-

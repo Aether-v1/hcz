@@ -256,4 +256,3 @@ func TestImmutableBuiltinRoleRejectsPolicyMutationAndDeletion(t *testing.T) {
 		t.Fatal("rejected policy revoke must preserve builtin policy")
 	}
 }
-

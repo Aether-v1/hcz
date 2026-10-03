@@ -161,4 +161,3 @@ func buildTestTelegramMiniAppValues(authDate int64, userJSON string) url.Values 
 	values.Set("user", userJSON)
 	return values
 }
-

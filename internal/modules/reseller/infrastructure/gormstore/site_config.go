@@ -110,4 +110,3 @@ func (r *Store) ListSiteConfigs(filter resellercontract.SiteConfigListFilter) ([
 	}
 	return rows, total, nil
 }
-

@@ -50,4 +50,3 @@ type UseCase interface {
 	GetJobItems(jobID uint, page, pageSize int) ([]reconciliationdomain.Item, int64, error)
 	ResolveItem(itemID, adminID uint, remark string) error
 }
-

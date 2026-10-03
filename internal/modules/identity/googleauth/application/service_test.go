@@ -571,4 +571,3 @@ func TestValidateRuntimeConfigAndClientID(t *testing.T) {
 		t.Fatalf("RuntimeClientID() = %q, %v", clientID, err)
 	}
 }
-

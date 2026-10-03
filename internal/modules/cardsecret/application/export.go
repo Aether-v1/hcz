@@ -251,4 +251,3 @@ func (s *Service) resolveBatchTargetCardSecretIDs(ids []uint, batchID uint, filt
 	}
 	return targetIDs, nil
 }
-

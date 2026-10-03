@@ -36,4 +36,3 @@ func channelIdentityError(context *gin.Context, err error) {
 		channelresponse.Error(context, http.StatusInternalServerError, response.CodeInternal, "internal_error", "error.internal_error", err)
 	}
 }
-

@@ -66,4 +66,3 @@ func (r *AuthzStore) ListAdmin(filter contract.AuthzFilter) ([]domain.AuthzAudit
 }
 
 var _ contract.AuthzRepository = (*AuthzStore)(nil)
-

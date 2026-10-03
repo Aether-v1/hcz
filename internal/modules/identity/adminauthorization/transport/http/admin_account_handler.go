@@ -321,4 +321,3 @@ func normalizeAdminUsername(username string) (string, error) {
 	}
 	return trimmed, nil
 }
-

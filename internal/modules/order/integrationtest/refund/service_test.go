@@ -730,4 +730,3 @@ func TestOrderRefundServiceResolveStatusEmailRefundDetails(t *testing.T) {
 		t.Fatalf("unexpected fallback from nil service: %+v", fallbackFromNilSvc)
 	}
 }
-

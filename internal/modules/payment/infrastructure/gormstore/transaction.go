@@ -50,4 +50,3 @@ func (s *Store) WithinTransaction(fn func(paymentcontract.Transaction) error) er
 		return fn(UseTransaction(tx, s.guestCredentialSecret))
 	})
 }
-

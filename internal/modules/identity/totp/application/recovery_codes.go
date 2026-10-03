@@ -87,4 +87,3 @@ func MatchAndConsumeRecoveryCode(entriesJSON, code string, now time.Time) (strin
 	}
 	return string(encoded), nil
 }
-

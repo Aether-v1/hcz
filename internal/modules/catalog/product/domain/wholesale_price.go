@@ -45,4 +45,3 @@ func (w *WholesalePriceTiers) Scan(value interface{}) error {
 	}
 	return json.Unmarshal(bytes, w)
 }
-

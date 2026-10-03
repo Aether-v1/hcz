@@ -237,4 +237,3 @@ func TestDujiaoPayAdapter_ParseWebhookMapsFiatFactsAndTransactionID(t *testing.T
 		t.Fatalf("payload tx_id = %v, want 0xpaid", result.Payload["tx_id"])
 	}
 }
-

@@ -31,4 +31,3 @@ func TestGetGuestCredentialsRejectsMalformedHeader(t *testing.T) {
 		t.Fatalf("query credentials must not authenticate without Guest authorization header")
 	}
 }
-

@@ -47,4 +47,3 @@ type SiteConfig struct {
 }
 
 func (SiteConfig) TableName() string { return "reseller_site_configs" }
-

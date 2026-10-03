@@ -844,4 +844,3 @@ func TestImportUpstreamProductRejectsInactive(t *testing.T) {
 		t.Fatalf("expected no local product created when import rejected, got %d", productCount)
 	}
 }
-

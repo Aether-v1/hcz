@@ -47,4 +47,3 @@ func TestPublicConfigHTTPLivesInTransport(t *testing.T) {
 	}
 	assertDirectoryGoFileBudget(t, filepath.Join(repositoryRoot, "internal", "bootstrap", "publicconfig"), 4)
 }
-

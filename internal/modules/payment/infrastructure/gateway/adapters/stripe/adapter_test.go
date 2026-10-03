@@ -229,4 +229,3 @@ func TestStripeAdapter_MapStripeError(t *testing.T) {
 		})
 	}
 }
-

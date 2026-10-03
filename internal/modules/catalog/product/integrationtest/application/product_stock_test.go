@@ -101,4 +101,3 @@ func TestApplyAutoStockCounts_LegacyStockPrefersDefaultSKU(t *testing.T) {
 		t.Fatalf("expected default sku auto sold=1, got %d", got.SKUs[1].AutoStockSold)
 	}
 }
-

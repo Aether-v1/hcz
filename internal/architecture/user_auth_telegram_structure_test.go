@@ -89,4 +89,3 @@ func TestUserAuthTelegramServiceIsSplitByFlow(t *testing.T) {
 		}
 	}
 }
-

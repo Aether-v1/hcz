@@ -21,4 +21,3 @@ type Item struct {
 func (Item) TableName() string {
 	return "cart_items"
 }
-

@@ -224,4 +224,3 @@ func TestHandleUpstreamCallback_Refunded_AfterCompletedKeepsOrderStatus(t *testi
 		expectedOrderStatus:       constants.OrderStatusCompleted,
 	})
 }
-

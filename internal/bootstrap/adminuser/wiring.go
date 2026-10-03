@@ -18,4 +18,3 @@ func NewHandler(c *container.Container) *adminusertransport.AdminHandler {
 		adminUserAuthStateAdapter{},
 	)
 }
-

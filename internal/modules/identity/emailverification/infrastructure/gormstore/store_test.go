@@ -67,4 +67,3 @@ func TestStoreReturnsLatestActiveCodeAndPersistsAttempts(t *testing.T) {
 		t.Fatalf("verification state was not persisted: %#v", refreshed)
 	}
 }
-

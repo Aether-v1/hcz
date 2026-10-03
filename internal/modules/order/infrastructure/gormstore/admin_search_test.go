@@ -122,4 +122,3 @@ func TestOrderRepositoryListAdminSupportsUserKeyword(t *testing.T) {
 		t.Fatalf("unexpected result by provider user id: total=%d rows=%+v", total, rows)
 	}
 }
-

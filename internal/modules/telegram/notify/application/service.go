@@ -54,4 +54,3 @@ func (s *Service) resolveBotToken() (string, error) {
 	}
 	return strings.TrimSpace(setting.BotToken), nil
 }
-

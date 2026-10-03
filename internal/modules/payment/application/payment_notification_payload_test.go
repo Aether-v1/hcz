@@ -686,4 +686,3 @@ func TestResolveInventoryAlertTypeKey(t *testing.T) {
 		})
 	}
 }
-

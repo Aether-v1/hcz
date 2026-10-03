@@ -43,4 +43,3 @@ func TestReleaseGORMLoggerDoesNotExposeQueryParameters(t *testing.T) {
 		t.Fatalf("release database log should retain useful query context: %s", output)
 	}
 }
-

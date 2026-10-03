@@ -41,4 +41,3 @@ type ProductSKU struct {
 func (ProductSKU) TableName() string {
 	return "product_skus"
 }
-

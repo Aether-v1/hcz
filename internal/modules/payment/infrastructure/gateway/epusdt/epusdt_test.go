@@ -432,4 +432,3 @@ func TestCreatePayment_MissingTradeIDBecomesResponseInvalid(t *testing.T) {
 		t.Fatalf("expected ErrResponseInvalid, got %v", err)
 	}
 }
-

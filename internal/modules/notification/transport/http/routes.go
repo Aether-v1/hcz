@@ -15,4 +15,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/settings/notifications/logs", handler.ListNotificationLogs)
 	admin.POST("/settings/notifications/test", handler.TestNotificationCenterSettings)
 }
-

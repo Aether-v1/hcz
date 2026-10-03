@@ -67,4 +67,3 @@ func (store *Store) first(query *gorm.DB) (*channelclientdomain.Client, error) {
 	}
 	return &client, nil
 }
-

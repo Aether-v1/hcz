@@ -98,4 +98,3 @@ func ResolveRequestHost(req *http.Request, cfg config.ResellerConfig) string {
 	}
 	return NormalizeHost(raw)
 }
-

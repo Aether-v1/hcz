@@ -102,4 +102,3 @@ func buildNotificationTestInventoryItems(locale string) string {
 		localizedNotificationText(locale, "2. ChatGPT Plus 代充 / 周期: 1个月 [人工交付] 剩余 0（缺货）", "2. ChatGPT Plus 代充 / 週期: 1個月 [人工交付] 剩餘 0（缺貨）", "2. ChatGPT Plus Recharge / Cycle: 1 month [Manual] | Remaining 0 (Out of stock)"),
 	}, "\n")
 }
-

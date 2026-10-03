@@ -86,4 +86,3 @@ func TestParseRSAPublicKeyWithPEM(t *testing.T) {
 		t.Fatalf("public key modulus mismatch")
 	}
 }
-

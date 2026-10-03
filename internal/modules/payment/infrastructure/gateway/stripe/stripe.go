@@ -799,4 +799,3 @@ func readInt64(raw map[string]interface{}, key string) int64 {
 		return 0
 	}
 }
-

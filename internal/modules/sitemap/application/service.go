@@ -203,4 +203,3 @@ func renderSitemapXML(entries []domain.URL) (string, error) {
 	}
 	return xml.Header + string(body) + "\n", nil
 }
-

@@ -891,4 +891,3 @@ func TestResellerAccountingApplyWithdrawRejectsExceedingNetAvailable(t *testing.
 		t.Fatalf("unexpected withdraw request: %+v", req)
 	}
 }
-

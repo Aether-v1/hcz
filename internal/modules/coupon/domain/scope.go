@@ -24,4 +24,3 @@ func DecodeScopeIDs(raw string) (map[uint]struct{}, error) {
 	}
 	return result, nil
 }
-

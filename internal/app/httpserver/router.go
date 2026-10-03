@@ -387,4 +387,3 @@ func deriveAdminPermissionModule(object string) string {
 	}
 	return segments[1]
 }
-

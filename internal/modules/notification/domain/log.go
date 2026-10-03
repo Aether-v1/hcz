@@ -29,4 +29,3 @@ type NotificationLog struct {
 func (NotificationLog) TableName() string {
 	return "notification_logs"
 }
-

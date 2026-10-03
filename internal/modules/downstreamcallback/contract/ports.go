@@ -37,4 +37,3 @@ type CallbackQueue interface {
 type Deliverer interface {
 	Send(ctx context.Context, request DeliveryRequest) error
 }
-

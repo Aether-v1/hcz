@@ -78,4 +78,3 @@ func (dispatcher Dispatcher) DispatchBroadcast(_ context.Context, broadcastID ui
 	}
 	return true, nil
 }
-

@@ -10,4 +10,3 @@ type AcknowledgeCommand struct {
 	ClientIP  string
 	UserAgent string
 }
-

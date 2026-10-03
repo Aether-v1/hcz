@@ -84,4 +84,3 @@ func (r *UserLoginStore) ListByUser(userID uint, page, pageSize int) ([]domain.U
 }
 
 var _ contract.UserLoginRepository = (*UserLoginStore)(nil)
-

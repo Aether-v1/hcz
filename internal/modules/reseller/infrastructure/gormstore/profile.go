@@ -115,4 +115,3 @@ func (r *Store) IsActiveRelatedAccount(resellerID uint, userID uint) (bool, erro
 	}
 	return count > 0, nil
 }
-

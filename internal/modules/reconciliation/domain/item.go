@@ -26,4 +26,3 @@ type Item struct {
 }
 
 func (Item) TableName() string { return "reconciliation_items" }
-

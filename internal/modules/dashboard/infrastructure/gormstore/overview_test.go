@@ -73,4 +73,3 @@ func TestGetOverviewUsesOrderCreationWindowForPaidGMV(t *testing.T) {
 		t.Fatalf("gmv paid want 100 got %.2f", overview.GMVPaid)
 	}
 }
-

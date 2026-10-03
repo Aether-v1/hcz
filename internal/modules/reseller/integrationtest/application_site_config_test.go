@@ -249,4 +249,3 @@ func resellerSiteConfigTestMap(value interface{}) map[string]interface{} {
 		return nil
 	}
 }
-

@@ -208,4 +208,3 @@ func TestMappingStoreDeleteHidesMappingFromEveryReadPath(t *testing.T) {
 		t.Fatalf("ListUpstreamIDsByConnection after delete = ids %v err %v; want empty", ids, err)
 	}
 }
-

@@ -728,4 +728,3 @@ func countDirectGoFiles(t *testing.T, directory string) (production int, total i
 	}
 	return production, total
 }
-

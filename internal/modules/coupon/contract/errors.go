@@ -20,4 +20,3 @@ var (
 	ErrUpdateFailed          = errors.New("coupon update failed")
 	ErrDeleteFailed          = errors.New("coupon delete failed")
 )
-

@@ -114,4 +114,3 @@ func resolveLegacyStockTargetSKUIndex(skus []productdomain.ProductSKU) int {
 	}
 	return 0
 }
-

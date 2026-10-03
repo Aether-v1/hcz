@@ -161,4 +161,3 @@ func TestCompareNumericIdentifiers(t *testing.T) {
 		}
 	}
 }
-

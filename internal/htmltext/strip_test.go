@@ -36,4 +36,3 @@ func TestStripToPlainText(t *testing.T) {
 		})
 	}
 }
-

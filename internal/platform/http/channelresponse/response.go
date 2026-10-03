@@ -80,4 +80,3 @@ func formatFieldError(locale string, fieldError validator.FieldError) string {
 	}
 	return field + ": " + tag
 }
-

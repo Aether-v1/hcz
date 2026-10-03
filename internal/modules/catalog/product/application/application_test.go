@@ -148,4 +148,3 @@ func TestApplyAutoStockCountsAssignsLegacyStockToOneSKU(t *testing.T) {
 		t.Fatalf("DEFAULT SKU available want 5 got %d", products[0].SKUs[1].AutoStockAvailable)
 	}
 }
-

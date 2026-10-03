@@ -232,4 +232,3 @@ func TestAdminResetClearsTarget(t *testing.T) {
 		t.Fatalf("expected cleared, got enabled_at=%v secret_len=%d", updated.TOTPEnabledAt, len(updated.TOTPSecret))
 	}
 }
-

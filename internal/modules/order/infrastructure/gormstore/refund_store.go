@@ -146,4 +146,3 @@ func (r *Store) ListRefundRecordsAdmin(filter ordercontract.RefundRecordListFilt
 	}
 	return records, total, nil
 }
-

@@ -708,4 +708,3 @@ func TestProductRepositoryListOnlyActiveTakesPrecedenceOverIsActive(t *testing.T
 		t.Fatalf("OnlyActive should win over IsActive, got %+v", got)
 	}
 }
-

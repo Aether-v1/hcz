@@ -18,4 +18,3 @@ var (
 	ErrOrderUpdateFailed       = orderapp.ErrOrderUpdateFailed
 	ErrCardSecretInsufficient  = orderapp.ErrCardSecretInsufficient
 )
-

@@ -205,4 +205,3 @@ func resolveProductSKU(repo contract.SKUReader, product *productdomain.Product, 
 	}
 	return nil, contract.ErrSKURequired
 }
-

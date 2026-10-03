@@ -165,4 +165,3 @@ func generateEpayRSAKeyPair(t *testing.T) (string, string) {
 	publicPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicDER})
 	return string(privatePEM), string(publicPEM)
 }
-

@@ -115,4 +115,3 @@ func TestVerifyUser2FAPreservesExternalLoginSource(t *testing.T) {
 		})
 	}
 }
-

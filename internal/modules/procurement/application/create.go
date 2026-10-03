@@ -115,4 +115,3 @@ func (s *Service) hasUpstreamItems(order *procurementdomain.LocalOrder) bool {
 	}
 	return false
 }
-

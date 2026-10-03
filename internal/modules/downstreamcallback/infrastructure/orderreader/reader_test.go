@@ -54,4 +54,3 @@ func TestReaderProjectsParentAndChildFulfillment(t *testing.T) {
 		t.Fatalf("delivered time mismatch: %#v", fulfillment.DeliveredAt)
 	}
 }
-

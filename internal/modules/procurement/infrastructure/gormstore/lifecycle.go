@@ -230,4 +230,3 @@ func calculateParentStatus(children []lifecycleOrderRecord, currentStatus string
 	}
 	return currentStatus
 }
-

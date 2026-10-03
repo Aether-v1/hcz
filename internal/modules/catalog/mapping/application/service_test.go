@@ -41,4 +41,3 @@ func TestRecordUpstreamMediaPropagatesCallerContext(t *testing.T) {
 		t.Fatalf("recorded media = (%q, %q)", recorder.localPath, recorder.scene)
 	}
 }
-

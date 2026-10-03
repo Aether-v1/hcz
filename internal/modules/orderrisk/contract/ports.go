@@ -25,4 +25,3 @@ type Controller interface {
 	CheckOrderAllowed(input CheckInput) (CheckResult, error)
 	CheckPendingOrderAllowed(input CheckInput, prepared CheckResult, gate PendingOrderGate) error
 }
-

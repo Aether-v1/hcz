@@ -77,4 +77,3 @@ func (r *UsageStore) DeleteByOrderID(orderID uint) error {
 }
 
 var _ couponcontract.UsageRepository = (*UsageStore)(nil)
-

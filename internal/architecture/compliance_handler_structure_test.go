@@ -50,4 +50,3 @@ func TestComplianceHTTPLivesInTransport(t *testing.T) {
 		t.Fatalf("stat legacy compliance service: %v", err)
 	}
 }
-

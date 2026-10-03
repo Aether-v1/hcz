@@ -532,4 +532,3 @@ func (h *AdminHandler) GetCardSecretTemplate(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=\"card-secrets-template.csv\"")
 	c.String(200, content)
 }
-

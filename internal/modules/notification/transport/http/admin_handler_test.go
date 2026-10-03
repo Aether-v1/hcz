@@ -135,4 +135,3 @@ func TestNotificationCenterTestSendAcceptsFeishuChannel(t *testing.T) {
 		t.Fatalf("unexpected test send input: %#v", sender.input)
 	}
 }
-

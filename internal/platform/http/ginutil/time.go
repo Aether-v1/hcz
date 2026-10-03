@@ -31,4 +31,3 @@ func ParseQueryTimeRange(c *gin.Context, fromKey, toKey string) (*time.Time, *ti
 	}
 	return from, to, nil
 }
-

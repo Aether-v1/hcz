@@ -74,4 +74,3 @@ func TestPatchGoogleAuthSettingCanClearClientIDOnlyWhenDisabled(t *testing.T) {
 		t.Fatalf("unexpected disabled setting: %#v", setting)
 	}
 }
-

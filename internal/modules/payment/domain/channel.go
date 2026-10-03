@@ -36,4 +36,3 @@ type PaymentChannel struct {
 func (PaymentChannel) TableName() string {
 	return "payment_channels"
 }
-

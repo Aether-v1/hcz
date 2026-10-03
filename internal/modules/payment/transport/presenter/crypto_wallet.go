@@ -119,4 +119,3 @@ func readPayloadString(payload jsonmap.JSON, keys ...string) string {
 		return strings.TrimSpace(fmt.Sprintf("%v", v))
 	}
 }
-

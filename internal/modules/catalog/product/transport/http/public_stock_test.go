@@ -156,4 +156,3 @@ func TestPublicProductResponseRangeModeReturnsBucketOnly(t *testing.T) {
 		t.Fatalf("expected sku manual stock to be masked, got exact value %d", sku.ManualStockTotal)
 	}
 }
-

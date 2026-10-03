@@ -461,4 +461,3 @@ func (h *AdminHandler) DeleteMedia(c *gin.Context) {
 	}
 	response.Success(c, nil)
 }
-

@@ -41,4 +41,3 @@ func (s *Service) AdminAdjustBalance(input walletcontract.AdjustBalanceInput) (*
 		&input.OperatorAdminID,
 	)
 }
-

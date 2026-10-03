@@ -140,4 +140,3 @@ func TestPaypalAdapter_MapPaypalError(t *testing.T) {
 		})
 	}
 }
-

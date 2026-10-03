@@ -25,4 +25,3 @@ func (store *Store) Upsert(key string, value jsonmap.JSON) (jsonmap.JSON, error)
 	store.Values[key] = value
 	return value, nil
 }
-

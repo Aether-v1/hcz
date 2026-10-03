@@ -211,4 +211,3 @@ func (h *AdminHandler) GetAdminCoupons(c *gin.Context) {
 	pagination := response.BuildPagination(page, pageSize, total)
 	response.SuccessWithPage(c, coupons, pagination)
 }
-

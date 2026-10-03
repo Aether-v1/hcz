@@ -61,4 +61,3 @@ func (s orderQueryStoreStub) StatsOrderSnapshotsByReseller(filter resellercontra
 func (s orderQueryStoreStub) GetOrderSnapshotByResellerOrderNo(resellerID uint, orderNo string) (*resellercontract.OrderSnapshotRow, error) {
 	return nil, nil
 }
-

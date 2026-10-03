@@ -67,4 +67,3 @@ func (r *Store) Update(broadcast *broadcastdomain.Broadcast) error {
 	}
 	return r.db.Save(broadcast).Error
 }
-

@@ -518,4 +518,3 @@ func resolveDashboardLegacyStockTargetSKUIndex(skus []productdomain.ProductSKU) 
 	}
 	return firstActiveIdx
 }
-

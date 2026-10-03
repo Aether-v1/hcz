@@ -28,4 +28,3 @@ func (a settingsCaptchaAdapter) ApplyRuntime(setting settingssecurity.CaptchaSet
 		a.captcha.InvalidateCache()
 	}
 }
-

@@ -96,4 +96,3 @@ func (s *Service) Execute(ctx context.Context, jobID uint) error {
 	}
 	return nil
 }
-

@@ -39,4 +39,3 @@ func ResellerFallback(host string) Brand {
 		FromName: normalized,
 	}
 }
-

@@ -363,4 +363,3 @@ func (h *User2FAHandler) verifyUserChallengeAttempt(userID uint, code, recoveryC
 	}
 	return h.totp.VerifyChallengeCode(userID, code)
 }
-

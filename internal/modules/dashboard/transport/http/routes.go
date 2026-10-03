@@ -8,4 +8,3 @@ func RegisterAdminRoutes(admin gin.IRoutes, handler *AdminHandler) {
 	admin.GET("/dashboard/rankings", handler.GetRankings)
 	admin.GET("/dashboard/inventory-alerts", handler.GetInventoryAlerts)
 }
-

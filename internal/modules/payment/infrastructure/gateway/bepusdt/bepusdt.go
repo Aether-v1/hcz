@@ -489,4 +489,3 @@ func ToPaymentStatus(status int) string {
 		return constants.PaymentStatusPending
 	}
 }
-

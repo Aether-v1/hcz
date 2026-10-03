@@ -35,4 +35,3 @@ type GiftCard struct {
 func (GiftCard) TableName() string {
 	return "gift_cards"
 }
-

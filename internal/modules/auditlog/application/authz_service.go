@@ -68,4 +68,3 @@ func (s *AuthzService) ListForAdmin(filter contract.AuthzFilter) ([]domain.Authz
 	}
 	return s.repo.ListAdmin(filter)
 }
-

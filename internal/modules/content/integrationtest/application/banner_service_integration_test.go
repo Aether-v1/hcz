@@ -241,4 +241,3 @@ func TestBannerServiceMissingBannerReturnsNotFound(t *testing.T) {
 		t.Fatalf("delete missing banner should return domaincontent.ErrNotFound, got %v", err)
 	}
 }
-

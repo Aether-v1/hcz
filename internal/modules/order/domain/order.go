@@ -92,4 +92,3 @@ func (o *Order) TruncateFulfillmentPayload() {
 		o.Children[i].TruncateFulfillmentPayload()
 	}
 }
-

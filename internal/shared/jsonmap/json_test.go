@@ -46,4 +46,3 @@ func TestJSONNilDatabaseValueStaysNull(t *testing.T) {
 		t.Fatalf("nil JSON should produce a NULL driver value, got %#v", encoded)
 	}
 }
-

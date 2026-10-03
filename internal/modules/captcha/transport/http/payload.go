@@ -21,4 +21,3 @@ func (r CaptchaPayloadRequest) ToCaptchaPayload() captchacontract.VerifyPayload 
 		TurnstileToken: strings.TrimSpace(r.TurnstileToken),
 	}
 }
-

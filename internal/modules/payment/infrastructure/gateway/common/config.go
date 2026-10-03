@@ -27,4 +27,3 @@ func ParseConfig[T any, PT ConfigNormalizer[T]](raw map[string]interface{}, errC
 	PT(&cfg).Normalize()
 	return &cfg, nil
 }
-

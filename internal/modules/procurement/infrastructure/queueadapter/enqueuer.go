@@ -32,4 +32,3 @@ func (e *Enqueuer) EnqueueSubmit(orderID uint) error {
 func (e *Enqueuer) EnqueuePoll(orderID uint, delay time.Duration) error {
 	return e.client.EnqueueProcurementPollStatus(queue.ProcurementPollStatusPayload{ProcurementOrderID: orderID}, delay)
 }
-

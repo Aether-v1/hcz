@@ -118,4 +118,3 @@ func assertTelegramErrorResponse(t *testing.T, recorder *httptest.ResponseRecord
 		t.Fatalf("msg = %q, want %q; body=%s", body.Msg, wantMsg, recorder.Body.String())
 	}
 }
-

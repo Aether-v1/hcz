@@ -104,4 +104,3 @@ func respondUserGiftCardError(c *gin.Context, err error) {
 		ginutil.RespondError(c, response.CodeInternal, "error.gift_card_redeem_failed", err)
 	}
 }
-

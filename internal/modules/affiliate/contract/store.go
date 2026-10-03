@@ -102,4 +102,3 @@ type Store interface {
 	ListWithdraws(filter WithdrawListFilter) ([]domain.WithdrawRequest, int64, error)
 	GetProfileStatsBatch(profileIDs []uint) (map[uint]ProfileStatsAggregate, error)
 }
-

@@ -18,4 +18,3 @@ type Window struct {
 	EndAt    time.Time
 	Timezone string
 }
-

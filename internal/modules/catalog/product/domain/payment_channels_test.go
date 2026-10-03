@@ -22,4 +22,3 @@ func TestPaymentChannelIDsRoundTripAndDiscardInvalidValues(t *testing.T) {
 		}
 	}
 }
-

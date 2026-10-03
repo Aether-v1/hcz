@@ -44,4 +44,3 @@ type RedeemInput struct {
 	UserID uint
 	Code   string
 }
-

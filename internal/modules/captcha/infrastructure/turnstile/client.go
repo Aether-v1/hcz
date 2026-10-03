@@ -63,4 +63,3 @@ func (Client) Verify(cfg settingssecurity.CaptchaTurnstileSetting, token, client
 	}
 	return nil
 }
-

@@ -170,4 +170,3 @@ func currentRequestID(c *gin.Context) string {
 	}
 	return ""
 }
-

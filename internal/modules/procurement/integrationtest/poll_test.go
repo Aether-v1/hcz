@@ -125,4 +125,3 @@ func TestPollUpstreamStatus_FulfilledMappedToDelivered(t *testing.T) {
 		t.Errorf("expected order status %q, got %q", constants.OrderStatusDelivered, updatedOrder.Status)
 	}
 }
-

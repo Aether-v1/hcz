@@ -86,4 +86,3 @@ type Transaction interface {
 	ResellerAccounting() resellercontract.AccountingLedgerStore
 	ExpirePendingPaymentsByOrderIDs(orderIDs []uint, expiredAt time.Time) (int64, error)
 }
-

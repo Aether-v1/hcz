@@ -234,4 +234,3 @@ func buildOrderSubject(order *orderdomain.Order) string {
 	}
 	return strings.TrimSpace(order.OrderNo)
 }
-

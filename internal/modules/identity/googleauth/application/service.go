@@ -454,4 +454,3 @@ func resolveJWKSCacheTTL(headers http.Header) time.Duration {
 	}
 	return defaultJWKSCacheTTL
 }
-

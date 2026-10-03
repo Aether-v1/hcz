@@ -39,4 +39,3 @@ func NewService(
 		settings:    settings,
 	}
 }
-

@@ -55,4 +55,3 @@ type AdminLoginRepository interface {
 	Create(log *domain.AdminLoginLog) error
 	List(filter AdminLoginFilter) ([]domain.AdminLoginLog, int64, error)
 }
-

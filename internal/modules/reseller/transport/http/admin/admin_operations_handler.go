@@ -68,4 +68,3 @@ func (h *AdminOperationsHandler) GetFinance(c *gin.Context) {
 	}
 	response.Success(c, data)
 }
-

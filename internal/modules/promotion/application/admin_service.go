@@ -168,4 +168,3 @@ func (s *AdminService) Delete(id uint) error {
 func (s *AdminService) List(filter promotioncontract.ListFilter) ([]promotiondomain.Promotion, int64, error) {
 	return s.repo.List(filter)
 }
-

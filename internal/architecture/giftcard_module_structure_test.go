@@ -77,4 +77,3 @@ func TestGiftCardLegacyRepositoryFileStaysRemoved(t *testing.T) {
 		}
 	}
 }
-

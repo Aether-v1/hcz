@@ -438,4 +438,3 @@ func TestUpdateAdminOrderRefundPaymentFeeSupportsHistoricalManualRefund(t *testi
 		t.Fatalf("items should not be empty: %+v", resp.Data["items"])
 	}
 }
-

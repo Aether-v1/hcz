@@ -80,4 +80,3 @@ func TestClientRejectsNonSuccessGatewayResponse(t *testing.T) {
 		t.Fatal("report impression must reject non-success gateway response")
 	}
 }
-

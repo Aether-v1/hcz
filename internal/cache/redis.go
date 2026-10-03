@@ -195,4 +195,3 @@ func buildKey(key string) string {
 	}
 	return fmt.Sprintf("%s:%s", redisPrefix, trimmed)
 }
-

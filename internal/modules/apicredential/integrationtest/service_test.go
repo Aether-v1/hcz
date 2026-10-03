@@ -211,4 +211,3 @@ func TestApiCredentialServiceApplyBlocksApprovedAndDisabled(t *testing.T) {
 		})
 	}
 }
-

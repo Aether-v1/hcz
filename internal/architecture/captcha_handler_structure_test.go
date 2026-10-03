@@ -54,4 +54,3 @@ func TestPublicCaptchaHTTPLivesInTransport(t *testing.T) {
 		}
 	}
 }
-

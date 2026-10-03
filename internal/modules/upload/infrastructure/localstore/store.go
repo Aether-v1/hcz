@@ -44,4 +44,3 @@ func (s *Store) Save(input contract.StoreInput) (string, error) {
 	}
 	return fmt.Sprintf("/uploads/%s/%s/%s/%s", input.Scene, input.Year, input.Month, input.Filename), nil
 }
-

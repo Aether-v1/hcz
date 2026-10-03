@@ -154,4 +154,3 @@ func (h *UserHandler) UpdateMyApiCredentialStatus(c *gin.Context) {
 
 	response.Success(c, gin.H{"updated": true})
 }
-

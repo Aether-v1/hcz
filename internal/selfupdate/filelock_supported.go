@@ -30,4 +30,3 @@ func acquireBinaryLock(execPath string) (func(), error) {
 		_ = f.Close()
 	}, nil
 }
-

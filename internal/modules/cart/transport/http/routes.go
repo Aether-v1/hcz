@@ -11,4 +11,3 @@ func RegisterUserRoutes(user gin.IRoutes, handler *UserHandler) {
 	user.POST("/cart/items", handler.UpsertCartItem)
 	user.DELETE("/cart/items/:product_id", handler.DeleteCartItem)
 }
-

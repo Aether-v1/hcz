@@ -190,4 +190,3 @@ func (s *AccountingQueryService) ListAdminWithdrawRequests(filter resellercontra
 		CreatedTo:   filter.CreatedTo,
 	})
 }
-

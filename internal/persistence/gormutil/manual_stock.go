@@ -57,4 +57,3 @@ func ConsumeManualStock(db *gorm.DB, model interface{}, id uint, quantity int) (
 	}
 	return result.RowsAffected, nil
 }
-

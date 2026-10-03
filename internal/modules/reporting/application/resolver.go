@@ -63,4 +63,3 @@ func Resolve(input reportingdomain.Query, now time.Time) (reportingdomain.Window
 	}
 	return window, nil
 }
-

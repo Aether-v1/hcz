@@ -94,4 +94,3 @@ func (r *UserStore) AssignDefaultMemberLevel(defaultLevelID uint) (int64, error)
 }
 
 var _ memberlevelcontract.UserRepository = (*UserStore)(nil)
-

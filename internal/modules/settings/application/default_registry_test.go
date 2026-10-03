@@ -138,4 +138,3 @@ func TestPaymentFeeConfigDefaultsSafeAndNormalizesSwitches(t *testing.T) {
 		t.Fatalf("payment fee config mismatch: %#v", got)
 	}
 }
-

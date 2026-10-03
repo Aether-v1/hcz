@@ -206,4 +206,3 @@ func TestAlipayAdapter_MapAlipayError(t *testing.T) {
 		})
 	}
 }
-

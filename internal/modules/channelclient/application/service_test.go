@@ -151,4 +151,3 @@ func TestServiceVerifiesSignatureAndMarksUsageThroughStore(t *testing.T) {
 		t.Fatalf("last-used timestamp was not persisted: %#v", store.items[client.ID].LastUsedAt)
 	}
 }
-

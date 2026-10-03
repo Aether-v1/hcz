@@ -87,4 +87,3 @@ func TestUserAuthBriefRespFields(t *testing.T) {
 		t.Errorf("expected email brief@test.com, got %s", resp.Email)
 	}
 }
-

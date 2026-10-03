@@ -153,4 +153,3 @@ func TestEnqueueOrderStatusEmailTaskIfEligibleSkipWhenSMTPDisabled(t *testing.T)
 		t.Fatalf("expected task skipped when smtp disabled")
 	}
 }
-

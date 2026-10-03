@@ -270,4 +270,3 @@ func (s *Service) findOrCreateLocalCategory(slug string, nameJSON jsonmap.JSON, 
 	}
 	return cat, nil
 }
-

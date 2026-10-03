@@ -115,4 +115,3 @@ func TestParseChallengeRejectsWrongPurpose(t *testing.T) {
 		t.Fatalf("expected error for non-challenge token")
 	}
 }
-

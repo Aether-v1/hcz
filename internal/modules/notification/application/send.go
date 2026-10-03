@@ -325,4 +325,3 @@ func notificationVariablesToJSON(data map[string]interface{}) jsonmap.JSON {
 	}
 	return result
 }
-

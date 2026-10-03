@@ -12,4 +12,3 @@ type Gateway interface {
 	RenderSlot(ctx context.Context, slotCode string, params map[string]string) (*domain.RenderResponse, error)
 	ReportImpression(ctx context.Context, payload json.RawMessage) error
 }
-

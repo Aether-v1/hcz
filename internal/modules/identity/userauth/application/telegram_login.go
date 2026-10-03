@@ -113,4 +113,3 @@ func (s *Service) LoginVerifiedTelegram(verified *telegramauthapp.IdentityVerifi
 
 	return s.completeExternalLogin(user, constants.LoginLogSourceTelegram)
 }
-

@@ -78,4 +78,3 @@ func TestCalculateLocalPrice(t *testing.T) {
 		})
 	}
 }
-

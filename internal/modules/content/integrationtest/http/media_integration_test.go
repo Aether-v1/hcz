@@ -74,4 +74,3 @@ func TestBatchDeleteMediaReturnsCounts(t *testing.T) {
 		t.Fatalf("failed IDs want [9999] got %#v", failedIDs)
 	}
 }
-

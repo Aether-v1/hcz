@@ -30,4 +30,3 @@ func ParseQuery(c *gin.Context) (reportingdomain.Query, error) {
 		ForceRefresh: forceRefresh,
 	}, nil
 }
-

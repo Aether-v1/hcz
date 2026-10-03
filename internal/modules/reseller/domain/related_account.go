@@ -20,4 +20,3 @@ type RelatedAccount struct {
 }
 
 func (RelatedAccount) TableName() string { return "reseller_related_accounts" }
-

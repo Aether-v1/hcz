@@ -77,4 +77,3 @@ func (r *SKUMappingStore) DeleteByProductMapping(productMappingID uint) error {
 		Where("deleted_at IS NULL AND product_mapping_id = ?", productMappingID).
 		Update("deleted_at", time.Now()).Error
 }
-

@@ -15,4 +15,3 @@ func applyPagination(query *gorm.DB, page, pageSize int) *gorm.DB {
 	}
 	return query.Limit(pageSize).Offset(offset)
 }
-

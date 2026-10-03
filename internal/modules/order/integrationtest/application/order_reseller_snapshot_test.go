@@ -646,4 +646,3 @@ func TestOrderServiceTenantScopedGuestQueries(t *testing.T) {
 		t.Fatalf("expected only reseller guest order, total=%d orders=%+v", total, orders)
 	}
 }
-

@@ -133,4 +133,3 @@ func resolveLocalizedJSON(m jsonmap.JSON, locale, defaultLocale string) string {
 	}
 	return ""
 }
-

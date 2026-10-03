@@ -428,4 +428,3 @@ func asConfigString(value interface{}) string {
 	text, _ := value.(string)
 	return text
 }
-

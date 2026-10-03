@@ -471,4 +471,3 @@ func resellerOperationsParseDBTime(value sql.NullString) *time.Time {
 	}
 	return nil
 }
-

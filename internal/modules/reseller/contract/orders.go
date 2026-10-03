@@ -111,4 +111,3 @@ type OrderQueryStore interface {
 	StatsOrderSnapshotsByReseller(filter OrderSnapshotListFilter) (OrderStatsRow, error)
 	GetOrderSnapshotByResellerOrderNo(resellerID uint, orderNo string) (*OrderSnapshotRow, error)
 }
-

@@ -231,4 +231,3 @@ func (r *Store) BatchUpdateLedgerEntriesByWithdrawID(withdrawID uint, updates ma
 		Where("withdraw_request_id = ? AND deleted_at IS NULL", withdrawID).
 		Updates(updates).Error
 }
-

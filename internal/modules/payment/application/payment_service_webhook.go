@@ -444,4 +444,3 @@ func (s *PaymentService) HandleStripeWebhook(input WebhookCallbackInput) (*payme
 		constants.PaymentChannelTypeStripe,
 	)
 }
-

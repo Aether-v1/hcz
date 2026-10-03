@@ -169,4 +169,3 @@ func (h *AdminCategoryHandler) DeleteCategory(c *gin.Context) {
 
 	response.Success(c, nil)
 }
-

@@ -113,4 +113,3 @@ func (h *UserProfileHandler) UpdateUserProfile(c *gin.Context) {
 	}
 	response.Success(c, profile)
 }
-

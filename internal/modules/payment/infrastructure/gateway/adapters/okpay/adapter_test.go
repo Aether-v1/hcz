@@ -276,4 +276,3 @@ func TestOkpayAdapter_MapOkpayError(t *testing.T) {
 		})
 	}
 }
-

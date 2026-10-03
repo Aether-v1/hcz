@@ -350,4 +350,3 @@ func decodeWebPDimensions(src io.ReadSeeker) (int, int, error) {
 		}
 	}
 }
-

@@ -21,4 +21,3 @@ func RegisterPublicRoutes(public gin.IRoutes, handler *PublicHandler) {
 func RegisterChannelRoutes(channel gin.IRoutes, handler *ChannelHandler) {
 	channel.GET("/member-levels", handler.List)
 }
-

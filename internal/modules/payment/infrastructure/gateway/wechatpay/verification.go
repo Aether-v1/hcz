@@ -260,4 +260,3 @@ func (c *Config) normalizeVerificationConfig() {
 	c.WechatPayPublicKeyID = strings.TrimSpace(c.WechatPayPublicKeyID)
 	c.WechatPayPublicKey = strings.TrimSpace(c.WechatPayPublicKey)
 }
-

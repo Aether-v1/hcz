@@ -493,4 +493,3 @@ func TestPostgresDashboardQueries(t *testing.T) {
 		t.Fatalf("payment trend day should not be empty")
 	}
 }
-
