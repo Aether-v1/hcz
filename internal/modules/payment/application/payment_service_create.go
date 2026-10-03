@@ -95,7 +95,8 @@ func (s *PaymentService) CreatePayment(input CreatePaymentInput) (*CreatePayment
 		if lockedOrder.ParentID != nil {
 			return ErrPaymentInvalid
 		}
-		if lockedOrder.Status != constants.OrderStatusPendingPayment {
+		// HCZ P0-1: wallet-only 模式下新订单为 pending_recharge，CreatePayment 是钱包扣款入口
+		if lockedOrder.Status != constants.OrderStatusPendingRecharge && lockedOrder.Status != constants.OrderStatusPendingPayment {
 			return orderapp.ErrOrderStatusInvalid
 		}
 		if lockedOrder.ExpiresAt != nil && !lockedOrder.ExpiresAt.After(time.Now()) {

@@ -56,7 +56,8 @@ func assertProcurementCallbackStatus(t *testing.T, fixture procurementCallbackSt
 func TestRejectProcurement_RollsBackOrderStatus(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-REJECT-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	// HCZ P0: 五态机下初始订单状态为 processing
+	order := createProcTestOrder(t, db, "PROC-REJECT-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	proc := createTestProcurementOrder(t, db, 1, order.ID, order.OrderNo, "pending")
 
 	connSvc := newTestSiteConnectionService(db, "test-key", t.TempDir())
@@ -75,20 +76,20 @@ func TestRejectProcurement_RollsBackOrderStatus(t *testing.T) {
 		t.Errorf("expected procurement status 'rejected', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单状态从 fulfilling 回退到 paid
+	// HCZ P0: 五态机下订单为 processing，采购失败回退到 processing（保持可重试）
 	var updatedOrder orderdomain.Order
 	if err := db.First(&updatedOrder, order.ID).Error; err != nil {
 		t.Fatalf("load order: %v", err)
 	}
-	if updatedOrder.Status != constants.OrderStatusPaid {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusPaid, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusProcessing {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusProcessing, updatedOrder.Status)
 	}
 }
 
 func TestHandleUpstreamCallback_Canceled_RollsBackOrder(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-CANCEL-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-CANCEL-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	proc := createTestProcurementOrder(t, db, 1, order.ID, order.OrderNo, "accepted")
 
 	connSvc := newTestSiteConnectionService(db, "test-key", t.TempDir())
@@ -107,20 +108,20 @@ func TestHandleUpstreamCallback_Canceled_RollsBackOrder(t *testing.T) {
 		t.Errorf("expected procurement status 'canceled', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单状态从 fulfilling 回退到 paid
+	// HCZ P0: 五态机下采购取消回退到 processing
 	var updatedOrder orderdomain.Order
 	if err := db.First(&updatedOrder, order.ID).Error; err != nil {
 		t.Fatalf("load order: %v", err)
 	}
-	if updatedOrder.Status != constants.OrderStatusPaid {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusPaid, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusProcessing {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusProcessing, updatedOrder.Status)
 	}
 }
 
 func TestHandleUpstreamCallback_Delivered_CreatesFulfillment(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-DELIVER-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-DELIVER-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	proc := createTestProcurementOrder(t, db, 1, order.ID, order.OrderNo, "accepted")
 
 	connSvc := newTestSiteConnectionService(db, "test-key", t.TempDir())
@@ -147,13 +148,13 @@ func TestHandleUpstreamCallback_Delivered_CreatesFulfillment(t *testing.T) {
 		t.Errorf("expected procurement status 'fulfilled', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单状态 = delivered
+	// HCZ P0: 五态机下采购完成直接写 completed
 	var updatedOrder orderdomain.Order
 	if err := db.First(&updatedOrder, order.ID).Error; err != nil {
 		t.Fatalf("load order: %v", err)
 	}
-	if updatedOrder.Status != constants.OrderStatusDelivered {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusDelivered, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusCompleted, updatedOrder.Status)
 	}
 
 	// 验证 Fulfillment 记录已创建
@@ -171,8 +172,9 @@ func TestHandleUpstreamCallback_Delivered_CreatesFulfillment(t *testing.T) {
 
 func TestHandleUpstreamCallback_Delivered_SynchronizesParentStatus(t *testing.T) {
 	db := setupProcurementTestDB(t)
-	parent := createProcTestOrder(t, db, "PROC-PARENT-DELIVERED", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
-	child := createProcTestOrder(t, db, "PROC-CHILD-DELIVERED", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	// HCZ P0: 五态机下 parent/child 初始为 processing
+	parent := createProcTestOrder(t, db, "PROC-PARENT-DELIVERED", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
+	child := createProcTestOrder(t, db, "PROC-CHILD-DELIVERED", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	if err := db.Model(&child).Update("parent_id", parent.ID).Error; err != nil {
 		t.Fatalf("set child parent: %v", err)
 	}
@@ -187,8 +189,9 @@ func TestHandleUpstreamCallback_Delivered_SynchronizesParentStatus(t *testing.T)
 	if err := db.First(&updatedParent, parent.ID).Error; err != nil {
 		t.Fatalf("load parent order: %v", err)
 	}
-	if updatedParent.Status != constants.OrderStatusDelivered {
-		t.Fatalf("parent status = %q, want %q", updatedParent.Status, constants.OrderStatusDelivered)
+	// HCZ P0: 子订单 completed → 父订单 completed（五态聚合）
+	if updatedParent.Status != constants.OrderStatusCompleted {
+		t.Fatalf("parent status = %q, want %q", updatedParent.Status, constants.OrderStatusCompleted)
 	}
 }
 

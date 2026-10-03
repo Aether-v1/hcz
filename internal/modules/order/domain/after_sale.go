@@ -17,14 +17,14 @@ const (
 )
 
 type AfterSaleTicket struct {
-	ID           uint            `gorm:"primaryKey"`
-	OrderID      uint            `gorm:"index;not null"`
-	UserID       uint            `gorm:"index;not null"`
-	Type         string          `gorm:"not null;default:'not_received'"`
-	Reason       string          `gorm:"type:varchar(255)"`
-	Description  string          `gorm:"type:text"`
-	Status       string          `gorm:"index;not null;default:'pending'"`
-	AdminNote    string          `gorm:"type:varchar(255)"`
+	ID           uint                `gorm:"primaryKey"`
+	OrderID      uint                `gorm:"index;not null"`
+	UserID       uint                `gorm:"index;not null"`
+	Type         string              `gorm:"not null;default:'not_received'"`
+	Reason       string              `gorm:"type:varchar(255)"`
+	Description  string              `gorm:"type:text"`
+	Status       string              `gorm:"index;not null;default:'pending'"`
+	AdminNote    string              `gorm:"type:varchar(255)"`
 	RefundAmount decimal.NullDecimal `gorm:"type:decimal(20,2)"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

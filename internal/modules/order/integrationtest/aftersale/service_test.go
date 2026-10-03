@@ -7,8 +7,8 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	"github.com/Aether-v1/hcz/internal/modules/affiliate/application"
-	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
+	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	userstore "github.com/Aether-v1/hcz/internal/modules/identity/user/infrastructure/gormstore"
@@ -75,10 +75,10 @@ func setupAfterSaleTest(t *testing.T) (*aftersale.Service, *refund.Service, *gor
 	order := &orderdomain.Order{
 		UserID: user.ID, OrderNo: fmt.Sprintf("T%d", now.UnixNano()),
 		Status: constants.OrderStatusCompleted, Currency: "CNY",
-		TotalAmount: money.FromDecimal(decimal.RequireFromString("71.80")),
-		UsdtTotalAmount: money.FromDecimal(decimal.RequireFromString("10.00")),
+		TotalAmount:      money.FromDecimal(decimal.RequireFromString("71.80")),
+		UsdtTotalAmount:  money.FromDecimal(decimal.RequireFromString("10.00")),
 		WalletPaidAmount: money.FromDecimal(decimal.RequireFromString("10.00")),
-		RefundStatus: "none", AfterSaleStatus: "none",
+		RefundStatus:     "none", AfterSaleStatus: "none",
 		PaidAt: &now, CreatedAt: now, UpdatedAt: now,
 	}
 	if err := db.Create(order).Error; err != nil {

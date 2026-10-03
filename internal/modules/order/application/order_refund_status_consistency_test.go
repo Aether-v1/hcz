@@ -7,14 +7,14 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	cardsecretdomain "github.com/Aether-v1/hcz/internal/modules/cardsecret/domain"
+	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	coupondomain "github.com/Aether-v1/hcz/internal/modules/coupon/domain"
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
-	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
-	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	userstore "github.com/Aether-v1/hcz/internal/modules/identity/user/infrastructure/gormstore"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	ordergormstore "github.com/Aether-v1/hcz/internal/modules/order/infrastructure/gormstore"
+	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
@@ -77,9 +77,9 @@ func setupRefundStatusConsistencyTest(t *testing.T) (*OrderService, *gorm.DB, ui
 	walletSvc := walletapp.NewService(walletapp.Options{Repository: walletStore, Transactions: walletStore})
 	settingSvc := settingsapp.NewService(settingsstore.New(db))
 	svc := NewOrderService(OrderServiceOptions{
-		OrderStore:    orderStore,
-		UserStore:     userstore.New(db),
-		WalletService: walletSvc,
+		OrderStore:     orderStore,
+		UserStore:      userstore.New(db),
+		WalletService:  walletSvc,
 		SettingService: settingSvc,
 	})
 	return svc, db, order.ID

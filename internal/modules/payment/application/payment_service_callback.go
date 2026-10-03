@@ -7,6 +7,7 @@ import (
 
 	productcontract "github.com/Aether-v1/hcz/internal/modules/catalog/product/contract"
 	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
+	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	paymentcontract "github.com/Aether-v1/hcz/internal/modules/payment/contract"
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
@@ -424,9 +425,26 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 	if order == nil {
 		return orderapp.ErrOrderNotFound
 	}
-	if !orderapp.IsTransitionAllowed(order.Status, constants.OrderStatusPaid) {
-		return orderapp.ErrOrderStatusInvalid
+
+	// HCZ P0-4: 五态机订单（pending_recharge）支付成功后写 processing，不再写 paid/fulfilling。
+	// 旧九态订单（pending_payment）保持原有 paid 行为以兼容历史数据。
+	isFiveStateOrder := order.Status == constants.OrderStatusPendingRecharge
+	paidTargetStatus := constants.OrderStatusPaid
+	if isFiveStateOrder {
+		paidTargetStatus = constants.OrderStatusProcessing
 	}
+
+	if !orderapp.IsTransitionAllowed(order.Status, paidTargetStatus) {
+		// 五态机订单用 ordermachine 校验，旧 IsTransitionAllowed 不含新五态会误拒
+		if isFiveStateOrder {
+			if !ordermachine.CanTransition(order.Status, paidTargetStatus) {
+				return orderapp.ErrOrderStatusInvalid
+			}
+		} else {
+			return orderapp.ErrOrderStatusInvalid
+		}
+	}
+
 	orderRepo := tx.Orders()
 	productRepo := tx.Products()
 	var productSKURepo productcontract.SKURepository
@@ -440,10 +458,10 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 		"online_paid_amount": money.FromDecimal(onlineAmount),
 		"updated_at":         now,
 	}
-	if err := orderRepo.UpdateStatus(order.ID, constants.OrderStatusPaid, orderUpdates); err != nil {
+	if err := orderRepo.UpdateStatus(order.ID, paidTargetStatus, orderUpdates); err != nil {
 		return orderapp.ErrOrderUpdateFailed
 	}
-	order.Status = constants.OrderStatusPaid
+	order.Status = paidTargetStatus
 	order.PaidAt = &now
 	order.OnlinePaidAmount = money.FromDecimal(onlineAmount)
 	order.UpdatedAt = now
@@ -451,8 +469,9 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 	if len(order.Children) > 0 {
 		for idx := range order.Children {
 			child := &order.Children[idx]
-			childStatus := constants.OrderStatusPaid
-			if shouldMarkFulfilling(child) {
+			// HCZ P0-4: 五态机子订单统一写 processing，不再区分 paid/fulfilling
+			childStatus := paidTargetStatus
+			if !isFiveStateOrder && shouldMarkFulfilling(child) {
 				childStatus = constants.OrderStatusFulfilling
 			}
 			if err := orderRepo.UpdateStatus(child.ID, childStatus, map[string]interface{}{
@@ -468,8 +487,8 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 			child.PaidAt = &now
 			child.UpdatedAt = now
 		}
-		parentStatus := orderapp.CalcParentStatus(order.Children, constants.OrderStatusPaid)
-		if parentStatus != "" && parentStatus != constants.OrderStatusPaid {
+		parentStatus := orderapp.CalcParentStatus(order.Children, paidTargetStatus)
+		if parentStatus != "" && parentStatus != paidTargetStatus {
 			if err := orderRepo.UpdateStatus(order.ID, parentStatus, map[string]interface{}{
 				"online_paid_amount": money.FromDecimal(onlineAmount),
 				"updated_at":         now,

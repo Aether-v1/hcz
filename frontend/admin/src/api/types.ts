@@ -169,6 +169,10 @@ export interface AdminOrder {
   wallet_paid_amount: number
   online_paid_amount: number
   refunded_amount: number
+  // USDT 结算字段：wallet_paid_amount/refunded_amount 本位币为 USDT。
+  // admin 原始 Order DTO 返回 usdt_total_amount；wallet_currency 由 presenter 计算（admin 未下发时前端回退 'USDT'）。
+  usdt_total_amount?: number
+  wallet_currency?: string
   coupon_id?: number
   coupon_code?: string
   promotion_id?: number

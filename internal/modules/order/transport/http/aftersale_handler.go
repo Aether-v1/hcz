@@ -141,7 +141,7 @@ func (h *AfterSaleHandler) UserGetAfterSale(c *gin.Context) {
 // AdminAfterSaleActionRequest 管理端售后操作请求。
 type AdminAfterSaleActionRequest struct {
 	Action       string `json:"action" binding:"required"` // reject / resolve / partial_refund / full_refund
-	RefundAmount string `json:"refund_amount"`              // partial_refund 时必填
+	RefundAmount string `json:"refund_amount"`             // partial_refund 时必填
 	AdminNote    string `json:"admin_note"`
 }
 

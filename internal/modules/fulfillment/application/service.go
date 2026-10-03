@@ -107,7 +107,8 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 	if order.ParentID == nil && len(order.Children) > 0 {
 		return nil, ErrFulfillmentInvalid
 	}
-	if order.Status != constants.OrderStatusPaid && order.Status != constants.OrderStatusFulfilling {
+	// HCZ P0-3: 五态机下订单处于 processing 时可履约，兼容旧态 paid/fulfilling
+	if order.Status != constants.OrderStatusPaid && order.Status != constants.OrderStatusFulfilling && order.Status != constants.OrderStatusProcessing {
 		return nil, ErrOrderStatusInvalid
 	}
 
@@ -140,8 +141,9 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 		if err := tx.Fulfillments().Create(fulfillment); err != nil {
 			return ErrFulfillmentCreateFailed
 		}
+		// HCZ P0-3: 人工履约完成后直接写 completed（五态终态），不再写 delivered
 		if err := tx.Orders().UpdateFields(order.ID, map[string]interface{}{
-			"status":     constants.OrderStatusDelivered,
+			"status":     constants.OrderStatusCompleted,
 			"updated_at": now,
 		}); err != nil {
 			return ErrOrderUpdateFailed
@@ -165,12 +167,12 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 				logger.Warnw("fulfillment_sync_parent_status_failed",
 					"order_id", order.ID,
 					"parent_order_id", *order.ParentID,
-					"target_status", constants.OrderStatusDelivered,
+					"target_status", constants.OrderStatusCompleted,
 					"error", syncErr,
 				)
 			} else {
 				if status == "" {
-					status = constants.OrderStatusDelivered
+					status = constants.OrderStatusCompleted
 				}
 				if status != constants.OrderStatusCanceled {
 					if _, err := orderapp.EnqueueStatusEmailTaskIfEligible(s.orderStore, s.orderQueue, s.settingService, s.defaultEmailConfig, *order.ParentID, status); err != nil {
@@ -184,11 +186,11 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 				}
 			}
 		} else {
-			if _, err := orderapp.EnqueueStatusEmailTaskIfEligible(s.orderStore, s.orderQueue, s.settingService, s.defaultEmailConfig, input.OrderID, constants.OrderStatusDelivered); err != nil {
+			if _, err := orderapp.EnqueueStatusEmailTaskIfEligible(s.orderStore, s.orderQueue, s.settingService, s.defaultEmailConfig, input.OrderID, constants.OrderStatusCompleted); err != nil {
 				logger.Warnw("fulfillment_enqueue_status_email_failed",
 					"order_id", order.ID,
 					"target_order_id", input.OrderID,
-					"status", constants.OrderStatusDelivered,
+					"status", constants.OrderStatusCompleted,
 					"error", err,
 				)
 			}
@@ -223,7 +225,8 @@ func (s *Service) CreateAuto(orderID uint) (*fulfillmentdomain.Fulfillment, erro
 	if order.ParentID == nil && len(order.Children) > 0 {
 		return nil, ErrFulfillmentInvalid
 	}
-	if order.Status != constants.OrderStatusPaid {
+	// HCZ P0-3: 五态机下订单处于 processing 时可自动履约，兼容旧态 paid
+	if order.Status != constants.OrderStatusPaid && order.Status != constants.OrderStatusProcessing {
 		return nil, ErrOrderStatusInvalid
 	}
 	if len(order.Items) == 0 {

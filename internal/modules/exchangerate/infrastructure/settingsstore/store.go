@@ -53,16 +53,16 @@ func (s *Store) SaveState(state exchangerate.State) error {
 		return nil
 	}
 	value := jsonmap.JSON{
-		"currency":            state.Currency,
-		"auto_rate":           state.AutoRate.String(),
-		"manual_rate":         state.ManualRate.String(),
-		"last_error":          state.LastError,
+		"currency":             state.Currency,
+		"auto_rate":            state.AutoRate.String(),
+		"manual_rate":          state.ManualRate.String(),
+		"last_error":           state.LastError,
 		"provider":             state.Provider,
-		"api_key":             state.APIKey,
-		"auto_enabled":        state.AutoEnabled,
+		"api_key":              state.APIKey,
+		"auto_enabled":         state.AutoEnabled,
 		"refresh_interval_min": state.RefreshIntervalMin,
-		"auto_fetched_at":     state.AutoFetchedAt.Unix(),
-		"last_success_at":     state.LastSuccessAt.Unix(),
+		"auto_fetched_at":      state.AutoFetchedAt.Unix(),
+		"last_success_at":      state.LastSuccessAt.Unix(),
 	}
 	_, err := s.kv.Upsert(key, value)
 	return err

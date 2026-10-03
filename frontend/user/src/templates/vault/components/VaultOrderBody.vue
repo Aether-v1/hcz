@@ -75,7 +75,7 @@
         <template v-if="variant === 'user'">
           <div v-if="hasAmount(order.wallet_paid_amount)" class="rounded-md border bg-secondary px-3.5 py-3">
             <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountWalletPaid') }}</div>
-            <div class="mt-1.5 font-bold tabular-nums">{{ formatMoney(order.wallet_paid_amount, order.currency) }}</div>
+            <div class="mt-1.5 font-bold tabular-nums">{{ formatMoney(order.wallet_paid_amount, order.wallet_currency || 'USDT') }}</div>
           </div>
           <div v-if="hasAmount(order.online_paid_amount)" class="rounded-md border bg-secondary px-3.5 py-3">
             <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountOnlinePaid') }}</div>
@@ -83,7 +83,7 @@
           </div>
           <div v-if="hasAmount(order.refunded_amount)" class="rounded-md border bg-secondary px-3.5 py-3">
             <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountRefunded') }}</div>
-            <div class="mt-1.5 font-bold tabular-nums">{{ formatMoney(order.refunded_amount, order.currency) }}</div>
+            <div class="mt-1.5 font-bold tabular-nums">{{ formatMoney(order.refunded_amount, order.wallet_currency || 'USDT') }}</div>
           </div>
         </template>
         <div v-if="hasDiscountAmount(order.member_discount_amount)" class="rounded-md border border-[color:var(--gold-strong)] bg-secondary px-3.5 py-3 text-[color:var(--gold-strong)]">

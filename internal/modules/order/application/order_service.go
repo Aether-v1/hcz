@@ -238,6 +238,16 @@ var allowedTransitions = map[string]map[string]bool{
 	constants.OrderStatusPartiallyRefunded: {
 		constants.OrderStatusRefunded: true,
 	},
+	// HCZ M3: 五态机迁移映射，确保新五态迁移不被误拒
+	constants.OrderStatusPendingRecharge: {
+		constants.OrderStatusProcessing: true,
+		constants.OrderStatusFailed:     true,
+		constants.OrderStatusCanceled:   true,
+	},
+	constants.OrderStatusProcessing: {
+		constants.OrderStatusCompleted: true,
+		constants.OrderStatusFailed:    true,
+	},
 }
 
 // CreateOrder 创建订单
@@ -565,7 +575,7 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		OnlinePaidAmount:        money.FromDecimal(decimal.Zero),
 		RefundedAmount:          money.FromDecimal(decimal.Zero),
 		UsdtTotalAmount:         money.FromDecimal(orderUsdtTotal),
-		ExchangeRate:             orderRate,
+		ExchangeRate:            orderRate,
 		ExchangeRateSource:      orderRateSrc,
 		ExchangeRateAt:          orderRateAt,
 		MemberLevelID:           result.MemberLevelID,
@@ -624,17 +634,18 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 				WholesaleDiscountAmount: money.FromDecimal(plan.WholesaleDiscount),
 				TotalAmount:             money.FromDecimal(normalizeOrderAmount(plan.TotalAmount.Sub(plan.CouponDiscount))),
 				WalletPaidAmount:        money.FromDecimal(decimal.Zero),
-				OnlinePaidAmount:        money.FromDecimal(normalizeOrderAmount(plan.TotalAmount.Sub(plan.CouponDiscount))),
-				RefundedAmount:          money.FromDecimal(decimal.Zero),
-				CouponID:                nil,
-				PromotionID:             plan.Item.PromotionID,
-				AffiliateProfileID:      affiliateProfileID,
-				AffiliateCode:           affiliateCode,
-				ExpiresAt:               &expiresAt,
-				ClientIP:                order.ClientIP,
-				RiskIP:                  order.RiskIP,
-				CreatedAt:               now,
-				UpdatedAt:               now,
+				// HCZ M4: wallet-only 模式下子订单 OnlinePaidAmount 恒为 0（无在线支付）
+				OnlinePaidAmount:   money.FromDecimal(decimal.Zero),
+				RefundedAmount:     money.FromDecimal(decimal.Zero),
+				CouponID:           nil,
+				PromotionID:        plan.Item.PromotionID,
+				AffiliateProfileID: affiliateProfileID,
+				AffiliateCode:      affiliateCode,
+				ExpiresAt:          &expiresAt,
+				ClientIP:           order.ClientIP,
+				RiskIP:             order.RiskIP,
+				CreatedAt:          now,
+				UpdatedAt:          now,
 			}
 			if pricingCtx != nil {
 				resellerID := pricingCtx.ResellerID

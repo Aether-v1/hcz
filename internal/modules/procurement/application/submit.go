@@ -118,8 +118,8 @@ func (s *Service) SubmitToUpstream(procurementOrderID uint) error {
 		"upstream_order_no", resp.OrderNo,
 	)
 
-	// 更新本地订单状态为 fulfilling
-	_ = s.orderRepo.UpdateStatus(localOrder.ID, constants.OrderStatusFulfilling, map[string]interface{}{
+	// HCZ P0: 五态机下订单处于 processing，采购提交不改变主状态（仍为 processing）
+	_ = s.orderRepo.UpdateStatus(localOrder.ID, constants.OrderStatusProcessing, map[string]interface{}{
 		"updated_at": now,
 	})
 
@@ -165,9 +165,10 @@ func (s *Service) rollbackLocalOrderOnProcurementFailure(procOrder *procurementd
 	if err != nil || localOrder == nil {
 		return
 	}
-	if localOrder.Status == constants.OrderStatusFulfilling {
+	// HCZ P0: 五态机下 procurement 失败时回退 processing → processing（保持可重试）
+	if localOrder.Status == constants.OrderStatusProcessing {
 		now := time.Now()
-		_ = s.orderRepo.UpdateStatus(localOrder.ID, constants.OrderStatusPaid, map[string]interface{}{
+		_ = s.orderRepo.UpdateStatus(localOrder.ID, constants.OrderStatusProcessing, map[string]interface{}{
 			"updated_at": now,
 		})
 		// 如果是子订单，同步父订单状态
@@ -177,8 +178,8 @@ func (s *Service) rollbackLocalOrderOnProcurementFailure(procOrder *procurementd
 		logger.Infow("procurement_failure_order_rolled_back",
 			"procurement_order_id", procOrder.ID,
 			"local_order_id", localOrder.ID,
-			"from_status", constants.OrderStatusFulfilling,
-			"to_status", constants.OrderStatusPaid,
+			"from_status", constants.OrderStatusProcessing,
+			"to_status", constants.OrderStatusProcessing,
 		)
 	}
 	s.notifyProcurementFailure(procOrder, errMsg)

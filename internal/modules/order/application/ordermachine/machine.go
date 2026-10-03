@@ -7,7 +7,7 @@ import "github.com/Aether-v1/hcz/internal/constants"
 
 // View 是归一后对外输出的订单主状态视图。
 type View struct {
-	Status      string // 五主状态之一
+	Status       string // 五主状态之一
 	RefundStatus string
 }
 

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	exchangerate "github.com/Aether-v1/hcz/internal/modules/exchangerate/contract"
 	"github.com/Aether-v1/hcz/internal/cache"
+	exchangerate "github.com/Aether-v1/hcz/internal/modules/exchangerate/contract"
 )
 
 const cacheKey = "global_exchange_rate:state"

@@ -17,11 +17,11 @@ import (
 //  2. 自动不可用/过期 → 若设置了手动兜底 → 用 MANUAL
 //  3. 都不可用 → 返回 ErrRateUnavailable，拒绝下单
 type Service struct {
-	provider   exchangerate.Provider
-	store      exchangerate.Store
-	currency   string
-	staleness  time.Duration
-	now        func() time.Time
+	provider  exchangerate.Provider
+	store     exchangerate.Store
+	currency  string
+	staleness time.Duration
+	now       func() time.Time
 }
 
 // NewService 构造。currency 为站点计价币种；staleness 为自动汇率允许的最大新鲜度。

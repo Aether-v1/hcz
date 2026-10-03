@@ -8,18 +8,18 @@ import (
 
 func TestNormalize_HistoryMapping(t *testing.T) {
 	cases := map[string]View{
-		"pending_payment":               {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
-		"paid":                          {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
-		"fulfilling":                    {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
-		"partially_delivered":           {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
-		"delivered":                     {constants.OrderStatusCompleted, constants.OrderRefundStatusNone},
-		"completed":                     {constants.OrderStatusCompleted, constants.OrderRefundStatusNone},
-		"canceled":                      {constants.OrderStatusCanceled, constants.OrderRefundStatusFull},
-		"partially_refunded":            {constants.OrderStatusCompleted, constants.OrderRefundStatusPartial},
-		"refunded":                      {constants.OrderStatusCompleted, constants.OrderRefundStatusFull},
-		"pending_recharge":              {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
-		"processing":                    {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
-		"failed":                        {constants.OrderStatusFailed, constants.OrderRefundStatusFull},
+		"pending_payment":     {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
+		"paid":                {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
+		"fulfilling":          {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
+		"partially_delivered": {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
+		"delivered":           {constants.OrderStatusCompleted, constants.OrderRefundStatusNone},
+		"completed":           {constants.OrderStatusCompleted, constants.OrderRefundStatusNone},
+		"canceled":            {constants.OrderStatusCanceled, constants.OrderRefundStatusFull},
+		"partially_refunded":  {constants.OrderStatusCompleted, constants.OrderRefundStatusPartial},
+		"refunded":            {constants.OrderStatusCompleted, constants.OrderRefundStatusFull},
+		"pending_recharge":    {constants.OrderStatusPendingRecharge, constants.OrderRefundStatusNone},
+		"processing":          {constants.OrderStatusProcessing, constants.OrderRefundStatusNone},
+		"failed":              {constants.OrderStatusFailed, constants.OrderRefundStatusFull},
 	}
 	for old, want := range cases {
 		got := Normalize(old)

@@ -12,8 +12,8 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	affiliateapp "github.com/Aether-v1/hcz/internal/modules/affiliate/application"
-	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
+	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	userstore "github.com/Aether-v1/hcz/internal/modules/identity/user/infrastructure/gormstore"

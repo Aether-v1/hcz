@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
-	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	"github.com/Aether-v1/hcz/internal/logger"
@@ -185,11 +185,10 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 		return nil, ErrOrderStatusInvalid
 	}
 	// P0-3: 统一合法性校验交给状态机（归一当前/目标后判断）。
-	// 旧退款主状态(partially_refunded/refunded)有独立退款链路，不经过五态机，豁免。
-	if target != constants.OrderStatusPartiallyRefunded && target != constants.OrderStatusRefunded {
-		if cur := ordermachine.Normalize(order.Status); !ordermachine.CanTransition(cur.Status, ordermachine.Normalize(target).Status) {
-			return nil, ErrOrderStatusInvalid
-		}
+	// HCZ P0-5: 删除 admin 直接设 partially_refunded/refunded 主状态的分支。
+	// Refund 只更新 refund_status 独立列，主状态继续由 ordermachine 管理。
+	if cur := ordermachine.Normalize(order.Status); !ordermachine.CanTransition(cur.Status, ordermachine.Normalize(target).Status) {
+		return nil, ErrOrderStatusInvalid
 	}
 	isParent := order.ParentID == nil && len(order.Children) > 0
 	if isParent {
@@ -235,50 +234,6 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 						"order_id", order.ID,
 						"target_order_id", order.ID,
 						"status", constants.OrderStatusCompleted,
-						"error", err,
-					)
-				}
-			}
-			return order, nil
-		case constants.OrderStatusPartiallyRefunded, constants.OrderStatusRefunded:
-			now := time.Now()
-			err = s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
-				orderStore := tx.Orders()
-				updates := map[string]interface{}{"updated_at": now}
-				if err := orderStore.UpdateStatus(order.ID, target, updates); err != nil {
-					return ErrOrderUpdateFailed
-				}
-				for _, child := range order.Children {
-					if child.Status == target {
-						continue
-					}
-					if !IsTransitionAllowed(child.Status, target) {
-						return ErrOrderStatusInvalid
-					}
-					if err := orderStore.UpdateStatus(child.ID, target, updates); err != nil {
-						return ErrOrderUpdateFailed
-					}
-				}
-				return nil
-			})
-			if err != nil {
-				if errors.Is(err, ErrOrderStatusInvalid) {
-					return nil, ErrOrderStatusInvalid
-				}
-				return nil, ErrOrderUpdateFailed
-			}
-			order.Status = target
-			order.UpdatedAt = now
-			for i := range order.Children {
-				order.Children[i].Status = target
-				order.Children[i].UpdatedAt = now
-			}
-			if s.queueClient != nil {
-				if _, err := EnqueueStatusEmailTaskIfEligible(s.orderStore, s.queueClient, s.settingService, s.defaultEmailConfig, order.ID, target); err != nil {
-					logger.Warnw("order_enqueue_status_email_failed",
-						"order_id", order.ID,
-						"target_order_id", order.ID,
-						"status", target,
 						"error", err,
 					)
 				}
@@ -376,7 +331,8 @@ func (s *OrderService) completeParentOrderInTx(tx ordercontract.Transaction, ord
 		if child.Status == constants.OrderStatusCompleted {
 			continue
 		}
-		if child.Status != constants.OrderStatusDelivered {
+		// HCZ M2: 五态机下子订单终态为 completed，兼容旧态 delivered
+		if child.Status != constants.OrderStatusDelivered && child.Status != constants.OrderStatusCompleted {
 			return ErrOrderStatusInvalid
 		}
 		if err := orderStore.UpdateStatus(child.ID, constants.OrderStatusCompleted, updates); err != nil {
@@ -438,7 +394,8 @@ func (s *OrderService) CancelExpiredOrder(orderID uint) (*orderdomain.Order, err
 	if order == nil {
 		return nil, ErrOrderNotFound
 	}
-	if order.Status != constants.OrderStatusPendingPayment {
+	// HCZ P0-2: wallet-only 模式下新订单为 pending_recharge，超时取消需处理此状态
+	if order.Status != constants.OrderStatusPendingRecharge && order.Status != constants.OrderStatusPendingPayment {
 		return order, nil
 	}
 	if order.ExpiresAt == nil {
@@ -467,7 +424,8 @@ func canCompleteParentOrder(order *orderdomain.Order) bool {
 	if order == nil {
 		return false
 	}
-	if order.Status != constants.OrderStatusDelivered {
+	// HCZ M2: 五态机下父单前置为 processing，兼容旧态 delivered
+	if order.Status != constants.OrderStatusDelivered && order.Status != constants.OrderStatusProcessing {
 		return false
 	}
 	for _, child := range order.Children {

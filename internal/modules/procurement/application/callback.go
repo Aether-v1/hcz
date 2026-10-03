@@ -58,8 +58,8 @@ func (s *Service) HandleUpstreamCallback(procurementOrderID uint, upstreamStatus
 			return fmt.Errorf("update procurement status: %w", err)
 		}
 
-		// 更新本地订单状态
-		_ = s.orderRepo.UpdateStatus(procOrder.LocalOrderID, constants.OrderStatusDelivered, map[string]interface{}{
+		// HCZ P0: 五态机下采购完成直接写 completed（终态），不再写 delivered
+		_ = s.orderRepo.UpdateStatus(procOrder.LocalOrderID, constants.OrderStatusCompleted, map[string]interface{}{
 			"updated_at": now,
 		})
 
@@ -74,14 +74,14 @@ func (s *Service) HandleUpstreamCallback(procurementOrderID uint, upstreamStatus
 				)
 			} else {
 				if status == "" {
-					status = constants.OrderStatusDelivered
+					status = constants.OrderStatusCompleted
 				}
 				if status != constants.OrderStatusCanceled {
 					_, _ = s.orderLifecycle.EnqueueStatusEmail(*localOrder.ParentID, status)
 				}
 			}
 		} else if localOrder != nil && s.orderLifecycle != nil {
-			_, _ = s.orderLifecycle.EnqueueStatusEmail(localOrder.ID, constants.OrderStatusDelivered)
+			_, _ = s.orderLifecycle.EnqueueStatusEmail(localOrder.ID, constants.OrderStatusCompleted)
 		}
 
 		// 触发下游回调（多级连跳：本站作为中间节点，通知下游交付完成）

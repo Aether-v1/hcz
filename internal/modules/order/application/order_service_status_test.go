@@ -18,44 +18,51 @@ import (
 )
 
 func TestCalcParentStatus(t *testing.T) {
+	// HCZ M1: 五态机下 CalcParentStatus 先归一子订单状态再聚合
+	// delivered → completed, paid → pending_recharge
+	// 一个 completed + 一个 pending_recharge → 父 pending_recharge（优先级更高）
 	children := []orderdomain.Order{
 		{Status: constants.OrderStatusDelivered},
 		{Status: constants.OrderStatusPaid},
 	}
-	status := CalcParentStatus(children, constants.OrderStatusPaid)
-	if status != constants.OrderStatusPartiallyDelivered {
-		t.Fatalf("expected partially_delivered, got %s", status)
+	status := CalcParentStatus(children, constants.OrderStatusProcessing)
+	if status != constants.OrderStatusPendingRecharge {
+		t.Fatalf("expected pending_recharge, got %s", status)
 	}
 
 	children = []orderdomain.Order{
-		{Status: constants.OrderStatusDelivered},
-		{Status: constants.OrderStatusDelivered},
+		{Status: constants.OrderStatusCompleted},
+		{Status: constants.OrderStatusCompleted},
 	}
-	status = CalcParentStatus(children, constants.OrderStatusPaid)
-	if status != constants.OrderStatusDelivered {
-		t.Fatalf("expected delivered, got %s", status)
+	status = CalcParentStatus(children, constants.OrderStatusProcessing)
+	if status != constants.OrderStatusCompleted {
+		t.Fatalf("expected completed, got %s", status)
 	}
 }
 
 func TestCalcParentStatusAllRefunded(t *testing.T) {
+	// HCZ M1: refunded 归一为 completed + refund_status=full，不影响主状态聚合
+	// 所有子 refunded → 归一为 completed → 父 completed
 	children := []orderdomain.Order{
 		{Status: constants.OrderStatusRefunded},
 		{Status: constants.OrderStatusRefunded},
 	}
 	status := CalcParentStatus(children, constants.OrderStatusDelivered)
-	if status != constants.OrderStatusRefunded {
-		t.Fatalf("expected refunded, got %s", status)
+	if status != constants.OrderStatusCompleted {
+		t.Fatalf("expected completed, got %s", status)
 	}
 }
 
 func TestCalcParentStatusPartiallyRefunded(t *testing.T) {
+	// HCZ M1: refund_status 不影响主状态聚合
+	// refunded → completed, delivered → completed → 父 completed
 	children := []orderdomain.Order{
 		{Status: constants.OrderStatusRefunded},
 		{Status: constants.OrderStatusDelivered},
 	}
 	status := CalcParentStatus(children, constants.OrderStatusDelivered)
-	if status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected partially_refunded, got %s", status)
+	if status != constants.OrderStatusCompleted {
+		t.Fatalf("expected completed, got %s", status)
 	}
 }
 
@@ -178,6 +185,8 @@ func TestIsTransitionAllowedRefunded(t *testing.T) {
 }
 
 func TestUpdateOrderStatusParentToPartiallyRefundedSyncsChildren(t *testing.T) {
+	// HCZ P0-5: admin 不能直接设 partially_refunded/refunded 主状态
+	// Refund 只更新 refund_status 独立列，主状态由 ordermachine 管理
 	dsn := fmt.Sprintf("file:order_service_parent_partial_refund_%d?mode=memory&cache=shared", time.Now().UnixNano())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -192,7 +201,7 @@ func TestUpdateOrderStatusParentToPartiallyRefundedSyncsChildren(t *testing.T) {
 	parent := &orderdomain.Order{
 		OrderNo:          "PARENT-PARTIAL-REFUND-001",
 		UserID:           0,
-		Status:           constants.OrderStatusDelivered,
+		Status:           constants.OrderStatusCompleted,
 		Currency:         "CNY",
 		OriginalAmount:   money.FromDecimal(decimal.NewFromInt(100)),
 		DiscountAmount:   money.FromDecimal(decimal.Zero),
@@ -208,78 +217,13 @@ func TestUpdateOrderStatusParentToPartiallyRefundedSyncsChildren(t *testing.T) {
 		t.Fatalf("create parent order failed: %v", err)
 	}
 
-	childA := &orderdomain.Order{
-		OrderNo:          "PARENT-PARTIAL-REFUND-001-A",
-		ParentID:         &parent.ID,
-		UserID:           0,
-		Status:           constants.OrderStatusDelivered,
-		Currency:         "CNY",
-		OriginalAmount:   money.FromDecimal(decimal.NewFromInt(60)),
-		DiscountAmount:   money.FromDecimal(decimal.Zero),
-		TotalAmount:      money.FromDecimal(decimal.NewFromInt(60)),
-		WalletPaidAmount: money.FromDecimal(decimal.Zero),
-		OnlinePaidAmount: money.FromDecimal(decimal.NewFromInt(60)),
-		RefundedAmount:   money.FromDecimal(decimal.Zero),
-		PaidAt:           &paidAt,
-		CreatedAt:        now,
-		UpdatedAt:        now,
-	}
-	if err := db.Create(childA).Error; err != nil {
-		t.Fatalf("create childA order failed: %v", err)
-	}
-
-	childB := &orderdomain.Order{
-		OrderNo:          "PARENT-PARTIAL-REFUND-001-B",
-		ParentID:         &parent.ID,
-		UserID:           0,
-		Status:           constants.OrderStatusCompleted,
-		Currency:         "CNY",
-		OriginalAmount:   money.FromDecimal(decimal.NewFromInt(40)),
-		DiscountAmount:   money.FromDecimal(decimal.Zero),
-		TotalAmount:      money.FromDecimal(decimal.NewFromInt(40)),
-		WalletPaidAmount: money.FromDecimal(decimal.Zero),
-		OnlinePaidAmount: money.FromDecimal(decimal.NewFromInt(40)),
-		RefundedAmount:   money.FromDecimal(decimal.Zero),
-		PaidAt:           &paidAt,
-		CreatedAt:        now,
-		UpdatedAt:        now,
-	}
-	if err := db.Create(childB).Error; err != nil {
-		t.Fatalf("create childB order failed: %v", err)
-	}
-
 	svc := NewOrderService(OrderServiceOptions{
 		OrderStore: ordergormstore.New(db, "test-guest-credential-secret-with-32-bytes"),
 	})
-	updated, err := svc.UpdateOrderStatus(parent.ID, constants.OrderStatusPartiallyRefunded)
-	if err != nil {
-		t.Fatalf("update parent status failed: %v", err)
-	}
-	if updated == nil || updated.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected parent partially_refunded, got: %+v", updated)
-	}
-	if len(updated.Children) != 2 {
-		t.Fatalf("expected 2 children in updated order, got: %d", len(updated.Children))
-	}
-	for _, child := range updated.Children {
-		if child.Status != constants.OrderStatusPartiallyRefunded {
-			t.Fatalf("expected child partially_refunded, got: %s", child.Status)
-		}
-	}
-
-	var reloadedA orderdomain.Order
-	if err := db.First(&reloadedA, childA.ID).Error; err != nil {
-		t.Fatalf("reload childA failed: %v", err)
-	}
-	if reloadedA.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected childA partially_refunded, got: %s", reloadedA.Status)
-	}
-	var reloadedB orderdomain.Order
-	if err := db.First(&reloadedB, childB.ID).Error; err != nil {
-		t.Fatalf("reload childB failed: %v", err)
-	}
-	if reloadedB.Status != constants.OrderStatusPartiallyRefunded {
-		t.Fatalf("expected childB partially_refunded, got: %s", reloadedB.Status)
+	// HCZ P0-5: admin 直接设 partially_refunded 应被拒绝
+	_, err = svc.UpdateOrderStatus(parent.ID, constants.OrderStatusPartiallyRefunded)
+	if err == nil {
+		t.Fatalf("expected admin direct partially_refunded to be rejected, but got nil error")
 	}
 }
 

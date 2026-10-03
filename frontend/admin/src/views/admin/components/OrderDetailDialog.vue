@@ -841,7 +841,7 @@ watch(
               <Card v-if="hasPositiveAmount(selectedOrder.wallet_paid_amount)" class="min-w-0 rounded-lg border-border bg-background shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-muted-foreground">{{ t('admin.orders.detailWalletPaid') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.wallet_paid_amount, selectedOrder.currency) }}</div>
+                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.wallet_paid_amount, selectedOrder.wallet_currency || 'USDT') }}</div>
                 </CardContent>
               </Card>
               <Card v-if="hasPositiveAmount(selectedOrder.online_paid_amount)" class="min-w-0 rounded-lg border-border bg-background shadow-none">
@@ -853,7 +853,7 @@ watch(
               <Card v-if="hasPositiveAmount(selectedOrder.refunded_amount)" class="min-w-0 rounded-lg border-border bg-background shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-muted-foreground">{{ t('admin.orders.detailRefunded') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.refunded_amount, selectedOrder.currency) }}</div>
+                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.refunded_amount, selectedOrder.wallet_currency || 'USDT') }}</div>
                 </CardContent>
               </Card>
               <Card class="min-w-0 rounded-lg border-border bg-background shadow-none">
@@ -992,7 +992,7 @@ watch(
             </div>
             <div v-if="selectedOrder.items && selectedOrder.items.length" class="mt-3 flex flex-wrap justify-end gap-2">
               <div v-if="hasPositiveAmount(selectedOrder.refunded_amount)" class="rounded-lg border border-blue-200 bg-blue-50/60 px-4 py-2 text-sm font-semibold text-blue-700">
-                {{ t('admin.orders.itemRefund') }}：{{ formatMoney(selectedOrder.refunded_amount, selectedOrder.currency) }}
+                {{ t('admin.orders.itemRefund') }}：{{ formatMoney(selectedOrder.refunded_amount, selectedOrder.wallet_currency || 'USDT') }}
               </div>
               <div v-if="hasPositiveAmount(orderPaymentFee(selectedOrder))" class="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-2 text-sm font-semibold text-amber-700">
                 {{ t('admin.payments.table.feeAmount') }}：{{ formatMoney(orderPaymentFee(selectedOrder).toFixed(2), selectedOrder.currency) }}

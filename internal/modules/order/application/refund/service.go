@@ -410,6 +410,11 @@ func (s *Service) adminManualRefundInTx(
 			return nil, err
 		}
 	}
+	// HCZ P0-RefundCurrency: USDT 订单退款记录币种为 USDT
+	refundCurrency := order.Currency
+	if order.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
+		refundCurrency = "USDT"
+	}
 	record, err := s.createRefundRecordTx(
 		orders,
 		&order,
@@ -418,6 +423,7 @@ func (s *Service) adminManualRefundInTx(
 		recordRemark,
 		input.PaymentFeeRefunded,
 		feeRefundedAmount,
+		refundCurrency,
 		now,
 	)
 	if err != nil {
@@ -516,6 +522,7 @@ func (s *Service) ResolveStatusEmailRefundDetails(orderID uint, refundRecordID u
 }
 
 // createRefundRecordTx 在事务内写入退款记录（order_refund_records）。
+// HCZ P0-RefundCurrency: 接收 refundCurrency 参数，USDT 订单传 "USDT"。
 func (s *Service) createRefundRecordTx(
 	orders ordercontract.Store,
 	order *orderdomain.Order,
@@ -524,12 +531,16 @@ func (s *Service) createRefundRecordTx(
 	remark string,
 	paymentFeeRefunded bool,
 	paymentFeeRefundedAmount money.Amount,
+	refundCurrency string,
 	now time.Time,
 ) (*orderdomain.OrderRefundRecord, error) {
 	if orders == nil || order == nil {
 		return nil, ErrRefundRecordCreateFailed
 	}
-	currency := strings.ToUpper(strings.TrimSpace(order.Currency))
+	currency := strings.ToUpper(strings.TrimSpace(refundCurrency))
+	if currency == "" {
+		currency = strings.ToUpper(strings.TrimSpace(order.Currency))
+	}
 	if currency == "" {
 		currency = "CNY"
 	}

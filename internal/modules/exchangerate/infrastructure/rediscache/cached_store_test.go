@@ -28,12 +28,12 @@ func (m *countingStore) SaveState(s exchangerate.State) error {
 
 func baseState() exchangerate.State {
 	return exchangerate.State{
-		Currency:     "CNY",
-		AutoEnabled:  true,
-		AutoRate:     decimal.RequireFromString("7.18000000"),
+		Currency:      "CNY",
+		AutoEnabled:   true,
+		AutoRate:      decimal.RequireFromString("7.18000000"),
 		AutoFetchedAt: time.Now(),
 		LastSuccessAt: time.Now(),
-		ManualRate:   decimal.RequireFromString("7.2"),
+		ManualRate:    decimal.RequireFromString("7.2"),
 	}
 }
 

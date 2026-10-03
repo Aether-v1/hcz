@@ -17,15 +17,15 @@ const (
 // pending_recharge 指平台充值业务订单等待人工处理，非钱包充值支付状态。
 const (
 	OrderStatusPendingRecharge = "pending_recharge"
-	OrderStatusProcessing       = "processing"
-	OrderStatusFailed           = "failed"
+	OrderStatusProcessing      = "processing"
+	OrderStatusFailed          = "failed"
 )
 
 // 独立退款子状态（不进主状态）。
 const (
-	OrderRefundStatusNone   = "none"
+	OrderRefundStatusNone    = "none"
 	OrderRefundStatusPartial = "partial"
-	OrderRefundStatusFull   = "full"
+	OrderRefundStatusFull    = "full"
 )
 
 // 订单退款常量

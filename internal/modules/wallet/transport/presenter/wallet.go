@@ -28,15 +28,15 @@ func NewWalletAccountResp(a *walletdomain.Account) WalletAccountResp {
 
 // WalletTransactionResp 钱包流水响应
 type WalletTransactionResp struct {
-	ID           uint         `json:"id"`
-	Type         string       `json:"type"`
-	Direction    string       `json:"direction"`
-	Amount       money.Amount `json:"amount"`
+	ID            uint         `json:"id"`
+	Type          string       `json:"type"`
+	Direction     string       `json:"direction"`
+	Amount        money.Amount `json:"amount"`
 	BalanceBefore money.Amount `json:"balance_before"`
-	BalanceAfter money.Amount `json:"balance_after"`
-	Currency     string       `json:"currency"` // 固定 USDT
-	Remark       string       `json:"remark"`
-	CreatedAt    time.Time    `json:"created_at"`
+	BalanceAfter  money.Amount `json:"balance_after"`
+	Currency      string       `json:"currency"` // 固定 USDT
+	Remark        string       `json:"remark"`
+	CreatedAt     time.Time    `json:"created_at"`
 }
 
 // NewWalletTransactionResp 从 walletdomain.Transaction 构造响应
@@ -46,15 +46,15 @@ func NewWalletTransactionResp(t *walletdomain.Transaction) WalletTransactionResp
 		currency = "USDT"
 	}
 	return WalletTransactionResp{
-		ID:           t.ID,
-		Type:         t.Type,
-		Direction:    t.Direction,
-		Amount:       t.Amount,
+		ID:            t.ID,
+		Type:          t.Type,
+		Direction:     t.Direction,
+		Amount:        t.Amount,
 		BalanceBefore: t.BalanceBefore,
-		BalanceAfter: t.BalanceAfter,
-		Currency:     currency,
-		Remark:       t.Remark,
-		CreatedAt:    t.CreatedAt,
+		BalanceAfter:  t.BalanceAfter,
+		Currency:      currency,
+		Remark:        t.Remark,
+		CreatedAt:     t.CreatedAt,
 	}
 }
 
@@ -69,34 +69,34 @@ func NewWalletTransactionRespList(txns []walletdomain.Transaction) []WalletTrans
 
 // WalletRechargeResp 钱包充值单响应
 type WalletRechargeResp struct {
-	ID            uint         `json:"id"`
-	RechargeNo    string       `json:"recharge_no"`
-	Amount        money.Amount `json:"amount"`
-	PayableAmount money.Amount `json:"payable_amount"`
-	FeeRate       money.Amount `json:"fee_rate"`
-	FeeAmount     money.Amount `json:"fee_amount"`
-	Currency      string       `json:"currency"`
-	Status        string       `json:"status"`
-	Remark        string       `json:"remark"`
-	PaidAt        *time.Time   `json:"paid_at"`
-	CreatedAt     time.Time    `json:"created_at"`
-	WalletCurrency string      `json:"wallet_currency"` // 充值到账币种固定 USDT
+	ID             uint         `json:"id"`
+	RechargeNo     string       `json:"recharge_no"`
+	Amount         money.Amount `json:"amount"`
+	PayableAmount  money.Amount `json:"payable_amount"`
+	FeeRate        money.Amount `json:"fee_rate"`
+	FeeAmount      money.Amount `json:"fee_amount"`
+	Currency       string       `json:"currency"`
+	Status         string       `json:"status"`
+	Remark         string       `json:"remark"`
+	PaidAt         *time.Time   `json:"paid_at"`
+	CreatedAt      time.Time    `json:"created_at"`
+	WalletCurrency string       `json:"wallet_currency"` // 充值到账币种固定 USDT
 }
 
 // NewWalletRechargeResp 从 walletdomain.RechargeOrder 构造响应
 func NewWalletRechargeResp(r *walletdomain.RechargeOrder) WalletRechargeResp {
 	return WalletRechargeResp{
-		ID:            r.ID,
-		RechargeNo:    r.RechargeNo,
-		Amount:        r.Amount,
-		PayableAmount: r.PayableAmount,
-		FeeRate:       r.FeeRate,
-		FeeAmount:     r.FeeAmount,
-		Currency:      r.Currency,
-		Status:        r.Status,
-		Remark:        r.Remark,
-		PaidAt:        r.PaidAt,
-		CreatedAt:     r.CreatedAt,
+		ID:             r.ID,
+		RechargeNo:     r.RechargeNo,
+		Amount:         r.Amount,
+		PayableAmount:  r.PayableAmount,
+		FeeRate:        r.FeeRate,
+		FeeAmount:      r.FeeAmount,
+		Currency:       r.Currency,
+		Status:         r.Status,
+		Remark:         r.Remark,
+		PaidAt:         r.PaidAt,
+		CreatedAt:      r.CreatedAt,
 		WalletCurrency: "USDT",
 	}
 	// 排除：UserID、PaymentID、ChannelID、ProviderType、ChannelType、InteractionMode、UpdatedAt

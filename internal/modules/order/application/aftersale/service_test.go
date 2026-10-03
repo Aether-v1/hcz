@@ -1,4 +1,4 @@
-﻿package aftersale
+package aftersale
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
-	"github.com/Aether-v1/hcz/internal/shared/money"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
+	"github.com/Aether-v1/hcz/internal/shared/money"
 	"github.com/shopspring/decimal"
 )
 
@@ -23,7 +23,7 @@ type fakeOrders struct {
 	afterSaleErr error
 }
 
-func (o *fakeOrders) GetByID(uint) (*orderdomain.Order, error)             { return o.order, nil }
+func (o *fakeOrders) GetByID(uint) (*orderdomain.Order, error)              { return o.order, nil }
 func (o *fakeOrders) GetByIDAndUser(uint, uint) (*orderdomain.Order, error) { return o.order, nil }
 func (o *fakeOrders) UpdateFields(uint, map[string]interface{}) error       { return nil }
 func (o *fakeOrders) GetAfterSaleTicketByOrderID(uint) (*orderdomain.AfterSaleTicket, error) {

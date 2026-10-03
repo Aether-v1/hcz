@@ -5,8 +5,8 @@ import (
 	"time"
 
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
-	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
+	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"github.com/Aether-v1/hcz/internal/shared/jsonslice"
@@ -81,37 +81,37 @@ func NewOrderSummaryList(orders []orderdomain.Order) []OrderSummary {
 
 // OrderDetail 订单详情响应（完整字段）
 type OrderDetail struct {
-	ID                       uint              `json:"id"`
-	OrderNo                  string            `json:"order_no"`
-	GuestEmail               string            `json:"guest_email,omitempty"`
-	GuestLocale              string            `json:"guest_locale,omitempty"`
-	Status                   string            `json:"status"`
-	RefundStatus             string            `json:"refund_status"`
-	Currency                 string            `json:"currency"`
-	OriginalAmount           money.Amount      `json:"original_amount"`
-	DiscountAmount           money.Amount      `json:"discount_amount"`
-	MemberDiscountAmount     money.Amount      `json:"member_discount_amount"`
-	PromotionDiscountAmount  money.Amount      `json:"promotion_discount_amount"`
-	WholesaleDiscountAmount  money.Amount      `json:"wholesale_discount_amount"`
-	TotalAmount              money.Amount      `json:"total_amount"`
-	WalletPaidAmount         money.Amount      `json:"wallet_paid_amount"`
-	OnlinePaidAmount         money.Amount      `json:"online_paid_amount"`
-	RefundedAmount           money.Amount      `json:"refunded_amount"`
+	ID                      uint         `json:"id"`
+	OrderNo                 string       `json:"order_no"`
+	GuestEmail              string       `json:"guest_email,omitempty"`
+	GuestLocale             string       `json:"guest_locale,omitempty"`
+	Status                  string       `json:"status"`
+	RefundStatus            string       `json:"refund_status"`
+	Currency                string       `json:"currency"`
+	OriginalAmount          money.Amount `json:"original_amount"`
+	DiscountAmount          money.Amount `json:"discount_amount"`
+	MemberDiscountAmount    money.Amount `json:"member_discount_amount"`
+	PromotionDiscountAmount money.Amount `json:"promotion_discount_amount"`
+	WholesaleDiscountAmount money.Amount `json:"wholesale_discount_amount"`
+	TotalAmount             money.Amount `json:"total_amount"`
+	WalletPaidAmount        money.Amount `json:"wallet_paid_amount"`
+	OnlinePaidAmount        money.Amount `json:"online_paid_amount"`
+	RefundedAmount          money.Amount `json:"refunded_amount"`
 	// P0-2: USDT 结算字段。total_amount/currency 为 Site Currency；以下为 USDT 实付与汇率快照。
-	UsdtTotalAmount          money.Amount       `json:"usdt_total_amount"`
-	WalletCurrency           string            `json:"wallet_currency"`
+	UsdtTotalAmount          money.Amount         `json:"usdt_total_amount"`
+	WalletCurrency           string               `json:"wallet_currency"`
 	ExchangeRate             *decimal.NullDecimal `json:"exchange_rate,omitempty"`
-	ExchangeRateSource       string            `json:"exchange_rate_source,omitempty"`
-	ExchangeRateAt           *time.Time        `json:"exchange_rate_at,omitempty"`
-	ExpiresAt                *time.Time        `json:"expires_at"`
-	PaidAt                   *time.Time        `json:"paid_at"`
-	CanceledAt               *time.Time        `json:"canceled_at"`
-	CreatedAt                time.Time         `json:"created_at"`
-	AllowedPaymentChannelIDs []uint            `json:"allowed_payment_channel_ids,omitempty"`
-	RefundRecords            []OrderRefundResp `json:"refund_records,omitempty"`
-	Items                    []OrderItemResp   `json:"items,omitempty"`
-	Fulfillment              *FulfillmentResp  `json:"fulfillment,omitempty"`
-	Children                 []OrderDetail     `json:"children,omitempty"`
+	ExchangeRateSource       string               `json:"exchange_rate_source,omitempty"`
+	ExchangeRateAt           *time.Time           `json:"exchange_rate_at,omitempty"`
+	ExpiresAt                *time.Time           `json:"expires_at"`
+	PaidAt                   *time.Time           `json:"paid_at"`
+	CanceledAt               *time.Time           `json:"canceled_at"`
+	CreatedAt                time.Time            `json:"created_at"`
+	AllowedPaymentChannelIDs []uint               `json:"allowed_payment_channel_ids,omitempty"`
+	RefundRecords            []OrderRefundResp    `json:"refund_records,omitempty"`
+	Items                    []OrderItemResp      `json:"items,omitempty"`
+	Fulfillment              *FulfillmentResp     `json:"fulfillment,omitempty"`
+	Children                 []OrderDetail        `json:"children,omitempty"`
 }
 
 // OrderRefundResp 用户侧订单退款记录响应
@@ -133,8 +133,8 @@ func NewOrderDetail(o *orderdomain.Order) OrderDetail {
 		GuestEmail:              o.GuestEmail,
 		GuestLocale:             o.GuestLocale,
 		Status:                  view.Status,
-		RefundStatus:             o.RefundStatus,
-		Currency:                 o.Currency,
+		RefundStatus:            o.RefundStatus,
+		Currency:                o.Currency,
 		OriginalAmount:          o.OriginalAmount,
 		DiscountAmount:          o.DiscountAmount,
 		MemberDiscountAmount:    o.MemberDiscountAmount,
@@ -146,7 +146,7 @@ func NewOrderDetail(o *orderdomain.Order) OrderDetail {
 		RefundedAmount:          o.RefundedAmount,
 		UsdtTotalAmount:         o.UsdtTotalAmount,
 		WalletCurrency:          walletCurrencyForOrder(o),
-		ExchangeRate:             ratePtr(o),
+		ExchangeRate:            ratePtr(o),
 		ExchangeRateSource:      o.ExchangeRateSource,
 		ExchangeRateAt:          o.ExchangeRateAt,
 		ExpiresAt:               o.ExpiresAt,

@@ -164,7 +164,12 @@ func (s *Service) HandleOrderRefunded(
 	if delta.LessThanOrEqual(decimal.Zero) {
 		return nil
 	}
+	// HCZ P0-Commission: 退款比例分母统一用 USDT 实付额（WalletPaidAmount），
+	// 因为 refund delta 是 USDT。旧无 USDT 快照的订单回退到 TotalAmount（Site Currency）。
 	totalAmount := order.TotalAmount.Decimal.Round(2)
+	if order.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
+		totalAmount = order.WalletPaidAmount.Decimal.Round(2)
+	}
 	if totalAmount.LessThanOrEqual(decimal.Zero) {
 		return nil
 	}

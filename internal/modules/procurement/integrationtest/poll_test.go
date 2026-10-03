@@ -18,7 +18,7 @@ import (
 func TestPollUpstreamStatus_Delivered(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-POLL-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-POLL-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -64,18 +64,18 @@ func TestPollUpstreamStatus_Delivered(t *testing.T) {
 		t.Errorf("expected procurement status 'fulfilled', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单状态 = delivered
+	// HCZ P0: 五态机下采购完成写 completed
 	var updatedOrder orderdomain.Order
 	db.First(&updatedOrder, order.ID)
-	if updatedOrder.Status != constants.OrderStatusDelivered {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusDelivered, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusCompleted, updatedOrder.Status)
 	}
 }
 
 func TestPollUpstreamStatus_FulfilledMappedToDelivered(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-POLL-FULLFILLED-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-POLL-FULLFILLED-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -121,7 +121,8 @@ func TestPollUpstreamStatus_FulfilledMappedToDelivered(t *testing.T) {
 
 	var updatedOrder orderdomain.Order
 	db.First(&updatedOrder, order.ID)
-	if updatedOrder.Status != constants.OrderStatusDelivered {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusDelivered, updatedOrder.Status)
+	// HCZ P0: 五态机下采购完成写 completed
+	if updatedOrder.Status != constants.OrderStatusCompleted {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusCompleted, updatedOrder.Status)
 	}
 }

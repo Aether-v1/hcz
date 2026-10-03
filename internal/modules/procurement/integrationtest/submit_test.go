@@ -19,7 +19,8 @@ import (
 func TestSubmitToUpstream_Success(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-SUBMIT-001", constants.OrderStatusPaid, constants.FulfillmentTypeUpstream)
+	// HCZ P0: 五态机下订单初始为 processing
+	order := createProcTestOrder(t, db, "PROC-SUBMIT-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	// 创建 product mapping 和 sku mapping
 	pm := &mappingdomain.Mapping{
 		ConnectionID:      1,
@@ -80,18 +81,18 @@ func TestSubmitToUpstream_Success(t *testing.T) {
 		t.Errorf("expected upstream_order_id=999, got %d", updatedProc.UpstreamOrderID)
 	}
 
-	// 验证本地订单状态 = fulfilling
+	// HCZ P0: 五态机下采购提交后订单仍为 processing
 	var updatedOrder orderdomain.Order
 	db.First(&updatedOrder, order.ID)
-	if updatedOrder.Status != constants.OrderStatusFulfilling {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusFulfilling, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusProcessing {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusProcessing, updatedOrder.Status)
 	}
 }
 
 func TestSubmitToUpstream_NonRetryableError_Rejects(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-NONRETRY-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-NONRETRY-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	pm := &mappingdomain.Mapping{ConnectionID: 1, LocalProductID: 1, UpstreamProductID: 101, IsActive: true}
 	db.Create(pm)
 	sm := &mappingdomain.SKUMapping{ProductMappingID: pm.ID, LocalSKUID: 1, UpstreamSKUID: 201, UpstreamIsActive: true}
@@ -126,18 +127,18 @@ func TestSubmitToUpstream_NonRetryableError_Rejects(t *testing.T) {
 		t.Errorf("expected procurement status 'rejected', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单状态回退到 paid
+	// HCZ P0: 五态机下采购失败回退到 processing（保持可重试）
 	var updatedOrder orderdomain.Order
 	db.First(&updatedOrder, order.ID)
-	if updatedOrder.Status != constants.OrderStatusPaid {
-		t.Errorf("expected order status %q after rejection, got %q", constants.OrderStatusPaid, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusProcessing {
+		t.Errorf("expected order status %q after rejection, got %q", constants.OrderStatusProcessing, updatedOrder.Status)
 	}
 }
 
 func TestSubmitToUpstream_RetryableError_Retries(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-RETRY-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	order := createProcTestOrder(t, db, "PROC-RETRY-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	pm := &mappingdomain.Mapping{ConnectionID: 1, LocalProductID: 1, UpstreamProductID: 101, IsActive: true}
 	db.Create(pm)
 	sm := &mappingdomain.SKUMapping{ProductMappingID: pm.ID, LocalSKUID: 1, UpstreamSKUID: 201, UpstreamIsActive: true}
@@ -182,7 +183,8 @@ func TestSubmitToUpstream_RetryableError_Retries(t *testing.T) {
 func TestHandleSubmitFailure_MaxRetriesExhausted(t *testing.T) {
 	db := setupProcurementTestDB(t)
 
-	order := createProcTestOrder(t, db, "PROC-MAXRETRY-001", constants.OrderStatusFulfilling, constants.FulfillmentTypeUpstream)
+	// HCZ P0: 五态机下订单初始为 processing
+	order := createProcTestOrder(t, db, "PROC-MAXRETRY-001", constants.OrderStatusProcessing, constants.FulfillmentTypeUpstream)
 	productMapping := &mappingdomain.Mapping{ConnectionID: 1, LocalProductID: 1, UpstreamProductID: 101, IsActive: true}
 	db.Create(productMapping)
 	db.Create(&mappingdomain.SKUMapping{
@@ -228,10 +230,10 @@ func TestHandleSubmitFailure_MaxRetriesExhausted(t *testing.T) {
 		t.Errorf("expected procurement status 'rejected', got %q", updatedProc.Status)
 	}
 
-	// 验证本地订单回退到 paid
+	// HCZ P0: 五态机下重试耗尽回退到 processing
 	var updatedOrder orderdomain.Order
 	db.First(&updatedOrder, order.ID)
-	if updatedOrder.Status != constants.OrderStatusPaid {
-		t.Errorf("expected order status %q, got %q", constants.OrderStatusPaid, updatedOrder.Status)
+	if updatedOrder.Status != constants.OrderStatusProcessing {
+		t.Errorf("expected order status %q, got %q", constants.OrderStatusProcessing, updatedOrder.Status)
 	}
 }

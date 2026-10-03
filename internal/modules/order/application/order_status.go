@@ -1,12 +1,12 @@
 package application
 
 import (
-	"strings"
 	"time"
 
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 
 	"github.com/Aether-v1/hcz/internal/constants"
+	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 )
 
@@ -38,64 +38,56 @@ func SyncParentStatus(orderStore ordercontract.Store, parentID uint, now time.Ti
 	return newStatus, nil
 }
 
+// CalcParentStatus HCZ M1: 基于五态聚合子订单状态计算父订单状态。
+// 规则（优先级从高到低）：
+//  1. 所有子 canceled → 父 canceled
+//  2. 任一子 failed → 父 failed
+//  3. 任一子 pending_recharge → 父 pending_recharge
+//  4. 任一子 processing → 父 processing
+//  5. 所有子 completed → 父 completed
+//  6. refund_status 不影响主状态聚合
 func CalcParentStatus(children []orderdomain.Order, currentStatus string) string {
 	if len(children) == 0 {
 		return currentStatus
 	}
-	var deliveredCount int
-	var completedCount int
-	var canceledCount int
-	var refundedCount int
-	var partiallyRefundedCount int
-	var paidCount int
-	var pendingCount int
-	var fulfillingCount int
+
+	// HCZ M1: 先将每个子订单状态归一为五态，再聚合
+	var completedCount, canceledCount, failedCount, pendingRechargeCount, processingCount int
 	for _, child := range children {
-		switch strings.ToLower(strings.TrimSpace(child.Status)) {
-		case constants.OrderStatusCanceled:
-			canceledCount++
-		case constants.OrderStatusRefunded:
-			refundedCount++
-		case constants.OrderStatusPartiallyRefunded:
-			partiallyRefundedCount++
+		normalized := ordermachine.Normalize(child.Status).Status
+		switch normalized {
 		case constants.OrderStatusCompleted:
 			completedCount++
-		case constants.OrderStatusDelivered:
-			deliveredCount++
-		case constants.OrderStatusPaid:
-			paidCount++
-		case constants.OrderStatusFulfilling:
-			fulfillingCount++
-		case constants.OrderStatusPendingPayment:
-			pendingCount++
+		case constants.OrderStatusCanceled:
+			canceledCount++
+		case constants.OrderStatusFailed:
+			failedCount++
+		case constants.OrderStatusPendingRecharge:
+			pendingRechargeCount++
+		case constants.OrderStatusProcessing:
+			processingCount++
 		}
 	}
+
+	// 1. 全部取消 → 父取消
 	if canceledCount == len(children) {
 		return constants.OrderStatusCanceled
 	}
-	if refundedCount == len(children) {
-		return constants.OrderStatusRefunded
+	// 2. 任一失败 → 父失败
+	if failedCount > 0 {
+		return constants.OrderStatusFailed
 	}
-	if refundedCount > 0 || partiallyRefundedCount > 0 {
-		return constants.OrderStatusPartiallyRefunded
+	// 3. 任一待充值 → 父待充值
+	if pendingRechargeCount > 0 {
+		return constants.OrderStatusPendingRecharge
 	}
+	// 4. 任一处理中 → 父处理中
+	if processingCount > 0 {
+		return constants.OrderStatusProcessing
+	}
+	// 5. 全部完成 → 父完成
 	if completedCount == len(children) {
 		return constants.OrderStatusCompleted
-	}
-	if deliveredCount+completedCount == len(children) {
-		return constants.OrderStatusDelivered
-	}
-	if deliveredCount+completedCount > 0 {
-		return constants.OrderStatusPartiallyDelivered
-	}
-	if fulfillingCount > 0 {
-		return constants.OrderStatusFulfilling
-	}
-	if paidCount > 0 {
-		return constants.OrderStatusPaid
-	}
-	if pendingCount > 0 {
-		return constants.OrderStatusPendingPayment
 	}
 	return currentStatus
 }

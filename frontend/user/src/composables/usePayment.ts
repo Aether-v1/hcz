@@ -420,7 +420,8 @@ export function usePayment() {
     }
     return formatMoney(String(order.value?.total_amount ?? ''), order.value?.currency)
   })
-  const walletBalanceDisplay = computed(() => formatMoney(walletBalance.value, order.value?.currency))
+  // 钱包余额本位币固定 USDT（wallet.account() 下发 wallet_currency=USDT），不能套用 order.currency（站点币）。
+  const walletBalanceDisplay = computed(() => formatMoney(walletBalance.value, 'USDT'))
   const expectedWalletPaidCents = computed(() => {
     if (!showBalanceOption.value || !useBalance.value) return 0
     const balance = amountToCents(walletBalance.value)
@@ -433,7 +434,8 @@ export function usePayment() {
     if (total === null) return 0
     return Math.max(total - expectedWalletPaidCents.value, 0)
   })
-  const expectedWalletPaidDisplay = computed(() => formatMoney(centsToAmount(expectedWalletPaidCents.value), order.value?.currency))
+  // 钱包实扣部分以钱包本位币 USDT 展示（order.currency 为站点币，不可混用）。
+  const expectedWalletPaidDisplay = computed(() => formatMoney(centsToAmount(expectedWalletPaidCents.value), 'USDT'))
   const expectedOnlinePayDisplay = computed(() => formatMoney(centsToAmount(expectedOnlinePayCents.value), order.value?.currency))
   const requiresOnlineChannel = computed(() => {
     if (isGuest.value) return true
@@ -503,7 +505,9 @@ export function usePayment() {
     if (paymentResult.value?.wallet_paid_amount === undefined || paymentResult.value?.wallet_paid_amount === null || paymentResult.value?.wallet_paid_amount === '') {
       return '-'
     }
-    return formatMoney(String(paymentResult.value.wallet_paid_amount), order.value?.currency)
+    // wallet_paid_amount 本位币为 USDT：优先取 paymentResult.wallet_currency，回退 order.wallet_currency，再回退 'USDT'。
+    const walletCcy = String(paymentResult.value?.wallet_currency || order.value?.wallet_currency || 'USDT')
+    return formatMoney(String(paymentResult.value.wallet_paid_amount), walletCcy)
   })
   const paymentOnlinePayDisplay = computed(() => {
     if (paymentResult.value?.online_pay_amount === undefined || paymentResult.value?.online_pay_amount === null || paymentResult.value?.online_pay_amount === '') {
