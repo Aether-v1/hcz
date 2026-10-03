@@ -8,6 +8,10 @@ import (
 	auditlogapp "github.com/Aether-v1/hcz/internal/modules/auditlog/application"
 	channelclientapp "github.com/Aether-v1/hcz/internal/modules/channelclient/application"
 	contentapp "github.com/Aether-v1/hcz/internal/modules/content/application"
+	exchangerateapp "github.com/Aether-v1/hcz/internal/modules/exchangerate/application"
+	exchangeratecoingecko "github.com/Aether-v1/hcz/internal/modules/exchangerate/infrastructure/provider"
+	exchangeratesettingsstore "github.com/Aether-v1/hcz/internal/modules/exchangerate/infrastructure/settingsstore"
+	exchangeraterediscache "github.com/Aether-v1/hcz/internal/modules/exchangerate/infrastructure/rediscache"
 	localfilestore "github.com/Aether-v1/hcz/internal/modules/content/infrastructure/filestore/local"
 	contentgormstore "github.com/Aether-v1/hcz/internal/modules/content/infrastructure/gormstore"
 	dashboardapp "github.com/Aether-v1/hcz/internal/modules/dashboard/application"
@@ -83,6 +87,22 @@ func (c *Container) initIntegrationServices() {
 	c.ProductMappingService.SetSettings(c.SettingService)
 	c.SiteConnectionService.SetMarkupReapplier(c.ProductMappingService)
 	c.OrderService.SetProductMappingService(c.ProductMappingService)
+
+	// HCZ P0-2: Global Exchange Rate。独立于 Payment Gateway 充值汇率，只用于商品订单
+	// Site Currency → USDT 换算。无有效汇率时 OrderService 拒单（fail-closed）。
+	exStore := exchangeratesettingsstore.New(c.SettingRepo)
+	cachedStore := exchangeraterediscache.New(exStore)
+	siteCurrency := "CNY"
+	if cur, err := c.SettingService.GetSiteCurrency("CNY"); err == nil && cur != "" {
+		siteCurrency = cur
+	}
+	c.ExchangeRateService = exchangerateapp.NewService(
+		exchangeratecoingecko.NewCoinGecko(""),
+		cachedStore,
+		siteCurrency,
+		exchangerateStaleDuration,
+	)
+	c.OrderService.SetRateResolver(exchangerateResolverAdapter{svc: c.ExchangeRateService})
 	var downstreamQueue downstreamcallbackcontract.CallbackQueue
 	if c.QueueClient != nil {
 		downstreamQueue = downstreamcallbackqueue.New(c.QueueClient)

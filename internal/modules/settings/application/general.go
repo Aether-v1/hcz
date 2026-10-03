@@ -389,20 +389,20 @@ func (s *Service) GetSiteBrand() (SiteBrand, error) {
 	}, nil
 }
 
-// GetWalletOnlyPayment 获取是否仅允许钱包余额支付
+// GetWalletOnlyPayment reports whether business orders are restricted to wallet
+// balance settlement.
+//
+// HCZ P0-1: this is a fixed business rule, not an operational toggle. Business
+// orders may ONLY be paid from the user wallet; online/gateway payment, mixed
+// wallet+online payment, and channel_id on business orders are rejected. Wallet
+// recharge keeps its own independent channel selection and is unaffected.
+//
+// The value is hard-bound to true (fail-closed): even on nil receiver, missing
+// config, or DB read error it returns true, so a settings outage can never
+// silently reopen the gateway path. The legacy wallet_config.wallet_only_payment
+// field is kept read-only for compatibility but no longer controls behavior.
 func (s *Service) GetWalletOnlyPayment() bool {
-	if s == nil {
-		return false
-	}
-	value, err := s.GetByKey(constants.SettingKeyWalletConfig)
-	if err != nil || value == nil {
-		return false
-	}
-	raw, ok := value[constants.SettingFieldWalletOnlyPayment]
-	if !ok {
-		return false
-	}
-	return parseSettingBool(raw)
+	return true
 }
 
 // GetPaymentFeeConfig 获取支付手续费与旧订单兼容配置。

@@ -10,7 +10,24 @@ import (
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"github.com/Aether-v1/hcz/internal/shared/jsonslice"
 	"github.com/Aether-v1/hcz/internal/shared/money"
+	"github.com/shopspring/decimal"
 )
+
+// walletCurrencyForOrder 返回钱包币种；有 USDT 结算快照即 USDT。
+func walletCurrencyForOrder(o *orderdomain.Order) string {
+	if o.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) || o.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
+		return "USDT"
+	}
+	return ""
+}
+
+func ratePtr(o *orderdomain.Order) *decimal.NullDecimal {
+	if o.ExchangeRate.Valid {
+		r := o.ExchangeRate
+		return &r
+	}
+	return nil
+}
 
 // OrderSummary 订单列表响应（精简字段）
 type OrderSummary struct {
@@ -77,6 +94,12 @@ type OrderDetail struct {
 	WalletPaidAmount         money.Amount      `json:"wallet_paid_amount"`
 	OnlinePaidAmount         money.Amount      `json:"online_paid_amount"`
 	RefundedAmount           money.Amount      `json:"refunded_amount"`
+	// P0-2: USDT 结算字段。total_amount/currency 为 Site Currency；以下为 USDT 实付与汇率快照。
+	UsdtTotalAmount          money.Amount       `json:"usdt_total_amount"`
+	WalletCurrency           string            `json:"wallet_currency"`
+	ExchangeRate             *decimal.NullDecimal `json:"exchange_rate,omitempty"`
+	ExchangeRateSource       string            `json:"exchange_rate_source,omitempty"`
+	ExchangeRateAt           *time.Time        `json:"exchange_rate_at,omitempty"`
 	ExpiresAt                *time.Time        `json:"expires_at"`
 	PaidAt                   *time.Time        `json:"paid_at"`
 	CanceledAt               *time.Time        `json:"canceled_at"`
@@ -115,6 +138,11 @@ func NewOrderDetail(o *orderdomain.Order) OrderDetail {
 		WalletPaidAmount:        o.WalletPaidAmount,
 		OnlinePaidAmount:        o.OnlinePaidAmount,
 		RefundedAmount:          o.RefundedAmount,
+		UsdtTotalAmount:         o.UsdtTotalAmount,
+		WalletCurrency:          walletCurrencyForOrder(o),
+		ExchangeRate:             ratePtr(o),
+		ExchangeRateSource:      o.ExchangeRateSource,
+		ExchangeRateAt:          o.ExchangeRateAt,
 		ExpiresAt:               o.ExpiresAt,
 		PaidAt:                  o.PaidAt,
 		CanceledAt:              o.CanceledAt,

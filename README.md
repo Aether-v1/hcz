@@ -46,7 +46,7 @@ application: the Go backend, the customer storefront, and the admin panel.
 ```
 .
 ├── cmd/server/               # entry point; also hosts the `admin` operator subcommands
-├── internal/
+├── internal/                 # all Go source: modules, platform, shared, architecture guards
 │   ├── app/                  # composition root
 │   │   ├── container/        # dependency-injection container
 │   │   ├── httpserver/       # Gin router, route groups, middleware
@@ -66,12 +66,17 @@ application: the Go backend, the customer storefront, and the admin panel.
 ├── frontend/
 │   ├── admin/                # admin panel SPA        (dev :5174)
 │   └── user/                 # customer storefront SPA (dev :5173)
+├── scripts/                  # developer / audit / maintenance / installer scripts
+├── docs/                     # project documentation, audits, reports, runbooks, ADRs
+├── assets/                   # static brand assets (partner logos)
 ├── config.yml.example
 ├── Dockerfile                # single full-stack image
 └── .goreleaser.yaml
 ```
 
 Runtime directories created on first start: `db/` (SQLite), `uploads/`, `logs/`.
+Local test / coverage / temp artifacts go under `runtime/` and are never committed.
+See [`docs/README.md`](docs/README.md) for the documentation index.
 
 ## Architecture
 

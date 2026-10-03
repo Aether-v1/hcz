@@ -70,34 +70,25 @@ func registerStorefrontRoutes(
 	storefront.Use(middleware.ResellerTenantMiddleware(c.ResellerDomainResolver))
 	affiliateHandler := affiliatebootstrap.NewStorefrontHandler(c)
 
-	// 公开接口
+	// 公开接口：仅认证链路与启动配置所需，无需登录（HCZ 全站登录收口）
 	public := storefront.Group("/public")
 	{
 		publicconfigtransport.RegisterPublicRoutes(public, publicConfigHandler)
-		producthttp.RegisterPublicRoutes(public, publicCatalogHandler)
-		categoryhttp.RegisterPublicRoutes(public, publicCategoryHandler)
-		contenttransport.RegisterPublicRoutes(public, publicContentHandler)
 		captchatransport.RegisterPublicRoutes(public, captchatransport.NewPublicHandler(c.CaptchaService))
 		affiliatetransport.RegisterPublicRoutes(public, affiliateHandler)
-		memberleveltransport.RegisterPublicRoutes(public, publicMemberLevelHandler)
 	}
 
-	// 游客接口
-	guest := storefront.Group("/guest")
-	guestRead := guest.Group("")
-	guestRead.Use(middleware.RateLimitMiddleware(redisClient, guestReadRule, middleware.KeyByIP))
+	// 业务读接口：商品/分类/内容/会员等级均需登录。
+	// 路径保持 /public 前缀不变，仅在其上叠加用户 JWT 鉴权（fail-closed，无 token 即 401）。
+	authedPublic := storefront.Group("/public", middleware.UserJWTAuthMiddleware(cfg.UserJWT.SecretKey, c.UserStore))
 	{
-		ordertransport.RegisterGuestPreviewRoute(guestRead, orderPreviewHandler)
-		ordertransport.RegisterGuestReadRoutes(guestRead, guestOrderHandler)
-		paymenttransport.RegisterGuestLatestRoute(guestRead, paymentLatestHandler)
+		producthttp.RegisterPublicRoutes(authedPublic, publicCatalogHandler)
+		categoryhttp.RegisterPublicRoutes(authedPublic, publicCategoryHandler)
+		contenttransport.RegisterPublicRoutes(authedPublic, publicContentHandler)
+		memberleveltransport.RegisterPublicRoutes(authedPublic, publicMemberLevelHandler)
 	}
-	guestWrite := guest.Group("")
-	guestWrite.Use(middleware.RateLimitMiddleware(redisClient, guestWriteRule, middleware.KeyByIP))
-	{
-		ordertransport.RegisterGuestCreateRoute(guestWrite, orderCreateHandler)
-		ordertransport.RegisterGuestCreateAndPayRoute(guestWrite, orderCreateHandler)
-		paymenttransport.RegisterGuestWriteRoutes(guestWrite, paymentWriteHandler)
-	}
+
+	// HCZ 不支持游客购买：原 /guest/* 下单/查单/支付/下载路由组停用，不再注册。
 
 	// 用户认证接口
 	auth := storefront.Group("/auth")

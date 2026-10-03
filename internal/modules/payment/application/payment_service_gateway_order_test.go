@@ -14,6 +14,8 @@ import (
 
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
 
+	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
+
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 
@@ -1114,28 +1116,18 @@ func TestCreateOrderPaymentSendsBaseAmountToGatewayAndStoresMerchantFee(t *testi
 		},
 	})
 
-	result, err := svc.CreatePayment(CreatePaymentInput{
+	// HCZ P0-1: business orders are wallet-only; gateway creation for a business
+	// order must be rejected (no fee snapshot, no gateway payment).
+	_, err := svc.CreatePayment(CreatePaymentInput{
 		OrderID:   order.ID,
 		ChannelID: channel.ID,
 		Context:   context.Background(),
 	})
-	if err != nil {
-		t.Fatalf("create payment failed: %v", err)
+	if !errors.Is(err, walletcontract.ErrOnlyPaymentRequired) {
+		t.Fatalf("order gateway payment error = %v, want ErrOnlyPaymentRequired", err)
 	}
-	if result.Payment == nil {
-		t.Fatal("expected payment result")
-	}
-	if got := gatewayAmount.StringFixed(2); got != "100.00" {
-		t.Fatalf("gateway amount want 100.00 got %s", got)
-	}
-	if got := result.Payment.Amount.StringFixed(2); got != "100.00" {
-		t.Fatalf("payment amount want 100.00 got %s", got)
-	}
-	if got := result.Payment.FeeAmount.StringFixed(2); got != "3.00" {
-		t.Fatalf("merchant fee want 3.00 got %s", got)
-	}
-	if result.Payment.FeePolicy != constants.PaymentFeePolicyMerchantAbsorbed {
-		t.Fatalf("fee policy want %s got %s", constants.PaymentFeePolicyMerchantAbsorbed, result.Payment.FeePolicy)
+	if gatewayAmount.StringFixed(2) != "0.00" {
+		t.Fatalf("gateway must not be called, but got amount %s", gatewayAmount.StringFixed(2))
 	}
 }
 
@@ -1244,14 +1236,12 @@ func TestCreateOrderPaymentSnapshotsCustomerSurchargeCompatibilityMode(t *testin
 		gatewayAmount = input.Amount
 	}})
 	result, err := svc.CreatePayment(CreatePaymentInput{OrderID: order.ID, ChannelID: channel.ID, Context: context.Background()})
-	if err != nil {
-		t.Fatalf("create customer fee payment failed: %v", err)
+	if !errors.Is(err, walletcontract.ErrOnlyPaymentRequired) {
+		t.Fatalf("customer-fee order gateway error = %v, want ErrOnlyPaymentRequired", err)
 	}
-	if got := gatewayAmount.StringFixed(2); got != "103.00" {
-		t.Fatalf("gateway amount want 103.00 got %s", got)
-	}
-	if result.Payment.FeePolicy != constants.PaymentFeePolicyCustomerSurcharge {
-		t.Fatalf("fee policy want %s got %s", constants.PaymentFeePolicyCustomerSurcharge, result.Payment.FeePolicy)
+	_ = result
+	if gatewayAmount.StringFixed(2) != "0.00" {
+		t.Fatalf("gateway must not be called for business order, got amount %s", gatewayAmount.StringFixed(2))
 	}
 }
 
@@ -1272,21 +1262,17 @@ func TestCreateOrderPaymentSupersedesLegacyFeeLinkByDefault(t *testing.T) {
 	registerTestGateway(t, svc, channel.ProviderType, channel.ChannelType, emptyProviderRefProvider{})
 
 	result, err := svc.CreatePayment(CreatePaymentInput{OrderID: order.ID, ChannelID: channel.ID, Context: context.Background()})
-	if err != nil {
-		t.Fatalf("replace legacy payment failed: %v", err)
+	if !errors.Is(err, walletcontract.ErrOnlyPaymentRequired) {
+		t.Fatalf("legacy-replace order gateway error = %v, want ErrOnlyPaymentRequired", err)
 	}
-	if result.Payment.ID == legacy.ID {
-		t.Fatal("legacy fee payment should be replaced")
-	}
-	if result.Payment.FeePolicy != constants.PaymentFeePolicyMerchantAbsorbed || result.Payment.Amount.StringFixed(2) != "100.00" {
-		t.Fatalf("unexpected replacement payment: %+v", result.Payment)
-	}
+	_ = result
+	// Legacy link must remain untouched (still pending) because gateway creation was rejected.
 	var storedLegacy paymentdomain.Payment
 	if err := db.First(&storedLegacy, legacy.ID).Error; err != nil {
 		t.Fatalf("reload legacy payment failed: %v", err)
 	}
-	if storedLegacy.Status != constants.PaymentStatusExpired || storedLegacy.SupersededAt == nil || storedLegacy.SupersededByPaymentID == nil || *storedLegacy.SupersededByPaymentID != result.Payment.ID {
-		t.Fatalf("legacy payment was not superseded correctly: %+v", storedLegacy)
+	if storedLegacy.Status != constants.PaymentStatusPending || storedLegacy.SupersededAt != nil {
+		t.Fatalf("rejected gateway creation must not touch legacy link: %+v", storedLegacy)
 	}
 }
 
@@ -1339,11 +1325,16 @@ func TestCreateOrderPaymentCanReuseLegacyFeeLinkUntilExpiry(t *testing.T) {
 	}
 
 	result, err := svc.CreatePayment(CreatePaymentInput{OrderID: order.ID, ChannelID: channel.ID, Context: context.Background()})
-	if err != nil {
-		t.Fatalf("reuse legacy payment failed: %v", err)
+	if !errors.Is(err, walletcontract.ErrOnlyPaymentRequired) {
+		t.Fatalf("legacy-reuse order gateway error = %v, want ErrOnlyPaymentRequired", err)
 	}
-	if result.Payment.ID != legacy.ID || result.Payment.FeePolicy != constants.PaymentFeePolicyLegacyCustomerSurcharge {
-		t.Fatalf("legacy payment was not reused: %+v", result.Payment)
+	_ = result
+	var storedLegacy paymentdomain.Payment
+	if err := db.First(&storedLegacy, legacy.ID).Error; err != nil {
+		t.Fatalf("reload legacy payment failed: %v", err)
+	}
+	if storedLegacy.Status != constants.PaymentStatusPending {
+		t.Fatalf("rejected gateway creation must leave legacy link pending: %+v", storedLegacy)
 	}
 }
 

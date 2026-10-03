@@ -303,11 +303,16 @@ func (s *Service) AdminManualRefund(input AdminManualRefundInput) (*orderdomain.
 		if settingsapp.IsOrderRefundWindowExpired(order.CreatedAt, order.PaidAt, cfg.MaxRefundDays, time.Now()) {
 			return ErrOrderRefundExpired
 		}
-		if order.TotalAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+		// P0-2: USDT 结算单按 WalletPaidAmount(USDT) 计算可退额与全额判定。
+		paidBase := order.TotalAmount.Decimal
+		if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+			paidBase = order.WalletPaidAmount.Decimal
+		}
+		if paidBase.LessThanOrEqual(decimal.Zero) {
 			return ErrOrderStatusInvalid
 		}
 		refundedBefore := order.RefundedAmount.Decimal.Round(2)
-		refundable := order.TotalAmount.Decimal.Sub(refundedBefore).Round(2)
+		refundable := paidBase.Sub(refundedBefore).Round(2)
 		if amount.GreaterThan(refundable) {
 			return walletcontract.ErrRefundExceeded
 		}
@@ -318,7 +323,7 @@ func (s *Service) AdminManualRefund(input AdminManualRefundInput) (*orderdomain.
 			"refunded_amount": money.FromDecimal(newRefunded),
 			"updated_at":      now,
 		}
-		markRefunded := newRefunded.GreaterThanOrEqual(order.TotalAmount.Decimal.Round(2))
+		markRefunded := newRefunded.GreaterThanOrEqual(paidBase.Round(2))
 		if markRefunded {
 			updates["status"] = constants.OrderStatusRefunded
 		} else {

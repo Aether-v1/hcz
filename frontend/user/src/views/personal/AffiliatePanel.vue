@@ -36,15 +36,15 @@
           </div>
           <div class="rounded-xl border p-4">
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.pendingCommission') }}</div>
-            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.pending_commission || '0.00' }}</div>
+            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.pending_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
           <div class="rounded-xl border p-4">
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.availableCommission') }}</div>
-            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.available_commission || '0.00' }}</div>
+            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.available_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
           <div class="rounded-xl border p-4">
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.withdrawnCommission') }}</div>
-            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.withdrawn_commission || '0.00' }}</div>
+            <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.withdrawn_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
         </div>
       </template>
@@ -131,7 +131,7 @@
           <TableBody>
             <TableRow v-for="item in commissions" :key="item.id">
               <TableCell class="px-4 font-mono text-xs text-foreground">-</TableCell>
-              <TableCell class="px-4 font-mono text-xs text-foreground">{{ item.commission_amount }}</TableCell>
+              <TableCell class="px-4 font-mono text-xs text-foreground">{{ item.commission_amount }} {{ item.currency || 'USDT' }}</TableCell>
               <TableCell class="px-4">
                 <Badge :variant="commissionStatusVariant(item.status)" size="sm">
                   {{ commissionStatusLabel(item.status) }}

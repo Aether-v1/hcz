@@ -783,13 +783,12 @@ watch(
 
           <div class="col-span-1">
             <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.purchaseType') }}</label>
-            <Select v-model="form.purchase_type">
+            <Select v-model="form.purchase_type" disabled>
               <SelectTrigger class="h-9 w-full">
                 <SelectValue :placeholder="t('admin.products.purchaseType.member')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">{{ t('admin.products.purchaseType.member') }}</SelectItem>
-                <SelectItem value="guest">{{ t('admin.products.purchaseType.guest') }}</SelectItem>
               </SelectContent>
             </Select>
           </div>

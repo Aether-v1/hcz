@@ -84,11 +84,19 @@ func (s *Service) AdminRefundToWallet(
 		if settingsapp.IsOrderRefundWindowExpired(order.CreatedAt, order.PaidAt, config.MaxRefundDays, now) {
 			return ErrOrderRefundExpired
 		}
-		if order.TotalAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+		// P0-2: USDT 结算单按实际 USDT 实付（WalletPaidAmount）退款，退款金额单位为 USDT，
+		// 不再用 Site Currency 的 TotalAmount 重算。旧单无快照时 legacy 按 Site 口径。
+		paidBase := order.TotalAmount.Decimal
+		refundCurrency := order.Currency
+		if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+			paidBase = order.WalletPaidAmount.Decimal
+			refundCurrency = "USDT"
+		}
+		if paidBase.LessThanOrEqual(decimal.Zero) {
 			return ErrOrderStatusInvalid
 		}
 		refundedBefore := order.RefundedAmount.Decimal.Round(2)
-		refundable := order.TotalAmount.Decimal.Sub(refundedBefore).Round(2)
+		refundable := paidBase.Sub(refundedBefore).Round(2)
 		if amount.GreaterThan(refundable) {
 			return walletcontract.ErrRefundExceeded
 		}
@@ -98,7 +106,7 @@ func (s *Service) AdminRefundToWallet(
 			walletcontract.CreditInput{
 				UserID:    order.UserID,
 				Amount:    money.FromDecimal(amount),
-				Currency:  order.Currency,
+				Currency:  refundCurrency,
 				Type:      constants.WalletTxnTypeAdminRefund,
 				Reference: reference,
 				Remark:    walletRemark,
@@ -114,7 +122,7 @@ func (s *Service) AdminRefundToWallet(
 			"refunded_amount": money.FromDecimal(newRefunded),
 			"updated_at":      now,
 		}
-		markRefunded := newRefunded.GreaterThanOrEqual(order.TotalAmount.Decimal.Round(2))
+		markRefunded := newRefunded.GreaterThanOrEqual(paidBase)
 		if markRefunded {
 			updates["status"] = constants.OrderStatusRefunded
 		} else {
@@ -146,7 +154,7 @@ func (s *Service) AdminRefundToWallet(
 			}
 		}
 
-		currency := strings.ToUpper(strings.TrimSpace(order.Currency))
+		currency := strings.ToUpper(strings.TrimSpace(refundCurrency))
 		if currency == "" {
 			currency = "CNY"
 		}

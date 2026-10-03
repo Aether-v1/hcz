@@ -106,6 +106,15 @@ func registerPeriodicTasks(scheduler *asynq.Scheduler, consumer *jobconsumer.Con
 			}
 		}
 	}
+	if consumer.ExchangeRateService != nil {
+		task := queue.NewExchangeRateRefreshTask()
+		entryID, err := scheduler.Register("@every 5m", task, asynq.Queue(queue.DefaultQueue))
+		if err != nil {
+			logger.Warnw("scheduler_register_exchange_rate_failed", "error", err)
+		} else {
+			logger.Infow("scheduler_register_exchange_rate_ok", "entry_id", entryID)
+		}
+	}
 	if consumer.ProcurementOrderService != nil {
 		task := queue.NewProcurementSyncAcceptedTask()
 		entryID, err := scheduler.Register("@every 30m", task, asynq.Queue(queue.DefaultQueue))

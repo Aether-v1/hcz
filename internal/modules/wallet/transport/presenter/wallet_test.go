@@ -60,7 +60,7 @@ func TestWalletTransactionRespOmitsSensitiveFields(t *testing.T) {
 	data, _ := json.Marshal(resp)
 	jsonStr := string(data)
 
-	sensitiveFields := []string{"user_id", "balance_before", "reference", "currency", "updated_at"}
+	sensitiveFields := []string{"user_id", "reference", "updated_at"}
 	for _, field := range sensitiveFields {
 		if strings.Contains(jsonStr, `"`+field+`"`) {
 			t.Errorf("sensitive field %q should not appear", field)
@@ -69,6 +69,12 @@ func TestWalletTransactionRespOmitsSensitiveFields(t *testing.T) {
 
 	if !strings.Contains(jsonStr, `"balance_after"`) {
 		t.Error("balance_after should appear")
+	}
+	if !strings.Contains(jsonStr, `"balance_before"`) {
+		t.Error("balance_before should appear")
+	}
+	if !strings.Contains(jsonStr, `"currency"`) {
+		t.Error("currency should appear (P0-2 USDT contract)")
 	}
 	if !strings.Contains(jsonStr, `"remark"`) {
 		t.Error("remark should appear")

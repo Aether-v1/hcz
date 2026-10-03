@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -51,6 +52,14 @@ type OrderService struct {
 	riskControlSvc          orderriskcontract.Controller
 	productMappingService   upstreamStockEnsurer
 	expireMinutes           int
+	// P0-2: Global Exchange Rate 解析端口。生产注入真实实现；下单时把 Site Currency 总额换算为
+	// USDT 并快照。未注入（老测试/兼容路径）时保持 legacy 行为，生产 bootstrap 必须注入。
+	rateResolver rateResolverPort
+}
+
+// rateResolverPort 是订单域对 Global Exchange Rate 的最小依赖端口，避免直接依赖具体源。
+type rateResolverPort interface {
+	Resolve(ctx context.Context) (rate decimal.Decimal, source string, at time.Time, err error)
 }
 
 type OrderMemberLevelService interface {
@@ -110,6 +119,14 @@ func (s *OrderService) SetProductMappingService(svc upstreamStockEnsurer) {
 		return
 	}
 	s.productMappingService = svc
+}
+
+// SetRateResolver 注入 P0-2 全局汇率解析端口。
+func (s *OrderService) SetRateResolver(r rateResolverPort) {
+	if s == nil {
+		return
+	}
+	s.rateResolver = r
 }
 
 // NewOrderService 创建订单服务
@@ -448,6 +465,29 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		return nil, ErrResellerProductNotListed
 	}
 
+	// P0-2: 解析全局汇率，把 Site Currency 总额换算为 USDT 并快照。
+	// 方向固定：1 USDT = R SiteCurrency，usdtTotal = siteTotal / R（Round half-up, 2dp）。
+	// 无有效汇率时 Resolve 返回错误 → 直接拒单（fail-closed）。
+	var (
+		orderUsdtTotal decimal.Decimal
+		orderRate      decimal.NullDecimal
+		orderRateSrc   string
+		orderRateAt    *time.Time
+	)
+	if s.rateResolver != nil {
+		rRate, rSrc, rAt, rErr := s.rateResolver.Resolve(context.Background())
+		if rErr != nil {
+			return nil, rErr
+		}
+		if rRate.LessThanOrEqual(decimal.Zero) {
+			return nil, walletcontract.ErrInsufficientBalance
+		}
+		orderUsdtTotal = result.TotalAmount.Div(rRate).Round(2)
+		orderRate = decimal.NullDecimal{Decimal: rRate, Valid: true}
+		orderRateSrc = rSrc
+		orderRateAt = &rAt
+	}
+
 	// 仅允许钱包余额支付时，在创建订单（锁库存）前预校验余额是否充足
 	if s.settingService != nil && s.settingService.GetWalletOnlyPayment() {
 		if input.UserID == 0 {
@@ -461,7 +501,12 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		if accErr != nil {
 			return nil, walletcontract.ErrOnlyPaymentRequired
 		}
-		if account.Balance.Decimal.LessThan(result.TotalAmount) {
+		// P0-2: 钱包是 USDT；有汇率快照时按 USDT 额校验，否则 legacy 按 Site 额校验。
+		expectedWallet := result.TotalAmount
+		if orderUsdtTotal.GreaterThan(decimal.Zero) {
+			expectedWallet = orderUsdtTotal
+		}
+		if account.Balance.Decimal.LessThan(expectedWallet) {
 			return nil, walletcontract.ErrInsufficientBalance
 		}
 	}
@@ -517,8 +562,12 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		WholesaleDiscountAmount: money.FromDecimal(result.WholesaleDiscountAmount),
 		TotalAmount:             money.FromDecimal(result.TotalAmount),
 		WalletPaidAmount:        money.FromDecimal(decimal.Zero),
-		OnlinePaidAmount:        money.FromDecimal(result.TotalAmount),
+		OnlinePaidAmount:        money.FromDecimal(decimal.Zero),
 		RefundedAmount:          money.FromDecimal(decimal.Zero),
+		UsdtTotalAmount:         money.FromDecimal(orderUsdtTotal),
+		ExchangeRate:             orderRate,
+		ExchangeRateSource:      orderRateSrc,
+		ExchangeRateAt:          orderRateAt,
 		MemberLevelID:           result.MemberLevelID,
 		CouponID:                nil,
 		PromotionID:             result.OrderPromotionID,

@@ -37,3 +37,12 @@ internal/web/dist/
 # Agents 配置
 .agents/
 skills-lock.json
+
+# Repository hygiene: local generated artifacts (logs / test output / coverage / temp)
+runtime/
+coverage.xml
+junit.xml
+*.tmp
+*.cache
+*.coverage
+*.out

@@ -294,24 +294,15 @@
         <div v-if="!form.footer_links?.length" class="rounded-lg border border-dashed px-4 py-5 text-center text-sm text-muted-foreground">
           {{ t('personalCenter.reseller.siteConfig.emptyLinks') }}
         </div>
-        <div
-          v-for="(link, index) in form.footer_links"
-          :key="`footer-${index}`"
-          class="mb-3 grid grid-cols-1 gap-3 rounded-xl border bg-muted/20 p-3 md:grid-cols-[1fr_1fr_auto]"
-        >
-          <Input v-model.trim="link.name[activeLocale]" type="text" :placeholder="t('personalCenter.reseller.siteConfig.fields.linkName')" />
-          <Input v-model.trim="link.url" type="text" placeholder="https://example.com" />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            :aria-label="t('personalCenter.reseller.siteConfig.actions.remove')"
-            @click="removeFooterLink(Number(index))"
-          >
-            <Trash2 class="h-4 w-4" />
-          </Button>
-        </div>
+        <FooterLinkRow
+          v-for="(item, itemIndex) in footerLinkList"
+          :key="itemIndex"
+          :link="item"
+          :index="itemIndex"
+          :active-locale="activeLocale"
+          @update="(value) => (form.footer_links[itemIndex] = value)"
+          @remove="removeFooterLink"
+        />
       </section>
 
       <!-- 导航 -->
@@ -371,7 +362,6 @@ import {
     Search,
     Send,
     Store,
-    Trash2,
 } from 'lucide-vue-next'
 import {
     resellerAPI,
@@ -388,6 +378,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import ResellerImageField from './ResellerImageField.vue'
 import ResellerLocaleTabs from './ResellerLocaleTabs.vue'
+import FooterLinkRow from './FooterLinkRow.vue'
 // TipTap 体积较大，异步加载，进入公告编辑时才拉取对应 chunk
 const ResellerRichText = defineAsyncComponent(() => import('./ResellerRichText.vue'))
 import { useAppStore } from '../../stores/app'
@@ -519,6 +510,14 @@ const createBlankForm = (): ResellerSiteConfigPayload => ({
 })
 
 const form = reactive<any>(createBlankForm())
+
+interface FooterLinkItem {
+    name: Record<string, string>
+    url: string
+}
+// v-for needs a concrete array element type; form is loosely typed (any),
+// so expose a typed view to keep the loop aliases (link/index) in scope.
+const footerLinkList = computed<FooterLinkItem[]>(() => form.footer_links ?? [])
 
 const canEdit = computed(() => canEditResellerSiteConfig(snapshot.value))
 const dirtyHint = computed(

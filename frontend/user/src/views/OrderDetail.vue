@@ -357,7 +357,7 @@
             <div v-if="hasAmount(order.wallet_paid_amount)" class="border rounded-xl p-4">
               <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountWalletPaid') }}</div>
               <div class="text-foreground font-mono mt-1">{{ formatMoney(order.wallet_paid_amount,
-                order.currency) }}</div>
+                order.wallet_currency || 'USDT') }}</div>
             </div>
             <div v-if="hasAmount(order.online_paid_amount)" class="border rounded-xl p-4">
               <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountOnlinePaid') }}</div>
@@ -367,7 +367,14 @@
             <div v-if="hasAmount(order.refunded_amount)" class="border rounded-xl p-4">
               <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountRefunded') }}</div>
               <div class="text-foreground font-mono mt-1">{{ formatMoney(order.refunded_amount,
-                order.currency) }}</div>
+                order.wallet_currency || 'USDT') }}</div>
+            </div>
+            <div v-if="order.exchange_rate" class="border rounded-xl p-4">
+              <div class="text-xs text-muted-foreground">结算汇率快照</div>
+              <div class="text-foreground font-mono mt-1">1 USDT = {{ order.exchange_rate }} {{ order.currency }}</div>
+              <div class="text-xs text-muted-foreground mt-1">
+                来源 {{ order.exchange_rate_source || '-' }} · {{ formatDate(order.exchange_rate_at) }}
+              </div>
             </div>
             <div v-if="hasDiscountAmount(order.member_discount_amount)" class="border border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30 rounded-xl p-4">
               <div class="text-xs text-amber-700 dark:text-amber-400">{{ t('orderDetail.amountMemberDiscount') }}</div>
@@ -399,7 +406,7 @@
                   :key="`refund-record-row-${idx}`"
                 >
                   <TableCell class="px-4 text-xs text-muted-foreground whitespace-nowrap">{{ formatDate(record.created_at) }}</TableCell>
-                  <TableCell class="px-4 font-mono text-sm text-foreground whitespace-nowrap">{{ formatMoney(record.amount, record.currency || order.currency) }}</TableCell>
+                  <TableCell class="px-4 font-mono text-sm text-foreground whitespace-nowrap">{{ formatMoney(record.amount, record.currency || 'USDT') }}</TableCell>
                   <TableCell class="px-4 text-xs text-muted-foreground whitespace-pre-wrap break-words">{{ refundReasonText(record.remark) }}</TableCell>
                 </TableRow>
               </TableBody>

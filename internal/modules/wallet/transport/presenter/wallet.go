@@ -1,6 +1,7 @@
 package presenter
 
 import (
+	"strings"
 	"time"
 
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
@@ -13,13 +14,15 @@ import (
 
 // WalletAccountResp 钱包账户响应
 type WalletAccountResp struct {
-	Balance money.Amount `json:"balance"`
+	Balance  money.Amount `json:"balance"`
+	Currency string       `json:"currency"` // 固定 USDT，钱包本位币
 }
 
 // NewWalletAccountResp 从 walletdomain.Account 构造响应
 func NewWalletAccountResp(a *walletdomain.Account) WalletAccountResp {
 	return WalletAccountResp{
-		Balance: a.Balance,
+		Balance:  a.Balance,
+		Currency: "USDT",
 	}
 }
 
@@ -29,23 +32,30 @@ type WalletTransactionResp struct {
 	Type         string       `json:"type"`
 	Direction    string       `json:"direction"`
 	Amount       money.Amount `json:"amount"`
+	BalanceBefore money.Amount `json:"balance_before"`
 	BalanceAfter money.Amount `json:"balance_after"`
+	Currency     string       `json:"currency"` // 固定 USDT
 	Remark       string       `json:"remark"`
 	CreatedAt    time.Time    `json:"created_at"`
 }
 
 // NewWalletTransactionResp 从 walletdomain.Transaction 构造响应
 func NewWalletTransactionResp(t *walletdomain.Transaction) WalletTransactionResp {
+	currency := strings.ToUpper(strings.TrimSpace(t.Currency))
+	if currency == "" {
+		currency = "USDT"
+	}
 	return WalletTransactionResp{
 		ID:           t.ID,
 		Type:         t.Type,
 		Direction:    t.Direction,
 		Amount:       t.Amount,
+		BalanceBefore: t.BalanceBefore,
 		BalanceAfter: t.BalanceAfter,
+		Currency:     currency,
 		Remark:       t.Remark,
 		CreatedAt:    t.CreatedAt,
 	}
-	// 排除：UserID、Currency、BalanceBefore、Reference、UpdatedAt
 }
 
 // NewWalletTransactionRespList 批量转换钱包流水
@@ -70,6 +80,7 @@ type WalletRechargeResp struct {
 	Remark        string       `json:"remark"`
 	PaidAt        *time.Time   `json:"paid_at"`
 	CreatedAt     time.Time    `json:"created_at"`
+	WalletCurrency string      `json:"wallet_currency"` // 充值到账币种固定 USDT
 }
 
 // NewWalletRechargeResp 从 walletdomain.RechargeOrder 构造响应
@@ -86,6 +97,7 @@ func NewWalletRechargeResp(r *walletdomain.RechargeOrder) WalletRechargeResp {
 		Remark:        r.Remark,
 		PaidAt:        r.PaidAt,
 		CreatedAt:     r.CreatedAt,
+		WalletCurrency: "USDT",
 	}
 	// 排除：UserID、PaymentID、ChannelID、ProviderType、ChannelType、InteractionMode、UpdatedAt
 }

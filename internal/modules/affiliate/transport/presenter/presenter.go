@@ -32,6 +32,7 @@ type Commission struct {
 	ID               uint         `json:"id"`
 	CommissionType   string       `json:"commission_type"`
 	CommissionAmount money.Amount `json:"commission_amount"`
+	Currency         string       `json:"currency"` // P0-2: 固定 USDT
 	Status           string       `json:"status"`
 	ConfirmAt        *time.Time   `json:"confirm_at,omitempty"`
 	AvailableAt      *time.Time   `json:"available_at,omitempty"`
@@ -44,6 +45,7 @@ func NewCommission(c *affiliatedomain.Commission) Commission {
 		ID:               c.ID,
 		CommissionType:   c.CommissionType,
 		CommissionAmount: c.CommissionAmount,
+		Currency:         "USDT",
 		Status:           c.Status,
 		ConfirmAt:        c.ConfirmAt,
 		AvailableAt:      c.AvailableAt,

@@ -22,6 +22,7 @@ import SettingsOrderEmailTemplateTab from './components/SettingsOrderEmailTempla
 import SettingsNavigationTab from './components/SettingsNavigationTab.vue'
 import SettingsHomeAnnouncementTab from './components/SettingsHomeAnnouncementTab.vue'
 import SettingsUpstreamSyncTab from './components/SettingsUpstreamSyncTab.vue'
+import SettingsExchangeRateTab from './components/SettingsExchangeRateTab.vue'
 
 const { t } = useI18n()
 const loading = ref(false)
@@ -84,6 +85,7 @@ const tabs = computed(() => [
   { label: t('admin.settings.tabs.google'), value: 'google' },
   { label: t('admin.settings.tabs.dashboard'), value: 'dashboard' },
   { label: t('admin.settings.tabs.upstreamSync'), value: 'upstream_sync' },
+  { label: 'USDT 汇率', value: 'exchange_rate' },
 ])
 
 const fallbackCurrencyOptions = [
@@ -1488,6 +1490,10 @@ onMounted(() => {
 
       <TabsContent value="upstream_sync" :forceMount="true" v-show="currentTab === 'upstream_sync'" class="mt-0">
         <SettingsUpstreamSyncTab ref="upstreamSyncTabRef" />
+      </TabsContent>
+
+      <TabsContent value="exchange_rate" :forceMount="true" v-show="currentTab === 'exchange_rate'" class="mt-0">
+        <SettingsExchangeRateTab />
       </TabsContent>
 
       <TabsContent value="dashboard" :forceMount="true" v-show="currentTab === 'dashboard'" class="space-y-6 mt-0">

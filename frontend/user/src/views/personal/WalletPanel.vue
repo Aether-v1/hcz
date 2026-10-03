@@ -271,7 +271,11 @@ const selectedChannelFeeAmountDisplay = computed(() => {
   const variableFeeCents = calculateFeeCents(amountCents, rate) || 0
   return formatMoney(centsToAmount(variableFeeCents + fixedFeeCents), selectedChannelCurrency.value)
 })
-const balanceDisplay = computed(() => formatMoney(wallet.value?.balance, String(appStore.config?.currency || 'CNY')))
+// P0-2: 钱包余额本位币固定 USDT，读 API 返回的 currency，不用 site config currency。
+const balanceDisplay = computed(() => {
+  const ccy = String(wallet.value?.currency || 'USDT')
+  return formatMoney(wallet.value?.balance, ccy)
+})
 
 const loadWallet = async () => {
   const response = await walletAPI.account()

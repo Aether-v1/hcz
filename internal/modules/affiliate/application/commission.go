@@ -300,6 +300,11 @@ func (s *Service) calculateCommissionBaseAmount(order *orderdomain.Order) (decim
 			total = total.Add(payable).Round(2)
 		}
 	}
+	// P0-2: 钱包是 USDT。订单有 Global Rate 快照时，把 Site Currency 返利基数一次性换算为 USDT，
+	// 后续 commission_amount 即 USDT，返利入账/展示均为 USDT。旧单无快照保持 legacy。
+	if order.ExchangeRate.Valid && order.ExchangeRate.Decimal.GreaterThan(decimal.Zero) {
+		total = total.Div(order.ExchangeRate.Decimal).Round(2)
+	}
 	return total, nil
 }
 

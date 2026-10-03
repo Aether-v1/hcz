@@ -90,7 +90,7 @@ func TestContentRoutesStayInExpectedRouterTrustGroups(t *testing.T) {
 		file      string
 		statement string
 	}{
-		{file: "routes_storefront.go", statement: "contenttransport.RegisterPublicRoutes(public, publicContentHandler)"},
+		{file: "routes_storefront.go", statement: "contenttransport.RegisterPublicRoutes(authedPublic, publicContentHandler)"},
 		{file: "routes_admin.go", statement: "contenttransport.RegisterAdminRoutes(authorized, adminContentHandler)"},
 	}
 

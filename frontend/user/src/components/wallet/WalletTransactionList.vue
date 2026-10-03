@@ -94,10 +94,8 @@ const { t } = useI18n()
 
 const formatMoney = (amount?: string, currency?: string) => {
   if (amount === null || amount === undefined || amount === '') return '-'
-  if (currency === null || currency === undefined || currency === '') {
-    return String(amount)
-  }
-  return `${amount} ${currency}`
+  const ccy = currency || 'USDT'
+  return `${amount} ${ccy}`
 }
 
 const formatDate = (raw?: string) => {

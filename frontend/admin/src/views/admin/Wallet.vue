@@ -60,7 +60,8 @@ const save = async () => {
       key: 'wallet_config',
       value: {
         recharge_channel_ids: form.recharge_channel_ids,
-        wallet_only_payment: form.wallet_only_payment,
+        // HCZ P0-1: wallet-only is a fixed business rule, always persisted true.
+        wallet_only_payment: true,
       },
     } as any)
     notifySuccess(t('admin.settings.saved'))
@@ -91,10 +92,13 @@ onMounted(() => {
       <div class="space-y-4 p-6">
         <div class="flex items-center justify-between">
           <div>
-            <Label for="wallet-only-payment" class="text-sm font-medium">{{ t('admin.settings.wallet.walletOnlyPayment') }}</Label>
-            <p class="text-xs text-muted-foreground mt-0.5">{{ t('admin.settings.wallet.walletOnlyPaymentTip') }}</p>
+            <Label class="text-sm font-medium">{{ t('admin.settings.wallet.walletOnlyPayment') }}</Label>
+            <p class="text-xs text-muted-foreground mt-0.5">{{ t('admin.settings.wallet.walletOnlyPaymentFixedTip') }}</p>
           </div>
-          <Switch id="wallet-only-payment" v-model="form.wallet_only_payment" />
+          <div class="flex items-center gap-2">
+            <Switch id="wallet-only-payment" :model-value="true" disabled />
+            <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{{ t('admin.settings.wallet.fixedOn') }}</span>
+          </div>
         </div>
         <div class="border-t border-border pt-4">
           <Label class="block text-xs font-medium text-muted-foreground mb-2">{{ t('admin.settings.wallet.rechargeChannels') }}</Label>

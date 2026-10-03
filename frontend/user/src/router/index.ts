@@ -116,6 +116,7 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: templateView('Home', homeViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/products',
@@ -126,6 +127,7 @@ const router = createRouter({
                     ? templateView('Home', homeViewLoader)()
                     : templateView('Products', productsViewLoader)()
             },
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/categories/:slug',
@@ -136,26 +138,31 @@ const router = createRouter({
                     ? templateView('Home', homeViewLoader)()
                     : templateView('Products', productsViewLoader)()
             },
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/products/:slug',
             name: 'product-detail',
             component: templateView('ProductDetail', productDetailViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/cart',
             name: 'cart',
             component: templateView('Cart', cartViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/checkout',
             name: 'checkout',
             component: templateView('Checkout', checkoutViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/pay',
             name: 'payment',
             component: templateView('Payment', paymentViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/me',
@@ -249,34 +256,28 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
-            path: '/guest/orders',
-            name: 'guest-orders',
-            component: templateView('GuestOrders', () => import('../views/GuestOrders.vue')),
-        },
-        {
-            path: '/guest/orders/:order_no',
-            name: 'guest-order-detail',
-            component: templateView('GuestOrderDetail', () => import('../views/GuestOrderDetail.vue')),
-        },
-        {
             path: '/blog',
             name: 'blog',
             component: templateView('Blog', blogViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/blog/:slug',
             name: 'blog-detail',
             component: templateView('BlogDetail', () => import('../views/BlogDetail.vue')),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/notice',
             name: 'notice',
             component: templateView('Notice', noticeViewLoader),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/about',
             name: 'about',
             component: templateView('About', () => import('../views/About.vue')),
+            meta: { requiresUserAuth: true },
         },
         {
             path: '/terms',

@@ -39,7 +39,14 @@ const (
 	TaskBotNotify = constants.TaskBotNotify
 	// TaskTelegramBroadcast Telegram 群发任务
 	TaskTelegramBroadcast = constants.TaskTelegramBroadcast
+	// TaskExchangeRateRefresh 全局汇率周期刷新任务（P0-2）
+	TaskExchangeRateRefresh = "exchange_rate:refresh"
 )
+
+// NewExchangeRateRefreshTask 构造全局汇率刷新任务。
+func NewExchangeRateRefreshTask() *asynq.Task {
+	return asynq.NewTask(TaskExchangeRateRefresh, nil)
+}
 
 // OrderStatusEmailPayload 订单状态邮件任务载荷
 type OrderStatusEmailPayload struct {

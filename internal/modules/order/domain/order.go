@@ -5,6 +5,7 @@ import (
 
 	fulfillmentdomain "github.com/Aether-v1/hcz/internal/modules/fulfillment/domain"
 	"github.com/Aether-v1/hcz/internal/shared/money"
+	"github.com/shopspring/decimal"
 )
 
 // Order 订单表
@@ -24,8 +25,12 @@ type Order struct {
 	PromotionDiscountAmount money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"promotion_discount_amount"`           // 活动价优惠金额
 	WholesaleDiscountAmount money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"wholesale_discount_amount"`           // 批发价优惠金额
 	TotalAmount             money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"total_amount"`                        // 实付金额
-	WalletPaidAmount        money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"wallet_paid_amount"`                  // 钱包支付金额
+	WalletPaidAmount        money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"wallet_paid_amount"`                  // 钱包支付金额（USDT 实扣）
 	OnlinePaidAmount        money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"online_paid_amount"`                  // 在线支付金额
+	UsdtTotalAmount         money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"usdt_total_amount"`                    // P0-2：本单应收 USDT（TotalAmount(Site)/汇率）
+	ExchangeRate            decimal.NullDecimal `gorm:"type:decimal(20,8)" json:"exchange_rate,omitempty"`                         // P0-2：1 USDT = R SiteCurrency 快照
+	ExchangeRateSource      string       `gorm:"type:varchar(16)" json:"exchange_rate_source,omitempty"`                            // P0-2：AUTO/MANUAL
+	ExchangeRateAt          *time.Time   `gorm:"index" json:"exchange_rate_at,omitempty"`                                           // P0-2：汇率快照时间
 	RefundedAmount          money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"refunded_amount"`                     // 已退款金额（退回钱包）
 	MemberLevelID           *uint        `gorm:"index" json:"member_level_id,omitempty"`                                           // 下单时等级快照
 	CouponID                *uint        `gorm:"index" json:"coupon_id,omitempty"`                                                 // 优惠券ID

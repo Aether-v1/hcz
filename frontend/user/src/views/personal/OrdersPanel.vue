@@ -106,6 +106,9 @@
             <div>
               <div class="text-xs uppercase tracking-[0.16em] text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
               <div class="mt-2 text-lg font-bold text-foreground">{{ formatMoney(order.total_amount, order.currency) }}</div>
+              <div class="mt-1 text-xs font-medium text-emerald-600">
+                {{ t('orderDetail.actualPaidLabel', '实际支付') }}：{{ usdtPaidDisplay(order) }}
+              </div>
               <div v-if="hasDiscount(order)" class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <Badge v-if="hasDiscountAmount(order.discount_amount)" variant="success" size="sm">
                   {{ t('orderDetail.couponDiscountLabel') }}：{{ formatDiscountMoney(order.discount_amount, order.currency) }}
@@ -478,6 +481,15 @@ const hasDiscountAmount = (amount?: string) => {
 const hasDiscount = (order: any) => {
   if (!order) return false
   return hasDiscountAmount(order.discount_amount) || hasDiscountAmount(order.promotion_discount_amount)
+}
+
+// P0-2: 订单实付 USDT。优先 wallet_paid_amount，其次 usdt_total_amount；历史单无快照则显示 --，不自行重算。
+const usdtPaidDisplay = (order: any): string => {
+  if (!order) return '--'
+  const ccy = String(order.wallet_currency || 'USDT')
+  const paid = order.wallet_paid_amount ?? order.usdt_total_amount
+  if (paid === null || paid === undefined || paid === '') return '--'
+  return `${paid} ${ccy}`
 }
 
 const formatDate = (raw?: string) => {

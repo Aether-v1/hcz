@@ -70,3 +70,36 @@ export const parseInteger = (value: unknown): number | null => {
   return num
 }
 
+// ---- HCZ P0-2 USDT display formatters (display only, NO money calculation) ----
+// 金额统一 2 位小数；null 安全；汇率 8 位。不做任何换算。
+
+const trimTrailing = (n: string) => n
+
+// 通用：把后端金额（字符串/数字，已是两位小数的十进制）格式化为 "123.45 CCY"
+export const formatMoney = (value: unknown, currency?: string): string => {
+  if (value === null || value === undefined || value === '') return '--'
+  const raw = String(value).trim()
+  if (!DECIMAL_PATTERN.test(raw)) return '--'
+  const [i, f = ''] = raw.split('.')
+  const fixed = `${i || '0'}.${(f + '00').slice(0, 2)}`
+  return currency ? `${fixed} ${currency}` : fixed
+}
+
+// 站点币金额（商品原价）：formatSiteMoney(total_amount, order.currency)
+export const formatSiteMoney = (value: unknown, currency?: string): string => formatMoney(value, currency)
+
+// 钱包/退款/返利/流水：固定 USDT。优先用 API 返回的 currency，缺省 USDT。
+export const formatWalletMoney = (value: unknown, currency: string = 'USDT'): string => formatMoney(value, currency || 'USDT')
+
+// 汇率：1 USDT = R SiteCurrency
+export const formatRate = (rate: unknown, siteCurrency?: string): string => {
+  if (rate === null || rate === undefined || rate === '') return '--'
+  const raw = String(rate).trim()
+  if (!DECIMAL_PATTERN.test(raw)) return '--'
+  const [i, f = ''] = raw.split('.')
+  const fixed = `${i || '0'}.${(f + '00000000').slice(0, 8)}`
+  return siteCurrency ? `1 USDT = ${fixed} ${siteCurrency}` : `1 USDT = ${fixed}`
+}
+
+void trimTrailing
+

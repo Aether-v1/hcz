@@ -32,12 +32,20 @@ func ApplyWalletBalance(
 		return decimal.Zero, walletcontract.ErrAccountNotFound
 	}
 
+	// P0-2: 钱包本位币是 USDT。订单创建时已按 Global Rate 算出应收 USDT（UsdtTotalAmount），
+	// 这里按 USDT 额扣款并把流水币种记为 USDT；旧单无快照时 legacy 按 Site 额扣款。
+	chargeAmount := order.TotalAmount
+	ledgerCurrency := order.Currency
+	if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+		chargeAmount = order.UsdtTotalAmount
+		ledgerCurrency = "USDT"
+	}
 	amount, err := wallets.ApplyOrderBalance(tx.Wallets(), walletcontract.OrderBalanceInput{
 		OrderID:          order.ID,
 		UserID:           order.UserID,
-		TotalAmount:      order.TotalAmount,
+		TotalAmount:      chargeAmount,
 		WalletPaidAmount: order.WalletPaidAmount,
-		Currency:         order.Currency,
+		Currency:         ledgerCurrency,
 		UseBalance:       useBalance,
 	})
 	if err != nil {
@@ -49,7 +57,11 @@ func ApplyWalletBalance(
 	}
 
 	now := time.Now()
+	// P0-2: USDT 结算单 online 恒为 0（wallet-only）；旧单无快照时保留 legacy 差额逻辑。
 	onlineAmount := normalizeOrderAmount(order.TotalAmount.Decimal.Sub(deducted))
+	if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+		onlineAmount = decimal.Zero
+	}
 	if err := tx.Orders().UpdateFields(order.ID, map[string]interface{}{
 		"wallet_paid_amount": money.FromDecimal(deducted),
 		"online_paid_amount": money.FromDecimal(onlineAmount),

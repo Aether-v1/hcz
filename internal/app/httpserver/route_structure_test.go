@@ -1,11 +1,17 @@
 package httpserver
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/Aether-v1/hcz/internal/app/httpserver/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 func TestSetupRouterDelegatesRouteDomains(t *testing.T) {
@@ -45,9 +51,11 @@ func TestRouteDomainFilesPreserveTrustBoundaries(t *testing.T) {
 			file: "routes_storefront.go",
 			required: []string{
 				`storefront.Use(middleware.ResellerTenantMiddleware(`,
-				`producthttp.RegisterPublicRoutes(public, publicCatalogHandler)`,
-				`categoryhttp.RegisterPublicRoutes(public, publicCategoryHandler)`,
-				`contenttransport.RegisterPublicRoutes(public, publicContentHandler)`,
+				`publicconfigtransport.RegisterPublicRoutes(public, publicConfigHandler)`,
+				`authedPublic := storefront.Group("/public", middleware.UserJWTAuthMiddleware(`,
+				`producthttp.RegisterPublicRoutes(authedPublic, publicCatalogHandler)`,
+				`categoryhttp.RegisterPublicRoutes(authedPublic, publicCategoryHandler)`,
+				`contenttransport.RegisterPublicRoutes(authedPublic, publicContentHandler)`,
 				`captchatransport.RegisterPublicRoutes(public,`,
 				`affiliatetransport.RegisterPublicRoutes(public, affiliateHandler)`,
 				`affiliatetransport.RegisterUserRoutes(user, affiliateHandler)`,
@@ -77,8 +85,6 @@ func TestRouteDomainFilesPreserveTrustBoundaries(t *testing.T) {
 				`middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByUserIDAndIP)`,
 				`userauthtransport.RegisterUserPasswordAuthRoutes(auth, userPasswordHandler)`,
 				`userauthtransport.RegisterUserPasswordRoutes(user, userPasswordHandler)`,
-				`memberleveltransport.RegisterPublicRoutes(public, publicMemberLevelHandler)`,
-				`publicconfigtransport.RegisterPublicRoutes(public, publicConfigHandler)`,
 				`carttransport.RegisterUserRoutes(user, userCartHandler)`,
 				`ordertransport.RegisterUserReadRoutes(user, userOrderHandler)`,
 				`ordertransport.RegisterUserCancelRoute(user, userOrderHandler)`,
@@ -86,14 +92,6 @@ func TestRouteDomainFilesPreserveTrustBoundaries(t *testing.T) {
 				`ordertransport.RegisterUserCreateRoute(user, orderCreateHandler)`,
 				`ordertransport.RegisterUserCreateAndPayRoute(user, orderCreateHandler)`,
 				`ordertransport.RegisterUserPaymentChannelsRoute(user, userOrderHandler)`,
-				`ordertransport.RegisterGuestReadRoutes(guestRead, guestOrderHandler)`,
-				`guestRead.Use(middleware.RateLimitMiddleware(redisClient, guestReadRule, middleware.KeyByIP))`,
-				`ordertransport.RegisterGuestPreviewRoute(guestRead, orderPreviewHandler)`,
-				`ordertransport.RegisterGuestCreateRoute(guestWrite, orderCreateHandler)`,
-				`ordertransport.RegisterGuestCreateAndPayRoute(guestWrite, orderCreateHandler)`,
-				`guestWrite.Use(middleware.RateLimitMiddleware(redisClient, guestWriteRule, middleware.KeyByIP))`,
-				`paymenttransport.RegisterGuestWriteRoutes(guestWrite, paymentWriteHandler)`,
-				`paymenttransport.RegisterGuestLatestRoute(guestRead, paymentLatestHandler)`,
 				`paymenttransport.RegisterUserWriteRoutes(user, paymentWriteHandler)`,
 				`paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)`,
 				`paymenttransport.RegisterWebhookRoutes(callbacks, webhookHandler)`,
@@ -187,6 +185,22 @@ func TestRouteDomainFilesPreserveTrustBoundaries(t *testing.T) {
 					t.Errorf("%s must preserve trust-boundary statement %q", test.file, required)
 				}
 			}
+			if test.file == "routes_storefront.go" {
+				// HCZ No-Guest-Purchase: 游客下单/查单/支付/下载路由组不得再注册
+				for _, forbidden := range []string{
+					`Group("/guest")`,
+					`RegisterGuestPreviewRoute(`,
+					`RegisterGuestReadRoutes(`,
+					`RegisterGuestCreateRoute(`,
+					`RegisterGuestCreateAndPayRoute(`,
+					`RegisterGuestWriteRoutes(`,
+					`RegisterGuestLatestRoute(`,
+				} {
+					if strings.Contains(source, forbidden) {
+						t.Errorf("%s must NOT register guest route %q (HCZ no-guest-purchase)", test.file, forbidden)
+					}
+				}
+			}
 		})
 	}
 }
@@ -207,4 +221,61 @@ func readRouterSource(t *testing.T, path string) string {
 		t.Fatalf("read router source %s: %v", path, err)
 	}
 	return string(raw)
+}
+
+// TestAuthenticatedOnlyBoundaryBehavior 校验 HCZ 登录收口的运行时行为：
+//   - /public/config 等认证链启动接口：无 token 仍可访问（200）
+//   - /public/products 等业务读接口：已挂 UserJWTAuthMiddleware，无 token 必须 401（fail-closed）
+//   - /guest/* 游客下单/查单路由不再注册：访问即 404
+//
+// 与上面的源码结构断言配合，闭合「路由确实挂在 JWT 组」+「JWT 组确实拒绝无 token」。
+func TestAuthenticatedOnlyBoundaryBehavior(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := gin.New()
+
+	// 无 auth 的公开组（等价 routes_storefront.go 里的 public：config/captcha/affiliate）
+	public := r.Group("/public")
+	public.GET("/config", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status_code": 0, "data": gin.H{"languages": []string{"zh-CN"}}})
+	})
+
+	// 挂 JWT 的业务读组（等价 authedPublic：products/categories/content/member-levels）
+	authedPublic := r.Group("/public", middleware.UserJWTAuthMiddleware("test-secret-key", nil))
+	authedPublic.GET("/products", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status_code": 0, "data": "products"})
+	})
+
+	do := func(method, path string) int {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(method, path, nil)
+		r.ServeHTTP(w, req)
+		// UserJWTAuthMiddleware 走统一响应包：HTTP 200 包体里 status_code=401
+		var body struct {
+			StatusCode int `json:"status_code"`
+		}
+		_ = json.Unmarshal(w.Body.Bytes(), &body)
+		if w.Code == http.StatusOK && body.StatusCode != 0 {
+			return body.StatusCode
+		}
+		return w.Code
+	}
+
+	// 1) 认证链启动配置：无 token 必须可用
+	if got := do(http.MethodGet, "/public/config"); got != http.StatusOK {
+		t.Fatalf("/public/config must stay public (200) for auth boot, got %d", got)
+	}
+
+	// 2) 业务读接口：无 token 必须被拒（401），不能只靠前端隐藏
+	if got := do(http.MethodGet, "/public/products"); got != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated GET /public/products must be rejected with 401, got %d", got)
+	}
+
+	// 3) 游客路由组已停用：直接访问 /guest/* 必须无路由（404）
+	if got := do(http.MethodPost, "/guest/orders"); got != http.StatusNotFound {
+		t.Fatalf("POST /guest/orders must be unregistered (404), got %d", got)
+	}
+	if got := do(http.MethodGet, "/guest/orders/whatever"); got != http.StatusNotFound {
+		t.Fatalf("GET /guest/orders/:order_no must be unregistered (404), got %d", got)
+	}
 }

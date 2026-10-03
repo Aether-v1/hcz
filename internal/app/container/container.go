@@ -69,6 +69,7 @@ import (
 	reseller "github.com/Aether-v1/hcz/internal/modules/reseller/application"
 	resellergormstore "github.com/Aether-v1/hcz/internal/modules/reseller/infrastructure/gormstore"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
+	exchangerateapp "github.com/Aether-v1/hcz/internal/modules/exchangerate/application"
 	settingscontract "github.com/Aether-v1/hcz/internal/modules/settings/contract"
 	siteconnectionapp "github.com/Aether-v1/hcz/internal/modules/siteconnection/application"
 	siteconnectioncontract "github.com/Aether-v1/hcz/internal/modules/siteconnection/contract"
@@ -151,6 +152,7 @@ type Container struct {
 	CategoryService               *categoryapp.Service
 	SettingService                *settingsapp.Service
 	SitemapService                *sitemapapp.Service
+	ExchangeRateService           *exchangerateapp.Service
 	CartService                   *cartapp.Service
 	WalletService                 *walletapp.Service
 	OrderRefundService            *orderrefund.Service

@@ -33,6 +33,7 @@ import (
 	reconciliationtransport "github.com/Aether-v1/hcz/internal/modules/reconciliation/transport/http"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/admin"
 	settingstransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http"
+	exchangeratetransport "github.com/Aether-v1/hcz/internal/modules/exchangerate/transport"
 	siteconnectiontransport "github.com/Aether-v1/hcz/internal/modules/siteconnection/transport/http"
 	broadcasthttp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/transport/http"
 	uploadtransport "github.com/Aether-v1/hcz/internal/modules/upload/transport/http"
@@ -120,6 +121,12 @@ func registerAdminRoutes(
 	settingstransport.RegisterAdminOrderEmailTemplateRoutes(authorized, settingstransport.NewOrderEmailTemplateHandler(c.SettingService))
 	settingstransport.RegisterAdminAffiliateRoutes(authorized, settingstransport.NewAffiliateHandler(c.SettingService))
 	settingstransport.RegisterAdminTelegramBotRoutes(authorized, settingstransport.NewTelegramBotHandler(c.SettingService))
+
+	// HCZ P0-2: 全局汇率（USDT 结算）管理，挂在 /admin/settings 下复用现有 JWT/RBAC。
+	exchRateHandler := exchangeratetransport.NewAdminHandler(c.ExchangeRateService)
+	authorized.GET("/settings/exchange-rate", exchRateHandler.Get)
+	authorized.PUT("/settings/exchange-rate", exchRateHandler.Update)
+	authorized.POST("/settings/exchange-rate/refresh", exchRateHandler.Refresh)
 	adminauthtransport.RegisterAdminPasswordRoutes(authorized, adminLoginHandler)
 
 	// 系统信息与版本检测
