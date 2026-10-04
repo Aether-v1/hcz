@@ -38,6 +38,13 @@ type AuthUnitOfWork interface {
 	WithinTransaction(ctx context.Context, fn func(AuthTransaction) error) error
 }
 
+// AffiliateAttributor 是注册时 cookie/click 归因回退端口。
+// 实现方根据访客标识解析出最近一次推广点击对应的推广用户 ID；
+// 无归因或归因失败时应返回 (0, nil)，由注册流程静默降级为无上级。
+type AffiliateAttributor interface {
+	ResolveRegistrationInviterUserID(visitorKey string) (uint, error)
+}
+
 // GoogleRedirectStore persists short-lived, single-use redirect state. Take
 // operations must atomically read and delete the value.
 type GoogleRedirectStore interface {

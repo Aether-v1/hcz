@@ -28,6 +28,17 @@
           <p class="mt-2 text-sm text-muted-foreground">{{ t('auth.register.subtitle') }}</p>
         </div>
 
+        <div
+          v-if="inviteCode"
+          class="mb-6 flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-primary"
+        >
+          <Gift class="h-4 w-4 shrink-0 opacity-80" />
+          <span>
+            {{ t('auth.register.inviteHint') }}
+            <span v-if="inviteCodeTail" class="font-mono font-semibold tracking-wider">***{{ inviteCodeTail }}</span>
+          </span>
+        </div>
+
         <form class="space-y-6" @submit.prevent="handleRegister">
           <div>
             <label class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -213,7 +224,7 @@
 import { useI18n } from 'vue-i18n'
 import ImageCaptcha from '../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../components/captcha/TurnstileCaptcha.vue'
-import { ArrowLeft, Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus } from 'lucide-vue-next'
+import { ArrowLeft, Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus, Gift } from 'lucide-vue-next'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -232,6 +243,7 @@ const {
   captchaProvider, sendCodeCaptchaEnabled, turnstileSiteKey,
   registrationEnabled, emailVerificationEnabled,
   emailDomainAllowlistEnabled, allowedEmailDomains, allowedEmailDomainsText, emailDomainSelectionRequired,
+  inviteCode, inviteCodeTail,
   touchRegistrationEmail, formValidation, handleCaptchaConfigStale, handleSendCode, handleRegister,
 } = useRegister()
 

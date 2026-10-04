@@ -263,14 +263,29 @@
       "orders": "我的订单",
       "wallet": "我的钱包",
       "affiliate": "推广返利",
+      "invitation": "邀请中心",
       "reseller": "分销中心",
       "giftCard": "礼品卡兑换",
       "api": "API 对接"
     },
     "common": {
       "loadFailed": "个人中心数据加载失败，请稍后重试",
+      "loadRetry": "重新加载",
       "saveSuccess": "保存成功",
       "saveFailed": "保存失败，请稍后重试"
+    },
+    "invitation": {
+      "title": "邀请中心",
+      "subtitle": "分享你的邀请码或邀请链接，邀请好友注册并绑定上下级关系。",
+      "myCode": "我的邀请码",
+      "inviteUrl": "邀请链接",
+      "myInviter": "我的上级",
+      "noInviter": "暂无上级",
+      "directCount": "直接邀请人数",
+      "boundAt": "绑定时间",
+      "copy": "复制",
+      "copied": "已复制",
+      "loadFailed": "邀请信息加载失败，请稍后重试"
     },
     "overview": {
       "accountLabel": "账号信息",
@@ -1045,6 +1060,7 @@
       "hasAccount": "已有账号？直接登录",
       "agreementPrefix": "我已阅读并同意",
       "agreementAnd": "和",
+      "inviteHint": "您将通过邀请链接注册",
       "allowedEmailDomainsHint": "当前仅支持以下邮箱后缀注册：{domains}",
       "noAllowedEmailDomainsHint": "当前未配置允许注册的邮箱后缀，请联系管理员",
       "errors": {
@@ -1053,7 +1069,8 @@
         "registerFailed": "注册失败，请检查输入",
         "agreementRequired": "请先阅读并同意隐私政策和服务条款",
         "emailDomainNotAllowed": "当前邮箱后缀不允许注册，请使用：{domains}",
-        "emailDomainUnavailable": "当前未配置允许注册的邮箱后缀，请联系管理员"
+        "emailDomainUnavailable": "当前未配置允许注册的邮箱后缀，请联系管理员",
+        "invalidInviteCode": "邀请码无效，请检查后重试"
       },
       "registrationDisabled": "注册功能已关闭"
     },

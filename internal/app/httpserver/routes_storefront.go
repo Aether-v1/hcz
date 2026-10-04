@@ -14,6 +14,8 @@ import (
 	producthttp "github.com/Aether-v1/hcz/internal/modules/catalog/product/transport/http"
 	contenttransport "github.com/Aether-v1/hcz/internal/modules/content/transport/http"
 	giftcardtransport "github.com/Aether-v1/hcz/internal/modules/giftcard/transport/http"
+	invitationapp "github.com/Aether-v1/hcz/internal/modules/identity/invitation/application"
+	invitationhttp "github.com/Aether-v1/hcz/internal/modules/identity/invitation/transport/http"
 	userauthtransport "github.com/Aether-v1/hcz/internal/modules/identity/userauth/transport/http"
 	memberleveltransport "github.com/Aether-v1/hcz/internal/modules/memberlevel/transport/http"
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
@@ -140,6 +142,10 @@ func registerStorefrontRoutes(
 		giftCardRedeem := user.Group("", middleware.RateLimitMiddleware(redisClient, giftCardRedeemRule, middleware.KeyByUserIDAndIP))
 		giftcardtransport.RegisterUserRoutes(giftCardRedeem, userGiftCardHandler)
 		affiliatetransport.RegisterUserRoutes(user, affiliateHandler)
+
+		// 邀请绑定查询（登录态，仅查自己）。
+		invitationHandler := invitationhttp.NewHandler(invitationapp.NewService(c.UserStore, c.SettingService))
+		invitationhttp.RegisterUserRoutes(user, invitationHandler)
 
 		resellerConsole := user.Group("/reseller")
 		resellerConsole.Use(middleware.RequireMainTenantForResellerConsole())

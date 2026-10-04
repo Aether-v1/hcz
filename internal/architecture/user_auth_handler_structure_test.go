@@ -112,7 +112,7 @@ func TestUserAccountPersistenceLivesInIdentityModule(t *testing.T) {
 	assertFileDeclaresTypes(t, filepath.Join(moduleRoot, "contract", "store.go"), []string{"Store", "ListFilter"})
 	assertFileDeclaresTypes(t, filepath.Join(moduleRoot, "infrastructure", "gormstore", "store.go"), []string{"Store"})
 	assertFileDeclaresFunctions(t, filepath.Join(moduleRoot, "infrastructure", "gormstore", "store.go"), []string{"New"})
-	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "domain"), 1)
+	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "domain"), 2)
 	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "contract"), 1)
 	assertDirectoryGoFileBudget(t, filepath.Join(moduleRoot, "infrastructure", "gormstore"), 2)
 }

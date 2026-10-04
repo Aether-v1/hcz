@@ -222,6 +222,13 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
+            path: '/me/invitation',
+            name: 'personal-center-invitation',
+            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            props: { section: 'invitation' },
+            meta: { requiresUserAuth: true }
+        },
+        {
             path: '/me/reseller',
             name: 'personal-center-reseller',
             redirect: '/reseller',

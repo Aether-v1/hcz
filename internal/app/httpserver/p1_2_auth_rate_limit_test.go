@@ -11,6 +11,7 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/app/httpserver/middleware"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
+	userauthapp "github.com/Aether-v1/hcz/internal/modules/identity/userauth/application"
 	userauthtransport "github.com/Aether-v1/hcz/internal/modules/identity/userauth/transport/http"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
 
@@ -31,7 +32,7 @@ func (f p1LoginSettings) GetEmailVerificationEnabled(bool) (bool, error) { retur
 
 type p1LoginAuth struct{ registerErr error }
 
-func (f p1LoginAuth) Register(email, password, code string, agreementAccepted, emailVerificationEnabled bool) (*userdomain.User, string, time.Time, error) {
+func (f p1LoginAuth) Register(input userauthapp.RegisterInput) (*userdomain.User, string, time.Time, error) {
 	return nil, "", time.Time{}, f.registerErr
 }
 

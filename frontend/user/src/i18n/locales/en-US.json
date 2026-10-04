@@ -310,14 +310,29 @@
       "orders": "My Orders",
       "wallet": "My Wallet",
       "affiliate": "Affiliate",
+      "invitation": "Invitation",
       "reseller": "Reseller Center",
       "giftCard": "Gift Card",
       "api": "API Integration"
     },
     "common": {
       "loadFailed": "Failed to load personal center data, please try again later",
+      "loadRetry": "Retry",
       "saveSuccess": "Saved successfully",
       "saveFailed": "Save failed, please try again later"
+    },
+    "invitation": {
+      "title": "Invitation Center",
+      "subtitle": "Share your invite code or link to invite friends and bind the uplink relationship.",
+      "myCode": "My Invite Code",
+      "inviteUrl": "Invite Link",
+      "myInviter": "My Inviter",
+      "noInviter": "No inviter yet",
+      "directCount": "Direct Invites",
+      "boundAt": "Bound At",
+      "copy": "Copy",
+      "copied": "Copied",
+      "loadFailed": "Failed to load invitation info, please try again later"
     },
     "overview": {
       "accountLabel": "Account",
@@ -1092,6 +1107,7 @@
       "hasAccount": "Already have an account? Login",
       "agreementPrefix": "I have read and agree to ",
       "agreementAnd": " and ",
+      "inviteHint": "You are registering via an invitation link",
       "allowedEmailDomainsHint": "Only these email domains can register: {domains}",
       "noAllowedEmailDomainsHint": "No email domains are currently allowed. Please contact the administrator.",
       "errors": {
@@ -1100,7 +1116,8 @@
         "registerFailed": "Registration failed, please check input",
         "agreementRequired": "Please read and agree to the Privacy Policy and Terms of Service first",
         "emailDomainNotAllowed": "This email domain cannot register. Please use: {domains}",
-        "emailDomainUnavailable": "No email domains are currently allowed. Please contact the administrator."
+        "emailDomainUnavailable": "No email domains are currently allowed. Please contact the administrator.",
+        "invalidInviteCode": "Invalid invite code, please check and try again"
       },
       "registrationDisabled": "Registration is currently disabled"
     },

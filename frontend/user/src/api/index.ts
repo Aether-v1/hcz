@@ -62,6 +62,7 @@ export { notificationAPI } from './notification'
 export { affiliateAPI } from './affiliate'
 export { resellerAPI } from './reseller'
 export { apiCredentialAPI } from './credential'
+export { invitationAPI, type MyInvitationData } from './invitation'
 
 // Default export for backward compatibility
 export { default } from './client'

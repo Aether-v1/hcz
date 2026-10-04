@@ -49,6 +49,7 @@ type Service struct {
 	googleRedirectStore   GoogleRedirectStore
 	memberLevelSvc        MemberLevelAssigner
 	authUnitOfWork        AuthUnitOfWork
+	attributor            AffiliateAttributor
 }
 
 type MemberLevelAssigner interface {
@@ -75,6 +76,13 @@ func (s *Service) SetGoogleRedirectStore(store GoogleRedirectStore) {
 // and external identities.
 func (s *Service) SetAuthUnitOfWork(unitOfWork AuthUnitOfWork) {
 	s.authUnitOfWork = unitOfWork
+}
+
+// SetAffiliateAttributor injects the cookie/click attribution fallback used at
+// registration to resolve an optional inviter when no explicit invite code is
+// supplied.
+func (s *Service) SetAffiliateAttributor(attributor AffiliateAttributor) {
+	s.attributor = attributor
 }
 
 // SetEmailBrandResolver enables request-scoped storefront branding for
@@ -259,19 +267,30 @@ func (s *Service) checkRegistrationEmailDomain(email string) error {
 	return settingsapp.CheckRegistrationEmailDomainAllowed(email, policy)
 }
 
+// RegisterInput 注册入参。invite_code / visitor_key 均为可选。
+type RegisterInput struct {
+	Email                    string
+	Password                 string
+	Code                     string
+	AgreementAccepted        bool
+	EmailVerificationEnabled bool
+	InviteCode               string // 用户显式提交的邀请码（禁止提交 inviter_id）
+	VisitorKey               string // 前端上报的推广访客标识，用于 cookie/click 归因回退
+}
+
 // Register 用户注册
-func (s *Service) Register(email, password, code string, agreementAccepted bool, emailVerificationEnabled bool) (*userdomain.User, string, time.Time, error) {
-	if !agreementAccepted {
+func (s *Service) Register(in RegisterInput) (*userdomain.User, string, time.Time, error) {
+	if !in.AgreementAccepted {
 		return nil, "", time.Time{}, ErrAgreementRequired
 	}
-	normalized, err := normalizeUserSuppliedEmail(email)
+	normalized, err := normalizeUserSuppliedEmail(in.Email)
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
 	if err := s.checkRegistrationEmailDomain(normalized); err != nil {
 		return nil, "", time.Time{}, err
 	}
-	if err := passwordpolicy.Validate(s.cfg.Security.PasswordPolicy.ValidationPolicy(), password); err != nil {
+	if err := passwordpolicy.Validate(s.cfg.Security.PasswordPolicy.ValidationPolicy(), in.Password); err != nil {
 		return nil, "", time.Time{}, err
 	}
 
@@ -283,13 +302,26 @@ func (s *Service) Register(email, password, code string, agreementAccepted bool,
 		return nil, "", time.Time{}, ErrEmailExists
 	}
 
-	if emailVerificationEnabled {
-		if _, err := s.verifyCode(normalized, constants.VerifyPurposeRegister, code); err != nil {
+	if in.EmailVerificationEnabled {
+		if _, err := s.verifyCode(normalized, constants.VerifyPurposeRegister, in.Code); err != nil {
 			return nil, "", time.Time{}, err
 		}
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// 解析直接上级（显式邀请码优先，其次 cookie 归因）。
+	// 显式邀请码无效会在此硬失败返回错误，此时尚未写入任何数据，用户不会落库。
+	inviterID, err := s.resolveRegistrationInviter(in.InviteCode, in.VisitorKey)
+	if err != nil {
+		return nil, "", time.Time{}, err
+	}
+
+	// 为新用户生成全局唯一邀请码。
+	newInviteCode, err := s.generateUniqueInviteCode()
+	if err != nil {
+		return nil, "", time.Time{}, err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
@@ -302,8 +334,15 @@ func (s *Service) Register(email, password, code string, agreementAccepted bool,
 		DisplayName:     nickname,
 		Status:          constants.UserStatusActive,
 		EmailVerifiedAt: &now,
+		InviteCode:      newInviteCode,
 		CreatedAt:       now,
 		UpdatedAt:       now,
+	}
+	// 上级关系与用户在同一条 INSERT 中落库（绑定字段即 users 行的列），
+	// 因此不存在"用户创建成功但绑定半失败"的中间态。
+	if inviterID > 0 {
+		user.InviterID = &inviterID
+		user.InviteBoundAt = &now
 	}
 
 	if err := s.userRepo.Create(user); err != nil {

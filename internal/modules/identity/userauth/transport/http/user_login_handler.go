@@ -9,6 +9,7 @@ import (
 	"github.com/Aether-v1/hcz/internal/constants"
 	captcha "github.com/Aether-v1/hcz/internal/modules/captcha/contract"
 	captchahttp "github.com/Aether-v1/hcz/internal/modules/captcha/transport/http"
+	userauthapp "github.com/Aether-v1/hcz/internal/modules/identity/userauth/application"
 	userpresenter "github.com/Aether-v1/hcz/internal/modules/identity/userauth/transport/presenter"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
@@ -30,7 +31,7 @@ type UserLoginSettings interface {
 
 // UserLoginAuth 是注册/登录端点所需的认证端口。
 type UserLoginAuth interface {
-	Register(email, password, code string, agreementAccepted, emailVerificationEnabled bool) (*userdomain.User, string, time.Time, error)
+	Register(input userauthapp.RegisterInput) (*userdomain.User, string, time.Time, error)
 	LoginStep1(email, password string, rememberMe bool) (*AuthLoginResult, error)
 }
 
@@ -58,6 +59,10 @@ type UserRegisterRequest struct {
 	Password          string `json:"password" binding:"required"`
 	Code              string `json:"code"`
 	AgreementAccepted bool   `json:"agreement_accepted"`
+	// InviteCode 可选：用户显式提交的邀请码（仅接受邀请码，不接受 inviter_id）。
+	InviteCode string `json:"invite_code"`
+	// VisitorKey 可选：前端上报的推广访客标识，用于 cookie/click 归因回退绑定上级。
+	VisitorKey string `json:"visitor_key"`
 }
 
 // UserLoginRequest 登录请求。
@@ -105,7 +110,15 @@ func (h *UserLoginHandler) UserRegister(c *gin.Context) {
 		return
 	}
 
-	user, token, expiresAt, err := h.auth.Register(req.Email, req.Password, req.Code, req.AgreementAccepted, emailVerificationEnabled)
+	user, token, expiresAt, err := h.auth.Register(userauthapp.RegisterInput{
+		Email:                    req.Email,
+		Password:                 req.Password,
+		Code:                     req.Code,
+		AgreementAccepted:        req.AgreementAccepted,
+		EmailVerificationEnabled: emailVerificationEnabled,
+		InviteCode:               req.InviteCode,
+		VisitorKey:               req.VisitorKey,
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrInvalidEmail):
@@ -122,6 +135,10 @@ func (h *UserLoginHandler) UserRegister(c *gin.Context) {
 			ginutil.RespondError(c, response.CodeBadRequest, "error.verify_code_attempts_exceeded", nil)
 		case errors.Is(err, ErrAgreementRequired):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.agreement_required", nil)
+		case errors.Is(err, userauthapp.ErrInviteCodeInvalid):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.invite_code_invalid", nil)
+		case errors.Is(err, userauthapp.ErrSelfInvite), errors.Is(err, userauthapp.ErrInviteCycle):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.invite_code_invalid", nil)
 		case errors.Is(err, ErrWeakPassword):
 			respondWeakPassword(c, err)
 		default:

@@ -310,14 +310,29 @@
       "orders": "我的訂單",
       "wallet": "我的錢包",
       "affiliate": "推廣返利",
+      "invitation": "邀請中心",
       "reseller": "分銷中心",
       "giftCard": "禮品卡兌換",
       "api": "API 對接"
     },
     "common": {
       "loadFailed": "個人中心資料載入失敗，請稍後重試",
+      "loadRetry": "重新載入",
       "saveSuccess": "儲存成功",
       "saveFailed": "保存失敗，請稍後重試"
+    },
+    "invitation": {
+      "title": "邀請中心",
+      "subtitle": "分享你的邀請碼或邀請連結，邀請好友註冊並綁定上下級關係。",
+      "myCode": "我的邀請碼",
+      "inviteUrl": "邀請連結",
+      "myInviter": "我的上級",
+      "noInviter": "暫無上級",
+      "directCount": "直接邀請人數",
+      "boundAt": "綁定時間",
+      "copy": "複製",
+      "copied": "已複製",
+      "loadFailed": "邀請資訊載入失敗，請稍後重試"
     },
     "overview": {
       "accountLabel": "帳號資訊",
@@ -1092,6 +1107,7 @@
       "hasAccount": "已有帳號？直接登入",
       "agreementPrefix": "我已閱讀並同意",
       "agreementAnd": "與",
+      "inviteHint": "您將透過邀請連結註冊",
       "allowedEmailDomainsHint": "目前僅支援以下信箱後綴註冊：{domains}",
       "noAllowedEmailDomainsHint": "目前未設定允許註冊的信箱後綴，請聯絡管理員",
       "errors": {
@@ -1100,7 +1116,8 @@
         "registerFailed": "註冊失敗，請檢查輸入",
         "agreementRequired": "請先閱讀並同意隱私政策與服務條款",
         "emailDomainNotAllowed": "目前信箱後綴不允許註冊，請使用：{domains}",
-        "emailDomainUnavailable": "目前未設定允許註冊的信箱後綴，請聯絡管理員"
+        "emailDomainUnavailable": "目前未設定允許註冊的信箱後綴，請聯絡管理員",
+        "invalidInviteCode": "邀請碼無效，請檢查後重試"
       },
       "registrationDisabled": "註冊功能已關閉"
     },

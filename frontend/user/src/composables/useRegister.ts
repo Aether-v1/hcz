@@ -1,5 +1,5 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserAuthStore } from '../stores/userAuth'
 import { useI18n } from 'vue-i18n'
 import { debounceAsync } from '../utils/debounce'
@@ -15,6 +15,7 @@ import { useFormValidation, getPasswordStrength } from './useFormValidation'
  */
 export function useRegister() {
   const router = useRouter()
+  const route = useRoute()
   const userAuthStore = useUserAuthStore()
   const appStore = useAppStore()
   const { t } = useI18n()
@@ -31,6 +32,16 @@ export function useRegister() {
   const showPassword = ref(false)
   const code = ref('')
   const agreed = ref(false)
+
+  // Phase 2：邀请绑定。仅从 URL ?invite= 读取，随注册请求提交；不在前端展示完整上级信息。
+  const inviteCode = ref('')
+  const normalizedInviteCode = computed(() => inviteCode.value.trim())
+  // 仅展示邀请码后几位，避免泄露完整邀请码/上级信息
+  const inviteCodeTail = computed(() => {
+    const code = normalizedInviteCode.value
+    if (!code) return ''
+    return code.length > 4 ? code.slice(-4) : code
+  })
 
   const passwordStrength = computed(() => getPasswordStrength(password.value))
   const error = ref('')
@@ -209,10 +220,21 @@ export function useRegister() {
         password: password.value,
         code: emailVerificationEnabled.value ? code.value : '',
         agreement_accepted: agreed.value,
+        invite_code: normalizedInviteCode.value || undefined,
       })
+      // 注册成功后清除 URL 中的 invite 参数，避免刷新/回退重复提交绑定。
+      // router.push 跳转到 /me/orders 已脱离当前 URL；这里再显式清理一次当前 query。
+      if (route.query.invite) {
+        const { invite: _invite, ...restQuery } = route.query
+        void router.replace({ query: restQuery })
+      }
       router.push('/me/orders')
     } catch (err: any) {
-      error.value = err.message || t('auth.register.errors.registerFailed')
+      // 邀请码无效（后端校验失败）时给出明确提示；其余错误沿用后端返回信息。
+      const isInviteInvalid = normalizedInviteCode.value && /invite|邀请/i.test(String(err?.message || ''))
+      error.value = err.message || (isInviteInvalid
+        ? t('auth.register.errors.invalidInviteCode')
+        : t('auth.register.errors.registerFailed'))
     }
   }
 
@@ -220,6 +242,9 @@ export function useRegister() {
   const handleRegister = debounceAsync(performRegister, 200)
 
   onMounted(async () => {
+    // 读取 URL 邀请参数 ?invite=XXXX（Phase 2 邀请绑定）
+    const rawInvite = Array.isArray(route.query.invite) ? route.query.invite[0] : route.query.invite
+    inviteCode.value = String(rawInvite || '').trim()
     await appStore.loadConfig(true)
   })
 
@@ -250,6 +275,8 @@ export function useRegister() {
     allowedEmailDomains,
     allowedEmailDomainsText,
     emailDomainSelectionRequired,
+    inviteCode,
+    inviteCodeTail,
     touchRegistrationEmail,
     formValidation,
     handleCaptchaConfigStale,

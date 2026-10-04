@@ -104,3 +104,28 @@ func (s *Service) TrackClick(input TrackClickInput) error {
 	}
 	return s.repo.CreateClick(click)
 }
+
+// ResolveRegistrationInviterUserID 根据访客标识解析注册时的直接上级用户 ID。
+// 复用下单归因同一份 click 记录（30 天窗口），仅做读取，不产生佣金、不改写任何状态。
+// 无归因 / 推广功能关闭 / 出错时返回 (0, nil)，由注册流程静默降级为无上级。
+func (s *Service) ResolveRegistrationInviterUserID(visitorKey string) (uint, error) {
+	visitorKey = strings.TrimSpace(visitorKey)
+	if s.repo == nil || visitorKey == "" {
+		return 0, nil
+	}
+	setting, err := s.settings.GetAffiliateSetting()
+	if err != nil {
+		return 0, err
+	}
+	if !setting.Enabled {
+		return 0, nil
+	}
+	profile, err := s.repo.GetLatestActiveProfileByVisitorKey(visitorKey, time.Now().Add(-affiliateAttributionWindow))
+	if err != nil {
+		return 0, err
+	}
+	if profile == nil {
+		return 0, nil
+	}
+	return profile.UserID, nil
+}

@@ -60,6 +60,35 @@ func (r *Store) ListByIDs(ids []uint) ([]userdomain.User, error) {
 	return users, nil
 }
 
+// GetByInviteCode 根据个人邀请码获取用户（邀请码大小写不敏感）。
+func (r *Store) GetByInviteCode(code string) (*userdomain.User, error) {
+	code = strings.ToUpper(strings.TrimSpace(code))
+	if code == "" {
+		return nil, nil
+	}
+	var user userdomain.User
+	err := r.db.Where("invite_code = ? AND deleted_at IS NULL", code).First(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// CountDirectInvitees 统计某用户的直接下级数量（inviter_id = ?）。
+func (r *Store) CountDirectInvitees(inviterID uint) (int64, error) {
+	if inviterID == 0 {
+		return 0, nil
+	}
+	var total int64
+	err := r.db.Model(&userdomain.User{}).
+		Where("inviter_id = ? AND deleted_at IS NULL", inviterID).
+		Count(&total).Error
+	return total, err
+}
+
 // Create 创建用户
 func (r *Store) Create(user *userdomain.User) error {
 	return r.db.Create(user).Error

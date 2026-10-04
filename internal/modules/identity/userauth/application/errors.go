@@ -32,6 +32,11 @@ var (
 	ErrEmailChangeInvalid           = errors.New("email change invalid")
 	ErrEmailChangeExists            = errors.New("email change exists")
 	ErrRegistrationDisabled         = errors.New("registration disabled")
+
+	// 邀请绑定（Phase 2）
+	ErrInviteCodeInvalid = errors.New("invite code invalid") // 邀请码不存在/无效
+	ErrSelfInvite        = errors.New("self invite")         // 不能绑定自己为上级
+	ErrInviteCycle       = errors.New("invite cycle")        // 会形成上下级环
 )
 
 var errExternalIdentityUnbindLocked = errors.New("external identity unbind would lock account")

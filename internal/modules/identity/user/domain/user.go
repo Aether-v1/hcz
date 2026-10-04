@@ -28,9 +28,13 @@ type User struct {
 	RecoveryCodes         string       `gorm:"type:text;default:''" json:"-"`                                // jsonmap.JSON 数组：[{"hash":"...","used_at":null|"..."}]
 	EmailVerifiedAt       *time.Time   `json:"email_verified_at"`                                            // 邮箱验证时间
 	LastLoginAt           *time.Time   `json:"last_login_at"`                                                // 最后登录时间
-	CreatedAt             time.Time    `gorm:"index" json:"created_at"`                                      // 创建时间
-	UpdatedAt             time.Time    `gorm:"index" json:"updated_at"`                                      // 更新时间
-	DeletedAt             *time.Time   `gorm:"index" json:"-"`                                               // 软删除时间
+	// 邀请绑定（Phase 2）：仅记录直接上下级关系，不涉及多级返利计算。
+	InviterID     *uint      `gorm:"index" json:"inviter_id,omitempty"`                       // 直接上级用户ID，可空（无上级）
+	InviteCode    string     `gorm:"type:varchar(12);not null;default:''" json:"invite_code"` // 个人邀请码（全局唯一，唯一索引由 migration 在 backfill 后创建）
+	InviteBoundAt *time.Time `gorm:"index" json:"invite_bound_at,omitempty"`                  // 绑定上级的时间，未绑定为 NULL
+	CreatedAt     time.Time  `gorm:"index" json:"created_at"`                                 // 创建时间
+	UpdatedAt     time.Time  `gorm:"index" json:"updated_at"`                                 // 更新时间
+	DeletedAt     *time.Time `gorm:"index" json:"-"`                                          // 软删除时间
 }
 
 // TableName 指定表名

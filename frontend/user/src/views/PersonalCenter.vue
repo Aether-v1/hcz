@@ -267,6 +267,7 @@
           <OrdersPanel v-else-if="currentSection === 'orders'" />
           <WalletPanel v-else-if="currentSection === 'wallet'" />
           <AffiliatePanel v-else-if="currentSection === 'affiliate'" />
+          <InvitationPanel v-else-if="currentSection === 'invitation'" />
           <div v-else-if="currentSection === 'reseller' && canAccessResellerConsole" class="rounded-2xl border bg-card p-6 shadow-sm">
             <h2 class="text-xl font-bold text-foreground">{{ t('resellerConsole.title') }}</h2>
             <p class="mt-2 text-sm text-muted-foreground">{{ t('resellerConsole.dashboard.description') }}</p>
@@ -298,6 +299,7 @@ import OrdersPanel from './personal/OrdersPanel.vue'
 import WalletPanel from './personal/WalletPanel.vue'
 import GiftCardPanel from './personal/GiftCardPanel.vue'
 import AffiliatePanel from './personal/AffiliatePanel.vue'
+import InvitationPanel from './personal/InvitationPanel.vue'
 import ApiPanel from './personal/ApiPanel.vue'
 import { usePersonalCenter, type PersonalSection } from '../composables/usePersonalCenter'
 

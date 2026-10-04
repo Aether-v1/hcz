@@ -28,6 +28,8 @@ type Store interface {
 	GetByEmail(string) (*userdomain.User, error)
 	GetByID(uint) (*userdomain.User, error)
 	ListByIDs([]uint) ([]userdomain.User, error)
+	GetByInviteCode(code string) (*userdomain.User, error)
+	CountDirectInvitees(inviterID uint) (int64, error)
 	Create(*userdomain.User) error
 	Update(*userdomain.User) error
 	IncrementTotalRecharged(uint, decimal.Decimal) error
