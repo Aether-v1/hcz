@@ -8,6 +8,15 @@
       :total-pages="pagination.total_page"
     />
 
+    <div class="flex flex-wrap gap-3">
+      <router-link to="/me/wallet/withdrawal" class="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
+        {{ t('personalCenter.wallet.withdraw.title') }}
+      </router-link>
+      <router-link to="/me/wallet/withdrawal-history" class="inline-flex h-10 items-center rounded-lg border px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
+        {{ t('personalCenter.wallet.withdraw.historyTitle') }}
+      </router-link>
+    </div>
+
     <WalletRechargeForm
       :amount="rechargeForm.amount"
       :channel-id="rechargeForm.channelId"

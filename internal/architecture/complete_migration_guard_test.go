@@ -17,7 +17,7 @@ type packageFileBudget struct {
 // Test-only architecture assertions intentionally share one package so they can
 // reuse AST helpers. Production packages have no file-budget exceptions.
 var packageFileBudgetOverrides = map[string]packageFileBudget{
-	"internal/architecture": {production: 0, total: 51},
+	"internal/architecture": {production: 0, total: 52},
 }
 
 // completedMigrationPaths are deleted compatibility-free entry points. Once a

@@ -91,6 +91,18 @@ const routes = [
         meta: { permission: 'GET:/admin/wallet/recharges' },
       },
       {
+        path: 'wallet-withdrawals',
+        name: 'wallet-withdrawals',
+        component: () => import('@/views/admin/WalletWithdrawals.vue'),
+        meta: { permission: 'GET:/admin/wallet/withdrawals' },
+      },
+      {
+        path: 'wallet-withdrawals/:id',
+        name: 'wallet-withdrawal-detail',
+        component: () => import('@/views/admin/WalletWithdrawalDetail.vue'),
+        meta: { permission: 'GET:/admin/wallet/withdrawals' },
+      },
+      {
         path: 'wallet-config',
         name: 'wallet-config',
         component: () => import('@/views/admin/Wallet.vue'),
@@ -390,6 +402,8 @@ const PAYMENT_PROTECTED_ROUTE_NAMES = new Set<string>([
   'payment-channels',
   'wallet-config',
   'wallet-recharges',
+  'wallet-withdrawals',
+  'wallet-withdrawal-detail',
   'reconciliation',
   'affiliates-withdraws',
   'affiliates-commissions',

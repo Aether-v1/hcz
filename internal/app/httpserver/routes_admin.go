@@ -38,6 +38,7 @@ import (
 	broadcasthttp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/transport/http"
 	uploadtransport "github.com/Aether-v1/hcz/internal/modules/upload/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
+	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
 	systemtransport "github.com/Aether-v1/hcz/internal/platform/http/system"
 
@@ -81,6 +82,7 @@ func registerAdminRoutes(
 	adminResellerFinanceHandler *resellertransport.AdminFinanceHandler,
 	adminSettingsHandler *settingstransport.AdminHandler,
 	adminWalletHandler *wallettransport.AdminHandler,
+	adminWithdrawalHandler *withdrawalhttp.AdminHandler,
 	adminPaymentHandler *paymenttransport.AdminHandler,
 	adminPaymentChannelHandler *paymenttransport.AdminChannelHandler,
 	redisClient *redis.Client,
@@ -181,6 +183,7 @@ func registerAdminRoutes(
 	// 用户管理
 	adminusertransport.RegisterAdminRoutes(authorized, adminUserHandler)
 	wallettransport.RegisterAdminRoutes(paymentProtected, adminWalletHandler)
+	withdrawalhttp.RegisterAdminRoutes(paymentProtected, adminWithdrawalHandler)
 	adminauthtransport.RegisterAdminUser2FARoutes(authorized, adminUser2FAHandler)
 
 	// API 凭证审核管理

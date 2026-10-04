@@ -145,6 +145,10 @@ const (
 	WalletTxnTypeGiftCard    = "gift_card_redeem"
 	// WalletTxnTypeOrderUnderpaidCredit 记录"支付成功但金额不足以履约订单"时转入用户余额的款项。
 	WalletTxnTypeOrderUnderpaidCredit = "order_underpaid_credit"
+	// WalletTxnTypeWithdrawalDebit 用户提现申请即扣款（余额→链上地址）。
+	WalletTxnTypeWithdrawalDebit = "withdrawal_debit"
+	// WalletTxnTypeWithdrawalRefund 提现被拒绝/取消时退回原始 request_amount。
+	WalletTxnTypeWithdrawalRefund = "withdrawal_refund"
 )
 
 // 钱包交易方向常量
@@ -375,6 +379,10 @@ const (
 	NotificationEventManualFulfillmentPending = "manual_fulfillment_pending"
 	NotificationEventExceptionAlert           = "exception_alert"
 	NotificationEventExceptionAlertCheck      = "exception_alert_check"
+	NotificationEventWithdrawalSubmitted      = "withdrawal_submitted"
+	NotificationEventWithdrawalApproved       = "withdrawal_approved"
+	NotificationEventWithdrawalCompleted      = "withdrawal_completed"
+	NotificationEventWithdrawalRejected       = "withdrawal_rejected"
 )
 
 // 通知中心渠道常量
@@ -512,6 +520,8 @@ const (
 
 	SettingKeyOrderRiskControlConfig = "order_risk_control_config"
 
+	SettingKeyWithdrawalConfig = "withdrawal_config"
+
 	SettingKeyUpstreamSyncConfig        = "upstream_sync_config"
 	SettingFieldUpstreamSyncIntervalMin = "interval_minutes"
 	SettingFieldUpstreamPreOrderCheck   = "pre_order_stock_check_enabled"
@@ -560,12 +570,13 @@ var SupportedLocales = []string{LocaleZhCN, LocaleZhTW, LocaleEnUS}
 
 // 通知业务类型常量
 const (
-	NotificationBizTypeOrder           = "order"
-	NotificationBizTypeWalletRecharge  = "wallet_recharge"
-	NotificationBizTypeDashboardAlert  = "dashboard_alert"
-	NotificationBizTypePaymentCallback = "payment_callback"
-	NotificationBizTypeProcurement     = "procurement"
-	NotificationBizTypeReconciliation  = "reconciliation"
+	NotificationBizTypeOrder            = "order"
+	NotificationBizTypeWalletRecharge   = "wallet_recharge"
+	NotificationBizTypeWalletWithdrawal = "wallet_withdrawal"
+	NotificationBizTypeDashboardAlert   = "dashboard_alert"
+	NotificationBizTypePaymentCallback  = "payment_callback"
+	NotificationBizTypeProcurement      = "procurement"
+	NotificationBizTypeReconciliation   = "reconciliation"
 )
 
 // 对账差异类型常量

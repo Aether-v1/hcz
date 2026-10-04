@@ -498,3 +498,56 @@ export interface CaptchaPayload {
     turnstile_token?: string
 }
 
+// --- Wallet Withdrawal ---
+export interface Withdrawal {
+    id: number
+    withdrawal_no: string
+    user_id: number
+    network: string
+    address: string
+    request_amount: string
+    fee_amount: string
+    net_amount: string
+    status: string
+    txid: string | null
+    user_note: string | null
+    admin_note: string | null
+    reject_reason: string | null
+    created_at: string
+    approved_at: string | null
+    processing_at: string | null
+    completed_at: string | null
+    rejected_at: string | null
+    canceled_at: string | null
+}
+
+export interface WithdrawalAddress {
+    id: number
+    user_id: number
+    network: string
+    address: string
+    label: string
+    is_default: boolean
+    created_at: string
+}
+
+export interface WithdrawalQuote {
+    request_amount: string
+    fee_amount: string
+    net_amount: string
+    currency: string
+}
+
+export interface CreateWithdrawalPayload {
+    network: string
+    address: string
+    amount: string
+    totp_code: string
+}
+
+export interface CreateWithdrawalAddressPayload {
+    network: string
+    address: string
+    label?: string
+}
+

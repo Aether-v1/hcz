@@ -82,6 +82,8 @@ import (
 	usernotificationgormstore "github.com/Aether-v1/hcz/internal/modules/usernotification/infrastructure/gormstore"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
 	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
+	withdrawalapp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/application"
+	withdrawalgormstore "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/queue"
 	"github.com/Aether-v1/hcz/internal/shared/mailbrand"
 )
@@ -110,6 +112,7 @@ type Container struct {
 	CouponUsageRepo        *coupongormstore.UsageStore
 	PromotionRepo          *promotiongormstore.Store
 	WalletRepo             *walletgormstore.Store
+	WithdrawalRepo         *withdrawalgormstore.Store
 	CategoryRepo           categorycontract.Repository
 	SettingRepo            settingscontract.Store
 	UserLoginLogRepo       auditlogcontract.UserLoginRepository
@@ -159,6 +162,7 @@ type Container struct {
 	ExchangeRateService           *exchangerateapp.Service
 	CartService                   *cartapp.Service
 	WalletService                 *walletapp.Service
+	WithdrawalService             *withdrawalapp.Service
 	OrderRefundService            *orderrefund.Service
 	AfterSaleService              *aftersale.Service
 	OrderService                  *orderapp.OrderService

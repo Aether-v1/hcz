@@ -201,6 +201,18 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
+            path: '/me/wallet/withdrawal',
+            name: 'personal-wallet-withdrawal',
+            component: () => import('../views/personal/WalletWithdrawal.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/wallet/withdrawal-history',
+            name: 'personal-wallet-withdrawal-history',
+            component: () => import('../views/personal/WalletWithdrawalHistory.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
             path: '/me/gift-cards',
             name: 'personal-center-gift-cards',
             component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),

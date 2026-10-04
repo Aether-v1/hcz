@@ -25,6 +25,7 @@ import (
 	publicconfigtransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http/public"
 	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
+	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -64,6 +65,7 @@ func registerStorefrontRoutes(
 	paymentLatestHandler *paymenttransport.LatestHandler,
 	paymentWriteHandler *paymenttransport.WriteHandler,
 	userWalletHandler *wallettransport.UserHandler,
+	userWithdrawalHandler *withdrawalhttp.UserHandler,
 	userNotificationHandler *usernotificationhttp.UserHandler,
 	redisClient *redis.Client,
 	loginRule middleware.RateLimitRule,
@@ -138,6 +140,7 @@ func registerStorefrontRoutes(
 		paymenttransport.RegisterUserWriteRoutes(user, paymentWriteHandler)
 		paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)
 		wallettransport.RegisterUserRoutes(user, userWalletHandler)
+		withdrawalhttp.RegisterUserRoutes(user, userWithdrawalHandler)
 		usernotificationhttp.RegisterUserRoutes(user, userNotificationHandler)
 		giftCardRedeem := user.Group("", middleware.RateLimitMiddleware(redisClient, giftCardRedeemRule, middleware.KeyByUserIDAndIP))
 		giftcardtransport.RegisterUserRoutes(giftCardRedeem, userGiftCardHandler)

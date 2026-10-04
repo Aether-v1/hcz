@@ -35,6 +35,7 @@ import (
 	broadcastdomain "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/domain"
 	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
+	withdrawaldomain "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/domain"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 
 	"gorm.io/gorm"
@@ -54,6 +55,8 @@ func AutoMigrate() error {
 		&walletdomain.Account{},
 		&walletdomain.Transaction{},
 		&walletdomain.RechargeOrder{},
+		&withdrawaldomain.Withdrawal{},
+		&withdrawaldomain.Address{},
 		&auditlogdomain.UserLoginLog{},
 		&auditlogdomain.AuthzAuditLog{},
 		&notificationdomain.NotificationLog{},

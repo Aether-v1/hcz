@@ -26,6 +26,7 @@ func TestDefaultSettingRegistryCoversLegacyNormalizedKeys(t *testing.T) {
 		constants.SettingKeyTelegramBotConfig,
 		constants.SettingKeyUpstreamSyncConfig,
 		constants.SettingKeyWalletConfig,
+		constants.SettingKeyWithdrawalConfig,
 	}
 
 	if got := defaultSettingRegistry.Keys(); !reflect.DeepEqual(got, want) {

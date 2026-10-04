@@ -34,6 +34,7 @@ import (
 	broadcaststore "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/infrastructure/gormstore"
 	usernotificationgormstore "github.com/Aether-v1/hcz/internal/modules/usernotification/infrastructure/gormstore"
 	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
+	withdrawalgormstore "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 )
 
@@ -61,6 +62,7 @@ func (c *Container) initRepositories() error {
 	c.CouponUsageRepo = coupongormstore.NewUsageStore(db)
 	c.PromotionRepo = promotiongormstore.New(db)
 	c.WalletRepo = walletgormstore.New(db)
+	c.WithdrawalRepo = withdrawalgormstore.New(db, c.WalletRepo)
 	c.CategoryRepo = categorygormstore.NewCategoryStore(db)
 	c.SettingRepo = settingsstore.New(db)
 	c.UserLoginLogRepo = auditloggormstore.NewUserLoginStore(db)

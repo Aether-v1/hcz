@@ -31,6 +31,7 @@ import (
 	sitemapcatalog "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/catalogreader"
 	usernotificationapp "github.com/Aether-v1/hcz/internal/modules/usernotification/application"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
+	withdrawalapp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/application"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 	giftcardredeemgormuow "github.com/Aether-v1/hcz/internal/workflows/giftcardredeem/infrastructure/gormuow"
 )
@@ -78,6 +79,14 @@ func (c *Container) initApplicationServices() {
 	c.CartService = cartapp.NewService(c.CartRepo, c.ProductRepo, c.ProductSKURepo, c.PromotionRepo, c.SettingService)
 	c.WalletService = walletapp.NewService(walletapp.Options{
 		Repository: c.WalletRepo, Transactions: c.WalletRepo,
+	})
+	c.WithdrawalService = withdrawalapp.NewService(withdrawalapp.Options{
+		Repository: c.WithdrawalRepo,
+		UnitOfWork: c.WithdrawalRepo,
+		TOTP:       c.UserTOTPService,
+		Config:     c.SettingService,
+		Notifier:   c.NotificationService,
+		Users:      c.UserStore,
 	})
 	c.OrderRefundService = orderrefund.New(
 		c.OrderStore,

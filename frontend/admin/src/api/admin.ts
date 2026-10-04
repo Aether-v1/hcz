@@ -20,7 +20,11 @@ import type {
   AdminResellerReasonPayload,
   AdminResellerSiteConfigPayload,
   AdminResellerSystemDomainPayload,
+  AdminWithdrawal,
+  AdminWithdrawalUser,
 } from './types'
+
+export type { AdminWithdrawal, AdminWithdrawalUser }
 
 export interface CaptchaPayload {
   captcha_id?: string
@@ -433,6 +437,19 @@ export const adminAPI = {
     api.get(`/admin/users/${id}/wallet/transactions`, { params }),
   getWalletRecharges: (params?: Record<string, unknown>) =>
     api.get('/admin/wallet/recharges', { params }),
+  // Wallet Withdrawals
+  getWalletWithdrawals: (params?: Record<string, unknown>) =>
+    api.get('/admin/wallet/withdrawals', { params }),
+  getWalletWithdrawal: (id: number) =>
+    api.get(`/admin/wallet/withdrawals/${id}`),
+  approveWalletWithdrawal: (id: number, adminNote: string | undefined, idempotencyKey: string) =>
+    api.post(`/admin/wallet/withdrawals/${id}/approve`, { admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
+  rejectWalletWithdrawal: (id: number, rejectReason: string, adminNote: string | undefined, idempotencyKey: string) =>
+    api.post(`/admin/wallet/withdrawals/${id}/reject`, { reject_reason: rejectReason, admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
+  processingWalletWithdrawal: (id: number, idempotencyKey: string) =>
+    api.post(`/admin/wallet/withdrawals/${id}/processing`, {}, { headers: { 'Idempotency-Key': idempotencyKey } }),
+  completeWalletWithdrawal: (id: number, txid: string, adminNote: string | undefined, idempotencyKey: string) =>
+    api.post(`/admin/wallet/withdrawals/${id}/complete`, { txid, admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
   adjustUserWallet: (id: number, data: AdminAdjustWalletPayload) =>
     api.post(`/admin/users/${id}/wallet/adjust`, data),
   updateUser: (id: number, data: Partial<AdminUser>) => api.put(`/admin/users/${id}`, data),

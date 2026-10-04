@@ -33,3 +33,16 @@ func (s *Service) GetOrderRiskControlConfig() (settingssecurity.OrderRiskControl
 	}
 	return settingssecurity.DecodeOrderRiskControlConfig(value, fallback), nil
 }
+
+// GetWithdrawalConfig returns the normalized withdrawal config.
+func (s *Service) GetWithdrawalConfig() (settingssecurity.WithdrawalConfig, error) {
+	fallback := settingssecurity.DefaultWithdrawalConfig()
+	if s == nil {
+		return fallback, nil
+	}
+	value, err := s.GetByKey(constants.SettingKeyWithdrawalConfig)
+	if err != nil {
+		return fallback, err
+	}
+	return settingssecurity.DecodeWithdrawalConfig(value, fallback), nil
+}

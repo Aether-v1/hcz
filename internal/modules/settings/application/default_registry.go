@@ -67,6 +67,10 @@ var defaultSettingRegistry = MustNewRegistry(
 		Normalize: settingssecurity.NormalizeOrderRiskControlConfigJSON,
 	},
 	Definition{
+		Key:       constants.SettingKeyWithdrawalConfig,
+		Normalize: settingssecurity.NormalizeWithdrawalConfigJSON,
+	},
+	Definition{
 		Key:       constants.SettingKeyUpstreamSyncConfig,
 		Normalize: settingsintegration.NormalizeUpstreamSyncConfigJSON,
 	},
