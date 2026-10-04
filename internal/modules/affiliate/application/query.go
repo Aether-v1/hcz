@@ -146,6 +146,7 @@ func (s *Service) ListAdminCommissions(filter AdminCommissionListFilter) ([]affi
 		OrderNo:            strings.TrimSpace(filter.OrderNo),
 		Status:             strings.TrimSpace(filter.Status),
 		Keyword:            strings.TrimSpace(filter.Keyword),
+		Level:              filter.Level,
 	})
 }
 

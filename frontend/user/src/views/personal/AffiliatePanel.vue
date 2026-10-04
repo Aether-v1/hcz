@@ -35,15 +35,19 @@
             </div>
           </div>
           <div class="rounded-xl border p-4">
-            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.pendingCommission') }}</div>
+            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.stats.total') }}</div>
+            <div class="mt-2 text-lg font-bold text-foreground">{{ totalCommissionText }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
+          </div>
+          <div class="rounded-xl border p-4">
+            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.stats.pending') }}</div>
             <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.pending_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
           <div class="rounded-xl border p-4">
-            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.availableCommission') }}</div>
+            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.stats.available') }}</div>
             <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.available_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
           <div class="rounded-xl border p-4">
-            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.withdrawnCommission') }}</div>
+            <div class="text-xs text-muted-foreground">{{ t('personalCenter.affiliate.stats.withdrawn') }}</div>
             <div class="mt-2 text-lg font-bold text-foreground">{{ dashboard?.withdrawn_commission || '0.00' }} <span class="text-xs font-normal text-muted-foreground">USDT</span></div>
           </div>
         </div>
@@ -122,6 +126,7 @@
         <Table>
           <TableHeader>
             <TableRow class="bg-muted/50">
+              <TableHead class="px-4">{{ t('personalCenter.affiliate.table.level') }}</TableHead>
               <TableHead class="px-4">{{ t('personalCenter.affiliate.table.orderNo') }}</TableHead>
               <TableHead class="px-4">{{ t('personalCenter.affiliate.table.amount') }}</TableHead>
               <TableHead class="px-4">{{ t('personalCenter.affiliate.table.status') }}</TableHead>
@@ -130,6 +135,9 @@
           </TableHeader>
           <TableBody>
             <TableRow v-for="item in commissions" :key="item.id">
+              <TableCell class="px-4">
+                <Badge variant="accent" size="sm">{{ levelBadgeText(item.level) }}</Badge>
+              </TableCell>
               <TableCell class="px-4 font-mono text-xs text-foreground">-</TableCell>
               <TableCell class="px-4 font-mono text-xs text-foreground">{{ item.commission_amount }} {{ item.currency || 'USDT' }}</TableCell>
               <TableCell class="px-4">
@@ -281,6 +289,18 @@ const conversionRateText = computed(() => {
   if (!Number.isFinite(value)) return '0.00%'
   return `${value.toFixed(2)}%`
 })
+
+// 总返利 = 待确认 + 可提现 + 累计提现（dashboard 未单独返回 total，前端汇总）
+const totalCommissionText = computed(() => {
+  const fields = ['pending_commission', 'available_commission', 'withdrawn_commission'] as const
+  const sum = fields.reduce((acc, key) => {
+    const n = Number(dashboard.value?.[key] || 0)
+    return acc + (Number.isFinite(n) ? n : 0)
+  }, 0)
+  return sum.toFixed(2)
+})
+
+const levelBadgeText = (level?: number) => `L${level || 1}`
 
 const formatDate = (raw?: string) => {
   if (!raw) return '-'

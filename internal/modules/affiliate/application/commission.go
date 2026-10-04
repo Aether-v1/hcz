@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -11,23 +12,36 @@ import (
 
 	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
+	settingsintegration "github.com/Aether-v1/hcz/internal/modules/settings/schema/integration"
+	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
+	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 
 	"github.com/Aether-v1/hcz/internal/constants"
+	"github.com/Aether-v1/hcz/internal/logger"
+	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
 	"github.com/shopspring/decimal"
 )
 
-// HandleOrderPaid 处理订单支付成功后的佣金生成
+// HandleOrderPaid 已退休：Phase 4 起佣金在订单进入 completed 时生成（见 HandleOrderCompleted）。
+// 保留方法签名仅为兼容旧调用方，新逻辑直接返回 nil，不再在 paid 阶段生成佣金。
 func (s *Service) HandleOrderPaid(orderID uint) error {
-	if orderID == 0 || s.repo == nil || s.orderRepo == nil {
+	return nil
+}
+
+// HandleOrderCompleted 订单进入 completed 时，沿 users.inviter_id 向上递归最多 maxLevel 级生成佣金。
+// 真源 = users.inviter_id；中间用户无 affiliate profile（或未激活）时跳过该层但层级不压缩。
+// 幂等：同一 (order_id, beneficiary_user_id, level, commission_type='order') 仅生成一次。
+func (s *Service) HandleOrderCompleted(orderID uint) error {
+	if orderID == 0 || s.repo == nil || s.orderRepo == nil || s.userRepo == nil {
 		return nil
 	}
 	setting, err := s.settings.GetAffiliateSetting()
 	if err != nil {
 		return err
 	}
-	if !setting.Enabled || setting.CommissionRate <= 0 {
+	if !setting.Enabled {
 		return nil
 	}
 
@@ -38,78 +52,233 @@ func (s *Service) HandleOrderPaid(orderID uint) error {
 	if order == nil {
 		return nil
 	}
-	profile, err := s.resolveAffiliateProfileForOrder(order)
+	// 佣金基数固定为 USDT 钱包实付额，禁止使用 total_amount 或汇率换算。
+	if order.WalletPaidAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+		return nil
+	}
+	if order.UserID == 0 {
+		return nil
+	}
+
+	maxLevel := setting.MaxLevel
+	if maxLevel < 1 {
+		maxLevel = 1
+	}
+	if maxLevel > affiliateMaxLevel {
+		maxLevel = affiliateMaxLevel
+	}
+
+	// 向上构建邀请链：chain[i] 对应第 i+1 层的收益人用户ID。
+	currentUserID := order.UserID
+	visited := map[uint]bool{order.UserID: true}
+	chain := make([]uint, 0, maxLevel)
+	for level := 1; level <= maxLevel; level++ {
+		current, err := s.userRepo.GetByID(currentUserID)
+		if err != nil {
+			return err
+		}
+		if current == nil {
+			break
+		}
+		if current.InviterID == nil {
+			break
+		}
+		inviterID := *current.InviterID
+		if inviterID == 0 || visited[inviterID] {
+			if inviterID != 0 {
+				logger.Warnw("affiliate_invite_chain_cycle",
+					"user_id", currentUserID,
+					"inviter_id", inviterID,
+					"order_id", order.ID,
+				)
+			}
+			break
+		}
+		visited[inviterID] = true
+		chain = append(chain, inviterID)
+		currentUserID = inviterID
+	}
+	if len(chain) == 0 {
+		return nil
+	}
+
+	// 批量资格检查：一次取出链上所有用户的 affiliate profile。
+	profiles, err := s.repo.GetProfilesByUserIDs(chain)
 	if err != nil {
 		return err
 	}
-	if profile == nil {
-		return nil
+	profileByUser := make(map[uint]affiliatedomain.Profile, len(profiles))
+	for _, p := range profiles {
+		profileByUser[p.UserID] = p
 	}
-	if strings.TrimSpace(profile.Status) != constants.AffiliateProfileStatusActive {
-		return nil
+
+	baseAmount := order.WalletPaidAmount.Decimal.Round(2)
+	now := time.Now()
+	commissions := make([]*affiliatedomain.Commission, 0, len(chain))
+	for idx, beneficiaryUserID := range chain {
+		level := idx + 1
+		profile, ok := profileByUser[beneficiaryUserID]
+		if !ok {
+			continue // 无 profile：跳过该层，但 chain 已包含上层，继续下一层
+		}
+		if strings.TrimSpace(profile.Status) != constants.AffiliateProfileStatusActive {
+			continue
+		}
+		rate := resolveLevelRate(setting, level)
+		if rate.LessThanOrEqual(decimal.Zero) {
+			continue
+		}
+		commissionAmount := baseAmount.Mul(rate).Div(decimal.NewFromInt(100)).Round(2)
+		if commissionAmount.LessThan(decimal.NewFromFloat(0.01)) {
+			continue
+		}
+		if beneficiaryUserID == order.UserID {
+			continue // 兜底自购检查（chain 构建已保证）
+		}
+
+		// 幂等检查：已存在则跳过。
+		existing, err := s.repo.GetCommissionByOrderBeneficiaryLevel(order.ID, beneficiaryUserID, level)
+		if err != nil {
+			return err
+		}
+		if existing != nil {
+			continue
+		}
+
+		status := constants.AffiliateCommissionStatusPendingConfirm
+		var confirmAt *time.Time
+		var availableAt *time.Time
+		if setting.ConfirmDays <= 0 {
+			status = constants.AffiliateCommissionStatusAvailable
+			availableAt = &now
+		} else {
+			t := now.Add(time.Duration(setting.ConfirmDays) * 24 * time.Hour)
+			confirmAt = &t
+		}
+
+		sourceUserID := order.UserID
+		commissions = append(commissions, &affiliatedomain.Commission{
+			AffiliateProfileID: profile.ID,
+			OrderID:            order.ID,
+			CommissionType:     constants.AffiliateCommissionTypeOrder,
+			BeneficiaryUserID:  beneficiaryUserID,
+			SourceUserID:       &sourceUserID,
+			Level:              level,
+			BaseAmount:         money.FromDecimal(baseAmount),
+			RatePercent:        money.FromDecimal(rate),
+			CommissionAmount:   money.FromDecimal(commissionAmount),
+			Status:             status,
+			ConfirmAt:          confirmAt,
+			AvailableAt:        availableAt,
+		})
 	}
-	if order.UserID > 0 && profile.UserID == order.UserID {
+	if len(commissions) == 0 {
 		return nil
 	}
 
-	commissionType := constants.AffiliateCommissionTypeOrder
-	existing, err := s.repo.GetCommissionByOrderAndProfile(order.ID, profile.ID, commissionType)
+	// 事务内批量创建，任一层失败整体回滚。
+	err = s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
+		return tx.BatchCreateCommissions(commissions)
+	})
 	if err != nil {
+		// 并发兜底：幂等检查与插入之间的竞争导致唯一冲突，静默跳过。
+		if isDuplicateKeyError(err) {
+			logger.Warnw("affiliate_handle_order_completed_duplicate",
+				"order_id", order.ID,
+				"error", err,
+			)
+			return nil
+		}
 		return err
 	}
-	if existing != nil {
-		return nil
-	}
 
-	baseAmount, err := s.calculateCommissionBaseAmount(order)
-	if err != nil {
-		return err
+	// ConfirmDays<=0 时佣金直接 available，立即发送到账通知（pending_confirm 阶段不发）。
+	for _, c := range commissions {
+		if c.Status == constants.AffiliateCommissionStatusAvailable {
+			s.notifyCommissionConfirmed(c)
+		}
 	}
-	if baseAmount.LessThanOrEqual(decimal.Zero) {
-		return nil
-	}
-	rate := decimal.NewFromFloat(setting.CommissionRate).Round(2)
-	commissionAmount := baseAmount.Mul(rate).Div(decimal.NewFromInt(100)).Round(2)
-	if commissionAmount.LessThanOrEqual(decimal.Zero) {
-		return nil
-	}
-
-	paidAt := time.Now()
-	if order.PaidAt != nil {
-		paidAt = *order.PaidAt
-	}
-	status := constants.AffiliateCommissionStatusPendingConfirm
-	var confirmAt *time.Time
-	var availableAt *time.Time
-	if setting.ConfirmDays <= 0 {
-		status = constants.AffiliateCommissionStatusAvailable
-		availableAt = &paidAt
-	} else {
-		t := paidAt.Add(time.Duration(setting.ConfirmDays) * 24 * time.Hour)
-		confirmAt = &t
-	}
-
-	commission := &affiliatedomain.Commission{
-		AffiliateProfileID: profile.ID,
-		OrderID:            order.ID,
-		CommissionType:     commissionType,
-		BaseAmount:         money.FromDecimal(baseAmount),
-		RatePercent:        money.FromDecimal(rate),
-		CommissionAmount:   money.FromDecimal(commissionAmount),
-		Status:             status,
-		ConfirmAt:          confirmAt,
-		AvailableAt:        availableAt,
-	}
-	return s.repo.CreateCommission(commission)
+	return nil
 }
 
-// ConfirmDueCommissions 将到期佣金转可提现
+// resolveLevelRate 返回指定层级的费率（百分比）。
+// LevelRates 由 NormalizeAffiliateSetting 补全到 10 项；legacy CommissionRate 已在 L1 fallback 中归一。
+func resolveLevelRate(setting settingsintegration.AffiliateSetting, level int) decimal.Decimal {
+	if level < 1 || level > affiliateMaxLevel {
+		return decimal.Zero
+	}
+	if level > len(setting.LevelRates) {
+		return decimal.Zero
+	}
+	item := setting.LevelRates[level-1]
+	if !item.Enabled {
+		return decimal.Zero
+	}
+	rate := decimal.NewFromFloat(item.Rate).Round(2)
+	if rate.LessThanOrEqual(decimal.Zero) {
+		return decimal.Zero
+	}
+	return rate
+}
+
+// notifyCommissionConfirmed 佣金转为 available 后写用户站内通知（尽力而为+幂等）。
+// 唯一约束 (user_id,biz_type=commission,biz_id=commission.ID,type=commission_confirmed) 拦截重复。
+func (s *Service) notifyCommissionConfirmed(c *affiliatedomain.Commission) {
+	if s == nil || s.userNotifier == nil || c == nil || c.BeneficiaryUserID == 0 {
+		return
+	}
+	data := jsonmap.JSON{
+		"commission_id":     c.ID,
+		"order_id":          c.OrderID,
+		"level":             c.Level,
+		"commission_amount": c.CommissionAmount.String(),
+		"base_amount":       c.BaseAmount.String(),
+		"rate_percent":      c.RatePercent.String(),
+	}
+	if err := s.userNotifier.CreateNotification(context.Background(), usernotificationcontract.CreateInput{
+		UserID:  c.BeneficiaryUserID,
+		Type:    usernotificationdomain.TypeCommissionConfirmed,
+		Title:   "佣金到账",
+		Body:    "您的推广佣金已转入可提现余额",
+		Data:    data,
+		BizType: usernotificationdomain.BizTypeCommission,
+		BizID:   c.ID,
+	}); err != nil {
+		logger.Warnw("usernotification_commission_confirmed_failed",
+			"commission_id", c.ID,
+			"order_id", c.OrderID,
+			"beneficiary_user_id", c.BeneficiaryUserID,
+			"error", err,
+		)
+	}
+}
+
+// isDuplicateKeyError 跨驱动识别唯一约束冲突（SQLite/Postgres/MySQL）。
+func isDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	lower := strings.ToLower(msg)
+	return strings.Contains(lower, "unique constraint") ||
+		strings.Contains(lower, "duplicate key") ||
+		strings.Contains(lower, "duplicate entry") ||
+		strings.Contains(lower, "unique index")
+}
+
+// ConfirmDueCommissions 将到期佣金转可提现，并对每条转换成功的佣金发送到账通知。
 func (s *Service) ConfirmDueCommissions(now time.Time) error {
 	if s.repo == nil {
 		return nil
 	}
-	_, err := s.repo.MarkPendingCommissionsAvailable(now, now)
-	return err
+	rows, err := s.repo.MarkPendingCommissionsAvailable(now, now)
+	if err != nil {
+		return err
+	}
+	for i := range rows {
+		s.notifyCommissionConfirmed(&rows[i])
+	}
+	return nil
 }
 
 // HandleOrderCanceled 处理订单取消/退款后的佣金逆向
@@ -150,6 +319,7 @@ func (s *Service) HandleOrderCanceled(orderID uint, reason string) error {
 }
 
 // HandleOrderRefunded 使用调用方提供的事务 Store 处理退款后的佣金回滚。
+// 多级别兼容：按 commission 逐条处理，天然覆盖 L1~L10；每级独立按比例扣减。
 func (s *Service) HandleOrderRefunded(
 	repoTx affiliatecontract.Store,
 	order *orderdomain.Order,
@@ -182,10 +352,15 @@ func (s *Service) HandleOrderRefunded(
 	}
 	remaining := totalAmount.Sub(before).Round(2)
 	if remaining.LessThanOrEqual(decimal.Zero) {
-		return nil
+		// 全量退款兜底：剩余为 0 时直接把所有 active 佣金清零，避免 rounding residue。
+		return s.rejectActiveCommissionsOnFullRefund(repoTx, order.ID, reason)
 	}
 	if delta.GreaterThan(remaining) {
 		delta = remaining
+	}
+	// delta 已经吃掉全部剩余时同样走兜底清零。
+	if delta.GreaterThanOrEqual(remaining) {
+		return s.rejectActiveCommissionsOnFullRefund(repoTx, order.ID, reason)
 	}
 
 	rows, err := repoTx.ListCommissionsByOrderForUpdate(order.ID, []string{
@@ -249,6 +424,39 @@ func (s *Service) HandleOrderRefunded(
 			item.ConfirmAt = nil
 			item.AvailableAt = nil
 		}
+		if err := repoTx.UpdateCommission(&item); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// rejectActiveCommissionsOnFullRefund 全量退款兜底：把订单所有 active 佣金清零并置 rejected。
+func (s *Service) rejectActiveCommissionsOnFullRefund(repoTx affiliatecontract.Store, orderID uint, reason string) error {
+	rows, err := repoTx.ListCommissionsByOrderForUpdate(orderID, []string{
+		constants.AffiliateCommissionStatusPendingConfirm,
+		constants.AffiliateCommissionStatusAvailable,
+	})
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	reasonText := strings.TrimSpace(reason)
+	if reasonText == "" {
+		reasonText = "order_refunded"
+	}
+	for i := range rows {
+		item := rows[i]
+		if item.WithdrawRequestID != nil {
+			continue
+		}
+		item.CommissionAmount = money.FromDecimal(decimal.Zero)
+		item.BaseAmount = money.FromDecimal(decimal.Zero)
+		item.Status = constants.AffiliateCommissionStatusRejected
+		item.InvalidReason = reasonText
+		item.ConfirmAt = nil
+		item.AvailableAt = nil
+		item.UpdatedAt = now
 		if err := repoTx.UpdateCommission(&item); err != nil {
 			return err
 		}

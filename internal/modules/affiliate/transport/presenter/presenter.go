@@ -31,6 +31,7 @@ func NewProfile(p *affiliatedomain.Profile) Profile {
 type Commission struct {
 	ID               uint         `json:"id"`
 	CommissionType   string       `json:"commission_type"`
+	Level            int          `json:"level"`
 	CommissionAmount money.Amount `json:"commission_amount"`
 	Currency         string       `json:"currency"` // P0-2: 固定 USDT
 	Status           string       `json:"status"`
@@ -44,6 +45,7 @@ func NewCommission(c *affiliatedomain.Commission) Commission {
 	return Commission{
 		ID:               c.ID,
 		CommissionType:   c.CommissionType,
+		Level:            c.Level,
 		CommissionAmount: c.CommissionAmount,
 		Currency:         "USDT",
 		Status:           c.Status,

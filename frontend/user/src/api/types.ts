@@ -178,6 +178,7 @@ export interface AffiliateCommissionData {
     commission_amount: string
     currency?: string
     status: string
+    level?: number
     confirm_at?: string
     available_at?: string
     created_at: string

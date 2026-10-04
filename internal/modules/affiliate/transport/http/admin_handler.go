@@ -2,6 +2,7 @@ package affiliatehttp
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
@@ -73,6 +74,7 @@ func (h *AdminHandler) ListAffiliateUsers(c *gin.Context) {
 func (h *AdminHandler) ListAffiliateCommissions(c *gin.Context) {
 	page, pageSize := ginutil.ParsePagination(c)
 	profileID, _ := ginutil.ParseQueryUint(c.Query("affiliate_profile_id"), false)
+	level, _ := strconv.Atoi(strings.TrimSpace(c.Query("level")))
 
 	rows, total, err := h.svc.ListAdminCommissions(affiliateapp.AdminCommissionListFilter{
 		Page:               page,
@@ -81,6 +83,7 @@ func (h *AdminHandler) ListAffiliateCommissions(c *gin.Context) {
 		OrderNo:            strings.TrimSpace(c.Query("order_no")),
 		Status:             strings.TrimSpace(c.Query("status")),
 		Keyword:            strings.TrimSpace(c.Query("keyword")),
+		Level:              level,
 	})
 	if err != nil {
 		ginutil.RespondError(c, response.CodeInternal, "error.user_fetch_failed", err)

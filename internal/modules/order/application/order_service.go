@@ -76,6 +76,9 @@ type AffiliateOrderLifecycle interface {
 	ResolveOrderAffiliateSnapshot(userID uint, rawCode, rawVisitorKey string) (*uint, string, error)
 	HandleOrderPaid(orderID uint) error
 	HandleOrderCanceled(orderID uint, reason string) error
+	// HandleOrderCompleted 在订单进入 completed 后由订单域调用，生成多级别佣金。
+	// 实现须自行管理事务，失败只 warn 不回滚订单。
+	HandleOrderCompleted(orderID uint) error
 }
 
 // resellerAccountingTransactions 是订单事务内调用分销账务用例的最小端口。

@@ -38,9 +38,13 @@ const filters = reactive({
   orderNo: '',
   affiliateProfileId: '',
   status: '__all__',
+  level: '__all__',
 })
 
+const levelOptions = Array.from({ length: 10 }, (_, i) => i + 1)
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
+const levelFilterParam = () => (filters.level === '__all__' ? undefined : Number(filters.level) || undefined)
+const levelLabel = (level?: number) => `L${level || 1}`
 const userDetailLink = (userId: number) => adminUrl(`/users/${userId}`)
 const resolveAffiliateUserID = (item: AdminAffiliateCommission) => Number(item?.affiliate_profile?.user_id || item?.affiliate_profile?.user?.id || 0)
 
@@ -54,6 +58,7 @@ const fetchRows = async (page = 1, options: ListFetchOptions = {}) => {
       order_no: filters.orderNo || undefined,
       affiliate_profile_id: filters.affiliateProfileId || undefined,
       status: normalizeFilterValue(filters.status) || undefined,
+      level: levelFilterParam(),
     })
     rows.value = response.data.data || []
     pagination.value = response.data.pagination || pagination.value
@@ -139,18 +144,32 @@ onMounted(() => {
             </SelectContent>
           </Select>
         </div>
+        <div class="w-full md:w-44">
+          <Select v-model="filters.level" @update:modelValue="handleSearch">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.affiliatesCommissions.filters.filterLevel')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{{ t('admin.affiliatesCommissions.filters.allLevels') }}</SelectItem>
+              <SelectItem v-for="lv in levelOptions" :key="lv" :value="String(lv)">L{{ lv }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div class="flex-1"></div>
         <Button size="sm" variant="outline" :disabled="refreshing" @click="refreshCurrentPage">{{ t('admin.common.refresh') }}</Button>
       </div>
     </div>
 
     <div class="rounded-xl border border-border bg-card overflow-x-auto">
-      <Table class="min-w-[1000px]">
+      <Table class="min-w-[1280px]">
         <TableHeader class="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
           <TableRow>
             <TableHead class="px-6 py-3">{{ t('admin.affiliatesCommissions.table.id') }}</TableHead>
+            <TableHead class="min-w-[80px] px-6 py-3">{{ t('admin.affiliatesCommissions.table.level') }}</TableHead>
             <TableHead class="min-w-[160px] px-6 py-3">{{ t('admin.affiliatesCommissions.table.user') }}</TableHead>
             <TableHead class="min-w-[160px] px-6 py-3">{{ t('admin.affiliatesCommissions.table.orderNo') }}</TableHead>
+            <TableHead class="min-w-[110px] px-6 py-3">{{ t('admin.affiliatesCommissions.table.sourceUser') }}</TableHead>
+            <TableHead class="min-w-[110px] px-6 py-3">{{ t('admin.affiliatesCommissions.table.beneficiary') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.affiliatesCommissions.table.baseAmount') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.affiliatesCommissions.table.rate') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.affiliatesCommissions.table.commission') }}</TableHead>
@@ -162,16 +181,21 @@ onMounted(() => {
         </TableHeader>
         <TableBody class="divide-y divide-border">
           <TableRow v-if="loading">
-            <TableCell :colspan="10" class="p-0">
-              <TableSkeleton :columns="10" :rows="5" />
+            <TableCell :colspan="13" class="p-0">
+              <TableSkeleton :columns="13" :rows="5" />
             </TableCell>
           </TableRow>
           <TableRow v-else-if="rows.length === 0">
-            <TableCell colspan="10" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.affiliatesCommissions.empty') }}</TableCell>
+            <TableCell colspan="13" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.affiliatesCommissions.empty') }}</TableCell>
           </TableRow>
           <TableRow v-for="item in rows" :key="item.id" class="hover:bg-muted/30">
             <TableCell class="px-6 py-4">
               <IdCell :value="item.id" />
+            </TableCell>
+            <TableCell class="min-w-[80px] px-6 py-4">
+              <span class="inline-flex rounded-full border border-border bg-muted/40 px-2 py-0.5 font-mono text-xs text-foreground">
+                {{ levelLabel(item.level) }}
+              </span>
             </TableCell>
             <TableCell class="min-w-[160px] px-6 py-4 text-xs text-muted-foreground">
               <div class="text-foreground">
@@ -194,6 +218,12 @@ onMounted(() => {
             </TableCell>
             <TableCell class="min-w-[160px] px-6 py-4 font-mono text-xs text-foreground break-all">
               {{ item?.order?.order_no || '-' }}
+            </TableCell>
+            <TableCell class="min-w-[110px] px-6 py-4 font-mono text-xs text-foreground">
+              {{ item.source_user_id != null ? `#${item.source_user_id}` : '-' }}
+            </TableCell>
+            <TableCell class="min-w-[110px] px-6 py-4 font-mono text-xs text-foreground">
+              {{ item.beneficiary_user_id != null ? `#${item.beneficiary_user_id}` : '-' }}
             </TableCell>
             <TableCell class="px-6 py-4 font-mono text-xs text-foreground">{{ item.base_amount || '0.00' }}</TableCell>
             <TableCell class="px-6 py-4 font-mono text-xs text-foreground">{{ item.rate_percent || '0.00' }}%</TableCell>

@@ -105,6 +105,34 @@ func (r *Store) GetProfileByCode(code string) (*affiliatedomain.Profile, error) 
 	return &profile, nil
 }
 
+// GetProfilesByUserIDs 批量查询用户对应的推广档案。
+func (r *Store) GetProfilesByUserIDs(userIDs []uint) ([]affiliatedomain.Profile, error) {
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+	cleaned := make([]uint, 0, len(userIDs))
+	seen := make(map[uint]struct{}, len(userIDs))
+	for _, id := range userIDs {
+		if id == 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		cleaned = append(cleaned, id)
+	}
+	if len(cleaned) == 0 {
+		return nil, nil
+	}
+	var rows []affiliatedomain.Profile
+	if err := r.db.Where("user_id IN ? AND affiliate_profiles.deleted_at IS NULL", cleaned).
+		Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 // CreateProfile 创建推广档案
 func (r *Store) CreateProfile(profile *affiliatedomain.Profile) error {
 	return r.db.Create(profile).Error
@@ -228,9 +256,35 @@ func (r *Store) GetCommissionByOrderAndProfile(orderID, profileID uint, commissi
 	return &commission, nil
 }
 
+// GetCommissionByOrderBeneficiaryLevel 按订单、收益人、层级查询订单类型佣金（多级别幂等）。
+// 仅匹配 commission_type='order'，提现拆分产生的 sp... 余留行不参与幂等判断。
+func (r *Store) GetCommissionByOrderBeneficiaryLevel(orderID, beneficiaryUserID uint, level int) (*affiliatedomain.Commission, error) {
+	if orderID == 0 || beneficiaryUserID == 0 || level <= 0 {
+		return nil, nil
+	}
+	var commission affiliatedomain.Commission
+	if err := r.db.Where("order_id = ? AND beneficiary_user_id = ? AND level = ? AND commission_type = ? AND deleted_at IS NULL",
+		orderID, beneficiaryUserID, level, constants.AffiliateCommissionTypeOrder).
+		First(&commission).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &commission, nil
+}
+
 // CreateCommission 创建佣金记录
 func (r *Store) CreateCommission(commission *affiliatedomain.Commission) error {
 	return r.db.Create(commission).Error
+}
+
+// BatchCreateCommissions 批量创建佣金记录。
+func (r *Store) BatchCreateCommissions(commissions []*affiliatedomain.Commission) error {
+	if len(commissions) == 0 {
+		return nil
+	}
+	return r.db.CreateInBatches(commissions, 50).Error
 }
 
 // UpdateCommission 更新佣金记录
@@ -263,6 +317,9 @@ func (r *Store) ListCommissions(filter affiliatecontract.CommissionListFilter) (
 	}
 	if status := strings.TrimSpace(filter.Status); status != "" {
 		query = query.Where("affiliate_commissions.status = ?", status)
+	}
+	if filter.Level > 0 {
+		query = query.Where("affiliate_commissions.level = ?", filter.Level)
 	}
 	if keyword := strings.TrimSpace(filter.Keyword); keyword != "" {
 		like := "%" + keyword + "%"
@@ -340,20 +397,46 @@ func (r *Store) ListCommissionsByWithdrawIDForUpdate(withdrawID uint) ([]affilia
 	return rows, nil
 }
 
-// MarkPendingCommissionsAvailable 批量将待确认佣金转可提现
-func (r *Store) MarkPendingCommissionsAvailable(before, now time.Time) (int64, error) {
-	result := r.db.Model(&affiliatedomain.Commission{}).
-		Where("status = ? AND confirm_at IS NOT NULL AND confirm_at <= ? AND withdraw_request_id IS NULL AND deleted_at IS NULL",
-			constants.AffiliateCommissionStatusPendingConfirm, before).
-		Updates(map[string]interface{}{
-			"status":       constants.AffiliateCommissionStatusAvailable,
-			"available_at": now,
-			"updated_at":   now,
-		})
-	if result.Error != nil {
-		return 0, result.Error
+// MarkPendingCommissionsAvailable 批量将待确认佣金转可提现，并返回本次实际转换的佣金列表。
+// 在事务内先加锁再更新，避免与并发 ConfirmDueCommissions 重复发放到账通知。
+func (r *Store) MarkPendingCommissionsAvailable(before, now time.Time) ([]affiliatedomain.Commission, error) {
+	var rows []affiliatedomain.Commission
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&affiliatedomain.Commission{}).
+			Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("status = ? AND confirm_at IS NOT NULL AND confirm_at <= ? AND withdraw_request_id IS NULL AND deleted_at IS NULL",
+				constants.AffiliateCommissionStatusPendingConfirm, before).
+			Order("id asc").
+			Find(&rows).Error; err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			return nil
+		}
+		ids := make([]uint, 0, len(rows))
+		for i := range rows {
+			ids = append(ids, rows[i].ID)
+		}
+		if err := tx.Model(&affiliatedomain.Commission{}).
+			Where("id IN ?", ids).
+			Updates(map[string]interface{}{
+				"status":       constants.AffiliateCommissionStatusAvailable,
+				"available_at": now,
+				"updated_at":   now,
+			}).Error; err != nil {
+			return err
+		}
+		for i := range rows {
+			rows[i].Status = constants.AffiliateCommissionStatusAvailable
+			rows[i].AvailableAt = &now
+			rows[i].UpdatedAt = now
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return result.RowsAffected, nil
+	return rows, nil
 }
 
 // CountValidOrdersByProfile 统计有效订单数

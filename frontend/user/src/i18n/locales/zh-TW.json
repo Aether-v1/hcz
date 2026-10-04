@@ -674,6 +674,12 @@
       "pendingCommission": "待確認佣金",
       "availableCommission": "可提現佣金",
       "withdrawnCommission": "累計提現佣金",
+      "stats": {
+        "total": "總返利",
+        "pending": "待確認",
+        "available": "可提現",
+        "withdrawn": "累計提現"
+      },
       "withdrawTitle": "申請提現",
       "withdrawSubtitle": "填寫金額、提現渠道與帳號後提交審核",
       "withdrawAmountLabel": "提現金額",
@@ -690,6 +696,7 @@
       "withdrawRecordTitle": "提現記錄",
       "withdrawEmpty": "暫無提現記錄",
       "table": {
+        "level": "層級",
         "orderNo": "訂單號",
         "amount": "佣金",
         "status": "狀態",

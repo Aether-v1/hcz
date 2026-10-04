@@ -71,6 +71,7 @@ type AdminCommissionListFilter struct {
 	OrderNo            string
 	Status             string
 	Keyword            string
+	Level              int
 }
 
 // AdminWithdrawListFilter 后台提现列表过滤。

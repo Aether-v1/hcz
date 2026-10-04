@@ -44,6 +44,7 @@ type CommissionListFilter struct {
 	OrderNo            string
 	Status             string
 	Keyword            string
+	Level              int
 	CreatedFrom        *time.Time
 	CreatedTo          *time.Time
 }
@@ -83,17 +84,24 @@ type Store interface {
 	CountClicksByProfile(profileID uint) (int64, error)
 
 	GetCommissionByOrderAndProfile(orderID, profileID uint, commissionType string) (*domain.Commission, error)
+	// GetCommissionByOrderBeneficiaryLevel 是多级别幂等检查：同一订单同一收益人同一层级仅允许一条。
+	GetCommissionByOrderBeneficiaryLevel(orderID, beneficiaryUserID uint, level int) (*domain.Commission, error)
 	CreateCommission(commission *domain.Commission) error
+	// BatchCreateCommissions 批量插入多级别佣金；调用方需在事务内使用并自行处理唯一冲突。
+	BatchCreateCommissions(commissions []*domain.Commission) error
 	UpdateCommission(commission *domain.Commission) error
 	ListCommissions(filter CommissionListFilter) ([]domain.Commission, int64, error)
 	ListCommissionsByOrder(orderID uint, statuses []string) ([]domain.Commission, error)
 	ListCommissionsByOrderForUpdate(orderID uint, statuses []string) ([]domain.Commission, error)
 	ListCommissionsByWithdrawIDForUpdate(withdrawID uint) ([]domain.Commission, error)
-	MarkPendingCommissionsAvailable(before, now time.Time) (int64, error)
+	// MarkPendingCommissionsAvailable 将到期的 pending_confirm 佣金转 available，并返回本次实际转换的佣金列表（用于发送到账通知）。
+	MarkPendingCommissionsAvailable(before, now time.Time) ([]domain.Commission, error)
 	CountValidOrdersByProfile(profileID uint) (int64, error)
 	SumCommissionByProfile(profileID uint, statuses []string, unboundOnly bool) (decimal.Decimal, error)
 	ListAvailableCommissionsForUpdate(profileID uint) ([]domain.Commission, error)
 	BatchUpdateCommissions(ids []uint, updates map[string]interface{}) error
+	// GetProfilesByUserIDs 批量查询用户对应的推广档案（用于多级别资格检查）。
+	GetProfilesByUserIDs(userIDs []uint) ([]domain.Profile, error)
 
 	CreateWithdraw(request *domain.WithdrawRequest) error
 	UpdateWithdraw(request *domain.WithdrawRequest) error

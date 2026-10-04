@@ -12,4 +12,6 @@ func (c *Container) wireServiceDependencies() {
 	c.PaymentService.SetUserNotifier(c.UserNotificationService)
 	c.OrderService.SetUserNotifier(c.UserNotificationService)
 	c.FulfillmentService.SetUserNotifier(c.UserNotificationService)
+	// Phase 4 多级返利：佣金转 available 后写收益人站内通知。
+	c.AffiliateService.SetUserNotifier(c.UserNotificationService)
 }

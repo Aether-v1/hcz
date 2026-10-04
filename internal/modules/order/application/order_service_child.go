@@ -240,6 +240,15 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 			}
 			// 事务成功后写用户站内通知（尽力而为，失败不回滚订单）。
 			s.notifyUserOrderCompleted(order)
+			// 事务成功后生成多级别返利佣金（佣金自管事务，失败只 warn 不回滚订单）。
+			if s.affiliateSvc != nil {
+				if err := s.affiliateSvc.HandleOrderCompleted(order.ID); err != nil {
+					logger.Warnw("affiliate_handle_order_completed_failed",
+						"order_id", order.ID,
+						"error", err,
+					)
+				}
+			}
 			return order, nil
 		default:
 			return nil, ErrOrderStatusInvalid
@@ -319,6 +328,14 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 	// 单订单转入 completed 后写用户站内通知（尽力而为，失败不回滚订单）。
 	if target == constants.OrderStatusCompleted {
 		s.notifyUserOrderCompleted(order)
+		if s.affiliateSvc != nil {
+			if err := s.affiliateSvc.HandleOrderCompleted(order.ID); err != nil {
+				logger.Warnw("affiliate_handle_order_completed_failed",
+					"order_id", order.ID,
+					"error", err,
+				)
+			}
+		}
 	}
 	FillOrderItemsFromChildren(order)
 	return order, nil

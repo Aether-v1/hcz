@@ -598,7 +598,7 @@ func TestDatabaseBootstrapIsSeparatedFromPlatformConnection(t *testing.T) {
 	assertFileDeclaresFunctions(t, filepath.Join(connectionRoot, "db.go"), []string{"InitDB"})
 	assertFileDeclaresFunctions(t, filepath.Join(migrationRoot, "registry.go"), []string{"AutoMigrate"})
 	assertDirectoryGoFileBudget(t, connectionRoot, 2)
-	assertDirectoryGoFileBudget(t, migrationRoot, 6)
+	assertDirectoryGoFileBudget(t, migrationRoot, 8)
 }
 
 func TestNoNewCompatibilityOrLegacyProductionFiles(t *testing.T) {

@@ -27,15 +27,7 @@ func (s *PaymentService) enqueueOrderPaidAsync(order *orderdomain.Order, payment
 	if order == nil {
 		return
 	}
-	if s.affiliateSvc != nil {
-		if err := s.affiliateSvc.HandleOrderPaid(order.ID); err != nil {
-			log.Warnw("affiliate_handle_order_paid_failed",
-				"order_id", order.ID,
-				"order_no", order.OrderNo,
-				"error", err,
-			)
-		}
-	}
+	// Phase 4: 佣金不再在 paid 阶段生成，改在订单 completed 时由 affiliateSvc.HandleOrderCompleted 生成。
 	if s.queue != nil && s.queue.Enabled() && !isOrderFullyAutoFulfill(order) {
 		// 完全自动交付的订单会紧接着发送含卡密内容的"已完成"邮件，跳过"已支付"邮件避免重复打扰
 		if _, err := orderapp.EnqueueStatusEmailTaskIfEligible(s.orderRepo, s.queue, s.settingService, s.defaultEmailConfig, order.ID, constants.OrderStatusPaid); err != nil {

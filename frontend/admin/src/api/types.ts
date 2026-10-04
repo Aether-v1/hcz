@@ -780,6 +780,9 @@ export interface AdminAffiliateCommission {
   base_amount?: number
   rate_percent?: number
   commission_amount?: number
+  level?: number
+  source_user_id?: number | null
+  beneficiary_user_id?: number
   status: string
   confirmed_at?: string
   confirm_at?: string

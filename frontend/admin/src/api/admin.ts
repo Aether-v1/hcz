@@ -282,12 +282,20 @@ export interface AdminExportGiftCardsPayload {
   format: 'txt' | 'csv'
 }
 
+export interface AffiliateLevelRate {
+  level: number
+  enabled: boolean
+  rate: number
+}
+
 export interface AdminAffiliateSetting {
   enabled: boolean
   commission_rate: number
   confirm_days: number
   min_withdraw_amount: number
   withdraw_channels: string[]
+  max_level: number
+  level_rates: AffiliateLevelRate[]
 }
 
 export interface ComplianceStatus {

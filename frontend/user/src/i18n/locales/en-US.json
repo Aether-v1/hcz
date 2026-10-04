@@ -674,6 +674,12 @@
       "pendingCommission": "Pending Commission",
       "availableCommission": "Available Commission",
       "withdrawnCommission": "Total Withdrawn",
+      "stats": {
+        "total": "Total Commission",
+        "pending": "Pending",
+        "available": "Available",
+        "withdrawn": "Withdrawn"
+      },
       "withdrawTitle": "Apply Withdraw",
       "withdrawSubtitle": "Fill amount, channel and account to submit for review",
       "withdrawAmountLabel": "Amount",
@@ -690,6 +696,7 @@
       "withdrawRecordTitle": "Withdraw Records",
       "withdrawEmpty": "No withdraw records",
       "table": {
+        "level": "Level",
         "orderNo": "Order No",
         "amount": "Commission",
         "status": "Status",
