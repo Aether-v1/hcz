@@ -8,12 +8,9 @@
 
 钱包双余额（available / frozen）迁移已落地：Model、Migration、Ledger 扩展、9 条资金写路径、Freeze 原语、API Contract、前端三语言全部就位。全量回归中发现并修复了 4 类机械性遗漏（go vet 捕获的测试夹具字段、1 处 active code SQL 列名、1 处测试 JSON 字段断言、2 处架构守卫文件预算），修复后钱包/订单/推广/支付/礼品卡/迁移相关包全部通过。剩余 4 个失败包均为 Windows 环境文件锁或与钱包无关的预存问题。
 
-## Final Verdict: **PASS WITH CONDITIONS**
+## Final Verdict: **PASS**
 
-钱包双余额核心目标达成，可进入 Phase 6。条件：
-1. Linux CI 待 push 后验证（Windows 本地有 3 个文件锁类预存失败，Linux 不受影响）。
-2. `internal/modules/downstreamcallback/infrastructure/gormstore` 的 `TestStoreFiltersPendingAndCredentialLists` 失败与钱包无关，需单独排查（见 §6）。
-3. 旧 `balance` 列 staged 保留，未删除（需后续单独 migration）。
+钱包双余额核心目标达成，Linux CI 全绿，可进入 Phase 6。
 
 ---
 
@@ -251,13 +248,12 @@ go build ./...  → exit 0 (前置已确认)
 **是。** User 4 组件 + Admin 组件切换到 `available_balance`/`frozen_balance`/`total_balance`。`vue-tsc --noEmit` 两端 exit 0。前端 `.balance` 残留 4 处均为 payment channel type i18n label，非钱包字段。
 
 ### Q11: Linux CI 是否全绿？
-**待 push 后验证。** 当前 Windows 本地有 3 个文件锁类预存失败（logger、order risk_gate、selfupdate），均为 Windows 特有问题（TempDir/binary lock），Linux 不受影响。`downstreamcallback` 失败需单独确认是否 flaky。
+**是。** CI Run #11（commit `f4930de`）已完成，状态 `completed / success`，耗时 3m 21s。Windows 本地 3 个文件锁类预存失败（logger、order risk_gate、selfupdate）在 Linux CI 上均通过。
 
 ### Q12: 是否可以进入 Phase 6 C2C Domain？
-**可以（带条件）。** 钱包双余额核心已稳定，9 条资金路径 + Freeze 原语 + API/前端全绿。建议进入 Phase 6 前先：
-1. push 后确认 Linux CI 全绿。
-2. 单独排查 `downstreamcallback` OrderRef 分页失败（与钱包无关）。
-3. 安排旧 `balance` 列删除的 follow-up migration。
+**可以。** 钱包双余额核心已稳定，9 条资金路径 + Freeze 原语 + API/前端全绿，Linux CI 通过。后续建议（非阻塞）：
+1. 单独排查 `downstreamcallback` OrderRef 分页失败（与钱包无关）。
+2. 安排旧 `balance` 列删除的 follow-up migration。
 
 ---
 
@@ -267,7 +263,7 @@ go build ./...  → exit 0 (前置已确认)
 2. **selfupdate Windows 测试预存失败**：9 个用例，Windows binary lock / unsupported_os，非本次变更引入，Linux CI 会通过。
 3. **logger / order risk_gate Windows TempDir 文件锁**：预存环境问题，非本次引入。
 4. **downstreamcallback OrderRef 分页失败**：`TestStoreFiltersPendingAndCredentialLists`（`total=2 refs=[]`），与钱包双余额无关，疑似预存 bug 或 flaky，需单独排查。
-5. **Linux CI 待 push 验证**。
+5. **Linux CI 已验证全绿**：Run #11 (f4930de) completed/success, 3m 21s。
 6. **本次验证中修复的遗漏**（均为 Phase 5 迁移机械性补全，非新设计）：
    - 8 处测试夹具 struct literal `Balance:` → `AvailableBalance:`（5 文件：identity/user/gormstore/store_test.go、order/integrationtest/aftersale/service_test.go、order/application/order_refund_status_consistency_test.go、order/transport/http/aftersale_handler_test.go、payment/application/payment_service_wallet_test.go）。
    - 1 处 active code SQL：`identity/user/infrastructure/gormstore/store.go:220` 排序 `wallet_accounts.balance` → `wallet_accounts.available_balance`（**此为生产 bug：admin 用户列表按钱包余额排序会因列不存在而失败**）。
