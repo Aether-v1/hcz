@@ -391,6 +391,15 @@ const (
 	NotificationEventWithdrawalApproved       = "withdrawal_approved"
 	NotificationEventWithdrawalCompleted      = "withdrawal_completed"
 	NotificationEventWithdrawalRejected       = "withdrawal_rejected"
+
+	// C2C 交易事件
+	NotificationEventC2CTradeCreated   = "c2c_trade_created"
+	NotificationEventC2CBuyerPaid      = "c2c_buyer_paid"
+	NotificationEventC2CTradeCompleted = "c2c_trade_completed"
+	NotificationEventC2CTradeCanceled  = "c2c_trade_canceled"
+	NotificationEventC2CTradeExpired   = "c2c_trade_expired"
+	NotificationEventC2CDisputed       = "c2c_disputed"
+	NotificationEventC2CArbitrated     = "c2c_arbitrated"
 )
 
 // 通知中心渠道常量
@@ -504,6 +513,7 @@ const (
 	SettingKeyDashboardConfig          = "dashboard_config"
 	SettingKeyNotificationCenterConfig = "notification_center_config"
 	SettingKeyAffiliateConfig          = "affiliate_config"
+	SettingKeyC2CConfig                = "c2c_config"
 	SettingKeyTelegramBotConfig        = "telegram_bot_config"
 	SettingKeyTelegramBotRuntimeStatus = "telegram_bot_runtime_status"
 	SettingKeyOrderEmailTemplateConfig = "order_email_template_config"
@@ -585,6 +595,7 @@ const (
 	NotificationBizTypePaymentCallback  = "payment_callback"
 	NotificationBizTypeProcurement      = "procurement"
 	NotificationBizTypeReconciliation   = "reconciliation"
+	NotificationBizTypeC2CTrade         = "c2c_trade"
 )
 
 // 对账差异类型常量

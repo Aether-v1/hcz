@@ -52,5 +52,6 @@ func (c *Consumer) Register(mux *asynq.ServeMux) {
 	mux.HandleFunc(queue.TaskReconciliationRun, withPanicRecovery(queue.TaskReconciliationRun, c.handleReconciliationRun))
 	mux.HandleFunc(queue.TaskBotNotify, withPanicRecovery(queue.TaskBotNotify, c.handleBotNotify))
 	mux.HandleFunc(queue.TaskTelegramBroadcast, withPanicRecovery(queue.TaskTelegramBroadcast, c.handleTelegramBroadcast))
+	mux.HandleFunc(queue.TaskC2CTradeExpire, withPanicRecovery(queue.TaskC2CTradeExpire, c.handleC2CTradeExpire))
 	c.RegisterExchangeRateRefresh(mux)
 }

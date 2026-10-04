@@ -220,6 +220,23 @@ func (c *Client) EnqueueTelegramBroadcast(payload TelegramBroadcastPayload, opts
 	return err
 }
 
+// EnqueueC2CTradeExpire 入队 C2C 交易超时过期任务（延迟到支付超时点触发）。
+func (c *Client) EnqueueC2CTradeExpire(tradeID uint, delay time.Duration) error {
+	if !c.Enabled() {
+		return nil
+	}
+	if delay < 0 {
+		delay = 0
+	}
+	task, err := NewC2CTradeExpireTask(C2CTradeExpirePayload{TradeID: tradeID})
+	if err != nil {
+		return err
+	}
+	options := []asynq.Option{asynq.Queue(c.defaultQueue), asynq.ProcessIn(delay)}
+	_, err = c.client.Enqueue(task, options...)
+	return err
+}
+
 // BuildServerConfig 生成队列服务配置
 func BuildServerConfig(cfg *config.QueueConfig) (asynq.RedisClientOpt, asynq.Config) {
 	opt := buildRedisOpt(cfg)

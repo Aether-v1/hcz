@@ -15,6 +15,7 @@ import (
 	adminauthzwiring "github.com/Aether-v1/hcz/internal/bootstrap/adminauthz"
 	adminuserwiring "github.com/Aether-v1/hcz/internal/bootstrap/adminuser"
 	affiliatebootstrap "github.com/Aether-v1/hcz/internal/bootstrap/affiliate"
+	c2cbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/c2c"
 	catalogproductbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/catalogproduct"
 	channelwiring "github.com/Aether-v1/hcz/internal/bootstrap/channelapi"
 	channeluserwiring "github.com/Aether-v1/hcz/internal/bootstrap/channeluser"
@@ -33,6 +34,7 @@ import (
 	"github.com/Aether-v1/hcz/internal/logger"
 	apicredentialtransport "github.com/Aether-v1/hcz/internal/modules/apicredential/transport/http"
 	auditlogtransport "github.com/Aether-v1/hcz/internal/modules/auditlog/transport/http"
+	c2chttp "github.com/Aether-v1/hcz/internal/modules/c2c/transport/http"
 	captchahttp "github.com/Aether-v1/hcz/internal/modules/captcha/transport/http"
 	cardsecrettransport "github.com/Aether-v1/hcz/internal/modules/cardsecret/transport/http"
 	carttransport "github.com/Aether-v1/hcz/internal/modules/cart/transport/http"
@@ -138,6 +140,8 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	withdrawalHandlers := walletwithdrawalbootstrap.New(c)
 	userWithdrawalHandler := withdrawalHandlers.User
 	adminWithdrawalHandler := withdrawalHandlers.Admin
+	c2cHandler := c2chttp.NewHandler(c.C2CService)
+	adminC2CHandler := c2cbootstrap.NewAdminHandler(c)
 	channelMemberLevelHandler := memberleveltransport.NewChannelHandler(c.MemberLevelService)
 	adminApiCredentialHandler := apicredentialtransport.NewAdminHandler(c.ApiCredentialService)
 	userApiCredentialHandler := apicredentialtransport.NewUserHandler(c.ApiCredentialService)
@@ -291,11 +295,11 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	sitemaptransport.RegisterRoutes(r, sitemaptransport.NewHandler(c.SitemapService, sitemapbrand.New(c.SettingService)))
 
 	apiV1 := r.Group("/api/v1")
-	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userWithdrawalHandler, userNotificationHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
+	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userWithdrawalHandler, userNotificationHandler, c2cHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
 	registerUpstreamRoutes(apiV1, c, upstreamHandler, redisClient, upstreamAPIRule, callbackRule)
 	registerChannelRoutes(apiV1, c, channelHandler, channelMemberLevelHandler, channelGiftCardHandler, channelAffiliateHandler, channelTelegramBotHandler, channelWalletHandler, redisClient, channelAPIRule)
 	registerPaymentCallbackRoutes(apiV1, paymentCallbackHandler, paymentWebhookHandler, redisClient, callbackRule)
-	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, redisClient, adminLoginRule)
+	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, adminC2CHandler, redisClient, adminLoginRule)
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {

@@ -673,6 +673,7 @@ const messages = {
         integrationManagement: '对接管理',
         telegramBot: 'Telegram Bot',
         systemSettings: '系统设置',
+        c2cTrading: 'C2C 交易',
       },
       navItems: {
         dashboard: '仪表盘',
@@ -730,6 +731,13 @@ const messages = {
         authzAudit: '权限审计',
         security: '安全设置',
         memberLevels: '会员等级',
+        c2cOverview: 'C2C 概览',
+        c2cListings: '挂单管理',
+        c2cTrades: '交易管理',
+        c2cDisputes: '申诉仲裁',
+        c2cUsers: '用户 C2C 管理',
+        c2cRiskSignals: '风控信号',
+        c2cSettings: 'C2C 设置',
       },
       navSearch: {
         placeholder: '搜索一级菜单或页面',

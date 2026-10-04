@@ -5,6 +5,7 @@ import (
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	apicredentialdomain "github.com/Aether-v1/hcz/internal/modules/apicredential/domain"
 	auditlogdomain "github.com/Aether-v1/hcz/internal/modules/auditlog/domain"
+	c2cdomain "github.com/Aether-v1/hcz/internal/modules/c2c/domain"
 	cardsecretdomain "github.com/Aether-v1/hcz/internal/modules/cardsecret/domain"
 	cartdomain "github.com/Aether-v1/hcz/internal/modules/cart/domain"
 	categorydomain "github.com/Aether-v1/hcz/internal/modules/catalog/category/domain"
@@ -100,6 +101,11 @@ func AutoMigrate() error {
 		&memberleveldomain.MemberLevelPrice{},
 		&contentdomain.Media{},
 		&usernotificationdomain.UserNotification{},
+		&c2cdomain.PaymentMethod{},
+		&c2cdomain.Listing{},
+		&c2cdomain.Trade{},
+		&c2cdomain.Dispute{},
+		&c2cdomain.RiskSignal{},
 	); err != nil {
 		return err
 	}

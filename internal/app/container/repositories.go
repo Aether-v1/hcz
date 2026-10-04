@@ -6,6 +6,7 @@ import (
 	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	apicredentialgormstore "github.com/Aether-v1/hcz/internal/modules/apicredential/infrastructure/gormstore"
 	auditloggormstore "github.com/Aether-v1/hcz/internal/modules/auditlog/infrastructure/gormstore"
+	c2cgormstore "github.com/Aether-v1/hcz/internal/modules/c2c/infrastructure/gormstore"
 	cardsecretgormstore "github.com/Aether-v1/hcz/internal/modules/cardsecret/infrastructure/gormstore"
 	cartgormstore "github.com/Aether-v1/hcz/internal/modules/cart/infrastructure/gormstore"
 	categorygormstore "github.com/Aether-v1/hcz/internal/modules/catalog/category/infrastructure/gormstore"
@@ -63,6 +64,7 @@ func (c *Container) initRepositories() error {
 	c.PromotionRepo = promotiongormstore.New(db)
 	c.WalletRepo = walletgormstore.New(db)
 	c.WithdrawalRepo = withdrawalgormstore.New(db, c.WalletRepo)
+	c.C2CRepo = c2cgormstore.New(db, c.WalletRepo)
 	c.CategoryRepo = categorygormstore.NewCategoryStore(db)
 	c.SettingRepo = settingsstore.New(db)
 	c.UserLoginLogRepo = auditloggormstore.NewUserLoginStore(db)

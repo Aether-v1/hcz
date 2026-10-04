@@ -10,6 +10,7 @@ import (
 	affiliatetransport "github.com/Aether-v1/hcz/internal/modules/affiliate/transport/http"
 	apicredentialtransport "github.com/Aether-v1/hcz/internal/modules/apicredential/transport/http"
 	auditlogtransport "github.com/Aether-v1/hcz/internal/modules/auditlog/transport/http"
+	c2ctransport "github.com/Aether-v1/hcz/internal/modules/c2c/transport/http"
 	cardsecrettransport "github.com/Aether-v1/hcz/internal/modules/cardsecret/transport/http"
 	categoryhttp "github.com/Aether-v1/hcz/internal/modules/catalog/category/transport/http"
 	mappinghttp "github.com/Aether-v1/hcz/internal/modules/catalog/mapping/transport/http"
@@ -85,6 +86,7 @@ func registerAdminRoutes(
 	adminWithdrawalHandler *withdrawalhttp.AdminHandler,
 	adminPaymentHandler *paymenttransport.AdminHandler,
 	adminPaymentChannelHandler *paymenttransport.AdminChannelHandler,
+	adminC2CHandler *c2ctransport.AdminHandler,
 	redisClient *redis.Client,
 	adminLoginRule middleware.RateLimitRule,
 ) {
@@ -209,4 +211,7 @@ func registerAdminRoutes(
 
 	// Telegram Bot 群发
 	broadcasthttp.RegisterAdminRoutes(authorized, broadcasthttp.NewAdminHandler(c.TelegramBroadcastService))
+
+	// C2C 后台管理：普通读写在 authorized，仲裁在 paymentProtected（Handler 内做 Step-Up）
+	c2ctransport.RegisterAdminRoutes(authorized, paymentProtected, adminC2CHandler)
 }

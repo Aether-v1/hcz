@@ -22,7 +22,14 @@ func isNotificationEventSupported(eventType string) bool {
 		constants.NotificationEventOrderPaidSuccess,
 		constants.NotificationEventManualFulfillmentPending,
 		constants.NotificationEventExceptionAlert,
-		constants.NotificationEventExceptionAlertCheck:
+		constants.NotificationEventExceptionAlertCheck,
+		constants.NotificationEventC2CTradeCreated,
+		constants.NotificationEventC2CBuyerPaid,
+		constants.NotificationEventC2CTradeCompleted,
+		constants.NotificationEventC2CTradeCanceled,
+		constants.NotificationEventC2CTradeExpired,
+		constants.NotificationEventC2CDisputed,
+		constants.NotificationEventC2CArbitrated:
 		return true
 	default:
 		return false

@@ -688,3 +688,21 @@ export const adminAPI = {
   patchPostCategoryStatus: (id: number, is_active: boolean) => api.patch(`/admin/post-categories/${id}/status`, { is_active }),
 }
 
+// C2C 交易管理（模块化拆分到 ./c2c.ts，此处 re-export 保持统一入口）
+export { c2cAPI } from './c2c'
+export type {
+  C2COverview,
+  C2CListing,
+  C2CListingStatus,
+  C2CTrade,
+  C2CTradeStatus,
+  C2CDispute,
+  C2CDisputeStatus,
+  C2CDisputeResult,
+  C2CUserStatus,
+  C2CRiskSignal,
+  C2CRiskSignalType,
+  C2CSettings,
+  C2CArbitrationPayload,
+} from './c2c'
+

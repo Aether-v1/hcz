@@ -45,6 +45,10 @@ import {
   Crown,
   Bell,
   ImageIcon,
+  ArrowLeftRight,
+  Gavel,
+  Radar,
+  UserCog,
 } from 'lucide-vue-next'
 import { Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -209,6 +213,55 @@ const navGroups = computed<NavGroup[]>(() => {
           to: '/callback-routes',
           icon: Link,
           permission: 'GET:/admin/settings',
+        },
+      ],
+    },
+    {
+      id: 'c2c',
+      label: t('admin.navGroups.c2cTrading'),
+      icon: ArrowLeftRight,
+      items: [
+        {
+          label: t('admin.navItems.c2cOverview'),
+          to: '/c2c/overview',
+          icon: LayoutDashboard,
+          permission: 'GET:/admin/c2c/overview',
+        },
+        {
+          label: t('admin.navItems.c2cListings'),
+          to: '/c2c/listings',
+          icon: ArrowLeftRight,
+          permission: 'GET:/admin/c2c/listings',
+        },
+        {
+          label: t('admin.navItems.c2cTrades'),
+          to: '/c2c/trades',
+          icon: ReceiptText,
+          permission: 'GET:/admin/c2c/trades',
+        },
+        {
+          label: t('admin.navItems.c2cDisputes'),
+          to: '/c2c/disputes',
+          icon: Gavel,
+          permission: 'GET:/admin/c2c/disputes',
+        },
+        {
+          label: t('admin.navItems.c2cUsers'),
+          to: '/c2c/users',
+          icon: UserCog,
+          permission: 'GET:/admin/c2c/users',
+        },
+        {
+          label: t('admin.navItems.c2cRiskSignals'),
+          to: '/c2c/risk-signals',
+          icon: Radar,
+          permission: 'GET:/admin/c2c/risk-signals',
+        },
+        {
+          label: t('admin.navItems.c2cSettings'),
+          to: '/c2c/settings',
+          icon: Settings,
+          permission: 'GET:/admin/c2c/settings',
         },
       ],
     },

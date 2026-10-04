@@ -41,6 +41,8 @@ const (
 	TaskTelegramBroadcast = constants.TaskTelegramBroadcast
 	// TaskExchangeRateRefresh 全局汇率周期刷新任务（P0-2）
 	TaskExchangeRateRefresh = "exchange_rate:refresh"
+	// TaskC2CTradeExpire C2C 交易支付超时过期任务
+	TaskC2CTradeExpire = "c2c_trade:expire"
 )
 
 // NewExchangeRateRefreshTask 构造全局汇率刷新任务。
@@ -253,4 +255,18 @@ func NewTelegramBroadcastTask(payload TelegramBroadcastPayload) (*asynq.Task, er
 		return nil, err
 	}
 	return asynq.NewTask(TaskTelegramBroadcast, body), nil
+}
+
+// C2CTradeExpirePayload C2C 交易超时过期任务载荷。
+type C2CTradeExpirePayload struct {
+	TradeID uint `json:"trade_id"`
+}
+
+// NewC2CTradeExpireTask 创建 C2C 交易超时过期任务。
+func NewC2CTradeExpireTask(payload C2CTradeExpirePayload) (*asynq.Task, error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return asynq.NewTask(TaskC2CTradeExpire, body), nil
 }

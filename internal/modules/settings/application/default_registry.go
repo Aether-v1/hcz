@@ -49,6 +49,10 @@ var defaultSettingRegistry = MustNewRegistry(
 		Normalize: settingsintegration.NormalizeAffiliateSettingJSON,
 	},
 	Definition{
+		Key:       constants.SettingKeyC2CConfig,
+		Normalize: settingsintegration.NormalizeC2CSettingJSON,
+	},
+	Definition{
 		Key:       constants.SettingKeyTelegramBotConfig,
 		Normalize: settingsmessaging.NormalizeTelegramBotConfigJSON,
 	},

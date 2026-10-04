@@ -8,6 +8,7 @@ import (
 	categoryapp "github.com/Aether-v1/hcz/internal/modules/catalog/category/application"
 
 	"github.com/Aether-v1/hcz/internal/logger"
+	c2capp "github.com/Aether-v1/hcz/internal/modules/c2c/application"
 	cardsecretapp "github.com/Aether-v1/hcz/internal/modules/cardsecret/application"
 	cartapp "github.com/Aether-v1/hcz/internal/modules/cart/application"
 	contentapp "github.com/Aether-v1/hcz/internal/modules/content/application"
@@ -87,6 +88,17 @@ func (c *Container) initApplicationServices() {
 		Config:     c.SettingService,
 		Notifier:   c.NotificationService,
 		Users:      c.UserStore,
+	})
+	c.C2CService = c2capp.NewService(c2capp.Options{
+		Repository:    c.C2CRepo,
+		UnitOfWork:    c.C2CRepo,
+		WalletService: c.WalletService,
+		Users:         c.UserStore,
+		UserAdmin:     c.UserStore,
+		Config:        c.SettingService,
+		Scheduler:     c.QueueClient,
+		Notifier:      c.NotificationService,
+		Audit:         c2cArbitrationAuditWriter{audit: c.AuthzAuditService},
 	})
 	c.OrderRefundService = orderrefund.New(
 		c.OrderStore,

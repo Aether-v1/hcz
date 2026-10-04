@@ -8,6 +8,7 @@ import (
 	affiliatetransport "github.com/Aether-v1/hcz/internal/modules/affiliate/transport/http"
 	apicredentialtransport "github.com/Aether-v1/hcz/internal/modules/apicredential/transport/http"
 	auditlogtransport "github.com/Aether-v1/hcz/internal/modules/auditlog/transport/http"
+	c2ctransport "github.com/Aether-v1/hcz/internal/modules/c2c/transport/http"
 	captchatransport "github.com/Aether-v1/hcz/internal/modules/captcha/transport/http"
 	carttransport "github.com/Aether-v1/hcz/internal/modules/cart/transport/http"
 	categoryhttp "github.com/Aether-v1/hcz/internal/modules/catalog/category/transport/http"
@@ -67,6 +68,7 @@ func registerStorefrontRoutes(
 	userWalletHandler *wallettransport.UserHandler,
 	userWithdrawalHandler *withdrawalhttp.UserHandler,
 	userNotificationHandler *usernotificationhttp.UserHandler,
+	c2cHandler *c2ctransport.Handler,
 	redisClient *redis.Client,
 	loginRule middleware.RateLimitRule,
 	guestReadRule middleware.RateLimitRule,
@@ -141,6 +143,7 @@ func registerStorefrontRoutes(
 		paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)
 		wallettransport.RegisterUserRoutes(user, userWalletHandler)
 		withdrawalhttp.RegisterUserRoutes(user, userWithdrawalHandler)
+		c2ctransport.RegisterUserRoutes(user, c2cHandler)
 		usernotificationhttp.RegisterUserRoutes(user, userNotificationHandler)
 		giftCardRedeem := user.Group("", middleware.RateLimitMiddleware(redisClient, giftCardRedeemRule, middleware.KeyByUserIDAndIP))
 		giftcardtransport.RegisterUserRoutes(giftCardRedeem, userGiftCardHandler)

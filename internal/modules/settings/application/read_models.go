@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Aether-v1/hcz/internal/constants"
+	settingsintegration "github.com/Aether-v1/hcz/internal/modules/settings/schema/integration"
 	settingssecurity "github.com/Aether-v1/hcz/internal/modules/settings/schema/security"
 	settingsstorefront "github.com/Aether-v1/hcz/internal/modules/settings/schema/storefront"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
@@ -45,4 +46,29 @@ func (s *Service) GetWithdrawalConfig() (settingssecurity.WithdrawalConfig, erro
 		return fallback, err
 	}
 	return settingssecurity.DecodeWithdrawalConfig(value, fallback), nil
+}
+
+// GetC2CConfig returns the normalized C2C trading config.
+func (s *Service) GetC2CConfig() (settingsintegration.C2CSetting, error) {
+	fallback := settingsintegration.DefaultC2CSetting()
+	if s == nil {
+		return fallback, nil
+	}
+	value, err := s.GetByKey(constants.SettingKeyC2CConfig)
+	if err != nil {
+		return fallback, err
+	}
+	return settingsintegration.DecodeC2CSetting(value, fallback), nil
+}
+
+// UpdateC2CConfig 更新 C2C 交易设置（归一化 + 校验后落库）。
+func (s *Service) UpdateC2CConfig(setting settingsintegration.C2CSetting) (settingsintegration.C2CSetting, error) {
+	normalized := settingsintegration.NormalizeC2CSetting(setting)
+	if err := settingsintegration.ValidateC2CSetting(normalized); err != nil {
+		return settingsintegration.DefaultC2CSetting(), err
+	}
+	if _, err := s.Update(constants.SettingKeyC2CConfig, map[string]interface{}(settingsintegration.EncodeC2CSetting(normalized))); err != nil {
+		return settingsintegration.DefaultC2CSetting(), err
+	}
+	return normalized, nil
 }

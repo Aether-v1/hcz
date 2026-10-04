@@ -10,6 +10,8 @@ import (
 	apicredentialcontract "github.com/Aether-v1/hcz/internal/modules/apicredential/contract"
 	auditlogapp "github.com/Aether-v1/hcz/internal/modules/auditlog/application"
 	auditlogcontract "github.com/Aether-v1/hcz/internal/modules/auditlog/contract"
+	c2capp "github.com/Aether-v1/hcz/internal/modules/c2c/application"
+	c2cgormstore "github.com/Aether-v1/hcz/internal/modules/c2c/infrastructure/gormstore"
 	captchaapp "github.com/Aether-v1/hcz/internal/modules/captcha/application"
 	cardsecretapp "github.com/Aether-v1/hcz/internal/modules/cardsecret/application"
 	cardsecretgormstore "github.com/Aether-v1/hcz/internal/modules/cardsecret/infrastructure/gormstore"
@@ -113,6 +115,7 @@ type Container struct {
 	PromotionRepo          *promotiongormstore.Store
 	WalletRepo             *walletgormstore.Store
 	WithdrawalRepo         *withdrawalgormstore.Store
+	C2CRepo                *c2cgormstore.Store
 	CategoryRepo           categorycontract.Repository
 	SettingRepo            settingscontract.Store
 	UserLoginLogRepo       auditlogcontract.UserLoginRepository
@@ -163,6 +166,7 @@ type Container struct {
 	CartService                   *cartapp.Service
 	WalletService                 *walletapp.Service
 	WithdrawalService             *withdrawalapp.Service
+	C2CService                    *c2capp.Service
 	OrderRefundService            *orderrefund.Service
 	AfterSaleService              *aftersale.Service
 	OrderService                  *orderapp.OrderService
