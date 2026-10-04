@@ -90,8 +90,9 @@ func TestOrderAdminHTTPLivesInTransport(t *testing.T) {
 	assertFileDeclaresFunctions(t, filepath.Join(transportRoot, "create_handler.go"), []string{
 		"NewCreateHandler", "CreateOrder", "CreateGuestOrder", "CreateOrderAndPay", "CreateGuestOrderAndPay",
 	})
-	// after-sale 新增 aftersale_handler.go 及其白盒测试，transport/http 预算从 7 调整为 9。
-	assertDirectoryGoFileBudget(t, transportRoot, 9)
+	// after-sale 新增 aftersale_handler.go 及其白盒测试，transport/http 预算从 7 调整为 9；
+	// admin 订单管理新增 admin_handler.go，预算从 9 调整为 10。
+	assertDirectoryGoFileBudget(t, transportRoot, 10)
 
 	for _, legacy := range []string{
 		filepath.Join(repositoryRoot, "internal", "http", "handlers", "admin", "order_admin.go"),

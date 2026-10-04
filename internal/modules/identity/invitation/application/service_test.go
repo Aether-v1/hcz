@@ -72,7 +72,7 @@ func TestGetMyInvitationFields(t *testing.T) {
 	if got.InviteBoundAt == nil {
 		t.Fatalf("invite_bound_at should be set")
 	}
-	if got.InviteURL != "/register?invite=CHILDCODE" {
+	if got.InviteURL != "/auth/register?invite=CHILDCODE" {
 		t.Fatalf("invite_url mismatch (no site url configured): %q", got.InviteURL)
 	}
 

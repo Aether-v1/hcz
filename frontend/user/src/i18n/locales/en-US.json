@@ -1841,6 +1841,12 @@
     "submitted": "After-sale request submitted",
     "submitFailed": "Submit failed, please try again",
     "submitting": "Submitting..."
+  },
+  "wallet": {
+    "availableBalance": "Available Balance",
+    "frozenBalance": "Frozen Balance",
+    "totalBalance": "Total Assets",
+    "frozenNotWithdrawable": "Frozen amount cannot be withdrawn"
   }
 }
 

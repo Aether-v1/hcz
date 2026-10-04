@@ -2,7 +2,9 @@
   <div class="space-y-6">
     <WalletBalanceCard
       :alert="walletAlert"
-      :balance-display="balanceDisplay"
+      :available-balance-display="availableBalanceDisplay"
+      :frozen-balance-display="frozenBalanceDisplay"
+      :total-balance-display="totalBalanceDisplay"
       :total-transactions="pagination.total"
       :current-page="pagination.page"
       :total-pages="pagination.total_page"
@@ -281,9 +283,17 @@ const selectedChannelFeeAmountDisplay = computed(() => {
   return formatMoney(centsToAmount(variableFeeCents + fixedFeeCents), selectedChannelCurrency.value)
 })
 // P0-2: 钱包余额本位币固定 USDT，读 API 返回的 currency，不用 site config currency。
-const balanceDisplay = computed(() => {
+const availableBalanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.balance, ccy)
+  return formatMoney(wallet.value?.available_balance, ccy)
+})
+const frozenBalanceDisplay = computed(() => {
+  const ccy = String(wallet.value?.currency || 'USDT')
+  return formatMoney(wallet.value?.frozen_balance, ccy)
+})
+const totalBalanceDisplay = computed(() => {
+  const ccy = String(wallet.value?.currency || 'USDT')
+  return formatMoney(wallet.value?.total_balance, ccy)
 })
 
 const loadWallet = async () => {

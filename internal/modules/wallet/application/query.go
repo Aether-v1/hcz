@@ -20,7 +20,7 @@ func (s *Service) GetAccount(userID uint) (*walletdomain.Account, error) {
 	}
 	now := time.Now()
 	account = &walletdomain.Account{
-		UserID: userID, Balance: money.FromDecimal(decimal.Zero), CreatedAt: now, UpdatedAt: now,
+		UserID: userID, AvailableBalance: money.FromDecimal(decimal.Zero), FrozenBalance: money.FromDecimal(decimal.Zero), CreatedAt: now, UpdatedAt: now,
 	}
 	if err := s.repository.CreateAccount(account); err != nil {
 		created, queryErr := s.repository.GetAccountByUserID(userID)
@@ -88,7 +88,7 @@ func (s *Service) GetBalancesByUserIDs(userIDs []uint) (map[uint]money.Amount, e
 		return nil, err
 	}
 	for _, account := range accounts {
-		result[account.UserID] = account.Balance
+		result[account.UserID] = account.AvailableBalance
 	}
 	return result, nil
 }

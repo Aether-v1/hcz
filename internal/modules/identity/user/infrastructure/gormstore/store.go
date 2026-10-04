@@ -213,11 +213,11 @@ func applyUserSort(query *gorm.DB, sortBy, sortOrder string) *gorm.DB {
 		// (last_login_at IS NULL) 让从未登录的用户始终垫底，跨 SQLite/PostgreSQL 行为一致
 		return query.Order("users.last_login_at IS NULL").Order("users.last_login_at " + dir).Order("users.id DESC")
 	case "wallet_balance":
-		// 钱包余额在 wallet_accounts 表，LEFT JOIN + COALESCE(0) 让无账户用户按余额 0 处理
+		// 钱包可用余额在 wallet_accounts 表，LEFT JOIN + COALESCE(0) 让无账户用户按余额 0 处理
 		return query.
 			Joins("LEFT JOIN wallet_accounts ON wallet_accounts.user_id = users.id").
 			Select("users.*").
-			Order("COALESCE(wallet_accounts.balance, 0) " + dir).
+			Order("COALESCE(wallet_accounts.available_balance, 0) " + dir).
 			Order("users.id DESC")
 	default:
 		return query.Order("users.id DESC")

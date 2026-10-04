@@ -196,8 +196,8 @@ func TestRedeemGiftCardChannelHandlerSuccess(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected wallet map, got %T", payload.Data["wallet"])
 	}
-	if walletData["balance"] != "88.80" {
-		t.Fatalf("expected wallet.balance=88.80, got %v", walletData["balance"])
+	if walletData["available_balance"] != "88.80" {
+		t.Fatalf("expected wallet.available_balance=88.80, got %v", walletData["available_balance"])
 	}
 
 	txnData, ok := payload.Data["transaction"].(map[string]interface{})
@@ -220,8 +220,8 @@ func TestRedeemGiftCardChannelHandlerSuccess(t *testing.T) {
 	if err := db.Where("user_id = ?", identity.UserID).First(&account).Error; err != nil {
 		t.Fatalf("expected wallet account: %v", err)
 	}
-	if account.Balance.String() != "88.80" {
-		t.Fatalf("expected stored wallet balance=88.80, got %s", account.Balance.String())
+	if account.AvailableBalance.String() != "88.80" {
+		t.Fatalf("expected stored wallet balance=88.80, got %s", account.AvailableBalance.String())
 	}
 
 	var refreshedCard giftcarddomain.GiftCard

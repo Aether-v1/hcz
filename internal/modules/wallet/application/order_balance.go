@@ -38,7 +38,7 @@ func (s *Service) ApplyOrderBalance(tx walletcontract.Transaction, input walletc
 	if err != nil {
 		return money.Amount{}, err
 	}
-	available := account.Balance.Decimal.Round(2)
+	available := account.AvailableBalance.Decimal.Round(2)
 	if available.LessThanOrEqual(decimal.Zero) {
 		return money.FromDecimal(decimal.Zero), nil
 	}
@@ -58,12 +58,13 @@ func (s *Service) ApplyOrderBalance(tx walletcontract.Transaction, input walletc
 		return existing.Amount, nil
 	}
 
-	before := account.Balance.Decimal.Round(2)
+	before := account.AvailableBalance.Decimal.Round(2)
 	after := before.Sub(deduct).Round(2)
 	if after.LessThan(decimal.Zero) {
 		return money.Amount{}, walletcontract.ErrInsufficientBalance
 	}
-	account.Balance = money.FromDecimal(after)
+	frozen := account.FrozenBalance
+	account.AvailableBalance = money.FromDecimal(after)
 	account.UpdatedAt = now
 	if err := repository.UpdateAccount(account); err != nil {
 		return money.Amount{}, walletcontract.ErrAccountUpdateFailed
@@ -73,7 +74,9 @@ func (s *Service) ApplyOrderBalance(tx walletcontract.Transaction, input walletc
 		UserID: input.UserID, OrderID: &orderID,
 		Type: constants.WalletTxnTypeOrderPay, Direction: constants.WalletTxnDirectionOut,
 		Amount: money.FromDecimal(deduct), BalanceBefore: money.FromDecimal(before),
-		BalanceAfter: money.FromDecimal(after), Currency: normalizeCurrency(input.Currency),
+		BalanceAfter: money.FromDecimal(after), AvailableBefore: money.FromDecimal(before),
+		AvailableAfter: money.FromDecimal(after), FrozenBefore: frozen, FrozenAfter: frozen,
+		Currency:  normalizeCurrency(input.Currency),
 		Reference: reference, Remark: "订单余额支付", CreatedAt: now, UpdatedAt: now,
 	}
 	if err := repository.CreateTransaction(transaction); err != nil {
@@ -126,9 +129,10 @@ func (s *Service) ReleaseOrderBalance(
 	if err != nil {
 		return money.Amount{}, err
 	}
-	before := account.Balance.Decimal.Round(2)
+	before := account.AvailableBalance.Decimal.Round(2)
 	after := before.Add(amount).Round(2)
-	account.Balance = money.FromDecimal(after)
+	frozen := account.FrozenBalance
+	account.AvailableBalance = money.FromDecimal(after)
 	account.UpdatedAt = now
 	if err := repository.UpdateAccount(account); err != nil {
 		return money.Amount{}, walletcontract.ErrAccountUpdateFailed
@@ -138,7 +142,9 @@ func (s *Service) ReleaseOrderBalance(
 		UserID: input.UserID, OrderID: &orderID,
 		Type: input.TransactionType, Direction: constants.WalletTxnDirectionIn,
 		Amount: money.FromDecimal(amount), BalanceBefore: money.FromDecimal(before),
-		BalanceAfter: money.FromDecimal(after), Currency: normalizeCurrency(input.Currency),
+		BalanceAfter: money.FromDecimal(after), AvailableBefore: money.FromDecimal(before),
+		AvailableAfter: money.FromDecimal(after), FrozenBefore: frozen, FrozenAfter: frozen,
+		Currency:  normalizeCurrency(input.Currency),
 		Reference: reference, Remark: cleanRemark(input.Remark, "订单余额退回"),
 		CreatedAt: now, UpdatedAt: now,
 	}

@@ -158,10 +158,10 @@ func TestCreatePaymentWalletFullAmountCreatesPaymentRecord(t *testing.T) {
 	}
 
 	account := &walletdomain.Account{
-		UserID:    user.ID,
-		Balance:   money.FromDecimal(decimal.NewFromInt(100)),
-		CreatedAt: now,
-		UpdatedAt: now,
+		UserID:           user.ID,
+		AvailableBalance: money.FromDecimal(decimal.NewFromInt(100)),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 	if err := db.Create(account).Error; err != nil {
 		t.Fatalf("create wallet account failed: %v", err)
@@ -229,8 +229,8 @@ func TestCreatePaymentWalletFullAmountCreatesPaymentRecord(t *testing.T) {
 	if err := db.Where("user_id = ?", user.ID).First(&refreshedAccount).Error; err != nil {
 		t.Fatalf("reload wallet account failed: %v", err)
 	}
-	if !refreshedAccount.Balance.Decimal.Equal(decimal.NewFromInt(50)) {
-		t.Fatalf("wallet balance want 50 got %s", refreshedAccount.Balance.String())
+	if !refreshedAccount.AvailableBalance.Decimal.Equal(decimal.NewFromInt(50)) {
+		t.Fatalf("wallet balance want 50 got %s", refreshedAccount.AvailableBalance.String())
 	}
 }
 
@@ -973,8 +973,8 @@ func assertWalletRechargeSuccessState(t *testing.T, db *gorm.DB, paymentID uint,
 	if err := db.Where("user_id = ?", userID).First(&account).Error; err != nil {
 		t.Fatalf("reload wallet account failed: %v", err)
 	}
-	if !account.Balance.Decimal.Equal(rechargeAmount) {
-		t.Fatalf("wallet balance want %s got %s", rechargeAmount.String(), account.Balance.String())
+	if !account.AvailableBalance.Decimal.Equal(rechargeAmount) {
+		t.Fatalf("wallet balance want %s got %s", rechargeAmount.String(), account.AvailableBalance.String())
 	}
 }
 
@@ -1020,7 +1020,7 @@ func walletBalance(t *testing.T, db *gorm.DB, userID uint) string {
 	if err := db.Where("user_id = ?", userID).First(&account).Error; err != nil {
 		t.Fatalf("load wallet account failed: %v", err)
 	}
-	return account.Balance.StringFixed(2)
+	return account.AvailableBalance.StringFixed(2)
 }
 
 // HCZ P0-1: business orders are hard-bound to wallet-only. Directly calling
@@ -1038,7 +1038,7 @@ func TestBusinessOrderRejectsChannelIDPayment(t *testing.T) {
 		t.Fatalf("create user failed: %v", err)
 	}
 	if err := db.Create(&walletdomain.Account{
-		UserID: user.ID, Balance: money.FromDecimal(decimal.NewFromInt(100)), CreatedAt: now, UpdatedAt: now,
+		UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.NewFromInt(100)), CreatedAt: now, UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create wallet account failed: %v", err)
 	}
@@ -1088,7 +1088,7 @@ func TestBusinessOrderRejectsMixedWalletOnlinePayment(t *testing.T) {
 		t.Fatalf("create user failed: %v", err)
 	}
 	if err := db.Create(&walletdomain.Account{
-		UserID: user.ID, Balance: money.FromDecimal(decimal.NewFromInt(100)), CreatedAt: now, UpdatedAt: now,
+		UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.NewFromInt(100)), CreatedAt: now, UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create wallet account failed: %v", err)
 	}
@@ -1200,7 +1200,7 @@ func TestBusinessOrderWalletShortfallRejectedAndRolledBack(t *testing.T) {
 	}
 	// Wallet holds 5, order requires 15 → shortfall.
 	if err := db.Create(&walletdomain.Account{
-		UserID: user.ID, Balance: money.FromDecimal(decimal.NewFromInt(5)), CreatedAt: now, UpdatedAt: now,
+		UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.NewFromInt(5)), CreatedAt: now, UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create wallet account failed: %v", err)
 	}

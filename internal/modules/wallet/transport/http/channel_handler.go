@@ -70,7 +70,7 @@ func (h *ChannelHandler) GetWallet(c *gin.Context) {
 	}
 
 	channelresponse.Success(c, gin.H{
-		"balance":  account.Balance.StringFixed(2),
+		"balance":  account.AvailableBalance.StringFixed(2),
 		"currency": "CNY",
 	})
 }

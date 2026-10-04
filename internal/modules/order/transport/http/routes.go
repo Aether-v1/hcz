@@ -63,8 +63,9 @@ func RegisterUserAfterSaleRoutes(user gin.IRoutes, handler *AfterSaleHandler) {
 	if user == nil || handler == nil {
 		panic("order user after-sale routes: required dependency is nil")
 	}
-	user.POST("/orders/:id/after-sale", handler.UserCreateAfterSale)
-	user.GET("/orders/:id/after-sale", handler.UserGetAfterSale)
+	// Gin 要求同一 URL 层级的通配参数同名；这里的值仍是数字订单 ID。
+	user.POST("/orders/:order_no/after-sale", handler.UserCreateAfterSale)
+	user.GET("/orders/:order_no/after-sale", handler.UserGetAfterSale)
 }
 
 // RegisterAdminAfterSaleRoutes 注册后台售后只读路由。

@@ -332,7 +332,7 @@ func (h *AdminHandler) GetAdminUser(c *gin.Context) {
 	}
 	response.Success(c, AdminUserDetail{
 		User:            *user,
-		WalletBalance:   account.Balance,
+		WalletBalance:   account.AvailableBalance,
 		OAuthIdentities: oauthItems,
 	})
 }

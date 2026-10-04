@@ -21,9 +21,10 @@ func newMoney(s string) money.Amount {
 
 func TestWalletAccountRespOmitsSensitiveFields(t *testing.T) {
 	account := &walletdomain.Account{
-		ID:      1,
-		UserID:  99,
-		Balance: newMoney("500.00"),
+		ID:               1,
+		UserID:           99,
+		AvailableBalance: newMoney("400.00"),
+		FrozenBalance:    newMoney("100.00"),
 	}
 
 	resp := NewWalletAccountResp(account)
@@ -36,24 +37,34 @@ func TestWalletAccountRespOmitsSensitiveFields(t *testing.T) {
 	if strings.Contains(jsonStr, `"id"`) {
 		t.Error("id should not appear")
 	}
-	if !strings.Contains(jsonStr, `"balance"`) {
-		t.Error("balance should appear")
+	if !strings.Contains(jsonStr, `"available_balance"`) {
+		t.Error("available_balance should appear")
+	}
+	if !strings.Contains(jsonStr, `"frozen_balance"`) {
+		t.Error("frozen_balance should appear")
+	}
+	if !strings.Contains(jsonStr, `"total_balance"`) {
+		t.Error("total_balance should appear")
 	}
 }
 
 func TestWalletTransactionRespOmitsSensitiveFields(t *testing.T) {
 	txn := &walletdomain.Transaction{
-		ID:            1,
-		UserID:        99,
-		Type:          "recharge",
-		Direction:     "in",
-		Amount:        newMoney("100.00"),
-		BalanceBefore: newMoney("400.00"),
-		BalanceAfter:  newMoney("500.00"),
-		Currency:      "CNY",
-		Reference:     "unique-ref-001",
-		Remark:        "充值",
-		CreatedAt:     time.Now(),
+		ID:              1,
+		UserID:          99,
+		Type:            "recharge",
+		Direction:       "in",
+		Amount:          newMoney("100.00"),
+		BalanceBefore:   newMoney("400.00"),
+		BalanceAfter:    newMoney("500.00"),
+		AvailableBefore: newMoney("400.00"),
+		AvailableAfter:  newMoney("500.00"),
+		FrozenBefore:    newMoney("0.00"),
+		FrozenAfter:     newMoney("0.00"),
+		Currency:        "CNY",
+		Reference:       "unique-ref-001",
+		Remark:          "充值",
+		CreatedAt:       time.Now(),
 	}
 
 	resp := NewWalletTransactionResp(txn)
@@ -67,11 +78,17 @@ func TestWalletTransactionRespOmitsSensitiveFields(t *testing.T) {
 		}
 	}
 
-	if !strings.Contains(jsonStr, `"balance_after"`) {
-		t.Error("balance_after should appear")
+	if !strings.Contains(jsonStr, `"total_after"`) {
+		t.Error("total_after should appear")
 	}
-	if !strings.Contains(jsonStr, `"balance_before"`) {
-		t.Error("balance_before should appear")
+	if !strings.Contains(jsonStr, `"total_before"`) {
+		t.Error("total_before should appear")
+	}
+	if !strings.Contains(jsonStr, `"available_after"`) {
+		t.Error("available_after should appear")
+	}
+	if !strings.Contains(jsonStr, `"frozen_before"`) {
+		t.Error("frozen_before should appear")
 	}
 	if !strings.Contains(jsonStr, `"currency"`) {
 		t.Error("currency should appear (P0-2 USDT contract)")
@@ -107,7 +124,7 @@ func TestWalletRechargePaymentPayloadOmitsSensitiveFields(t *testing.T) {
 		ExpiredAt:       &expires,
 		Status:          "paid",
 	}
-	account := &walletdomain.Account{Balance: newMoney("200.00")}
+	account := &walletdomain.Account{AvailableBalance: newMoney("200.00")}
 
 	resp := NewWalletRechargePaymentPayload(recharge, payment, account)
 	data, _ := json.Marshal(resp)

@@ -14,29 +14,38 @@ import (
 
 // WalletAccountResp 钱包账户响应
 type WalletAccountResp struct {
-	Balance  money.Amount `json:"balance"`
-	Currency string       `json:"currency"` // 固定 USDT，钱包本位币
+	AvailableBalance money.Amount `json:"available_balance"`
+	FrozenBalance    money.Amount `json:"frozen_balance"`
+	TotalBalance     money.Amount `json:"total_balance"`
+	Currency         string       `json:"currency"` // 固定 USDT，钱包本位币
 }
 
 // NewWalletAccountResp 从 walletdomain.Account 构造响应
 func NewWalletAccountResp(a *walletdomain.Account) WalletAccountResp {
+	total := a.AvailableBalance.Decimal.Add(a.FrozenBalance.Decimal).Round(2)
 	return WalletAccountResp{
-		Balance:  a.Balance,
-		Currency: "USDT",
+		AvailableBalance: a.AvailableBalance,
+		FrozenBalance:    a.FrozenBalance,
+		TotalBalance:     money.FromDecimal(total),
+		Currency:         "USDT",
 	}
 }
 
 // WalletTransactionResp 钱包流水响应
 type WalletTransactionResp struct {
-	ID            uint         `json:"id"`
-	Type          string       `json:"type"`
-	Direction     string       `json:"direction"`
-	Amount        money.Amount `json:"amount"`
-	BalanceBefore money.Amount `json:"balance_before"`
-	BalanceAfter  money.Amount `json:"balance_after"`
-	Currency      string       `json:"currency"` // 固定 USDT
-	Remark        string       `json:"remark"`
-	CreatedAt     time.Time    `json:"created_at"`
+	ID              uint         `json:"id"`
+	Type            string       `json:"type"`
+	Direction       string       `json:"direction"`
+	Amount          money.Amount `json:"amount"`
+	TotalBefore     money.Amount `json:"total_before"`
+	TotalAfter      money.Amount `json:"total_after"`
+	AvailableBefore money.Amount `json:"available_before"`
+	AvailableAfter  money.Amount `json:"available_after"`
+	FrozenBefore    money.Amount `json:"frozen_before"`
+	FrozenAfter     money.Amount `json:"frozen_after"`
+	Currency        string       `json:"currency"` // 固定 USDT
+	Remark          string       `json:"remark"`
+	CreatedAt       time.Time    `json:"created_at"`
 }
 
 // NewWalletTransactionResp 从 walletdomain.Transaction 构造响应
@@ -46,15 +55,19 @@ func NewWalletTransactionResp(t *walletdomain.Transaction) WalletTransactionResp
 		currency = "USDT"
 	}
 	return WalletTransactionResp{
-		ID:            t.ID,
-		Type:          t.Type,
-		Direction:     t.Direction,
-		Amount:        t.Amount,
-		BalanceBefore: t.BalanceBefore,
-		BalanceAfter:  t.BalanceAfter,
-		Currency:      currency,
-		Remark:        t.Remark,
-		CreatedAt:     t.CreatedAt,
+		ID:              t.ID,
+		Type:            t.Type,
+		Direction:       t.Direction,
+		Amount:          t.Amount,
+		TotalBefore:     t.BalanceBefore,
+		TotalAfter:      t.BalanceAfter,
+		AvailableBefore: t.AvailableBefore,
+		AvailableAfter:  t.AvailableAfter,
+		FrozenBefore:    t.FrozenBefore,
+		FrozenAfter:     t.FrozenAfter,
+		Currency:        currency,
+		Remark:          t.Remark,
+		CreatedAt:       t.CreatedAt,
 	}
 }
 

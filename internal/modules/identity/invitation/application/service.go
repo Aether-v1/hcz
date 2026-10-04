@@ -105,5 +105,5 @@ func (s *Service) buildInviteURL(code string) string {
 			base = strings.TrimRight(strings.TrimSpace(brand.SiteURL), "/")
 		}
 	}
-	return base + "/register?invite=" + code
+	return base + "/auth/register?invite=" + code
 }

@@ -113,7 +113,7 @@ func (s *Service) CreateWithdrawal(input withdrawalcontract.CreateWithdrawalInpu
 			// 账户不存在则视为余额 0，直接拒绝
 			return withdrawalcontract.ErrInsufficientBalance
 		}
-		before := account.Balance.Decimal.Round(2)
+		before := account.AvailableBalance.Decimal.Round(2)
 		// 8b. 余额校验
 		if before.LessThan(amount) {
 			return withdrawalcontract.ErrInsufficientBalance
@@ -151,7 +151,8 @@ func (s *Service) CreateWithdrawal(input withdrawalcontract.CreateWithdrawalInpu
 
 		// 8e. 余额扣款
 		after := before.Sub(amount).Round(2)
-		account.Balance = money.FromDecimal(after)
+		frozen := account.FrozenBalance
+		account.AvailableBalance = money.FromDecimal(after)
 		account.UpdatedAt = now
 		if err := tx.Wallets().UpdateAccount(account); err != nil {
 			return err
@@ -159,17 +160,21 @@ func (s *Service) CreateWithdrawal(input withdrawalcontract.CreateWithdrawalInpu
 
 		// 8f. 写 ledger（withdrawal_debit, out）
 		debitTxn := &walletdomain.Transaction{
-			UserID:        input.UserID,
-			Type:          constants.WalletTxnTypeWithdrawalDebit,
-			Direction:     constants.WalletTxnDirectionOut,
-			Amount:        money.FromDecimal(amount),
-			BalanceBefore: money.FromDecimal(before),
-			BalanceAfter:  money.FromDecimal(after),
-			Currency:      "USDT",
-			Reference:     reference,
-			Remark:        "用户提现扣款",
-			CreatedAt:     now,
-			UpdatedAt:     now,
+			UserID:          input.UserID,
+			Type:            constants.WalletTxnTypeWithdrawalDebit,
+			Direction:       constants.WalletTxnDirectionOut,
+			Amount:          money.FromDecimal(amount),
+			BalanceBefore:   money.FromDecimal(before),
+			BalanceAfter:    money.FromDecimal(after),
+			AvailableBefore: money.FromDecimal(before),
+			AvailableAfter:  money.FromDecimal(after),
+			FrozenBefore:    frozen,
+			FrozenAfter:     frozen,
+			Currency:        "USDT",
+			Reference:       reference,
+			Remark:          "用户提现扣款",
+			CreatedAt:       now,
+			UpdatedAt:       now,
 		}
 		if err := tx.Wallets().CreateTransaction(debitTxn); err != nil {
 			return err

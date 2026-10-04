@@ -11,8 +11,13 @@
     </Alert>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <StatCard :label="t('personalCenter.wallet.balanceLabel')" :value="balanceDisplay" :icon="Banknote" tone="accent" mono />
-      <StatCard :label="t('personalCenter.wallet.transactionsLabel')" :value="totalTransactions" :icon="ReceiptText" tone="info" mono />
+      <StatCard :label="t('wallet.availableBalance')" :value="availableBalanceDisplay" :icon="Banknote" tone="accent" mono />
+      <StatCard :label="t('wallet.frozenBalance')" :value="frozenBalanceDisplay" :icon="Lock" tone="warning" mono />
+      <StatCard :label="t('wallet.totalBalance')" :value="totalBalanceDisplay" :icon="Wallet" tone="info" mono />
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <StatCard :label="t('personalCenter.wallet.transactionsLabel')" :value="totalTransactions" :icon="ReceiptText" tone="neutral" mono />
       <StatCard
         :label="t('personalCenter.wallet.currentPageLabel')"
         :value="t('orders.pageInfo', { page: currentPage, total: totalPages })"
@@ -25,7 +30,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Wallet, Banknote, ReceiptText, Layers } from 'lucide-vue-next'
+import { Wallet, Banknote, ReceiptText, Layers, Lock } from 'lucide-vue-next'
 import { pageAlertVariant, pageAlertToneClass, type PageAlert } from '../../utils/alerts'
 import PanelHeading from '../shared/PanelHeading.vue'
 import StatCard from '../shared/StatCard.vue'
@@ -34,7 +39,9 @@ import { Badge } from '@/components/ui/badge'
 
 defineProps<{
   alert: PageAlert | null
-  balanceDisplay: string
+  availableBalanceDisplay: string
+  frozenBalanceDisplay: string
+  totalBalanceDisplay: string
   totalTransactions: number
   currentPage: number
   totalPages: number

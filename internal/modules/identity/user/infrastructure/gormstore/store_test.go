@@ -39,7 +39,7 @@ func createTestUser(t *testing.T, db *gorm.DB, email string, createdAt time.Time
 
 func createTestWalletAccount(t *testing.T, db *gorm.DB, userID uint, balance int64) {
 	t.Helper()
-	w := &walletdomain.Account{UserID: userID, Balance: money.FromDecimal(decimal.NewFromInt(balance))}
+	w := &walletdomain.Account{UserID: userID, AvailableBalance: money.FromDecimal(decimal.NewFromInt(balance))}
 	if err := db.Create(w).Error; err != nil {
 		t.Fatalf("create wallet account for user %d failed: %v", userID, err)
 	}

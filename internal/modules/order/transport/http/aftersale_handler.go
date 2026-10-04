@@ -89,7 +89,7 @@ func (h *AfterSaleHandler) UserCreateAfterSale(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeUnauthorized, "error.unauthorized", nil)
 		return
 	}
-	orderID, err := ginutil.ParseParamUint(c, "id")
+	orderID, err := ginutil.ParseParamUint(c, "order_no")
 	if err != nil {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.order_item_invalid", nil)
 		return
@@ -119,7 +119,7 @@ func (h *AfterSaleHandler) UserGetAfterSale(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeUnauthorized, "error.unauthorized", nil)
 		return
 	}
-	orderID, err := ginutil.ParseParamUint(c, "id")
+	orderID, err := ginutil.ParseParamUint(c, "order_no")
 	if err != nil {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.order_item_invalid", nil)
 		return

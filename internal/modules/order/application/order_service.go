@@ -559,7 +559,7 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		if orderUsdtTotal.GreaterThan(decimal.Zero) {
 			expectedWallet = orderUsdtTotal
 		}
-		if account.Balance.Decimal.LessThan(expectedWallet) {
+		if account.AvailableBalance.Decimal.LessThan(expectedWallet) {
 			return nil, walletcontract.ErrInsufficientBalance
 		}
 	}

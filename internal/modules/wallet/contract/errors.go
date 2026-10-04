@@ -15,4 +15,6 @@ var (
 	ErrRechargeStatusInvalid   = errors.New("wallet recharge status invalid")
 	ErrOnlyPaymentRequired     = errors.New("wallet only payment required")
 	ErrTransactionRequired     = errors.New("wallet transaction required")
+	ErrInsufficientFrozen      = errors.New("wallet insufficient frozen balance")
+	ErrSameAccount             = errors.New("wallet source and target must be different accounts")
 )

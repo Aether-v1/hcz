@@ -9,7 +9,13 @@
         :icon="Wallet"
       />
       <div class="mt-2 text-3xl font-black text-foreground">
-        {{ balanceDisplay }}
+        {{ availableBalanceDisplay }}
+      </div>
+      <div class="mt-2 text-sm text-muted-foreground">
+        {{ t('wallet.frozenBalance') }}: {{ frozenBalanceDisplay }}
+      </div>
+      <div v-if="hasFrozenBalance" class="mt-2 rounded-lg border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-warning">
+        {{ t('wallet.frozenNotWithdrawable') }}
       </div>
     </div>
 
@@ -215,10 +221,19 @@ const quoteLoading = ref(false)
 let quoteTimer: number | null = null
 let quoteSeq = 0
 
-const balanceDisplay = computed(() => {
+const availableBalanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  const bal = wallet.value?.balance ?? '0.00'
+  const bal = wallet.value?.available_balance ?? '0.00'
   return `${bal} ${ccy}`
+})
+const frozenBalanceDisplay = computed(() => {
+  const ccy = String(wallet.value?.currency || 'USDT')
+  const bal = wallet.value?.frozen_balance ?? '0.00'
+  return `${bal} ${ccy}`
+})
+const hasFrozenBalance = computed(() => {
+  const frozen = Number(wallet.value?.frozen_balance ?? 0)
+  return frozen > 0
 })
 
 const alertClass = computed(() => {

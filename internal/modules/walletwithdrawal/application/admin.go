@@ -77,26 +77,31 @@ func (s *Service) Reject(input withdrawalcontract.AdminReviewInput) (*withdrawal
 			if account == nil {
 				return withdrawalcontract.ErrWithdrawalNotFound
 			}
-			before := account.Balance.Decimal.Round(2)
+			before := account.AvailableBalance.Decimal.Round(2)
 			refundAmount := w.RequestAmount.Decimal.Round(2)
 			after := before.Add(refundAmount).Round(2)
-			account.Balance = money.FromDecimal(after)
+			frozen := account.FrozenBalance
+			account.AvailableBalance = money.FromDecimal(after)
 			account.UpdatedAt = now
 			if err := tx.Wallets().UpdateAccount(account); err != nil {
 				return err
 			}
 			refundTxn := &walletdomain.Transaction{
-				UserID:        w.UserID,
-				Type:          constants.WalletTxnTypeWithdrawalRefund,
-				Direction:     constants.WalletTxnDirectionIn,
-				Amount:        money.FromDecimal(refundAmount),
-				BalanceBefore: money.FromDecimal(before),
-				BalanceAfter:  money.FromDecimal(after),
-				Currency:      "USDT",
-				Reference:     refundReference(w.ID),
-				Remark:        "提现拒绝退款",
-				CreatedAt:     now,
-				UpdatedAt:     now,
+				UserID:          w.UserID,
+				Type:            constants.WalletTxnTypeWithdrawalRefund,
+				Direction:       constants.WalletTxnDirectionIn,
+				Amount:          money.FromDecimal(refundAmount),
+				BalanceBefore:   money.FromDecimal(before),
+				BalanceAfter:    money.FromDecimal(after),
+				AvailableBefore: money.FromDecimal(before),
+				AvailableAfter:  money.FromDecimal(after),
+				FrozenBefore:    frozen,
+				FrozenAfter:     frozen,
+				Currency:        "USDT",
+				Reference:       refundReference(w.ID),
+				Remark:          "提现拒绝退款",
+				CreatedAt:       now,
+				UpdatedAt:       now,
 			}
 			if err := tx.Wallets().CreateTransaction(refundTxn); err != nil {
 				return err

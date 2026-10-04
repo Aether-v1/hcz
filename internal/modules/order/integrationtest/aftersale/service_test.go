@@ -66,7 +66,7 @@ func setupAfterSaleTest(t *testing.T) (*aftersale.Service, *refund.Service, *gor
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	acct := &walletdomain.Account{UserID: user.ID, Balance: money.FromDecimal(decimal.RequireFromString("100.00"))}
+	acct := &walletdomain.Account{UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.RequireFromString("100.00"))}
 	if err := db.Create(acct).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func walletBalance(t *testing.T, db *gorm.DB, userID uint) decimal.Decimal {
 	if err := db.Where("user_id = ?", userID).First(&acct).Error; err != nil {
 		t.Fatal(err)
 	}
-	return acct.Balance.Decimal
+	return acct.AvailableBalance.Decimal
 }
 
 func TestPartialRefundRealDB(t *testing.T) {

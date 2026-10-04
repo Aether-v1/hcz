@@ -291,8 +291,8 @@ func TestWalletServiceRecharge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("recharge failed: %v", err)
 	}
-	if !account.Balance.Decimal.Equal(decimal.NewFromInt(120)) {
-		t.Fatalf("unexpected balance: %s", account.Balance.String())
+	if !account.AvailableBalance.Decimal.Equal(decimal.NewFromInt(120)) {
+		t.Fatalf("unexpected balance: %s", account.AvailableBalance.String())
 	}
 	if txn == nil || txn.Type != constants.WalletTxnTypeRecharge || txn.Direction != constants.WalletTxnDirectionIn {
 		t.Fatalf("unexpected transaction: %+v", txn)
@@ -350,8 +350,8 @@ func TestWalletServiceApplyAndReleaseOrderBalance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get account failed: %v", err)
 	}
-	if !account.Balance.Decimal.Equal(decimal.NewFromInt(20)) {
-		t.Fatalf("unexpected balance after apply: %s", account.Balance.String())
+	if !account.AvailableBalance.Decimal.Equal(decimal.NewFromInt(20)) {
+		t.Fatalf("unexpected balance after apply: %s", account.AvailableBalance.String())
 	}
 
 	var refreshed orderdomain.Order
@@ -384,8 +384,8 @@ func TestWalletServiceApplyAndReleaseOrderBalance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get account failed: %v", err)
 	}
-	if !account.Balance.Decimal.Equal(decimal.NewFromInt(50)) {
-		t.Fatalf("unexpected balance after release: %s", account.Balance.String())
+	if !account.AvailableBalance.Decimal.Equal(decimal.NewFromInt(50)) {
+		t.Fatalf("unexpected balance after release: %s", account.AvailableBalance.String())
 	}
 }
 

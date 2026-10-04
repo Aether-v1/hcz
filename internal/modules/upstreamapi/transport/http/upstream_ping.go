@@ -31,7 +31,7 @@ func (h *Handler) Ping(c *gin.Context) {
 	balanceStr := "0.00"
 	account, err := h.Wallet.GetAccount(userID)
 	if err == nil && account != nil {
-		balanceStr = account.Balance.StringFixed(2)
+		balanceStr = account.AvailableBalance.StringFixed(2)
 	}
 
 	// 币种

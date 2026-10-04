@@ -152,6 +152,9 @@ func AutoMigrate() error {
 	if err := migrateAffiliateCommissionMultilevel(); err != nil {
 		return err
 	}
+	if err := migrateWalletDualBalance(); err != nil {
+		return err
+	}
 	if db.Migrator().HasColumn(&productdomain.Product{}, "price_currency") {
 		if err := db.Migrator().DropColumn(&productdomain.Product{}, "price_currency"); err != nil {
 			return err

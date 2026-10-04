@@ -78,7 +78,7 @@ func TestWalletTransactionsDoNotRequestASecondConnection(t *testing.T) {
 		if err != nil {
 			t.Fatalf("get account %d: %v", userID, err)
 		}
-		if account == nil || !account.Balance.Decimal.Equal(decimal.NewFromInt(100)) {
+		if account == nil || !account.AvailableBalance.Decimal.Equal(decimal.NewFromInt(100)) {
 			t.Fatalf("unexpected balance for user %d: %+v", userID, account)
 		}
 	}

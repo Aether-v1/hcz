@@ -1841,6 +1841,12 @@
     "submitted": "售后申请已提交",
     "submitFailed": "提交失败，请稍后重试",
     "submitting": "提交中..."
+  },
+  "wallet": {
+    "availableBalance": "可用余额",
+    "frozenBalance": "冻结余额",
+    "totalBalance": "总资产",
+    "frozenNotWithdrawable": "冻结金额不可提现"
   }
 }
 

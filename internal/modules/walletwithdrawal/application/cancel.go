@@ -44,10 +44,11 @@ func (s *Service) CancelWithdrawal(input withdrawalcontract.CancelWithdrawalInpu
 		if account == nil {
 			return withdrawalcontract.ErrWithdrawalNotFound
 		}
-		before := account.Balance.Decimal.Round(2)
+		before := account.AvailableBalance.Decimal.Round(2)
 		refundAmount := w.RequestAmount.Decimal.Round(2)
 		after := before.Add(refundAmount).Round(2)
-		account.Balance = money.FromDecimal(after)
+		frozen := account.FrozenBalance
+		account.AvailableBalance = money.FromDecimal(after)
 		account.UpdatedAt = now
 		if err := tx.Wallets().UpdateAccount(account); err != nil {
 			return err
@@ -55,17 +56,21 @@ func (s *Service) CancelWithdrawal(input withdrawalcontract.CancelWithdrawalInpu
 
 		// 写退款 ledger（reference 幂等：wd_refund:<withdrawal_id>）
 		refundTxn := &walletdomain.Transaction{
-			UserID:        input.UserID,
-			Type:          constants.WalletTxnTypeWithdrawalRefund,
-			Direction:     constants.WalletTxnDirectionIn,
-			Amount:        money.FromDecimal(refundAmount),
-			BalanceBefore: money.FromDecimal(before),
-			BalanceAfter:  money.FromDecimal(after),
-			Currency:      "USDT",
-			Reference:     refundReference(w.ID),
-			Remark:        "提现取消退款",
-			CreatedAt:     now,
-			UpdatedAt:     now,
+			UserID:          input.UserID,
+			Type:            constants.WalletTxnTypeWithdrawalRefund,
+			Direction:       constants.WalletTxnDirectionIn,
+			Amount:          money.FromDecimal(refundAmount),
+			BalanceBefore:   money.FromDecimal(before),
+			BalanceAfter:    money.FromDecimal(after),
+			AvailableBefore: money.FromDecimal(before),
+			AvailableAfter:  money.FromDecimal(after),
+			FrozenBefore:    frozen,
+			FrozenAfter:     frozen,
+			Currency:        "USDT",
+			Reference:       refundReference(w.ID),
+			Remark:          "提现取消退款",
+			CreatedAt:       now,
+			UpdatedAt:       now,
 		}
 		if err := tx.Wallets().CreateTransaction(refundTxn); err != nil {
 			return err

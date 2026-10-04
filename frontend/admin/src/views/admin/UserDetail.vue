@@ -325,7 +325,9 @@ const walletTypeLabel = (type?: string) => {
   return translated
 }
 
-const walletBalanceDisplay = computed(() => formatMoney(walletAccount.value?.balance, siteCurrency.value))
+const walletAvailableBalanceDisplay = computed(() => formatMoney(walletAccount.value?.available_balance, walletAccount.value?.currency || 'USDT'))
+const walletFrozenBalanceDisplay = computed(() => formatMoney(walletAccount.value?.frozen_balance, walletAccount.value?.currency || 'USDT'))
+const walletTotalBalanceDisplay = computed(() => formatMoney(walletAccount.value?.total_balance, walletAccount.value?.currency || 'USDT'))
 
 const submitWalletAdjust = async () => {
   if (!Number.isFinite(userId.value) || userId.value <= 0) return
@@ -917,10 +919,18 @@ watch(
 
     <div v-if="activeTab === 'wallet'" class="space-y-4">
       <Card class="rounded-lg border-border bg-background shadow-none">
-        <CardContent class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+        <CardContent class="grid grid-cols-1 gap-4 p-4 md:grid-cols-4">
           <div>
-            <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.wallet.balanceLabel') }}</div>
-            <div class="mt-1 text-xl font-bold text-foreground">{{ walletBalanceDisplay }}</div>
+            <div class="text-xs text-muted-foreground">{{ t('wallet.availableBalance') }}</div>
+            <div class="mt-1 text-xl font-bold text-foreground">{{ walletAvailableBalanceDisplay }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted-foreground">{{ t('wallet.frozenBalance') }}</div>
+            <div class="mt-1 text-xl font-bold text-foreground">{{ walletFrozenBalanceDisplay }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted-foreground">{{ t('wallet.totalBalance') }}</div>
+            <div class="mt-1 text-xl font-bold text-foreground">{{ walletTotalBalanceDisplay }}</div>
           </div>
           <div>
             <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.wallet.updatedAtLabel') }}</div>
@@ -999,7 +1009,7 @@ watch(
                 </span>
               </TableCell>
               <TableCell class="px-6 py-4 text-xs font-mono text-foreground">{{ formatMoney(item.amount, item.currency) }}</TableCell>
-              <TableCell class="px-6 py-4 text-xs font-mono text-foreground">{{ formatMoney(item.balance_after, item.currency) }}</TableCell>
+              <TableCell class="px-6 py-4 text-xs font-mono text-foreground">{{ formatMoney(item.total_after, item.currency) }}</TableCell>
               <TableCell class="min-w-[220px] px-6 py-4 text-xs text-muted-foreground break-words">{{ item.remark || '-' }}</TableCell>
               <TableCell class="px-6 py-4 text-xs text-muted-foreground">{{ formatDate(item.created_at) }}</TableCell>
             </TableRow>

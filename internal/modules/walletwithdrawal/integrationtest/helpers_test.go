@@ -164,8 +164,9 @@ func (f *fixture) countLedger(t *testing.T, userID uint) int64 {
 func (f *fixture) setBalance(t *testing.T, userID uint, amount string) {
 	t.Helper()
 	acc := &walletdomain.Account{
-		UserID:  userID,
-		Balance: money.FromDecimal(mustDec(amount)),
+		UserID:           userID,
+		AvailableBalance: money.FromDecimal(mustDec(amount)),
+		FrozenBalance:    money.FromDecimal(decimal.Zero),
 	}
 	if err := f.walletDB.CreateAccount(acc); err != nil {
 		t.Fatalf("create account: %v", err)
@@ -181,7 +182,7 @@ func (f *fixture) getBalance(t *testing.T, userID uint) decimal.Decimal {
 	if acc == nil {
 		return decimal.Zero
 	}
-	return acc.Balance.Decimal
+	return acc.AvailableBalance.Decimal
 }
 
 func mustDec(s string) decimal.Decimal {

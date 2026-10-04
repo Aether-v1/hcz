@@ -55,7 +55,7 @@ func setupRefundStatusConsistencyTest(t *testing.T) (*OrderService, *gorm.DB, ui
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	acct := &walletdomain.Account{UserID: user.ID, Balance: money.FromDecimal(decimal.RequireFromString("100.00"))}
+	acct := &walletdomain.Account{UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.RequireFromString("100.00"))}
 	if err := db.Create(acct).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func walletBalanceRS(t *testing.T, db *gorm.DB, userID uint) decimal.Decimal {
 	if err := db.Where("user_id = ?", userID).First(&acct).Error; err != nil {
 		t.Fatal(err)
 	}
-	return acct.Balance.Decimal
+	return acct.AvailableBalance.Decimal
 }
 
 // canceled: status=canceled + refund_status=full + wallet 退回 + refunded_amount 正确

@@ -73,7 +73,7 @@ func setupAfterSaleHandlerTest(t *testing.T) (*AfterSaleHandler, *gorm.DB, uint,
 	if err := db.Create(user).Error; err != nil {
 		t.Fatal(err)
 	}
-	acct := &walletdomain.Account{UserID: user.ID, Balance: money.FromDecimal(decimal.RequireFromString("100.00"))}
+	acct := &walletdomain.Account{UserID: user.ID, AvailableBalance: money.FromDecimal(decimal.RequireFromString("100.00"))}
 	if err := db.Create(acct).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func newTestContext(method, path string, body interface{}, userID uint) (*gin.Co
 	}
 	c.Request = httptest.NewRequest(method, path, &buf)
 	c.Request.Header.Set("Content-Type", "application/json")
-	c.Params = gin.Params{{Key: "id", Value: fmt.Sprintf("%d", 0)}}
+	c.Params = gin.Params{{Key: "id", Value: "0"}, {Key: "order_no", Value: "0"}}
 	if userID > 0 {
 		c.Set("user_id", userID)
 	}
@@ -111,7 +111,8 @@ func newTestContext(method, path string, body interface{}, userID uint) (*gin.Co
 }
 
 func setOrderIDParam(c *gin.Context, orderID uint) {
-	c.Params = gin.Params{{Key: "id", Value: fmt.Sprintf("%d", orderID)}}
+	value := fmt.Sprintf("%d", orderID)
+	c.Params = gin.Params{{Key: "id", Value: value}, {Key: "order_no", Value: value}}
 }
 
 // respStatusCode 解析统一响应体的业务状态码（HTTP 始终 200，业务码在 body.status_code）。
@@ -281,8 +282,8 @@ func TestAfterSaleAdminPartialRefund(t *testing.T) {
 	// wallet balance should increase by 3.00
 	var acct walletdomain.Account
 	db.Where("user_id = ?", userID).First(&acct)
-	if !acct.Balance.Decimal.Equal(decimal.RequireFromString("103.00")) {
-		t.Fatalf("wallet should be 103.00, got %s", acct.Balance.Decimal)
+	if !acct.AvailableBalance.Decimal.Equal(decimal.RequireFromString("103.00")) {
+		t.Fatalf("wallet should be 103.00, got %s", acct.AvailableBalance.Decimal)
 	}
 }
 
@@ -309,8 +310,8 @@ func TestAfterSaleAdminFullRefund(t *testing.T) {
 	}
 	var acct walletdomain.Account
 	db.Where("user_id = ?", userID).First(&acct)
-	if !acct.Balance.Decimal.Equal(decimal.RequireFromString("110.00")) {
-		t.Fatalf("wallet should be 110.00, got %s", acct.Balance.Decimal)
+	if !acct.AvailableBalance.Decimal.Equal(decimal.RequireFromString("110.00")) {
+		t.Fatalf("wallet should be 110.00, got %s", acct.AvailableBalance.Decimal)
 	}
 }
 

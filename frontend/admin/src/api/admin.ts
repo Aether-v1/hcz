@@ -146,7 +146,10 @@ export interface AdminPermissionCatalogItem {
 export interface AdminWalletAccount {
   id: number
   user_id: number
-  balance: string
+  available_balance: string
+  frozen_balance: string
+  total_balance: string
+  currency: string
   created_at: string
   updated_at: string
 }
@@ -158,8 +161,12 @@ export interface AdminWalletTransaction {
   type: string
   direction: string
   amount: string
-  balance_before: string
-  balance_after: string
+  total_before: string
+  total_after: string
+  available_before: string
+  available_after: string
+  frozen_before: string
+  frozen_after: string
   currency: string
   reference: string
   remark: string

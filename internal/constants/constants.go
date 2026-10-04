@@ -149,6 +149,14 @@ const (
 	WalletTxnTypeWithdrawalDebit = "withdrawal_debit"
 	// WalletTxnTypeWithdrawalRefund 提现被拒绝/取消时退回原始 request_amount。
 	WalletTxnTypeWithdrawalRefund = "withdrawal_refund"
+	// WalletTxnTypeC2CFreeze C2C 资金冻结：available → frozen
+	WalletTxnTypeC2CFreeze = "c2c_freeze"
+	// WalletTxnTypeC2CUnfreeze C2C 资金解冻：frozen → available
+	WalletTxnTypeC2CUnfreeze = "c2c_unfreeze"
+	// WalletTxnTypeC2CSettle C2C 结算划出：source frozen 减少
+	WalletTxnTypeC2CSettle = "c2c_settle"
+	// WalletTxnTypeC2CReceive C2C 结算划入：target available 增加
+	WalletTxnTypeC2CReceive = "c2c_receive"
 )
 
 // 钱包交易方向常量

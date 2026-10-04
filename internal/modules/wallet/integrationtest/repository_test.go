@@ -208,10 +208,11 @@ func TestWalletStoreExcludesSoftDeletedRecords(t *testing.T) {
 	repo, db := setupWalletRepositoryTest(t)
 	now := time.Now()
 	account := walletdomain.Account{
-		UserID:    991,
-		Balance:   money.FromDecimal(decimal.NewFromInt(10)),
-		CreatedAt: now,
-		UpdatedAt: now,
+		UserID:           991,
+		AvailableBalance: money.FromDecimal(decimal.NewFromInt(10)),
+		FrozenBalance:    money.FromDecimal(decimal.Zero),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 	if err := db.Create(&account).Error; err != nil {
 		t.Fatalf("create account: %v", err)

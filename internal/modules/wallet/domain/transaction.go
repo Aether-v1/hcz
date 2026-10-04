@@ -17,6 +17,10 @@ type Transaction struct {
 	Amount          money.Amount `gorm:"type:decimal(20,2);not null" json:"amount"`
 	BalanceBefore   money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"balance_before"`
 	BalanceAfter    money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"balance_after"`
+	AvailableBefore money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"available_before"`
+	AvailableAfter  money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"available_after"`
+	FrozenBefore    money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"frozen_before"`
+	FrozenAfter     money.Amount `gorm:"type:decimal(20,2);not null;default:0" json:"frozen_after"`
 	Currency        string       `gorm:"type:varchar(16);not null;default:'CNY'" json:"currency"`
 	Reference       string       `gorm:"type:varchar(120);uniqueIndex" json:"reference"`
 	Remark          string       `gorm:"type:varchar(255)" json:"remark"`

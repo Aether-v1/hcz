@@ -2,6 +2,12 @@ import { createI18n } from 'vue-i18n'
 
 const messages = {
   'zh-CN': {
+    wallet: {
+      availableBalance: '可用余额',
+      frozenBalance: '冻结余额',
+      totalBalance: '总资产',
+      frozenNotWithdrawable: '冻结金额不可提现'
+    },
     common: {
       api: {
         responseMissing: '响应内容为空',
@@ -4552,6 +4558,12 @@ const messages = {
     },
   },
   'zh-TW': {
+    wallet: {
+      availableBalance: '可用餘額',
+      frozenBalance: '凍結餘額',
+      totalBalance: '總資產',
+      frozenNotWithdrawable: '凍結金額不可提現'
+    },
     common: {
       api: {
         responseMissing: '回應內容為空',
@@ -9102,6 +9114,12 @@ const messages = {
     },
   },
   'en-US': {
+    wallet: {
+      availableBalance: 'Available Balance',
+      frozenBalance: 'Frozen Balance',
+      totalBalance: 'Total Assets',
+      frozenNotWithdrawable: 'Frozen amount cannot be withdrawn'
+    },
     common: {
       api: {
         responseMissing: 'Empty response',

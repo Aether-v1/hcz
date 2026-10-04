@@ -200,7 +200,7 @@ func TestGiftCardServiceRedeemGiftCard(t *testing.T) {
 	if redeemedCard == nil || redeemedCard.Status != giftcarddomain.GiftCardStatusRedeemed {
 		t.Fatalf("unexpected redeemed card: %+v", redeemedCard)
 	}
-	if account == nil || !account.Balance.Decimal.Equal(decimal.RequireFromString("59.90")) {
+	if account == nil || !account.AvailableBalance.Decimal.Equal(decimal.RequireFromString("59.90")) {
 		t.Fatalf("unexpected wallet account: %+v", account)
 	}
 	if txn == nil || txn.Type != constants.WalletTxnTypeGiftCard {
@@ -219,8 +219,8 @@ func TestGiftCardServiceRedeemGiftCard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get account failed: %v", err)
 	}
-	if !accountAfter.Balance.Decimal.Equal(decimal.RequireFromString("59.90")) {
-		t.Fatalf("unexpected account balance after duplicate redeem: %s", accountAfter.Balance.String())
+	if !accountAfter.AvailableBalance.Decimal.Equal(decimal.RequireFromString("59.90")) {
+		t.Fatalf("unexpected account balance after duplicate redeem: %s", accountAfter.AvailableBalance.String())
 	}
 }
 
