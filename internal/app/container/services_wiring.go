@@ -8,4 +8,8 @@ func (c *Container) wireServiceDependencies() {
 	c.PaymentService.SetProcurementService(c.ProcurementOrderService)
 	c.PaymentService.SetDownstreamCallbackService(c.DownstreamCallbackService)
 	c.FulfillmentService.SetDownstreamCallbackService(c.DownstreamCallbackService)
+	// Phase 1 用户站内通知：业务事件尽力而为写入（幂等）。
+	c.PaymentService.SetUserNotifier(c.UserNotificationService)
+	c.OrderService.SetUserNotifier(c.UserNotificationService)
+	c.FulfillmentService.SetUserNotifier(c.UserNotificationService)
 }

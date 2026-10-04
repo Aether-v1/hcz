@@ -269,6 +269,19 @@
     "contactUs": "Contact Us",
     "contactText": "If you have any questions about our products or services, please feel free to contact us via:"
   },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Order, wallet and aftersale updates will show up here",
+    "markAllRead": "Mark all as read",
+    "markAllReadSuccess": "All notifications marked as read",
+    "markAllReadFailed": "Failed, please try again",
+    "markReadFailed": "Failed to mark as read, please try again",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "empty": "No notifications",
+    "read": "Read",
+    "unread": "Unread"
+  },
   "navbar": {
     "cart": "Cart",
     "login": "Login",

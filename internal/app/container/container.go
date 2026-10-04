@@ -78,6 +78,8 @@ import (
 	broadcastapp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/application"
 	broadcastcontract "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/contract"
 	uploadapp "github.com/Aether-v1/hcz/internal/modules/upload/application"
+	usernotificationapp "github.com/Aether-v1/hcz/internal/modules/usernotification/application"
+	usernotificationgormstore "github.com/Aether-v1/hcz/internal/modules/usernotification/infrastructure/gormstore"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
 	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/queue"
@@ -130,6 +132,7 @@ type Container struct {
 	MemberLevelRepo        memberlevelcontract.LevelRepository
 	MemberLevelPriceRepo   *memberlevelgormstore.PriceStore
 	MemberLevelUserRepo    memberlevelcontract.UserRepository
+	UserNotificationRepo   *usernotificationgormstore.Store
 
 	// Services
 	AuthzService                  *authz.Service
@@ -194,6 +197,7 @@ type Container struct {
 	AdProxyService                *adproxyapp.Service
 	OrderRiskControlService       *orderriskapp.Service
 	ComplianceService             *complianceapp.Service
+	UserNotificationService       *usernotificationapp.Service
 
 	PaymentProviderRegistry *paymentprovider.Registry
 }

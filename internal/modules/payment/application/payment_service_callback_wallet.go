@@ -95,6 +95,7 @@ func (s *PaymentService) handleWalletRechargeCallback(payment *paymentdomain.Pay
 		}
 		s.enqueueWalletRechargeSuccessAsync(recharge, updated, log)
 		s.enqueueWalletRechargeBotNotifyAsync(recharge, log)
+		s.notifyUserWalletRechargeSuccess(recharge, log)
 	}
 	return updated, nil
 }

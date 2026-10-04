@@ -29,6 +29,7 @@ import (
 	sitemapcontract "github.com/Aether-v1/hcz/internal/modules/sitemap/contract"
 	sitemapcache "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/cacheadapter"
 	sitemapcatalog "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/catalogreader"
+	usernotificationapp "github.com/Aether-v1/hcz/internal/modules/usernotification/application"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 	giftcardredeemgormuow "github.com/Aether-v1/hcz/internal/workflows/giftcardredeem/infrastructure/gormuow"
@@ -140,6 +141,7 @@ func (c *Container) initApplicationServices() {
 	})
 	c.CouponAdminService = couponapp.NewAdminService(c.CouponRepo)
 	c.PromotionAdminService = promotionapp.NewAdminService(c.PromotionRepo)
+	c.UserNotificationService = usernotificationapp.NewService(c.UserNotificationRepo)
 	c.ContentBannerService = contentapp.NewBannerService(
 		gormstore.NewBannerStore(gormdb.DB),
 		contentapp.SystemClock{},

@@ -33,6 +33,7 @@ import (
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	siteconnectiondomain "github.com/Aether-v1/hcz/internal/modules/siteconnection/domain"
 	broadcastdomain "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/domain"
+	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 
@@ -95,6 +96,7 @@ func AutoMigrate() error {
 		&memberleveldomain.MemberLevel{},
 		&memberleveldomain.MemberLevelPrice{},
 		&contentdomain.Media{},
+		&usernotificationdomain.UserNotification{},
 	); err != nil {
 		return err
 	}

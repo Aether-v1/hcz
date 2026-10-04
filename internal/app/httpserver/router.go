@@ -50,6 +50,7 @@ import (
 	sitemapbrand "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/settingsbrand"
 	sitemaptransport "github.com/Aether-v1/hcz/internal/modules/sitemap/transport/http"
 	telegramchanneltransport "github.com/Aether-v1/hcz/internal/modules/telegram/channelbot/transport/http"
+	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
 	"github.com/Aether-v1/hcz/internal/web"
 
 	"github.com/gin-gonic/gin"
@@ -152,6 +153,7 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	adminCouponHandler := coupontransport.NewAdminHandler(c.CouponAdminService)
 	adminGiftCardHandler := giftcardtransport.NewAdminHandler(c.GiftCardService)
 	userGiftCardHandler := giftcardtransport.NewUserHandler(c.GiftCardService, captchaVerifier)
+	userNotificationHandler := usernotificationhttp.NewUserHandler(c.UserNotificationService)
 	channelGiftCardHandler := giftcardtransport.NewChannelHandler(
 		c.GiftCardService,
 		channeluserwiring.NewSimpleProvisioner(c.UserAuthService),
@@ -285,7 +287,7 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	sitemaptransport.RegisterRoutes(r, sitemaptransport.NewHandler(c.SitemapService, sitemapbrand.New(c.SettingService)))
 
 	apiV1 := r.Group("/api/v1")
-	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
+	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userNotificationHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
 	registerUpstreamRoutes(apiV1, c, upstreamHandler, redisClient, upstreamAPIRule, callbackRule)
 	registerChannelRoutes(apiV1, c, channelHandler, channelMemberLevelHandler, channelGiftCardHandler, channelAffiliateHandler, channelTelegramBotHandler, channelWalletHandler, redisClient, channelAPIRule)
 	registerPaymentCallbackRoutes(apiV1, paymentCallbackHandler, paymentWebhookHandler, redisClient, callbackRule)

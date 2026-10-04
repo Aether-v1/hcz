@@ -50,6 +50,18 @@
           </router-link>
         </Button>
 
+        <!-- Notifications bell (login only) -->
+        <Button v-if="userAuthStore.isAuthenticated" as-child variant="ghost" size="sm"
+          class="hidden lg:flex relative gap-2 text-muted-foreground">
+          <router-link to="/notifications" :aria-label="t('notifications.title')" :title="t('notifications.title')">
+            <Bell class="w-4 h-4 shrink-0" />
+            <Badge v-if="notificationStore.unreadCount > 0" variant="destructive" size="xs"
+              class="absolute -top-1.5 -right-2 !min-w-[1.1rem] !justify-center !px-1.5 !py-0 leading-none pointer-events-none">
+              {{ notificationStore.badgeText }}
+            </Badge>
+          </router-link>
+        </Button>
+
         <Button v-if="!userAuthStore.isAuthenticated" as-child variant="ghost" size="sm"
           class="hidden lg:inline-flex gap-1.5 text-muted-foreground whitespace-nowrap">
           <router-link to="/guest/orders">
@@ -174,6 +186,18 @@
             </router-link>
           </Button>
 
+          <!-- Notifications (login only, not in bottom nav) -->
+          <Button v-if="userAuthStore.isAuthenticated" as-child variant="ghost"
+            class="w-full justify-start gap-3 h-auto py-3 rounded-xl text-sm text-muted-foreground [&_svg]:size-5">
+            <router-link to="/notifications" @click="showMobileMenu = false" active-class="!text-primary !bg-primary/10" class="w-full flex items-center justify-between">
+              <span class="flex items-center gap-3">
+                <Bell class="shrink-0 opacity-60" />
+                {{ t('notifications.title') }}
+              </span>
+              <Badge v-if="notificationStore.unreadCount > 0" variant="destructive" size="xs">{{ notificationStore.badgeText }}</Badge>
+            </router-link>
+          </Button>
+
           <!-- Logout (login/me already in bottom nav) -->
           <Button v-if="userAuthStore.isAuthenticated" variant="ghost"
             class="w-full justify-start gap-3 h-auto py-3 rounded-xl text-sm text-destructive hover:text-destructive hover:bg-destructive/10 [&_svg]:size-5"
@@ -209,20 +233,23 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/app'
 import { useCartStore } from '../stores/cart'
 import { useUserAuthStore } from '../stores/userAuth'
+import { useNotificationStore } from '../stores/notification'
 import { useTheme } from '../utils/theme'
 import { getImageUrl } from '../utils/image'
 import { useNavConfig } from '../composables/useNavConfig'
 import {
   Sun, Moon, ShoppingCart, ClipboardList, LogIn, User, LogOut, Languages,
-  EllipsisVertical, X,
+  EllipsisVertical, X, Bell,
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 const cartStore = useCartStore()
 const userAuthStore = useUserAuthStore()
+const notificationStore = useNotificationStore()
 const { theme, toggleTheme } = useTheme()
 const { primaryNavItems, secondaryNavItems } = useNavConfig()
 

@@ -14,6 +14,7 @@ func TestPaymentServiceImplementationIsSplitByResponsibility(t *testing.T) {
 	expected := map[string][]string{
 		"payment_service.go": {
 			"SetProcurementService", "SetDownstreamCallbackService", "SetMemberLevelService",
+			"SetUserNotifier",
 			"NewPaymentService", "ListPayments", "GetPayment", "ListChannels", "GetChannel",
 			"paymentLogger",
 		},

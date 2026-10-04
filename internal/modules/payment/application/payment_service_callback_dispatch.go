@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -16,6 +17,9 @@ import (
 	notificationformat "github.com/Aether-v1/hcz/internal/modules/notification/application/format"
 	notificationcontract "github.com/Aether-v1/hcz/internal/modules/notification/contract"
 	procurementcontract "github.com/Aether-v1/hcz/internal/modules/procurement/contract"
+	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
+	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
+	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"go.uber.org/zap"
 )
 
@@ -45,6 +49,7 @@ func (s *PaymentService) enqueueOrderPaidAsync(order *orderdomain.Order, payment
 	}
 	s.enqueueOrderPaidNotificationAsync(order, payment, log)
 	s.enqueueOrderPaidBotNotifyAsync(order, log)
+	s.notifyUserOrderProcessing(order, log)
 
 	// 订单支付成功后触发会员等级升级检查
 	if s.memberLevelSvc != nil && order.UserID > 0 {
@@ -255,6 +260,65 @@ func (s *PaymentService) enqueueManualFulfillmentPendingAsync(order *orderdomain
 		Data:      payload,
 	}); err != nil {
 		log.Warnw("notification_enqueue_manual_pending_failed",
+			"order_id", order.ID,
+			"order_no", order.OrderNo,
+			"error", err,
+		)
+	}
+}
+
+// notifyUserWalletRechargeSuccess 钱包充值到账后写用户站内通知（尽力而为+幂等）。
+// 唯一约束 (user_id,biz_type,biz_id,type) 拦截 callback 重放，不重复。
+func (s *PaymentService) notifyUserWalletRechargeSuccess(recharge *walletdomain.RechargeOrder, log *zap.SugaredLogger) {
+	if s.userNotifier == nil || recharge == nil || recharge.UserID == 0 {
+		return
+	}
+	data := jsonmap.JSON{
+		"recharge_no": recharge.RechargeNo,
+		"amount":      recharge.Amount.String(),
+		"currency":    strings.ToUpper(strings.TrimSpace(recharge.Currency)),
+	}
+	if err := s.userNotifier.CreateNotification(context.Background(), usernotificationcontract.CreateInput{
+		UserID:  recharge.UserID,
+		Type:    usernotificationdomain.TypeWalletRecharge,
+		Title:   "钱包充值到账",
+		Body:    "USDT 充值已到账",
+		Data:    data,
+		BizType: usernotificationdomain.BizTypeWalletRecharge,
+		BizID:   recharge.ID,
+	}); err != nil {
+		log.Warnw("usernotification_wallet_recharge_failed",
+			"recharge_id", recharge.ID,
+			"recharge_no", recharge.RechargeNo,
+			"error", err,
+		)
+	}
+}
+
+// notifyUserOrderProcessing 五态机订单 pending_recharge -> processing 后写用户站内通知。
+// 仅当订单真实进入 processing（五态机）才发；旧 paid/fulfilling 态不发。
+func (s *PaymentService) notifyUserOrderProcessing(order *orderdomain.Order, log *zap.SugaredLogger) {
+	if s.userNotifier == nil || order == nil || order.UserID == 0 {
+		return
+	}
+	if order.Status != constants.OrderStatusProcessing {
+		return
+	}
+	data := jsonmap.JSON{
+		"order_no": order.OrderNo,
+		"amount":   order.TotalAmount.String(),
+		"currency": order.Currency,
+	}
+	if err := s.userNotifier.CreateNotification(context.Background(), usernotificationcontract.CreateInput{
+		UserID:  order.UserID,
+		Type:    usernotificationdomain.TypeOrderProcessing,
+		Title:   "订单处理中",
+		Body:    "您的订单已支付成功，正在为您处理",
+		Data:    data,
+		BizType: usernotificationdomain.BizTypeOrder,
+		BizID:   order.ID,
+	}); err != nil {
+		log.Warnw("usernotification_order_processing_failed",
 			"order_id", order.ID,
 			"order_no", order.OrderNo,
 			"error", err,

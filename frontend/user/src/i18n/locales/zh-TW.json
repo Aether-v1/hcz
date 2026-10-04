@@ -269,6 +269,19 @@
     "contactUs": "聯絡我們",
     "contactText": "如果您對我們的產品或服務有任何疑問，歡迎透過以下方式聯絡我們："
   },
+  "notifications": {
+    "title": "通知",
+    "subtitle": "帳戶訂單、錢包與售後動態都會在這裡提醒你",
+    "markAllRead": "全部已讀",
+    "markAllReadSuccess": "已將全部通知標記為已讀",
+    "markAllReadFailed": "操作失敗，請重試",
+    "markReadFailed": "標記已讀失敗，請重試",
+    "loadMore": "載入更多",
+    "loading": "載入中…",
+    "empty": "暫無通知",
+    "read": "已讀",
+    "unread": "未讀"
+  },
   "navbar": {
     "cart": "購物車",
     "login": "登入",

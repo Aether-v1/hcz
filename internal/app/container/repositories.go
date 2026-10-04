@@ -32,6 +32,7 @@ import (
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	siteconnectiongormstore "github.com/Aether-v1/hcz/internal/modules/siteconnection/infrastructure/gormstore"
 	broadcaststore "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/infrastructure/gormstore"
+	usernotificationgormstore "github.com/Aether-v1/hcz/internal/modules/usernotification/infrastructure/gormstore"
 	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 )
@@ -82,5 +83,6 @@ func (c *Container) initRepositories() error {
 	c.MemberLevelRepo = memberlevelgormstore.NewLevelStore(db)
 	c.MemberLevelPriceRepo = memberlevelgormstore.NewPriceStore(db)
 	c.MemberLevelUserRepo = memberlevelgormstore.NewUserStore(db)
+	c.UserNotificationRepo = usernotificationgormstore.New(db)
 	return nil
 }

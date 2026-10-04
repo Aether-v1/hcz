@@ -33,6 +33,10 @@
             <Sun v-if="theme === 'dark'" class="h-[18px] w-[18px]" />
             <Moon v-else class="h-[18px] w-[18px]" />
           </button>
+          <RouterLink v-if="userAuthStore.isAuthenticated" class="relative grid h-10 w-10 flex-none place-items-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary" to="/notifications" :aria-label="t('notifications.title')" :title="t('notifications.title')">
+            <Bell class="h-[18px] w-[18px]" />
+            <span v-if="notificationStore.unreadCount > 0" class="absolute -right-[3px] -top-[3px] grid h-[19px] min-w-[19px] place-items-center rounded-full bg-destructive px-[5px] text-[11px] font-bold text-white">{{ notificationStore.badgeText }}</span>
+          </RouterLink>
           <RouterLink class="relative grid h-10 w-10 flex-none place-items-center rounded-full bg-secondary text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary" to="/cart" :aria-label="t('navbar.cart')">
             <ShoppingCart class="h-[18px] w-[18px]" />
             <span v-if="cartCount > 0" class="absolute -right-[3px] -top-[3px] grid h-[19px] min-w-[19px] place-items-center rounded-full bg-primary px-[5px] text-[11px] font-bold text-white">{{ cartCount }}</span>
@@ -71,6 +75,7 @@
                 <a v-else :href="item.path" :target="item.target" rel="noopener noreferrer" class="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="moreOpen = false">{{ item.label }}</a>
               </template>
               <RouterLink v-if="!userAuthStore.isAuthenticated" to="/guest/orders" class="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="moreOpen = false">{{ t('navbar.guestOrders') }}</RouterLink>
+              <RouterLink v-if="userAuthStore.isAuthenticated" to="/notifications" class="flex w-full items-center justify-between gap-2.5 rounded-sm px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="moreOpen = false"><span>{{ t('notifications.title') }}</span><span v-if="notificationStore.unreadCount > 0" class="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white">{{ notificationStore.badgeText }}</span></RouterLink>
               <RouterLink v-if="userAuthStore.isAuthenticated" to="/me" class="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="moreOpen = false">{{ t('navbar.personalCenter') }}</RouterLink>
               <RouterLink v-else to="/auth/login" class="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="moreOpen = false">{{ t('navbar.login') }}</RouterLink>
               <button v-if="userAuthStore.isAuthenticated" class="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-left text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" @click="userAuthStore.logout(); moreOpen = false">{{ t('navbar.logout') }}</button>
@@ -140,11 +145,12 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   Search, Moon, Sun, ShoppingCart, Languages, Menu, X, User, Info, ClipboardList, LogOut, Github,
-  LayoutGrid, Send, MessageCircle,
+  LayoutGrid, Send, MessageCircle, Bell,
 } from 'lucide-vue-next'
 import { useAppStore } from '../../../stores/app'
 import { useCartStore } from '../../../stores/cart'
 import { useUserAuthStore } from '../../../stores/userAuth'
+import { useNotificationStore } from '../../../stores/notification'
 import { useNavConfig, type NavItem } from '../../../composables/useNavConfig'
 import { useTheme } from '../../../utils/theme'
 import { getImageUrl } from '../../../utils/image'
@@ -165,6 +171,7 @@ const { t } = useI18n()
 const appStore = useAppStore()
 const cartStore = useCartStore()
 const userAuthStore = useUserAuthStore()
+const notificationStore = useNotificationStore()
 const { theme, toggleTheme } = useTheme()
 
 const langOpen = ref(false)

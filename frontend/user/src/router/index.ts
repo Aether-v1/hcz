@@ -16,6 +16,7 @@ const checkoutViewLoader: RouteComponentLoader = () => import('../views/Checkout
 const paymentViewLoader: RouteComponentLoader = () => import('../views/Payment.vue')
 const blogViewLoader: RouteComponentLoader = () => import('../views/Blog.vue')
 const noticeViewLoader: RouteComponentLoader = () => import('../views/Notice.vue')
+const notificationsViewLoader: RouteComponentLoader = () => import('../views/Notifications.vue')
 const loginViewLoader: RouteComponentLoader = () => import('../views/auth/Login.vue')
 const resellerLayoutLoader: RouteComponentLoader = () => import('../views/reseller/ResellerConsoleLayout.vue')
 
@@ -271,6 +272,12 @@ const router = createRouter({
             path: '/notice',
             name: 'notice',
             component: templateView('Notice', noticeViewLoader),
+            meta: { requiresUserAuth: true },
+        },
+        {
+            path: '/notifications',
+            name: 'notifications',
+            component: templateView('Notifications', notificationsViewLoader),
             meta: { requiresUserAuth: true },
         },
         {

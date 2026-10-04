@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -14,6 +15,8 @@ import (
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
+	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
+	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 
 	"github.com/Aether-v1/hcz/internal/config"
 	"github.com/Aether-v1/hcz/internal/constants"
@@ -32,6 +35,7 @@ type Service struct {
 	defaultEmailConfig    config.EmailConfig
 	downstreamCallbackSvc DownstreamCallbackEnqueuer
 	userOAuthIdentityRepo externalidentitycontract.Store
+	userNotifier          usernotificationcontract.Creator
 }
 
 type BotNotifier interface {
@@ -45,6 +49,38 @@ type DownstreamCallbackEnqueuer interface {
 // SetDownstreamCallbackService 设置下游回调服务（解决循环依赖）
 func (s *Service) SetDownstreamCallbackService(svc DownstreamCallbackEnqueuer) {
 	s.downstreamCallbackSvc = svc
+}
+
+// SetUserNotifier 注入用户站内通知写入器（Phase 1，尽力而为+幂等）。
+func (s *Service) SetUserNotifier(svc usernotificationcontract.Creator) {
+	s.userNotifier = svc
+}
+
+// notifyUserOrderCompleted 订单交付完成后写用户站内通知（尽力而为+幂等）。
+func (s *Service) notifyUserOrderCompleted(order *orderdomain.Order) {
+	if s == nil || s.userNotifier == nil || order == nil || order.UserID == 0 {
+		return
+	}
+	data := jsonmap.JSON{
+		"order_no": order.OrderNo,
+		"amount":   order.TotalAmount.String(),
+		"currency": order.Currency,
+	}
+	if err := s.userNotifier.CreateNotification(context.Background(), usernotificationcontract.CreateInput{
+		UserID:  order.UserID,
+		Type:    usernotificationdomain.TypeOrderCompleted,
+		Title:   "订单已完成",
+		Body:    "您的订单已完成，感谢购买",
+		Data:    data,
+		BizType: usernotificationdomain.BizTypeOrder,
+		BizID:   order.ID,
+	}); err != nil {
+		logger.Warnw("usernotification_order_completed_failed",
+			"order_id", order.ID,
+			"order_no", order.OrderNo,
+			"error", err,
+		)
+	}
 }
 
 // Options 汇总交付用例依赖。
@@ -202,6 +238,11 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 		notifyOrderID = *order.ParentID
 	}
 	go s.NotifyBotOrderFulfilled(order.UserID, notifyOrderID)
+	// 顶层单订单交付完成后写用户站内通知（尽力而为，幂等）。
+	// 分组子单不逐单发（避免 spam），父单完成由 order_service_child 统一收口。
+	if order.ParentID == nil {
+		s.notifyUserOrderCompleted(order)
+	}
 	// B 侧：人工交付完成后触发下游回调
 	if s.downstreamCallbackSvc != nil {
 		s.downstreamCallbackSvc.EnqueueCallback(input.OrderID)
@@ -381,6 +422,10 @@ func (s *Service) CreateAuto(orderID uint) (*fulfillmentdomain.Fulfillment, erro
 		notifyOrderID = *order.ParentID
 	}
 	go s.NotifyBotOrderFulfilled(order.UserID, notifyOrderID)
+	// 顶层单订单自动交付完成后写用户站内通知（尽力而为，幂等）。
+	if order.ParentID == nil {
+		s.notifyUserOrderCompleted(order)
+	}
 	// B 侧：自动交付完成后触发下游回调
 	if s.downstreamCallbackSvc != nil {
 		s.downstreamCallbackSvc.EnqueueCallback(orderID)

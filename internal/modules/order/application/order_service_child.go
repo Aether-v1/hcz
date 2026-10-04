@@ -238,6 +238,8 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 					)
 				}
 			}
+			// 事务成功后写用户站内通知（尽力而为，失败不回滚订单）。
+			s.notifyUserOrderCompleted(order)
 			return order, nil
 		default:
 			return nil, ErrOrderStatusInvalid
@@ -313,6 +315,10 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 				"error", err,
 			)
 		}
+	}
+	// 单订单转入 completed 后写用户站内通知（尽力而为，失败不回滚订单）。
+	if target == constants.OrderStatusCompleted {
+		s.notifyUserOrderCompleted(order)
 	}
 	FillOrderItemsFromChildren(order)
 	return order, nil

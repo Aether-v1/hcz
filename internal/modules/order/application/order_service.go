@@ -18,6 +18,8 @@ import (
 	promotioncontract "github.com/Aether-v1/hcz/internal/modules/promotion/contract"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
+	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
+	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
 	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
 
@@ -52,6 +54,8 @@ type OrderService struct {
 	riskControlSvc          orderriskcontract.Controller
 	productMappingService   upstreamStockEnsurer
 	expireMinutes           int
+	// userNotifier 写入用户站内通知（尽力而为+幂等，Phase 1）。
+	userNotifier usernotificationcontract.Creator
 	// P0-2: Global Exchange Rate 解析端口。生产注入真实实现；下单时把 Site Currency 总额换算为
 	// USDT 并快照。未注入（老测试/兼容路径）时保持 legacy 行为，生产 bootstrap 必须注入。
 	rateResolver rateResolverPort
@@ -119,6 +123,42 @@ func (s *OrderService) SetProductMappingService(svc upstreamStockEnsurer) {
 		return
 	}
 	s.productMappingService = svc
+}
+
+// SetUserNotifier 注入用户站内通知写入器（Phase 1，尽力而为+幂等）。
+func (s *OrderService) SetUserNotifier(svc usernotificationcontract.Creator) {
+	if s == nil {
+		return
+	}
+	s.userNotifier = svc
+}
+
+// notifyUserOrderCompleted 订单完成后写用户站内通知（尽力而为+幂等）。
+// 唯一约束 (user_id,biz_type=order,biz_id=order.ID,type=order_completed) 拦截重复触发。
+func (s *OrderService) notifyUserOrderCompleted(order *orderdomain.Order) {
+	if s == nil || s.userNotifier == nil || order == nil || order.UserID == 0 {
+		return
+	}
+	data := jsonmap.JSON{
+		"order_no": order.OrderNo,
+		"amount":   order.TotalAmount.String(),
+		"currency": order.Currency,
+	}
+	if err := s.userNotifier.CreateNotification(context.Background(), usernotificationcontract.CreateInput{
+		UserID:  order.UserID,
+		Type:    usernotificationdomain.TypeOrderCompleted,
+		Title:   "订单已完成",
+		Body:    "您的订单已完成，感谢购买",
+		Data:    data,
+		BizType: usernotificationdomain.BizTypeOrder,
+		BizID:   order.ID,
+	}); err != nil {
+		logger.Warnw("usernotification_order_completed_failed",
+			"order_id", order.ID,
+			"order_no", order.OrderNo,
+			"error", err,
+		)
+	}
 }
 
 // SetRateResolver 注入 P0-2 全局汇率解析端口。

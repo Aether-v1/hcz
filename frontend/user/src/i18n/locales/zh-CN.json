@@ -222,6 +222,19 @@
     "contactUs": "联系我们",
     "contactText": "如果您对我们的产品或服务有任何疑问，欢迎通过以下方式联系我们："
   },
+  "notifications": {
+    "title": "通知",
+    "subtitle": "账户订单、钱包与售后动态都会在这里提醒你",
+    "markAllRead": "全部已读",
+    "markAllReadSuccess": "已将全部通知标记为已读",
+    "markAllReadFailed": "操作失败，请重试",
+    "markReadFailed": "标记已读失败，请重试",
+    "loadMore": "加载更多",
+    "loading": "加载中…",
+    "empty": "暂无通知",
+    "read": "已读",
+    "unread": "未读"
+  },
   "navbar": {
     "cart": "购物车",
     "login": "登录",

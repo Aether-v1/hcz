@@ -15,6 +15,7 @@ import (
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
+	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
 	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
 
@@ -66,6 +67,8 @@ type PaymentService struct {
 	memberLevelSvc          MemberLevelProgressor
 	paymentProviderRegistry paymentcontract.GatewayRegistry
 	resellerAccounting      resellerAccountingTransactions
+	// userNotifier 写入用户站内通知（尽力而为+幂等，Phase 1）。
+	userNotifier usernotificationcontract.Creator
 }
 
 type MemberLevelProgressor interface {
@@ -104,6 +107,11 @@ func (s *PaymentService) SetDownstreamCallbackService(svc DownstreamCallbackEnqu
 // SetMemberLevelService 设置会员等级服务
 func (s *PaymentService) SetMemberLevelService(svc MemberLevelProgressor) {
 	s.memberLevelSvc = svc
+}
+
+// SetUserNotifier 设置用户站内通知写入器（Phase 1，尽力而为+幂等）。
+func (s *PaymentService) SetUserNotifier(svc usernotificationcontract.Creator) {
+	s.userNotifier = svc
 }
 
 // PaymentServiceOptions 支付服务构造参数

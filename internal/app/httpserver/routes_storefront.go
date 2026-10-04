@@ -21,6 +21,7 @@ import (
 	paymentcallbacktransport "github.com/Aether-v1/hcz/internal/modules/payment/transport/http/callback"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/user"
 	publicconfigtransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http/public"
+	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 
 	"github.com/gin-gonic/gin"
@@ -61,6 +62,7 @@ func registerStorefrontRoutes(
 	paymentLatestHandler *paymenttransport.LatestHandler,
 	paymentWriteHandler *paymenttransport.WriteHandler,
 	userWalletHandler *wallettransport.UserHandler,
+	userNotificationHandler *usernotificationhttp.UserHandler,
 	redisClient *redis.Client,
 	loginRule middleware.RateLimitRule,
 	guestReadRule middleware.RateLimitRule,
@@ -134,6 +136,7 @@ func registerStorefrontRoutes(
 		paymenttransport.RegisterUserWriteRoutes(user, paymentWriteHandler)
 		paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)
 		wallettransport.RegisterUserRoutes(user, userWalletHandler)
+		usernotificationhttp.RegisterUserRoutes(user, userNotificationHandler)
 		giftCardRedeem := user.Group("", middleware.RateLimitMiddleware(redisClient, giftCardRedeemRule, middleware.KeyByUserIDAndIP))
 		giftcardtransport.RegisterUserRoutes(giftCardRedeem, userGiftCardHandler)
 		affiliatetransport.RegisterUserRoutes(user, affiliateHandler)

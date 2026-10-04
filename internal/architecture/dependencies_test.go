@@ -505,6 +505,7 @@ func isKnownTransportIntegrationTest(file string) bool {
 	relative := filepath.ToSlash(file)
 	known := []string{
 		"internal/modules/order/transport/http/aftersale_handler_test.go",
+		"internal/modules/usernotification/transport/http/handler_test.go",
 	}
 	for _, path := range known {
 		if relative == path {
