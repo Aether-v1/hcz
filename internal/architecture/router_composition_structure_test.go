@@ -36,7 +36,8 @@ func TestHTTPServerSeparatesRoutesFromMiddleware(t *testing.T) {
 	if len(productionFiles) > 6 {
 		t.Fatalf("HTTP server route assembly file budget exceeded: got %d files: %v", len(productionFiles), productionFiles)
 	}
-	assertDirectoryGoFileBudget(t, httpServerRoot, 10)
+	// P1-1 退款合规回归测试 + P1-2 认证限流/枚举一致性回归测试，各增加 1 个聚焦测试文件。
+	assertDirectoryGoFileBudget(t, httpServerRoot, 12)
 	assertDirectoryGoFileBudget(t, middlewareRoot, 16)
 }
 

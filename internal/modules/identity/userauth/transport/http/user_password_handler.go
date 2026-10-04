@@ -84,9 +84,9 @@ func (h *UserPasswordHandler) UserForgotPassword(c *gin.Context) {
 		switch {
 		case errors.Is(err, ErrInvalidEmail):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.email_invalid", nil)
-		case errors.Is(err, ErrUserNotFound):
-			ginutil.RespondError(c, response.CodeNotFound, "error.user_not_found", nil)
-		case errors.Is(err, ErrVerifyCodeInvalid):
+		case errors.Is(err, ErrUserNotFound),
+			errors.Is(err, ErrVerifyCodeInvalid):
+			// 不区分「邮箱未注册」与「验证码错误」，统一返回 400，消除账号枚举（P2-3）
 			ginutil.RespondError(c, response.CodeBadRequest, "error.verify_code_invalid", nil)
 		case errors.Is(err, ErrVerifyCodeExpired):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.verify_code_expired", nil)

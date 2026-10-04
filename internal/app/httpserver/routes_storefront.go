@@ -66,6 +66,9 @@ func registerStorefrontRoutes(
 	guestReadRule middleware.RateLimitRule,
 	guestWriteRule middleware.RateLimitRule,
 	giftCardRedeemRule middleware.RateLimitRule,
+	registerRule middleware.RateLimitRule,
+	verifyRule middleware.RateLimitRule,
+	forgotRule middleware.RateLimitRule,
 ) {
 	storefront := apiV1.Group("")
 	storefront.Use(middleware.ResellerTenantMiddleware(c.ResellerDomainResolver))
@@ -94,14 +97,14 @@ func registerStorefrontRoutes(
 	// 用户认证接口
 	auth := storefront.Group("/auth")
 	{
-		userauthtransport.RegisterUserVerifyAuthRoutes(auth, userVerifyHandler)
-		userauthtransport.RegisterUserRegisterAuthRoutes(auth, userLoginHandler)
+		userauthtransport.RegisterUserVerifyAuthRoutes(auth, userVerifyHandler, middleware.RateLimitMiddleware(redisClient, verifyRule, middleware.KeyByIPAndJSONField("email")))
+		userauthtransport.RegisterUserRegisterAuthRoutes(auth, userLoginHandler, middleware.RateLimitMiddleware(redisClient, registerRule, middleware.KeyByIPAndJSONField("email")))
 		userauthtransport.RegisterUserLoginAuthRoutes(auth, userLoginHandler, middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByIPAndJSONField("email")))
 		userauthtransport.RegisterUser2FAAuthRoutes(auth, user2FAHandler, middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByIP))
 		userauthtransport.RegisterUserTelegramAuthRoutes(auth, userTelegramHandler, middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByIP))
 		userauthtransport.RegisterUserTelegramOIDCAuthRoutes(auth, userTelegramOIDCHandler, middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByIP))
 		userauthtransport.RegisterUserGoogleAuthRoutes(auth, userGoogleHandler, middleware.RateLimitMiddleware(redisClient, loginRule, middleware.KeyByIP))
-		userauthtransport.RegisterUserPasswordAuthRoutes(auth, userPasswordHandler)
+		userauthtransport.RegisterUserPasswordAuthRoutes(auth, userPasswordHandler, middleware.RateLimitMiddleware(redisClient, forgotRule, middleware.KeyByIPAndJSONField("email")))
 	}
 
 	// 用户接口（需鉴权）

@@ -238,6 +238,30 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 		BlockSeconds:  300,
 		MessageKey:    "error.rate_limited",
 	}
+	// 注册：限制批量注册（10 分钟窗口内 5 次，超限封禁 15 分钟）
+	registerRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:register", redisPrefix),
+		WindowSeconds: 600,
+		MaxRequests:   5,
+		BlockSeconds:  900,
+		MessageKey:    "error.rate_limited",
+	}
+	// 发送验证码：限制邮件轰炸（1 分钟窗口内 3 次，超限封禁 2 分钟）
+	verifyRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:verify", redisPrefix),
+		WindowSeconds: 60,
+		MaxRequests:   3,
+		BlockSeconds:  120,
+		MessageKey:    "error.rate_limited",
+	}
+	// 忘记密码/重置提交：限制账号枚举与重置邮件轰炸（15 分钟窗口内 3 次，超限封禁 30 分钟）
+	forgotRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:forgot", redisPrefix),
+		WindowSeconds: 900,
+		MaxRequests:   3,
+		BlockSeconds:  1800,
+		MessageKey:    "error.rate_limited",
+	}
 
 	// middleware.RequestIDMiddleware 必须前置于 middleware.RecoveryMiddleware：panic 日志与响应都依赖 request_id。
 	r.Use(middleware.RequestIDMiddleware())
@@ -261,7 +285,7 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	sitemaptransport.RegisterRoutes(r, sitemaptransport.NewHandler(c.SitemapService, sitemapbrand.New(c.SettingService)))
 
 	apiV1 := r.Group("/api/v1")
-	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule)
+	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
 	registerUpstreamRoutes(apiV1, c, upstreamHandler, redisClient, upstreamAPIRule, callbackRule)
 	registerChannelRoutes(apiV1, c, channelHandler, channelMemberLevelHandler, channelGiftCardHandler, channelAffiliateHandler, channelTelegramBotHandler, channelWalletHandler, redisClient, channelAPIRule)
 	registerPaymentCallbackRoutes(apiV1, paymentCallbackHandler, paymentWebhookHandler, redisClient, callbackRule)

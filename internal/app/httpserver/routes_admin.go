@@ -159,7 +159,7 @@ func registerAdminRoutes(
 
 	// 订单管理
 	ordertransport.RegisterAdminRoutes(authorized, adminOrderHandler)
-	ordertransport.RegisterAdminRefundWriteRoutes(authorized, adminOrderRefundHandler)
+	ordertransport.RegisterAdminRefundWriteRoutes(paymentProtected, adminOrderRefundHandler)
 	ordertransport.RegisterAdminRefundRoutes(authorized, adminOrderRefundHandler)
 	ordertransport.RegisterAdminAfterSaleRoutes(authorized, afterSaleHandler)
 	ordertransport.RegisterAdminAfterSaleWriteRoutes(paymentProtected, afterSaleHandler)

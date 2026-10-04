@@ -119,6 +119,12 @@ func (h *UserVerifyHandler) SendUserVerifyCode(c *gin.Context) {
 		case errors.Is(err, ErrEmailDomainNotAllowed):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.email_domain_not_allowed", nil)
 		case errors.Is(err, ErrUserNotFound):
+			if purpose == constants.VerifyPurposeReset {
+				// 忘记密码：不区分邮箱是否已注册，统一返回「已发送」，消除账号枚举。
+				// 未注册邮箱不会真正发信，响应与成功路径完全一致。
+				response.Success(c, gin.H{"sent": true})
+				return
+			}
 			ginutil.RespondError(c, response.CodeNotFound, "error.user_not_found", nil)
 		case errors.Is(err, ErrVerifyCodeTooFrequent):
 			ginutil.RespondError(c, response.CodeTooManyRequests, "error.verify_code_too_frequent", nil)
