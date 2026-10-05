@@ -10,10 +10,10 @@
 
 ## Final Verdict: PASS WITH CONDITIONS
 
-**整体完成度**: ~95%。核心资金链、安全、迁移、前端、CI 全部通过审计。本轮发现 1 个生产阻断问题（Linux CI 红色，sitebuilder 分层违规），已修复并推送。无 P0 残留。
+**整体完成度**: ~95%。核心资金链、安全、迁移、前端、CI 全部通过审计。本轮发现 1 个生产阻断问题（Linux CI 红色，sitebuilder 分层违规），已修复并推送，**CI 已验证转绿**。无 P0 残留。
 
 **进入 Production Deployment 的前提条件**:
-1. commit `5f0ab23` 的 Linux CI（Verify API）必须转绿 — 当前正在运行
+1. ✅ commit `5f0ab23` 的 Linux CI 4 jobs 全部 success（已验证）
 2. User 前端（`hcz_user`，非 git repo）的 6 个 DOMPurify 修复文件必须包含在生产构建中
 3. 生产环境必须使用 PostgreSQL（C2C 并发测试依赖 PG 行锁）
 
@@ -30,7 +30,7 @@
 | main vs origin/main | 一致（已推送） |
 | 未跟踪业务文件 | 无 |
 | binary/dist/node_modules/temp DB/log/coverage 误提交 | 无（均 gitignored） |
-| **最终 Release Baseline Commit** | **`5f0ab23`**（待 CI 转绿后锁定） |
+| **最终 Release Baseline Commit** | **`5f0ab23`**（CI 4 jobs 全绿，已锁定） |
 
 ---
 
@@ -492,7 +492,7 @@ C2C 自己合法使用 `pending_payment/paid`（C2C 状态机的一部分），�
 
 **已修复（commit 5f0ab23）**: 将 `ReorderItem` 移至 `application` 包，gormstore 改为 import application。修改 6 个文件。修复后 `TestDependencyRules` PASS（0.28s），`go build` PASS。
 
-**当前状态**: commit `5f0ab23` 已推送，Linux CI 正在运行。**Verify API 必须转绿后方可锁定 release baseline。**
+**修复验证**: commit `5f0ab23` 已推送，Linux CI **4 jobs 全部 success**（Verify installer ✅ / Verify API ✅ / Verify release config ✅ / Verify fullstack build ✅）。**CI 红色问题已彻底解决。**
 
 ---
 
@@ -649,7 +649,7 @@ C2C 自己合法使用 `pending_payment/paid`（C2C 状态机的一部分），�
 ### Production-blocking P1 List
 | # | 问题 | 状态 | 说明 |
 |---|---|---|---|
-| P1-1 | Linux CI Verify API 红色（sitebuilder 分层违规） | ✅ **已修复**（5f0ab23） | 待 CI 转绿确认 |
+| P1-1 | Linux CI Verify API 红色（sitebuilder 分层违规） | ✅ **已修复并验证**（5f0ab23，CI 4 jobs 全绿） | 已关闭 |
 
 > 修复后无残留 production-blocking P1。
 
@@ -693,17 +693,17 @@ C2C 自己合法使用 `pending_payment/paid`（C2C 状态机的一部分），�
 | 10 | Site Builder scripts 是否彻底禁用 | **是**。比 LEGACY_DISABLED 更彻底：scripts 字段已从 schema/service/handler 完全移除 |
 | 11 | Migration 是否可生产升级 | **是**。AutoMigrate 全覆盖+幂等+Fresh/Upgrade 测试 PASS |
 | 12 | User/Admin 前端是否全绿 | **是**。Admin vue-tsc+28 tests+build 全过；User vue-tsc+72 tests+build 全过；classic+vault 双编译 |
-| 13 | Linux CI 是否最新 main 全绿 | **审计起始时为红色**（Verify API 失败），**已修复并推送 5f0ab23**，待 CI 运行结果确认 |
+| 13 | Linux CI 是否最新 main 全绿 | **是**。审计起始时 2ed4013 为红色（Verify API 失败），已修复并推送 5f0ab23，**CI 4 jobs 全部 success**（已验证） |
 | 14 | Secrets 是否安全 | **安全**。无生产硬编码，.env/config/logs/uploads 全 gitignore，弱密钥启动即 Fatal |
 | 15 | Backup/Rollback 是否可执行 | **是**。AutoMigrate 仅 ADD 不 DROP，新旧二进制可共存，rollback 方案完备 |
-| 16 | 是否允许进入 Production Deployment | **条件允许**：commit 5f0ab23 的 Linux CI 转绿 + User 前端修复包含在生产构建 + 生产使用 PostgreSQL |
+| 16 | 是否允许进入 Production Deployment | **条件允许**：CI 已转绿 ✅ + User 前端修复包含在生产构建 + 生产使用 PostgreSQL |
 
 ---
 
 ## GO LIVE CHECKLIST
 
 ### 代码与 CI
-- [ ] commit `5f0ab23` Linux CI 4 jobs 全部 success
+- [x] commit `5f0ab23` Linux CI 4 jobs 全部 success ✅
 - [ ] git status clean，无未提交变更
 - [ ] Release baseline commit 锁定为 CI 全绿的 commit
 
@@ -788,4 +788,4 @@ C2C 自己合法使用 `pending_payment/paid`（C2C 状态机的一部分），�
 ---
 
 *报告生成时间: 2026-10-05 Asia/Shanghai*
-*审计 commit: 5f0ab23（待 CI 确认）*
+*审计 commit: 5f0ab23（CI 4 jobs 全绿，已验证）*
