@@ -20,8 +20,8 @@
         v-else-if="!listing"
         variant="soft"
         size="lg"
-        title="挂单不存在或已删除"
-        action-label="返回挂单列表"
+        :title="t('c2c.listingDetailNotFound')"
+        :action-label="t('c2c.listingDetailBackToList')"
         @action="goBack"
       />
 
@@ -32,7 +32,7 @@
           <CardContent class="p-6">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <div class="text-sm text-muted-foreground">单价</div>
+                <div class="text-sm text-muted-foreground">{{ t('c2c.listingDetailLabels.unitPrice') }}</div>
                 <div class="mt-1 text-3xl font-bold font-mono">
                   {{ listing.price }}
                   <span class="text-base text-muted-foreground font-normal">{{ listing.fiat_currency }}/USDT</span>
@@ -45,27 +45,27 @@
 
             <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-border/60">
               <div>
-                <div class="text-xs text-muted-foreground">可售数量</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.availableQty') }}</div>
                 <div class="mt-1 text-sm font-semibold font-mono">{{ listing.available_usdt }} USDT</div>
               </div>
               <div>
-                <div class="text-xs text-muted-foreground">挂单总量</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.listingTotal') }}</div>
                 <div class="mt-1 text-sm font-semibold font-mono">{{ listing.total_usdt }} USDT</div>
               </div>
               <div>
-                <div class="text-xs text-muted-foreground">卖家</div>
-                <div class="mt-1 text-sm font-semibold">用户#{{ listing.seller_user_id }}</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.seller') }}</div>
+                <div class="mt-1 text-sm font-semibold">{{ t('c2c.userPrefix') }}{{ listing.seller_user_id }}</div>
               </div>
               <div>
-                <div class="text-xs text-muted-foreground">最小成交额</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.sell.minFiat') }}</div>
                 <div class="mt-1 text-sm font-semibold font-mono">{{ listing.min_fiat_amount }} {{ listing.fiat_currency }}</div>
               </div>
               <div>
-                <div class="text-xs text-muted-foreground">最大成交额</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.sell.maxFiat') }}</div>
                 <div class="mt-1 text-sm font-semibold font-mono">{{ listing.max_fiat_amount }} {{ listing.fiat_currency }}</div>
               </div>
               <div>
-                <div class="text-xs text-muted-foreground">创建时间</div>
+                <div class="text-xs text-muted-foreground">{{ t('c2c.myListings.createdAt') }}</div>
                 <div class="mt-1 text-sm font-semibold">{{ formatTime(getCreatedAt(listing)) }}</div>
               </div>
             </div>
@@ -82,7 +82,7 @@
           <CardContent class="p-6">
             <Button class="w-full h-12 text-base font-bold" @click="goBuy">
               <TrendingDown class="w-5 h-5" />
-              立即购买
+              {{ t('c2c.listingDetailLabels.buyNow') }}
             </Button>
           </CardContent>
         </Card>
@@ -114,10 +114,10 @@
         <!-- Trade Records -->
         <Card>
           <CardHeader>
-            <CardTitle class="text-base">成交记录</CardTitle>
+            <CardTitle class="text-base">{{ t('c2c.listingDetailLabels.trades') }}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p class="text-sm text-muted-foreground">暂无成交记录</p>
+            <p class="text-sm text-muted-foreground">{{ t('c2c.listingDetailLabels.noTrades') }}</p>
           </CardContent>
         </Card>
       </template>
@@ -127,31 +127,31 @@
         <div v-if="editModal.visible" class="fixed inset-0 z-[120] flex items-center justify-center p-4">
           <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeEdit"></div>
           <div class="relative z-10 w-full max-w-md rounded-2xl bg-card border shadow-2xl p-6">
-            <h3 class="text-lg font-bold">编辑挂单</h3>
+            <h3 class="text-lg font-bold">{{ t('c2c.listingDetailLabels.editTitle') }}</h3>
             <p class="mt-1 text-xs text-muted-foreground font-mono">{{ listing?.listing_no }}</p>
             <form class="mt-5 space-y-4" @submit.prevent="submitEdit">
               <div>
-                <Label class="mb-1.5 block">单价（{{ listing?.fiat_currency || '法币' }}/USDT）</Label>
+                <Label class="mb-1.5 block">{{ t('c2c.listingDetailLabels.unitPrice') }}（{{ listing?.fiat_currency || t('c2c.listingDetailLabels.fiatLabel') }}/USDT）</Label>
                 <Input v-model="editForm.price" inputmode="decimal" required />
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <Label class="mb-1.5 block">最小成交额</Label>
+                  <Label class="mb-1.5 block">{{ t('c2c.sell.minFiat') }}</Label>
                   <Input v-model="editForm.min_fiat_amount" inputmode="decimal" required />
                 </div>
                 <div>
-                  <Label class="mb-1.5 block">最大成交额</Label>
+                  <Label class="mb-1.5 block">{{ t('c2c.sell.maxFiat') }}</Label>
                   <Input v-model="editForm.max_fiat_amount" inputmode="decimal" required />
                 </div>
               </div>
               <div>
-                <Label class="mb-1.5 block">交易条款</Label>
+                <Label class="mb-1.5 block">{{ t('c2c.sell.terms') }}</Label>
                 <Textarea v-model="editForm.terms" rows="3" />
               </div>
               <div class="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="secondary" @click="closeEdit">取消</Button>
+                <Button type="button" variant="secondary" @click="closeEdit">{{ t('c2c.buyPanel.cancel') }}</Button>
                 <Button type="submit" :disabled="submitting">
-                  {{ submitting ? '保存中...' : '保存' }}
+                  {{ submitting ? t('c2c.listingDetailLabels.saving') : t('c2c.listingDetailLabels.save') }}
                 </Button>
               </div>
             </form>
@@ -224,7 +224,7 @@ const loadDetail = async () => {
     listing.value = (res.data?.data || null) as C2CListing | null
   } catch {
     listing.value = null
-    toast.error('挂单不存在')
+    toast.error(t('c2c.listingDetailLabels.notExist'))
   } finally {
     loading.value = false
   }
@@ -269,11 +269,11 @@ const submitEdit = async () => {
       max_fiat_amount: editForm.max_fiat_amount,
       terms: editForm.terms,
     })
-    toast.success('挂单已更新')
+    toast.success(t('c2c.listingDetailLabels.updated'))
     closeEdit()
     await loadDetail()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '更新失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.listingDetailLabels.updateFailed'))
   } finally {
     submitting.value = false
   }
@@ -282,14 +282,14 @@ const submitEdit = async () => {
 // ── Actions ──
 const onPause = async () => {
   if (!listing.value) return
-  const ok = await confirm({ title: '暂停挂单', message: `确定要暂停挂单 ${listing.value.listing_no} 吗？`, variant: 'default' })
+  const ok = await confirm({ title: t('c2c.listingDetailLabels.pauseTitle'), message: t('c2c.listingDetailLabels.pauseConfirm', { listingNo: listing.value.listing_no }), variant: 'default' })
   if (!ok) return
   try {
     await c2cAPI.pauseListing(listing.value.id)
-    toast.success('挂单已暂停')
+    toast.success(t('c2c.listingDetailLabels.paused'))
     await loadDetail()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '操作失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.listingDetailLabels.operationFailed'))
   }
 }
 
@@ -297,23 +297,23 @@ const onResume = async () => {
   if (!listing.value) return
   try {
     await c2cAPI.resumeListing(listing.value.id)
-    toast.success('挂单已恢复')
+    toast.success(t('c2c.listingDetailLabels.resumed'))
     await loadDetail()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '操作失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.listingDetailLabels.operationFailed'))
   }
 }
 
 const onClose = async () => {
   if (!listing.value) return
-  const ok = await confirm({ title: '关闭挂单', message: `确定要关闭挂单 ${listing.value.listing_no} 吗？关闭后不可恢复。`, variant: 'danger' })
+  const ok = await confirm({ title: t('c2c.listingDetailLabels.closeTitle'), message: t('c2c.listingDetailLabels.closeConfirm', { listingNo: listing.value.listing_no }), variant: 'danger' })
   if (!ok) return
   try {
     await c2cAPI.closeListing(listing.value.id)
-    toast.success('挂单已关闭')
+    toast.success(t('c2c.listingDetailLabels.closed'))
     await loadDetail()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '操作失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.listingDetailLabels.operationFailed'))
   }
 }
 

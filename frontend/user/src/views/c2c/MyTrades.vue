@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="mb-6 mt-8">
         <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.myTrades.title') }}</h1>
-        <p class="mt-1 text-sm text-muted-foreground">你作为买家或卖家参与的所有交易</p>
+        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.myTrades.subtitle') }}</p>
       </div>
 
       <!-- Status Filter Tabs -->
@@ -40,14 +40,14 @@
         <Table>
           <TableHeader>
             <TableRow class="bg-muted/40">
-              <TableHead>交易单号</TableHead>
-              <TableHead>我的角色</TableHead>
-              <TableHead>对手方</TableHead>
-              <TableHead>法币金额</TableHead>
-              <TableHead>USDT 数量</TableHead>
-              <TableHead>单价</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>创建时间</TableHead>
+              <TableHead>{{ t('c2c.myTrades.tradeNo') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.myRole') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.counterparty') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.fiatAmount') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.usdtAmount') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.unitPrice') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.status') }}</TableHead>
+              <TableHead>{{ t('c2c.myTrades.createdAt') }}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -58,7 +58,7 @@
                   {{ myRole(trade) === 'buyer' ? t('c2c.myTrades.buyer') : t('c2c.myTrades.seller') }}
                 </Badge>
               </TableCell>
-              <TableCell class="text-sm text-muted-foreground">用户#{{ counterpartyId(trade) }}</TableCell>
+              <TableCell class="text-sm text-muted-foreground">{{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</TableCell>
               <TableCell class="font-mono text-sm">
                 {{ trade.fiat_amount }} <span class="text-xs text-muted-foreground">{{ trade.fiat_currency }}</span>
               </TableCell>
@@ -101,7 +101,7 @@
             </Badge>
           </div>
           <div class="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>对手方 用户#{{ counterpartyId(trade) }}</span>
+            <span>{{ t('c2c.myTrades.counterparty') }} {{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</span>
             <span>{{ formatTime(trade.created_at) }}</span>
           </div>
         </div>
@@ -111,7 +111,7 @@
       <div v-if="hasMore" class="mt-6 text-center">
         <Button variant="outline" :disabled="loadingMore" @click="loadMore">
           <Loader2 v-if="loadingMore" class="w-4 h-4 animate-spin" />
-          {{ loadingMore ? '加载中...' : '加载更多' }}
+          {{ loadingMore ? t('c2c.myTrades.loadingMore') : t('c2c.market.loadMore') }}
         </Button>
       </div>
     </div>
@@ -151,7 +151,7 @@ const activeStatus = ref<StatusFilter>('')
 const loadingMore = ref(false)
 
 const statusTabs: { key: StatusFilter; label: string }[] = [
-  { key: '', label: '全部' },
+  { key: '', label: t('c2c.myTrades.all') },
   { key: 'pending_payment', label: TRADE_STATUS_LABELS.pending_payment },
   { key: 'paid', label: TRADE_STATUS_LABELS.paid },
   { key: 'disputed', label: TRADE_STATUS_LABELS.disputed },
@@ -211,7 +211,7 @@ const loadMore = async () => {
       c2cStore.myTradesPagination.page = Number(pg.page) || nextPage
     }
   } catch {
-    toast.error('加载更多失败')
+    toast.error(t('c2c.myTrades.loadMoreFailed'))
   } finally {
     loadingMore.value = false
   }

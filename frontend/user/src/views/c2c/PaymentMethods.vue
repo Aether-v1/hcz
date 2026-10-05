@@ -5,7 +5,7 @@
       <div class="mb-6 mt-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.paymentMethod.title') }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">添加你的收款账户，买家付款时会看到这些信息</p>
+          <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.paymentMethod.subtitle') }}</p>
         </div>
         <Button @click="openCreate">
           <Plus class="w-4 h-4" />
@@ -24,7 +24,7 @@
         variant="soft"
         size="lg"
         :title="t('c2c.paymentMethod.empty')"
-        action-label="添加第一个收款方式"
+        :action-label="t('c2c.paymentMethod.addFirst')"
         @action="openCreate"
       />
 
@@ -86,7 +86,7 @@
                 <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.type') }}</Label>
                 <Select v-model="form.type" :disabled="!!editingId">
                   <SelectTrigger class="h-10">
-                    <SelectValue placeholder="选择类型" />
+                    <SelectValue :placeholder="t('c2c.paymentMethod.selectType')" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
@@ -112,9 +112,9 @@
                 <Textarea v-model="form.instructions" rows="3" />
               </div>
               <div class="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="secondary" @click="closeForm">取消</Button>
+                <Button type="button" variant="secondary" @click="closeForm">{{ t('c2c.buyPanel.cancel') }}</Button>
                 <Button type="submit" :disabled="submitting">
-                  {{ submitting ? '保存中...' : '保存' }}
+                  {{ submitting ? t('c2c.paymentMethod.saving') : t('c2c.paymentMethod.save') }}
                 </Button>
               </div>
             </form>
@@ -214,7 +214,7 @@ const closeForm = () => {
 
 const submitForm = async () => {
   if (!form.account_identifier.trim()) {
-    toast.error('请填写账号/收款标识')
+    toast.error(t('c2c.paymentMethod.accountRequired'))
     return
   }
   submitting.value = true
@@ -226,7 +226,7 @@ const submitForm = async () => {
         qr_image: form.qr_image,
         instructions: form.instructions,
       })
-      toast.success('已更新')
+      toast.success(t('c2c.paymentMethod.updated'))
     } else {
       await c2cAPI.createPaymentMethod({
         type: form.type,
@@ -235,13 +235,13 @@ const submitForm = async () => {
         qr_image: form.qr_image,
         instructions: form.instructions,
       })
-      toast.success('已添加')
+      toast.success(t('c2c.paymentMethod.added'))
     }
     closeForm()
     await c2cStore.fetchPaymentMethods()
     syncList()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '保存失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.paymentMethod.saveFailed'))
   } finally {
     submitting.value = false
   }
@@ -252,27 +252,27 @@ const onToggleEnabled = async (pm: C2CPaymentMethod, enabled: boolean) => {
   pm.enabled = enabled
   try {
     await c2cAPI.setPaymentMethodEnabled(pm.id, enabled)
-    toast.success(enabled ? '已启用' : '已停用')
+    toast.success(enabled ? t('c2c.paymentMethod.enabledToast') : t('c2c.paymentMethod.disabledToast'))
   } catch (err) {
     pm.enabled = !enabled
-    toast.error(err instanceof Error ? err.message : '操作失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.paymentMethod.operationFailed'))
   }
 }
 
 const onDelete = async (pm: C2CPaymentMethod) => {
   const ok = await confirm({
-    title: '删除收款方式',
+    title: t('c2c.paymentMethod.deleteTitle'),
     message: t('c2c.paymentMethod.deleteConfirm'),
     variant: 'danger',
   })
   if (!ok) return
   try {
     await c2cAPI.deletePaymentMethod(pm.id)
-    toast.success('已删除')
+    toast.success(t('c2c.paymentMethod.deleted'))
     await c2cStore.fetchPaymentMethods()
     syncList()
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : '删除失败')
+    toast.error(err instanceof Error ? err.message : t('c2c.paymentMethod.deleteFailed'))
   }
 }
 

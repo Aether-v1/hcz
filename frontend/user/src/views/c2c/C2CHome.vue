@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="mb-8 mt-8">
         <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.title') }}</h1>
-        <p class="mt-1 text-sm text-muted-foreground">P2P USDT 场外交易，安全托管</p>
+        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.subtitle') }}</p>
       </div>
 
       <!-- Wallet Card -->
@@ -60,7 +60,7 @@
         <div class="flex items-center justify-between px-6 py-4 border-b border-border/60">
           <h2 class="text-base font-semibold">{{ t('c2c.myTrades.title') }}</h2>
           <router-link to="/c2c/trades" class="text-xs text-primary hover:underline">
-            查看全部
+            {{ t('c2c.viewAll') }}
           </router-link>
         </div>
         <div class="divide-y divide-border/60">
@@ -116,28 +116,28 @@ const entries = [
     to: '/c2c/buy',
     icon: TrendingDown,
     title: t('c2c.buy'),
-    desc: '从其他用户的挂单中购买 USDT',
+    desc: t('c2c.entries.buyDesc'),
     box: 'bg-emerald-500/10 text-emerald-600',
   },
   {
     to: '/c2c/sell',
     icon: TrendingUp,
     title: t('c2c.sell.title'),
-    desc: '发布 SELL 挂单，卖出你的 USDT',
+    desc: t('c2c.entries.sellDesc'),
     box: 'bg-blue-500/10 text-blue-600',
   },
   {
     to: '/c2c/trades',
     icon: Receipt,
     title: t('c2c.myTrades.title'),
-    desc: '查看进行中与历史交易',
+    desc: t('c2c.entries.tradesDesc'),
     box: 'bg-amber-500/10 text-amber-600',
   },
   {
     to: '/c2c/my-listings',
     icon: ListOrdered,
     title: t('c2c.myListings.title'),
-    desc: '管理你发布的卖单',
+    desc: t('c2c.entries.listingsDesc'),
     box: 'bg-purple-500/10 text-purple-600',
   },
 ] as const

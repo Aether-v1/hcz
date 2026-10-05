@@ -72,7 +72,7 @@
         >
           <!-- seller -->
           <div class="md:col-span-2 flex items-center gap-2">
-            <span class="font-medium text-sm">用户#{{ listing.seller_user_id }}</span>
+            <span class="font-medium text-sm">{{ t('c2c.userPrefix') }}{{ listing.seller_user_id }}</span>
             <Badge v-if="isOwnListing(listing)" size="sm" class="bg-primary/10 text-primary">{{ t('c2c.market.myListing') }}</Badge>
           </div>
           <!-- price -->
@@ -120,7 +120,7 @@
         <h3 class="text-base font-semibold">{{ t('c2c.buyPanel.title') }}</h3>
 
         <div class="mt-4 space-y-2 text-sm rounded-xl bg-muted/50 p-4">
-          <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.seller') }}</span><span class="font-medium">用户#{{ selectedListing.seller_user_id }}</span></div>
+          <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.seller') }}</span><span class="font-medium">{{ t('c2c.userPrefix') }}{{ selectedListing.seller_user_id }}</span></div>
           <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.buyPanel.price') }}</span><span class="font-mono font-medium">{{ selectedListing.price }} {{ selectedListing.fiat_currency }}</span></div>
           <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.minMax') }}</span><span class="font-mono text-xs">{{ selectedListing.min_fiat_amount }} ~ {{ selectedListing.max_fiat_amount }}</span></div>
         </div>
