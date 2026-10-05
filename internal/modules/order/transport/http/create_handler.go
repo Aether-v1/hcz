@@ -109,6 +109,13 @@ func (h *CreateHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// P1：正式用户订单创建必须携带 Idempotency-Key。
+	idempotencyKey := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
+	if idempotencyKey == "" {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.idempotency_key_required", nil)
+		return
+	}
+
 	order, err := h.orders.CreateOrder(CreateOrderInput{
 		UserID:              uid,
 		Tenant:              tenantFromRequest(c),
@@ -118,6 +125,7 @@ func (h *CreateHandler) CreateOrder(c *gin.Context) {
 		AffiliateVisitorKey: req.AffiliateVisitorKey,
 		ClientIP:            c.ClientIP(),
 		ManualFormData:      req.ManualFormData,
+		IdempotencyKey:      idempotencyKey,
 	})
 	if err != nil {
 		respondUserOrderCreateError(c, err)
@@ -174,6 +182,13 @@ func (h *CreateHandler) CreateOrderAndPay(c *gin.Context) {
 		return
 	}
 
+	// P1：正式用户订单创建必须携带 Idempotency-Key。
+	idempotencyKey := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
+	if idempotencyKey == "" {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.idempotency_key_required", nil)
+		return
+	}
+
 	order, err := h.orders.CreateOrder(CreateOrderInput{
 		UserID:              uid,
 		Tenant:              tenantFromRequest(c),
@@ -183,6 +198,7 @@ func (h *CreateHandler) CreateOrderAndPay(c *gin.Context) {
 		AffiliateVisitorKey: req.AffiliateVisitorKey,
 		ClientIP:            c.ClientIP(),
 		ManualFormData:      req.ManualFormData,
+		IdempotencyKey:      idempotencyKey,
 	})
 	if err != nil {
 		respondUserOrderCreateError(c, err)

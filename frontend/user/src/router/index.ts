@@ -217,6 +217,54 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
+            path: '/c2c',
+            name: 'c2c-home',
+            component: () => import('../views/c2c/C2CHome.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/buy',
+            name: 'c2c-buy',
+            component: () => import('../views/c2c/BuyUSDT.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/sell',
+            name: 'c2c-sell',
+            component: () => import('../views/c2c/SellUSDT.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/my-listings',
+            name: 'c2c-my-listings',
+            component: () => import('../views/c2c/MyListings.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/listings/:id',
+            name: 'c2c-listing-detail',
+            component: () => import('../views/c2c/ListingDetail.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/trades',
+            name: 'c2c-my-trades',
+            component: () => import('../views/c2c/MyTrades.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/trades/:id',
+            name: 'c2c-trade-detail',
+            component: () => import('../views/c2c/TradeDetail.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/c2c/payment-methods',
+            name: 'c2c-payment-methods',
+            component: () => import('../views/c2c/PaymentMethods.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
             path: '/support',
             name: 'support-home',
             component: () => import('../views/support/HelpCenter.vue'),

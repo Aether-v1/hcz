@@ -307,6 +307,10 @@
     "messages": "消息",
     "me": "我的"
   },
+  "discover": {
+    "comingSoon": "即将开放",
+    "description": "更多服务正在准备中，敬请期待"
+  },
   "bottomNav": {
     "home": "首页",
     "products": "充值服务",
@@ -1898,6 +1902,7 @@
     "guest": "游客可购"
   },
   "notifications": {
+    "entryTitle": "消息通知",
     "title": "通知",
     "subtitle": "账户订单、钱包与售后动态都会在这里提醒你",
     "markAllRead": "全部已读",

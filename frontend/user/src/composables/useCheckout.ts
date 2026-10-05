@@ -66,6 +66,18 @@ export function useCheckout() {
   const couponCode = ref('')
   const normalizedCouponCode = computed(() => couponCode.value.trim())
   const submitting = ref(false)
+  // P1：订单创建幂等键。同一次业务请求（含网络重试）复用同一个 key；
+  // 仅当购物车内容变化（新的下单意图）或组件重新挂载时才生成新 key。
+  const idempotencyKey = ref('')
+  const ensureIdempotencyKey = () => {
+    if (!idempotencyKey.value) {
+      idempotencyKey.value = crypto.randomUUID()
+    }
+    return idempotencyKey.value
+  }
+  const resetIdempotencyKey = () => {
+    idempotencyKey.value = ''
+  }
   const error = ref('')
   const preview = ref<any>(null)
   const previewLoading = ref(false)
@@ -827,7 +839,10 @@ export function useCheckout() {
       let responseData: any
 
       if (userAuthStore.isAuthenticated) {
-        const response = await userOrderAPI.createAndPay(payload)
+        // P1：确保幂等 key 存在。同一次提交内的重试复用同一个 key；
+        // 购物车变化时 key 已被重置，此处会生成新 key。
+        const idemKey = ensureIdempotencyKey()
+        const response = await userOrderAPI.createAndPay(payload, idemKey)
         responseData = response.data.data
       } else {
         const response = await guestOrderAPI.createAndPay({
@@ -876,6 +891,16 @@ export function useCheckout() {
     { deep: true }
   )
 
+  // P1：购物车内容变化意味着新的下单意图，重置幂等 key。
+  // 同一次提交内的网络重试不会触发此 watch（items 未变），因此 key 保持不变。
+  watch(
+    () => cartItems.value,
+    () => {
+      resetIdempotencyKey()
+    },
+    { deep: true }
+  )
+
   watch(walletOnlyPayment, (v) => {
     if (v) useBalance.value = true
   }, { immediate: true })
@@ -911,7 +936,7 @@ export function useCheckout() {
     walletLoading.value = true
     try {
       const response = await walletAPI.account()
-      walletBalance.value = String(response.data.data?.balance || '0')
+      walletBalance.value = String(response.data.data?.available_balance || '0')
       walletCurrency.value = String(response.data.data?.currency || 'USDT')
     } catch {
       walletBalance.value = '0'
@@ -1185,6 +1210,10 @@ export function useCheckout() {
     submitting,
     canSubmit,
     handleSubmit,
+    // P1：idempotency
+    idempotencyKey,
+    ensureIdempotencyKey,
+    resetIdempotencyKey,
   }
 }
 

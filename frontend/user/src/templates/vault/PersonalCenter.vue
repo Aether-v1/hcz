@@ -47,6 +47,9 @@
 
         <!-- 概览 -->
         <template v-if="currentSection === 'overview'">
+          <PersonalOverviewShortcuts />
+          <PersonalNotificationsEntry />
+          <PersonalUsdtEntry />
           <div class="grid gap-3.5 sm:grid-cols-3">
             <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
               <div class="grid h-[42px] w-[42px] flex-none place-items-center rounded-xl bg-[color:var(--plum-soft)] text-[color:var(--plum)]"><Crown class="h-5 w-5" /></div>
@@ -156,6 +159,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import PersonalNotificationsEntry from '../../components/PersonalNotificationsEntry.vue'
+import PersonalOverviewShortcuts from '../../components/PersonalOverviewShortcuts.vue'
+import PersonalUsdtEntry from '../../components/PersonalUsdtEntry.vue'
 import { Crown, ShieldCheck, Percent } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getImageUrl } from '../../utils/image'

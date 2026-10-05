@@ -69,14 +69,14 @@
         </div>
       </section>
 
-      <section class="home-usdt" :aria-label="t('homeV2.usdtTitle')">
+      <RouterLink to="/c2c" class="home-usdt" :aria-label="t('homeV2.usdtTitle')">
         <span class="home-usdt__icon"><CircleDollarSign :size="32" :stroke-width="1.65" aria-hidden="true" /></span>
         <div class="home-usdt__copy">
           <h2>{{ t('homeV2.usdtTitle') }}</h2>
           <p>{{ t('homeV2.usdtDescription') }}</p>
         </div>
-        <span class="home-usdt__soon">{{ t('homeV2.comingSoon') }}</span>
-      </section>
+        <span class="home-usdt__soon">{{ t('c2c.title') }} <ArrowRight :size="16" aria-hidden="true" /></span>
+      </RouterLink>
 
       <section class="home-section" :aria-labelledby="'home-featured-title'">
         <div class="home-section__head">

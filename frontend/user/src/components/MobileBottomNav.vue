@@ -11,7 +11,7 @@
       >
         <span class="hcz-bottom-nav__icon">
           <component :is="item.icon" :size="21" :stroke-width="isActive(item.key) ? 2.3 : 1.9" aria-hidden="true" />
-          <span v-if="item.key === 'messages' && notificationStore.unreadCount > 0" class="hcz-bottom-nav__dot" />
+          <span v-if="item.key === 'me' && notificationStore.unreadCount > 0" class="hcz-bottom-nav__dot" />
         </span>
         <span>{{ item.label }}</span>
       </router-link>

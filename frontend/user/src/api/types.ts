@@ -91,7 +91,10 @@ export interface GoogleBindingData extends TelegramBindingData {
 }
 
 export interface WalletAccountData {
-    balance: string
+    available_balance: string
+    frozen_balance: string
+    total_balance: string
+    currency: string
 }
 
 export interface WalletTransactionData {

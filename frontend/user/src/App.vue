@@ -55,7 +55,7 @@ const VaultLayout = defineAsyncComponent(() => import('./templates/vault/layout/
 const appStore = useAppStore()
 const route = useRoute()
 const isResellerConsole = computed(() => route.meta.resellerConsole === true)
-const isLoginOrRegister = computed(() => route.name === 'user-login' || route.name === 'user-register')
+const isLoginOrRegister = computed(() => route.name === 'user-login' || route.name === 'user-register' || route.name === 'user-forgot')
 // getActiveTemplate 读取 appStore.config（响应式），config 加载后会重新计算
 const isVault = computed(() => getActiveTemplate() === 'vault')
 </script>

@@ -9,7 +9,7 @@
 #        - JWT_SECRET        (jwt.secret)           后台管理员 JWT
 #        - USER_JWT_SECRET   (user_jwt.secret)       前台用户 JWT
 #      生成命令见交付报告。
-#   4. 运行 scripts/validate_prod_config.ps1 校验本文件后再上线。
+#   4. 运行 scripts/deployment/validate_prod_config.ps1 校验本文件后再上线。
 # 注意：本文件不包含回环以外的主机名 / 示例域名 / 弱口令 / debug 模式。
 # =============================================================================
 

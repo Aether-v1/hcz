@@ -208,6 +208,7 @@ type CreateOrderInput struct {
 	ManualFormData      map[string]jsonmap.JSON
 	SkipRiskControl     bool // 完全跳过风控（下游订单）
 	SkipIPRiskControl   bool // 跳过 IP 维度风控（渠道/Bot 订单）
+	IdempotencyKey      string // P1：订单创建幂等键（来自 Idempotency-Key header，正式用户必填）
 }
 
 // CreateGuestOrderInput 游客创建订单输入
@@ -298,17 +299,26 @@ func (s *OrderService) CreateOrder(input CreateOrderInput) (*orderdomain.Order, 
 	if input.UserID == 0 {
 		return nil, ErrInvalidOrderItem
 	}
+	// P1：计算 payload 指纹（仅当携带 Idempotency-Key 时用于冲突检测）。
+	// key 的非空校验由 transport 层的正式用户端点负责；channel/upstream API 等内部路径不强制。
+	var fingerprint string
+	idempotencyKey := strings.TrimSpace(input.IdempotencyKey)
+	if idempotencyKey != "" {
+		fingerprint = orderIdempotencyFingerprint(input.Items, input.CouponCode, input.AffiliateCode)
+	}
 	return s.createOrder(orderCreateParams{
-		UserID:              input.UserID,
-		Tenant:              input.Tenant,
-		Items:               input.Items,
-		CouponCode:          input.CouponCode,
-		AffiliateCode:       input.AffiliateCode,
-		AffiliateVisitorKey: input.AffiliateVisitorKey,
-		ClientIP:            input.ClientIP,
-		ManualFormData:      input.ManualFormData,
-		SkipRiskControl:     input.SkipRiskControl,
-		SkipIPRiskControl:   input.SkipIPRiskControl,
+		UserID:                 input.UserID,
+		Tenant:                 input.Tenant,
+		Items:                  input.Items,
+		CouponCode:             input.CouponCode,
+		AffiliateCode:          input.AffiliateCode,
+		AffiliateVisitorKey:    input.AffiliateVisitorKey,
+		ClientIP:               input.ClientIP,
+		ManualFormData:         input.ManualFormData,
+		SkipRiskControl:        input.SkipRiskControl,
+		SkipIPRiskControl:      input.SkipIPRiskControl,
+		IdempotencyKey:         idempotencyKey,
+		IdempotencyFingerprint: fingerprint,
 	})
 }
 
@@ -358,6 +368,8 @@ type orderCreateParams struct {
 	SkipManualFormCheck      bool
 	SkipRiskControl          bool
 	SkipIPRiskControl        bool
+	IdempotencyKey           string // P1：订单创建幂等键（仅正式用户）
+	IdempotencyFingerprint   string // P1：请求 payload 指纹（SHA256），用于同 key 不同 payload 冲突检测
 }
 
 // OrderPreview 订单金额预览
@@ -500,6 +512,23 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		return nil, ErrQueueUnavailable
 	}
 
+	// P1：订单创建幂等预检（在事务外，避免重复执行昂贵的风控/定价/库存校验）。
+	// 仅对正式用户（user_id > 0 且 key 非空）生效；游客订单不参与幂等。
+	if input.UserID > 0 && strings.TrimSpace(input.IdempotencyKey) != "" {
+		existing, err := s.orderStore.GetByUserIDAndIdempotency(input.UserID, input.IdempotencyKey)
+		if err != nil {
+			return nil, err
+		}
+		if existing != nil {
+			// P1：同 key 但 payload 不同 → 409 Conflict，不静默返回旧订单。
+			if input.IdempotencyFingerprint != "" && existing.IdempotencyFingerprint != "" &&
+				existing.IdempotencyFingerprint != input.IdempotencyFingerprint {
+				return nil, ErrIdempotencyPayloadConflict
+			}
+			return existing, nil
+		}
+	}
+
 	if err := s.checkOrderRisk(&input, true); err != nil {
 		return nil, err
 	}
@@ -629,6 +658,8 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		ExpiresAt:               &expiresAt,
 		ClientIP:                strings.TrimSpace(input.ClientIP),
 		RiskIP:                  input.RiskIP,
+		IdempotencyKey:          strings.TrimSpace(input.IdempotencyKey),
+		IdempotencyFingerprint:  input.IdempotencyFingerprint,
 		CreatedAt:               now,
 		UpdatedAt:               now,
 	}
@@ -815,6 +846,14 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		}
 		if errors.Is(err, ErrManualStockInsufficient) {
 			return nil, ErrManualStockInsufficient
+		}
+		// P1：并发竞态兜底。两个相同 key 的请求同时通过预检，唯一索引只允许一个插入成功。
+		// 失败方检测到唯一约束冲突后，重新查询并返回已存在的订单（replay 语义）。
+		if input.UserID > 0 && strings.TrimSpace(input.IdempotencyKey) != "" && isUniqueConstraintViolation(err) {
+			existing, qErr := s.orderStore.GetByUserIDAndIdempotency(input.UserID, input.IdempotencyKey)
+			if qErr == nil && existing != nil {
+				return existing, nil
+			}
 		}
 		return nil, ErrOrderCreateFailed
 	}

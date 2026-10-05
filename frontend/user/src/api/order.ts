@@ -44,8 +44,16 @@ function withGuestAuth(input: GuestAuthInput, options: Record<string, any> = {})
 export const userOrderAPI = {
     preview: (data: any) => userApi.post('/orders/preview', data),
     getPaymentChannels: (data: any) => userApi.post('/order/payment-channels', data),
-    create: (data: any) => userApi.post('/orders', data),
-    createAndPay: (data: any) => userApi.post('/orders/create-and-pay', data),
+    // P1：正式用户订单创建必须携带 Idempotency-Key。同一次业务请求重试时复用同一个 key。
+    create: (data: any, idempotencyKey?: string) =>
+        userApi.post('/orders', data, {
+            headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+        }),
+    // P1：创建订单并支付（合并接口）同样需要 Idempotency-Key。
+    createAndPay: (data: any, idempotencyKey?: string) =>
+        userApi.post('/orders/create-and-pay', data, {
+            headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+        }),
     list: (params?: any) => userApi.get('/orders', { params }),
     stats: (params?: any) => userApi.get('/orders/stats', { params }),
     detail: (orderNo: string, options?: any) => userApi.get(`/orders/${encodeURIComponent(orderNo)}`, options),

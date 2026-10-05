@@ -48,7 +48,7 @@ export const resolveHomeEntryIcon = (key: string | undefined): Component => {
  * action_target 显式下发时以 action_target 为准；未下发时按 key 取这里的默认路由。
  */
 export const HOME_ENTRY_ROUTE_MAP: Record<string, string> = {
-  recharge: '/recharge',
+  recharge: '/products',
   c2c: '/c2c',
   wallet: '/me/wallet',
   withdrawal: '/me/wallet/withdrawal',

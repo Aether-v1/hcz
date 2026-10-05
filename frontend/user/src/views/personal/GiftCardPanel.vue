@@ -134,7 +134,7 @@ const redeemedAmountText = computed(() => {
 })
 
 const currentBalanceText = computed(() => {
-  const balance = String(lastRedeem.value?.wallet?.balance || '').trim()
+  const balance = String(lastRedeem.value?.wallet?.available_balance || '').trim()
   const currency = String(lastRedeem.value?.gift_card?.currency || appStore.config?.currency || 'CNY').trim()
   if (!balance) return '-'
   return `${balance} ${currency}`

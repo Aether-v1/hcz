@@ -1,7 +1,0 @@
-﻿git : Everything up-to-date
-所在位置 行:1 字符: 180
-+ ... OMPT -ErrorAction SilentlyContinue; git push origin main 2>&1 | Tee-O ...
-+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (Everything up-to-date:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 

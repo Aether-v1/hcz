@@ -1,13 +1,45 @@
+# IDE & Editor
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local config (NEVER commit real configs)
+# Templates that MAY be committed: config.yml.example, config.yml.production
 config.yml
-.idea
-db
-uploads
+config.yml.local
+.env
+.env.*
+!.env.example
+
+# Runtime data dirs
+db/
+uploads/
+logs/
+runtime/
+
+# Database files
 *.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.dump
+
+# Logs & backups
 *.log
 *.bak
-.env
+*.old
+*.orig
+*.pid
+
+# OS files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Node dependencies
 node_modules/
 
 # 构建产物与二进制
@@ -15,6 +47,11 @@ node_modules/
 *.dll
 *.so
 *.dylib
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
 /hcz
 /dujiao-next
 /dujiao-api
@@ -22,7 +59,10 @@ node_modules/
 *.test
 coverage.txt
 coverage.html
-logs/
+coverage.xml
+junit.xml
+.coverage
+htmlcov/
 
 # Added by goreleaser init:
 dist/
@@ -30,22 +70,52 @@ dist/
 # 前端构建产物与依赖（frontend/{admin,user}）
 frontend/*/dist/
 frontend/*/node_modules/
+frontend/*/coverage/
 frontend/*/*.local
+frontend/*/.vite/
 
 # Fullstack 嵌入产物：由前端构建拷贝而来，不进 git 历史
 internal/web/dist/
+
+# Python (used by test/integration scripts)
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
 
 # Agents 配置
 .agents/
 skills-lock.json
 
 # Repository hygiene: local generated artifacts (logs / test output / coverage / temp)
-runtime/
-coverage.xml
-junit.xml
 *.tmp
 *.cache
 *.coverage
 *.out
 .staging_creds.txt
 pg_hba.conf.bak.finalgate
+push_live.txt
+test_regression.txt
+
+# Development process docs (audits / reports / phase docs / closure reports)
+# 正式仓库只保留 API / 架构 / 部署 / 迁移 / 运维文档
+docs/audits/
+docs/reports/
+
+# Test artifacts & evidence
+test-results/
+test-output/
+screenshots/
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary directories
+tmp/
+temp/
+
+# SQLite WAL/SHM (already covered by *.db-* but explicit)
+*.sqlite-wal
+*.sqlite-shm

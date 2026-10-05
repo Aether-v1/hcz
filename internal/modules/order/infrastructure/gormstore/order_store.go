@@ -868,3 +868,27 @@ func (r *Store) GetByIDForUpdateWithChildren(id uint) (*orderdomain.Order, error
 	}
 	return &order, nil
 }
+
+// GetByUserIDAndIdempotency 按 (user_id, idempotency_key) 查询已存在的父订单。
+// 用于订单创建幂等预检。未找到返回 (nil, nil)。
+// 仅对正式用户（user_id > 0 且 key 非空）有效；游客订单不参与幂等。
+func (r *Store) GetByUserIDAndIdempotency(userID uint, idempotencyKey string) (*orderdomain.Order, error) {
+	idempotencyKey = strings.TrimSpace(idempotencyKey)
+	if userID == 0 || idempotencyKey == "" {
+		return nil, nil
+	}
+	var order orderdomain.Order
+	err := r.db.
+		Where("user_id = ? AND idempotency_key = ? AND deleted_at IS NULL", userID, idempotencyKey).
+		Preload("Items", "deleted_at IS NULL").
+		Preload("Children", "deleted_at IS NULL").
+		Preload("Children.Items", "deleted_at IS NULL").
+		First(&order).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &order, nil
+}

@@ -52,7 +52,7 @@ archives:
     files:
       - ./config.yml.example
       - ./README.md
-      - ./scripts/hcz-manager.sh
+      - ./scripts/maintenance/hcz-manager.sh
     name_template: >-
       {{ .ProjectName }}_
       {{- .Tag }}_

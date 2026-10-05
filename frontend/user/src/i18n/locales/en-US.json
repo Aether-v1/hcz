@@ -359,6 +359,10 @@
     "messages": "Messages",
     "me": "Me"
   },
+  "discover": {
+    "comingSoon": "Coming soon",
+    "description": "More services are on the way. Stay tuned."
+  },
   "bottomNav": {
     "home": "Home",
     "products": "Services",
@@ -1898,6 +1902,7 @@
     "authClear": "Clear saved info"
   },
   "notifications": {
+    "entryTitle": "Notifications",
     "title": "Notifications",
     "subtitle": "Order, wallet and aftersale updates will show up here",
     "markAllRead": "Mark all as read",

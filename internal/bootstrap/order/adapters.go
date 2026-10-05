@@ -337,6 +337,7 @@ func (a orderCreateAdapter) CreateOrder(input ordertransport.CreateOrderInput) (
 		AffiliateVisitorKey: input.AffiliateVisitorKey,
 		ClientIP:            input.ClientIP,
 		ManualFormData:      input.ManualFormData,
+		IdempotencyKey:      input.IdempotencyKey,
 	})
 	return order, mapOrderTransportError(err)
 }
@@ -522,6 +523,8 @@ func mapOrderTransportError(err error) error {
 		{orderriskcontract.ErrProductQuantityLimit, ordertransport.ErrRiskProductQuantityLimit},
 		{orderriskcontract.ErrPendingProductQuantityLimit, ordertransport.ErrRiskPendingProductLimit},
 		{orderriskcontract.ErrOrderRateLimited, ordertransport.ErrRiskOrderRateLimited},
+		{orderapp.ErrIdempotencyKeyRequired, ordertransport.ErrIdempotencyKeyRequired},
+		{orderapp.ErrIdempotencyPayloadConflict, ordertransport.ErrIdempotencyPayloadConflict},
 	} {
 		if errors.Is(err, mapping.source) {
 			return fmt.Errorf("%w: %v", mapping.target, err)

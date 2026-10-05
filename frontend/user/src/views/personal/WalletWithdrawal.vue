@@ -217,7 +217,7 @@ let quoteSeq = 0
 
 const balanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  const bal = wallet.value?.balance ?? '0.00'
+  const bal = wallet.value?.available_balance ?? '0.00'
   return `${bal} ${ccy}`
 })
 

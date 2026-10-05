@@ -184,6 +184,9 @@ func AutoMigrate() error {
 	if err := SeedHomeEntries(db); err != nil {
 		return err
 	}
+	if err := ensureOrderIdempotencyUniqueIndex(); err != nil {
+		return err
+	}
 	return nil
 }
 

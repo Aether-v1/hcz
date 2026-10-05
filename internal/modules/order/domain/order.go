@@ -44,6 +44,8 @@ type Order struct {
 	ResellerProfitAmount    money.Amount        `gorm:"type:decimal(20,2);not null;default:0" json:"reseller_profit_amount"`              // 分销差价快照
 	ClientIP                string              `gorm:"type:varchar(64)" json:"client_ip,omitempty"`                                      // 下单客户端IP
 	RiskIP                  string              `gorm:"type:varchar(80);index;index:idx_orders_risk_pending,priority:1" json:"-"`         // 规范化风控IP（IPv6按/64）
+	IdempotencyKey          string              `gorm:"type:varchar(128);index" json:"idempotency_key,omitempty"`                          // P1：订单创建幂等键（仅父订单，用户下单时设置）
+	IdempotencyFingerprint  string              `gorm:"type:varchar(64)" json:"idempotency_fingerprint,omitempty"`                         // P1：请求 payload 指纹（SHA256），用于同 key 不同 payload 冲突检测
 	ExpiresAt               *time.Time          `gorm:"index" json:"expires_at"`                                                          // 过期时间
 	PaidAt                  *time.Time          `gorm:"index" json:"paid_at"`                                                             // 支付时间
 	CanceledAt              *time.Time          `gorm:"index" json:"canceled_at"`                                                         // 取消时间

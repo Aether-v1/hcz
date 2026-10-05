@@ -279,7 +279,7 @@ const selectedChannelFeeAmountDisplay = computed(() => {
 // P0-2: 钱包余额本位币固定 USDT，读 API 返回的 currency，不用 site config currency。
 const balanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.balance, ccy)
+  return formatMoney(wallet.value?.available_balance, ccy)
 })
 
 const loadWallet = async () => {

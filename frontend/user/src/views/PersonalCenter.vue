@@ -90,6 +90,9 @@
           </Alert>
 
           <template v-if="currentSection === 'overview'">
+            <PersonalOverviewShortcuts />
+            <PersonalNotificationsEntry />
+            <PersonalUsdtEntry />
             <!-- 数据一览 -->
             <div class="grid gap-4 sm:grid-cols-3">
               <StatCard :label="t('personalCenter.memberLevel.currentLevel')" :icon="Crown" tone="accent">
@@ -232,6 +235,9 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import PersonalNotificationsEntry from '../components/PersonalNotificationsEntry.vue'
+import PersonalOverviewShortcuts from '../components/PersonalOverviewShortcuts.vue'
+import PersonalUsdtEntry from '../components/PersonalUsdtEntry.vue'
 import { Crown, ShieldCheck, Percent } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
 import { pageAlertVariant, pageAlertToneClass } from '../utils/alerts'

@@ -41,4 +41,7 @@ var (
 	ErrResellerPriceBelowBase     = resellercontract.ErrPriceBelowBase
 	ErrResellerMarkupExceeded     = resellercontract.ErrMarkupExceeded
 	ErrResellerPricingModeInvalid = resellercontract.ErrPricingModeInvalid
+	// P1：订单创建幂等
+	ErrIdempotencyKeyRequired    = errors.New("order idempotency key required")
+	ErrIdempotencyPayloadConflict = errors.New("order idempotency key reused with different payload")
 )

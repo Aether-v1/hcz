@@ -31,12 +31,12 @@ jobs:
 
       - name: Check Bash syntax and ShellCheck
         run: |
-          bash -n scripts/hcz-manager.sh
-          bash -n scripts/tests/hcz-manager_test.sh
-          shellcheck -x -S warning scripts/hcz-manager.sh scripts/tests/hcz-manager_test.sh
+          bash -n scripts/maintenance/hcz-manager.sh
+          bash -n scripts/testing/hcz-manager_test.sh
+          shellcheck -x -S warning scripts/maintenance/hcz-manager.sh scripts/testing/hcz-manager_test.sh
 
       - name: Run installer tests
-        run: sudo bash scripts/tests/hcz-manager_test.sh
+        run: sudo bash scripts/testing/hcz-manager_test.sh
 
       - name: Check release archive includes installer
         run: |
@@ -46,7 +46,7 @@ jobs:
           with open('.goreleaser.yaml', encoding='utf-8') as handle:
               config = yaml.safe_load(handle)
           files = config['archives'][0]['files']
-          assert './scripts/hcz-manager.sh' in files, files
+          assert './scripts/maintenance/hcz-manager.sh' in files, files
           PY
 
   api:

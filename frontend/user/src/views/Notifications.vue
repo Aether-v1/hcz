@@ -40,10 +40,14 @@
           v-for="item in notificationStore.notifications"
           :key="item.id"
           class="group flex items-start gap-4 rounded-2xl border p-4 md:p-5 transition-colors cursor-pointer"
+          :tabindex="0"
+          :role="notificationTarget(item) ? 'link' : 'button'"
           :class="item.is_read
             ? 'bg-card/60 border-border/60 opacity-70'
             : 'bg-card border-primary/30 shadow-sm hover:border-primary/50'"
-          @click="handleItemClick(item)">
+          @click="handleItemClick(item)"
+          @keydown.enter="handleItemClick(item)"
+          @keydown.space.prevent="handleItemClick(item)">
           <!-- Type icon -->
           <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl" :class="typeMeta(item.type).box">
             <component :is="typeMeta(item.type).icon" class="h-5 w-5" />
@@ -81,6 +85,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   Bell, CheckCheck, CheckCircle2, BadgeDollarSign, Loader2, MessageSquareWarning,
@@ -92,11 +97,14 @@ import EmptyState from '../components/EmptyState.vue'
 import { useNotificationStore, type NotificationItem } from '../stores/notification'
 import { useAppStore } from '../stores/app'
 import { toast } from '../composables/useToast'
+import { resolveNotificationTarget } from '../utils/notificationTarget'
 
 const { t } = useI18n()
 const notificationStore = useNotificationStore()
+const router = useRouter()
 const appStore = useAppStore()
 const markingAll = ref(false)
+const notificationTarget = (item: NotificationItem) => resolveNotificationTarget(item)
 
 const typeMetaMap: Record<string, { icon: any; box: string }> = {
   wallet_recharge: { icon: Wallet, box: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
@@ -125,12 +133,15 @@ const formatTime = (iso: string) => {
 }
 
 const handleItemClick = async (item: NotificationItem) => {
-  if (item.is_read) return
-  try {
-    await notificationStore.markRead(item.id)
-  } catch {
-    toast.error(t('notifications.markReadFailed'))
+  if (!item.is_read) {
+    try {
+      await notificationStore.markRead(item.id)
+    } catch {
+      toast.error(t('notifications.markReadFailed'))
+    }
   }
+  const target = notificationTarget(item)
+  if (target) await router.push(target)
 }
 
 const handleMarkAllRead = async () => {

@@ -54,6 +54,9 @@ type Store interface {
 	UpdateFieldsWhereWalletPaid(id uint, updates map[string]interface{}) (int64, error)
 	GetByIDForUpdate(id uint) (*orderdomain.Order, error)
 	GetByIDForUpdateWithChildren(id uint) (*orderdomain.Order, error)
+	// P1：订单创建幂等预检。按 (user_id, idempotency_key) 查询已存在的父订单。
+	// 未找到返回 (nil, nil)；仅对正式用户（user_id > 0 且 key 非空）有效。
+	GetByUserIDAndIdempotency(userID uint, idempotencyKey string) (*orderdomain.Order, error)
 
 	CreateRefundRecord(record *orderdomain.OrderRefundRecord) error
 	GetRefundRecordByID(id uint) (*orderdomain.OrderRefundRecord, error)

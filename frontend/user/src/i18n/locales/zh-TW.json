@@ -359,6 +359,10 @@
     "messages": "訊息",
     "me": "我的"
   },
+  "discover": {
+    "comingSoon": "即將開放",
+    "description": "更多服務正在準備中，敬請期待"
+  },
   "bottomNav": {
     "home": "首頁",
     "products": "儲值服務",
@@ -1898,6 +1902,7 @@
     "authClear": "清除已保存資訊"
   },
   "notifications": {
+    "entryTitle": "訊息通知",
     "title": "通知",
     "subtitle": "帳戶訂單、錢包與售後動態都會在這裡提醒你",
     "markAllRead": "全部已讀",

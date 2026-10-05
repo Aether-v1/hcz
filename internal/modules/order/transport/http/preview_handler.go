@@ -44,6 +44,9 @@ var (
 	ErrRiskProductQuantityLimit  = errors.New("risk: product quantity limit")
 	ErrRiskPendingProductLimit   = errors.New("risk: pending product quantity limit")
 	ErrRiskOrderRateLimited      = errors.New("risk: order rate limited")
+	// P1：订单创建幂等
+	ErrIdempotencyKeyRequired     = errors.New("order idempotency key required")
+	ErrIdempotencyPayloadConflict = errors.New("order idempotency key reused with different payload")
 )
 
 type riskRateLimitedError struct {
@@ -123,6 +126,7 @@ type CreateOrderInput struct {
 	AffiliateVisitorKey string
 	ClientIP            string
 	ManualFormData      map[string]jsonmap.JSON
+	IdempotencyKey      string // P1：订单创建幂等键（来自 Idempotency-Key header）
 }
 
 // CreateGuestOrderInput 游客订单预览输入。
@@ -332,6 +336,8 @@ var guestOrderCreateExtraErrorRules = []mappedError{
 }
 
 var userOrderCommonErrorRules = []mappedError{
+	{target: ErrIdempotencyKeyRequired, code: response.CodeBadRequest, key: "error.idempotency_key_required"},
+	{target: ErrIdempotencyPayloadConflict, code: response.CodeBadRequest, key: "error.idempotency_payload_conflict"},
 	{target: ErrProductSKURequired, code: response.CodeBadRequest, key: "error.order_item_invalid"},
 	{target: productcontract.ErrProductSKUInvalid, code: response.CodeBadRequest, key: "error.order_item_invalid"},
 	{target: productdomain.ErrPurchaseQuantityInvalid, code: response.CodeBadRequest, key: "error.order_item_invalid"},

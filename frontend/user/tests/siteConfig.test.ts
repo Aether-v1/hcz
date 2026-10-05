@@ -13,7 +13,7 @@ import {
 import { resolveBlockAction } from '../src/components/discovery/shared.ts'
 
 const ROUTE_MAP: Record<string, string> = {
-  recharge: '/recharge',
+  recharge: '/products',
   c2c: '/c2c',
   wallet: '/me/wallet',
   withdrawal: '/me/wallet/withdrawal',
@@ -55,7 +55,7 @@ test('home_entries empty falls back to default 4 entries', () => {
   const entries = normalizeHomeEntries([], 'zh-CN', ROUTE_MAP)
   assert.equal(entries.length, DEFAULT_HOME_ENTRIES.length)
   assert.equal(entries[0].key, 'recharge')
-  assert.equal(entries[0].href, '/recharge')
+  assert.equal(entries[0].href, '/products')
   assert.equal(entries[0].external, false)
   assert.equal(entries[0].recommended, true)
 })
