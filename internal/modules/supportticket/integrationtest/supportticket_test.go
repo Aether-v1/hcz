@@ -16,10 +16,10 @@ func TestCreateTicketSuccess(t *testing.T) {
 	cat := f.seedCategory("account", "账户问题", "normal", true)
 
 	ticket, err := f.svc.CreateTicket(context.Background(), supportcontract.CreateTicketInput{
-		UserID:   100,
+		UserID:     100,
 		CategoryID: cat.ID,
-		Subject:  "无法登录",
-		Body:     "我收不到验证码",
+		Subject:    "无法登录",
+		Body:       "我收不到验证码",
 	})
 	if err != nil {
 		t.Fatalf("create ticket: %v", err)

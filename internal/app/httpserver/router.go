@@ -52,9 +52,9 @@ import (
 	settingstransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http"
 	sitemapbrand "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/settingsbrand"
 	sitemaptransport "github.com/Aether-v1/hcz/internal/modules/sitemap/transport/http"
+	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	telegramchanneltransport "github.com/Aether-v1/hcz/internal/modules/telegram/channelbot/transport/http"
 	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
-	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	"github.com/Aether-v1/hcz/internal/web"
 
 	"github.com/gin-gonic/gin"

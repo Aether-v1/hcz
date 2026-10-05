@@ -27,13 +27,13 @@ type Options struct {
 
 // Service 工单用例入口。
 type Service struct {
-	repo    supportcontract.Repository
-	uow     supportcontract.UnitOfWork
-	users   supportcontract.UserReader
-	admins  supportcontract.AdminReader
+	repo     supportcontract.Repository
+	uow      supportcontract.UnitOfWork
+	users    supportcontract.UserReader
+	admins   supportcontract.AdminReader
 	notifier supportcontract.NotificationCreator
 	uploader supportcontract.FileUploader
-	filer   supportcontract.FileStreamer
+	filer    supportcontract.FileStreamer
 }
 
 // NewService 创建工单 Service。

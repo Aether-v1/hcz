@@ -53,11 +53,11 @@ func (m *mockNotifier) CreateNotification(_ context.Context, in supportcontract.
 // ---- fixture ----
 
 type fixture struct {
-	db     *gorm.DB
-	repo   *supportgormstore.Store
-	svc    *supportapp.Service
-	users  *mockUserReader
-	admins *mockAdminReader
+	db       *gorm.DB
+	repo     *supportgormstore.Store
+	svc      *supportapp.Service
+	users    *mockUserReader
+	admins   *mockAdminReader
 	notifier *mockNotifier
 }
 

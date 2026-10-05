@@ -228,8 +228,8 @@ func (s *Service) ChangePriority(ctx context.Context, in supportcontract.ChangeP
 // ResolveTicket 解决工单。
 func (s *Service) ResolveTicket(ctx context.Context, in supportcontract.ResolveTicketInput) (*supportdomain.Ticket, error) {
 	var (
-		updated *supportdomain.Ticket
-		userID  uint
+		updated  *supportdomain.Ticket
+		userID   uint
 		ticketNo string
 	)
 	err := s.uow.WithinTransaction(func(tx supportcontract.Transaction) error {
@@ -299,8 +299,8 @@ func (s *Service) ResolveTicket(ctx context.Context, in supportcontract.ResolveT
 // CloseTicket 客服关闭工单。
 func (s *Service) CloseTicket(ctx context.Context, in supportcontract.CloseTicketInput) (*supportdomain.Ticket, error) {
 	var (
-		updated *supportdomain.Ticket
-		userID  uint
+		updated  *supportdomain.Ticket
+		userID   uint
 		ticketNo string
 	)
 	err := s.uow.WithinTransaction(func(tx supportcontract.Transaction) error {

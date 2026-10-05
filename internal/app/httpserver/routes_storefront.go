@@ -24,8 +24,8 @@ import (
 	paymentcallbacktransport "github.com/Aether-v1/hcz/internal/modules/payment/transport/http/callback"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/user"
 	publicconfigtransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http/public"
-	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
 	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
+	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 

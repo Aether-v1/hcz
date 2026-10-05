@@ -223,10 +223,10 @@ func (h *UserHandler) UploadAttachment(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{
-		"id":         att.ID,
-		"file_name":  att.FileName,
-		"mime_type":  att.MimeType,
-		"file_size":  att.FileSize,
+		"id":        att.ID,
+		"file_name": att.FileName,
+		"mime_type": att.MimeType,
+		"file_size": att.FileSize,
 	})
 }
 

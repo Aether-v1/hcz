@@ -13,24 +13,24 @@ import (
 
 // TicketListFilter 用户侧工单列表过滤。
 type TicketListFilter struct {
-	UserID    uint
-	Status    string
-	Page      int
-	PageSize  int
+	UserID   uint
+	Status   string
+	Page     int
+	PageSize int
 }
 
 // AdminTicketListFilter 后台工单列表过滤。
 type AdminTicketListFilter struct {
-	Status         string
-	CategoryID     uint
-	Priority       string
+	Status          string
+	CategoryID      uint
+	Priority        string
 	AssignedAdminID uint // 0=unassigned, math.MaxUint 特殊值保留；"me" 由 service 层展开
-	UnassignedOnly bool
-	MyAssignedOnly uint // 0=不过滤；否则只看该 admin 负责的
-	UnreadOnly     bool
-	Search         string
-	Page           int
-	PageSize       int
+	UnassignedOnly  bool
+	MyAssignedOnly  uint // 0=不过滤；否则只看该 admin 负责的
+	UnreadOnly      bool
+	Search          string
+	Page            int
+	PageSize        int
 }
 
 // MessageListFilter 消息分页过滤。
