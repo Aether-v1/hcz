@@ -30,7 +30,7 @@
 | main vs origin/main | 一致（已推送） |
 | 未跟踪业务文件 | 无 |
 | binary/dist/node_modules/temp DB/log/coverage 误提交 | 无（均 gitignored） |
-| **最终 Release Baseline Commit** | **`5f0ab23`**（CI 4 jobs 全绿，已锁定） |
+| **最终 Release Baseline Commit** | **`875a24c3509d200001261c57bda101732eea46a4`**（在审计锁定 `5f0ab23` 之后叠加 user 前端 DOMPurify 消毒同步；Linux CI run #22 4 jobs 全绿，已锁定） |
 
 ---
 
