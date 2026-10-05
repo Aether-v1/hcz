@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
 )
 
@@ -23,6 +24,7 @@ type HomeEntryInput struct {
 	Title        string
 	Subtitle     string
 	Icon         string
+	Image        string
 	ActionType   string
 	ActionTarget string
 	Badge        string
@@ -33,7 +35,17 @@ type HomeEntryInput struct {
 
 // HomeEntryService 首页入口业务逻辑。
 type HomeEntryService struct {
-	store HomeEntryStore
+	store    HomeEntryStore
+	products interface {
+		GetBySlug(slug string, onlyActive bool) (*productdomain.Product, error)
+	}
+}
+
+// SetProductLookup connects published catalog products to manually configured entries.
+func (s *HomeEntryService) SetProductLookup(products interface {
+	GetBySlug(slug string, onlyActive bool) (*productdomain.Product, error)
+}) {
+	s.products = products
 }
 
 // NewHomeEntryService 创建 HomeEntryService。
@@ -48,7 +60,24 @@ func (s *HomeEntryService) ListAdmin() ([]sitebuilderdomain.HomeEntry, error) {
 
 // ListPublic 列出启用入口（前台）。
 func (s *HomeEntryService) ListPublic() ([]sitebuilderdomain.HomeEntry, error) {
-	return s.store.List(true)
+	entries, err := s.store.List(true)
+	if err != nil {
+		return nil, err
+	}
+	visible := make([]sitebuilderdomain.HomeEntry, 0, len(entries))
+	for _, entry := range entries {
+		if entry.ActionType == "product" {
+			if s.products == nil {
+				continue
+			}
+			product, lookupErr := s.products.GetBySlug(entry.ActionTarget, true)
+			if lookupErr != nil || product == nil {
+				continue
+			}
+		}
+		visible = append(visible, entry)
+	}
+	return visible, nil
 }
 
 // Get 按 ID 查询。
@@ -119,6 +148,11 @@ func (s *HomeEntryService) SetEnabled(id uint, enabled bool) (*sitebuilderdomain
 	if entry == nil {
 		return nil, errors.New("home entry not found")
 	}
+	if enabled && entry.ActionType == "product" {
+		if err := s.requirePublishedProduct(entry.ActionTarget); err != nil {
+			return nil, err
+		}
+	}
 	entry.Enabled = enabled
 	if err := s.store.Update(entry); err != nil {
 		return nil, err
@@ -139,6 +173,15 @@ func (s *HomeEntryService) applyInput(entry *sitebuilderdomain.HomeEntry, input 
 	}
 	entry.Subtitle = strings.TrimSpace(input.Subtitle)
 	entry.Badge = strings.TrimSpace(input.Badge)
+	entry.Image = strings.TrimSpace(input.Image)
+	if entry.Image != "" && !strings.HasPrefix(entry.Image, "/") {
+		if err := ValidateExternalURL(entry.Image); err != nil {
+			return errors.New("image must be a site path or http/https URL")
+		}
+	}
+	if strings.HasPrefix(entry.Image, "//") {
+		return errors.New("image must not be a protocol-relative URL")
+	}
 
 	entry.Icon = strings.TrimSpace(input.Icon)
 	if entry.Icon != "" && !IsAllowedHomeEntryIcon(entry.Icon) {
@@ -156,8 +199,26 @@ func (s *HomeEntryService) applyInput(entry *sitebuilderdomain.HomeEntry, input 
 		if err := ValidateExternalURL(entry.ActionTarget); err != nil {
 			return err
 		}
+	case "product":
+		if err := s.requirePublishedProduct(entry.ActionTarget); err != nil {
+			return err
+		}
 	default:
-		return errors.New("action_type must be internal or external")
+		return errors.New("action_type must be internal, external or product")
+	}
+	return nil
+}
+
+func (s *HomeEntryService) requirePublishedProduct(slug string) error {
+	if s.products == nil || slug == "" {
+		return errors.New("published product is required")
+	}
+	product, err := s.products.GetBySlug(slug, true)
+	if err != nil {
+		return err
+	}
+	if product == nil {
+		return errors.New("product is not published")
 	}
 	return nil
 }

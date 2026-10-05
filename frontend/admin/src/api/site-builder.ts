@@ -74,7 +74,7 @@ export interface BrandConfig {
   social_links: SocialLink[]
 }
 
-export type HomeEntryActionType = 'internal' | 'external'
+export type HomeEntryActionType = 'internal' | 'external' | 'product'
 
 export interface HomeEntry {
   id?: number
@@ -82,6 +82,7 @@ export interface HomeEntry {
   title: string
   subtitle: string
   icon: string
+  image: string
   action_type: HomeEntryActionType
   action_target: string
   badge: string

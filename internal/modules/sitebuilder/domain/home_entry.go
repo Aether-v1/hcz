@@ -9,7 +9,8 @@ type HomeEntry struct {
 	Title        string    `gorm:"type:varchar(100);not null" json:"title"`
 	Subtitle     string    `gorm:"type:varchar(200)" json:"subtitle"`
 	Icon         string    `gorm:"type:varchar(100)" json:"icon"`
-	ActionType   string    `gorm:"type:varchar(20);not null" json:"action_type"` // internal/external
+	Image        string    `gorm:"type:varchar(500)" json:"image"`
+	ActionType   string    `gorm:"type:varchar(20);not null" json:"action_type"` // internal/external/product
 	ActionTarget string    `gorm:"type:varchar(500);not null" json:"action_target"`
 	Badge        string    `gorm:"type:varchar(50)" json:"badge"`
 	Recommended  bool      `gorm:"default:false" json:"recommended"`

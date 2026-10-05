@@ -287,7 +287,7 @@ func (h *Handler) attachSiteBuilderPublicData(data map[string]interface{}) {
 	}
 
 	homeEntries := h.siteBuilder.PublicHomeEntries()
-	if len(homeEntries) == 0 {
+	if homeEntries == nil {
 		homeEntries = defaultPublicHomeEntries()
 	}
 	data["home_entries"] = homeEntries

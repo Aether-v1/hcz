@@ -3,6 +3,7 @@ package application
 import (
 	"testing"
 
+	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 )
@@ -245,6 +246,43 @@ func TestHomeEntryServiceUpdateAndToggle(t *testing.T) {
 	list, _ := svc.ListPublic()
 	if len(list) != 0 {
 		t.Fatalf("expected no public entries after disable, got %d", len(list))
+	}
+}
+
+type fakePublishedProducts struct{ active map[string]bool }
+
+func (f *fakePublishedProducts) GetBySlug(slug string, onlyActive bool) (*productdomain.Product, error) {
+	if !f.active[slug] {
+		return nil, nil
+	}
+	return &productdomain.Product{Slug: slug, IsActive: true}, nil
+}
+
+func TestHomeEntryProductRequiresPublishedProductAndPreservesOwnImage(t *testing.T) {
+	store := newFakeHomeEntryStore()
+	products := &fakePublishedProducts{active: map[string]bool{"topup": true}}
+	svc := NewHomeEntryService(store)
+	svc.SetProductLookup(products)
+	if _, err := svc.Create(HomeEntryInput{Title: "下架", ActionType: "product", ActionTarget: "unpublished"}); err == nil {
+		t.Fatal("unpublished product must be rejected")
+	}
+	entry, err := svc.Create(HomeEntryInput{Title: "充值", ActionType: "product", ActionTarget: "topup", Image: "/uploads/entry.png"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if entry.Image != "/uploads/entry.png" {
+		t.Fatalf("independent image lost: %q", entry.Image)
+	}
+	if _, err := svc.Create(HomeEntryInput{Title: "坏图片", ActionType: "product", ActionTarget: "topup", Image: "javascript:alert(1)"}); err == nil {
+		t.Fatal("unsafe image URL must be rejected")
+	}
+	delete(products.active, "topup")
+	public, err := svc.ListPublic()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(public) != 0 {
+		t.Fatal("delisted product must not appear in public entries")
 	}
 }
 

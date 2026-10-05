@@ -46,3 +46,5 @@ junit.xml
 *.cache
 *.coverage
 *.out
+.staging_creds.txt
+pg_hba.conf.bak.finalgate

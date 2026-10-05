@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,6 +9,10 @@ import { Dialog, DialogHeader, DialogScrollContent, DialogTitle } from '@/compon
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import TableSkeleton from '@/components/TableSkeleton.vue'
+import MediaPicker from '@/components/admin/MediaPicker.vue'
+import { adminAPI } from '@/api/admin'
+import type { AdminProduct } from '@/api/types'
+import { getImageUrl } from '@/utils/image'
 import {
   getHomeEntries,
   createHomeEntry,
@@ -29,14 +34,36 @@ const showModal = ref(false)
 const isEditing = ref(false)
 
 const entries = ref<HomeEntry[]>([])
+const publishedProducts = ref<AdminProduct[]>([])
+const productSearch = ref('')
+const productPage = ref(1)
+const productTotalPages = ref(1)
+const productsLoading = ref(false)
+
+const fetchPublishedProducts = async (page = 1) => {
+  productsLoading.value = true
+  try {
+    const res = await adminAPI.getProducts({ page, page_size: 20, is_active: 1, search: productSearch.value || undefined })
+    publishedProducts.value = (res.data.data || []).filter((product: AdminProduct) => product.is_active && product.slug)
+    productPage.value = page
+    productTotalPages.value = res.data.pagination?.total_page || 1
+  } catch {
+    publishedProducts.value = []
+    notifyError('已上架商品加载失败')
+  } finally {
+    productsLoading.value = false
+  }
+}
+watch(productSearch, useDebounceFn(() => { void fetchPublishedProducts(1) }, 300))
 
 const emptyForm = (): HomeEntry => ({
   key: '',
   title: '',
   subtitle: '',
   icon: 'recharge',
-  action_type: 'internal',
-  action_target: 'recharge',
+  image: '',
+  action_type: 'product',
+  action_target: '',
   badge: '',
   recommended: false,
   enabled: true,
@@ -62,19 +89,23 @@ const fetchEntries = async () => {
 const openCreate = () => {
   isEditing.value = false
   Object.assign(form, emptyForm())
+  productSearch.value = ''
   formError.value = ''
   showModal.value = true
+  void fetchPublishedProducts(1)
 }
 
 const openEdit = (entry: HomeEntry) => {
   isEditing.value = true
+  productSearch.value = ''
   Object.assign(form, {
     id: entry.id,
     key: entry.key || '',
     title: entry.title || '',
     subtitle: entry.subtitle || '',
     icon: entry.icon || 'recharge',
-    action_type: (entry.action_type === 'external' ? 'external' : 'internal') as 'internal' | 'external',
+    image: entry.image || '',
+    action_type: entry.action_type === 'product' ? 'product' : entry.action_type === 'external' ? 'external' : 'internal',
     action_target: entry.action_target || '',
     badge: entry.badge || '',
     recommended: Boolean(entry.recommended),
@@ -83,6 +114,7 @@ const openEdit = (entry: HomeEntry) => {
   })
   formError.value = ''
   showModal.value = true
+  void fetchPublishedProducts(1)
 }
 
 const closeModal = () => {
@@ -101,6 +133,10 @@ const validate = (): boolean => {
   }
   if (form.action_type === 'external' && !isHttpUrl(form.action_target)) {
     formError.value = '外部链接必须以 http:// 或 https:// 开头'
+    return false
+  }
+  if (form.action_type === 'product' && !form.action_target.trim()) {
+    formError.value = '请选择已上架商品'
     return false
   }
   return true
@@ -178,7 +214,7 @@ onMounted(fetchEntries)
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-foreground">配置前台首页九宫格/功能入口，支持排序与启停。</p>
+      <p class="text-sm text-muted-foreground">手动配置首页核心入口。首页按排序展示前四个启用入口。</p>
       <Button @click="openCreate">新建入口</Button>
     </div>
 
@@ -211,7 +247,7 @@ onMounted(fetchEntries)
                 <span class="ml-1 text-xs text-muted-foreground">{{ entry.sort_order }}</span>
               </div>
             </TableCell>
-            <TableCell class="px-4 py-3 text-xs">{{ entry.icon }}</TableCell>
+            <TableCell class="px-4 py-3 text-xs"><img v-if="entry.image" :src="getImageUrl(entry.image)" alt="" class="h-9 w-9 rounded object-cover" /><span v-else>{{ entry.icon }}</span></TableCell>
             <TableCell class="px-4 py-3">
               <div class="font-medium">{{ entry.title }}</div>
               <div class="text-xs text-muted-foreground">{{ entry.subtitle }}</div>
@@ -257,6 +293,10 @@ onMounted(fetchEntries)
                 </SelectContent>
               </Select>
             </div>
+            <div class="space-y-2 md:col-span-2">
+              <Label class="text-xs font-medium text-muted-foreground">入口图片（单独配置，留空时使用图标）</Label>
+              <MediaPicker v-model="form.image" scene="common" />
+            </div>
 
             <div class="space-y-2">
               <Label class="text-xs font-medium text-muted-foreground">标题 *</Label>
@@ -271,17 +311,31 @@ onMounted(fetchEntries)
               <Label class="text-xs font-medium text-muted-foreground">跳转类型</Label>
               <div class="flex gap-4">
                 <Label class="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="radio" value="internal" v-model="form.action_type" /> 内部路由
+                  <input type="radio" value="product" v-model="form.action_type" @change="form.action_target = ''" /> 已上架商品
                 </Label>
                 <Label class="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="radio" value="external" v-model="form.action_type" /> 外部链接
+                  <input type="radio" value="internal" v-model="form.action_type" @change="form.action_target = 'recharge'" /> 内部路由
+                </Label>
+                <Label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" value="external" v-model="form.action_type" @change="form.action_target = ''" /> 外部链接
                 </Label>
               </div>
             </div>
 
             <div class="space-y-2 md:col-span-2">
               <Label class="text-xs font-medium text-muted-foreground">跳转目标</Label>
-              <Select v-if="form.action_type === 'internal'" v-model="form.action_target">
+              <div v-if="form.action_type === 'product'" class="space-y-2">
+                <Input v-model="productSearch" placeholder="搜索已上架商品" />
+                <div class="max-h-44 overflow-y-auto rounded border border-border">
+                  <button v-for="product in publishedProducts" :key="product.id" type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-muted" :class="{ 'bg-muted font-semibold': form.action_target === product.slug }" @click="form.action_target = product.slug">
+                    {{ product.title?.['zh-CN'] || product.title?.['en-US'] || product.slug }} · {{ product.slug }}
+                  </button>
+                  <p v-if="!productsLoading && !publishedProducts.length" class="px-3 py-3 text-sm text-muted-foreground">没有符合条件的已上架商品</p>
+                </div>
+                <p v-if="form.action_target" class="text-xs text-muted-foreground">已选择：{{ form.action_target }}</p>
+                <div v-if="productTotalPages > 1" class="flex items-center gap-2 text-xs"><Button type="button" size="sm" variant="outline" :disabled="productPage <= 1 || productsLoading" @click="fetchPublishedProducts(productPage - 1)">上一页</Button><span>{{ productPage }} / {{ productTotalPages }}</span><Button type="button" size="sm" variant="outline" :disabled="productPage >= productTotalPages || productsLoading" @click="fetchPublishedProducts(productPage + 1)">下一页</Button></div>
+              </div>
+              <Select v-else-if="form.action_type === 'internal'" v-model="form.action_target">
                 <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem>

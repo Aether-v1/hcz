@@ -22,8 +22,11 @@ func (a publicConfigSiteBuilderAdapter) PublicHomeEntries() []map[string]interfa
 		return nil
 	}
 	entries, err := a.homeEntries.ListPublic()
-	if err != nil || len(entries) == 0 {
+	if err != nil {
 		return nil
+	}
+	if len(entries) == 0 {
+		return make([]map[string]interface{}, 0)
 	}
 	result := make([]map[string]interface{}, 0, len(entries))
 	for i := range entries {
@@ -33,6 +36,7 @@ func (a publicConfigSiteBuilderAdapter) PublicHomeEntries() []map[string]interfa
 			"title":         e.Title,
 			"subtitle":      e.Subtitle,
 			"icon":          e.Icon,
+			"image":         e.Image,
 			"action_type":   e.ActionType,
 			"action_target": e.ActionTarget,
 			"badge":         e.Badge,

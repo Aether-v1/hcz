@@ -1,0 +1,216 @@
+# =============================================================================
+# HCZ 生产环境配置模板 (config.yml.production)
+# -----------------------------------------------------------------------------
+# 用法：
+#   1. 复制为 config.yml（或通过环境变量覆盖，见底部说明）。
+#   2. 把所有 ${PLACEHOLDER} 替换为真实值；切勿把真实密钥提交到 Git。
+#   3. 三个核心 secret 必须各为 32 字节强随机值且互不相同：
+#        - APP_SECRET        (app.secret_key)        AES-256 内部加密
+#        - JWT_SECRET        (jwt.secret)           后台管理员 JWT
+#        - USER_JWT_SECRET   (user_jwt.secret)       前台用户 JWT
+#      生成命令见交付报告。
+#   4. 运行 scripts/validate_prod_config.ps1 校验本文件后再上线。
+# 注意：本文件不包含回环以外的主机名 / 示例域名 / 弱口令 / debug 模式。
+# =============================================================================
+
+app:
+  secret_key: "${APP_SECRET}"        # 32 字节随机，AES-256 加密敏感数据，必须与两个 JWT secret 不同
+  totp_issuer: "HCZ"                 # 2FA 验证器发行方名称（勿用 & 等特殊字符）
+
+server:
+  host: 127.0.0.1                    # 仅绑定本机回环，前置 Nginx/反向代理对外提供 TLS
+  port: "8080"
+  mode: release                      # 生产必须 release，禁止 debug
+  # 仅信任真实反向代理地址/网段。同机 Nginx 用 127.0.0.1/32；
+  # Docker/CDN 部署改成实际代理网段（如 172.16.0.0/12），禁止 0.0.0.0/0 或 ::/0。
+  trusted_proxies:
+    - 127.0.0.1/32
+    - ::1/128
+
+log:
+  dir: "/var/log/hcz"                # Linux 生产日志目录；Windows 调试可改 ./logs
+  filename: app.log
+  max_size_mb: 100
+  max_backups: 14
+  max_age_days: 30
+  compress: true
+
+database:
+  driver: postgres                   # 生产必须 postgres，禁止 sqlite
+  # 占位符：PROD_PG_HOST 替换为实际 PG 主机；PG_PASSWORD 通过环境变量或此处替换。
+  dsn: "host=PROD_PG_HOST port=5432 user=hcz_app password=${PG_PASSWORD} dbname=hcz_production sslmode=require TimeZone=UTC"
+  pool:
+    max_open_conns: 25
+    max_idle_conns: 10
+    conn_max_lifetime_seconds: 300
+    conn_max_idle_time_seconds: 60
+
+jwt:
+  secret: "${JWT_SECRET}"            # 32 字节随机，后台管理员 JWT，必须与其他 secret 不同
+  expire_hours: 12                   # 管理员 token 有效期（小时），生产收紧到 12h
+
+user_jwt:
+  secret: "${USER_JWT_SECRET}"       # 32 字节随机，前台用户 JWT，必须与 JWT_SECRET 不同
+  expire_hours: 24
+  remember_me_expire_hours: 168      # 记住我 7 天
+
+bootstrap:
+  # 首次启动初始化管理员。上线后立即登录修改用户名与密码，并可清空这两项。
+  default_admin_username: "${BOOTSTRAP_ADMIN_USERNAME}"
+  default_admin_password: "${BOOTSTRAP_ADMIN_PASSWORD}"
+
+telegram_auth:
+  enabled: false
+  bot_username: ""
+  bot_token: ""
+  client_secret: ""
+  oidc_redirect_uri: ""
+  mini_app_url: ""
+  login_expire_seconds: 300
+  replay_ttl_seconds: 300
+
+google_auth:
+  enabled: false
+  client_id: ""
+
+redis:
+  enabled: true
+  host: 127.0.0.1                   # 同机 Redis（回环地址）
+  port: 6379
+  password: "${REDIS_PASSWORD}"     # 生产 Redis 必须设密码，禁止空密码
+  db: 0
+  prefix: "dj"
+
+queue:
+  enabled: true
+  host: 127.0.0.1                   # 与 redis 同实例，使用独立 db
+  port: 6379
+  password: "${REDIS_PASSWORD}"
+  db: 1
+  concurrency: 10
+  queues:
+    default: 10
+    critical: 5
+  upstream_sync_interval: "5m"
+
+upload:
+  max_size: 10485760                # 10MB
+  allowed_types:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/webp
+  allowed_extensions:
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .webp
+  # 注意：上传物理根目录在代码中固定为运行目录下 ./uploads（无对象存储适配）。
+  #       请把 ./uploads 挂载到独立数据盘，并由反代对外提供 /uploads 静态访问。
+  max_width: 4096
+  max_height: 4096
+
+cors:
+  # 生产禁止 "*"。替换为真实前台域名（含协议，不带尾部斜杠）。
+  # 多域名逐行列出，例如：
+  #   - "https://shop.your-domain.com"
+  #   - "https://www.your-domain.com"
+  allowed_origins:
+    - "https://REPLACE_WITH_PRIMARY_DOMAIN"
+  allowed_methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  allowed_headers:
+    - Content-Type
+    - Content-Length
+    - Accept-Encoding
+    - Authorization
+    - Cache-Control
+    - X-Requested-With
+    - X-CSRF-Token
+  allow_credentials: true
+  max_age: 600
+
+security:
+  login_rate_limit:
+    window_seconds: 300             # 5 分钟窗口
+    max_attempts: 5                  # 窗口内最多 5 次失败
+    block_seconds: 900               # 超限锁定 15 分钟
+  password_policy:
+    min_length: 10
+    require_upper: true
+    require_lower: true
+    require_number: true
+    require_special: true
+
+email:
+  # 此段为运行时 SMTP 设置的种子默认值；上线后可在后台「邮件设置」修改并覆盖。
+  enabled: true
+  host: "${SMTP_HOST}"               # 例如 smtp.your-domain.com
+  port: 465
+  username: "${SMTP_USERNAME}"
+  password: "${SMTP_PASSWORD}"
+  from: "${SMTP_FROM}"               # 合法发件人邮箱，例如 noreply@your-domain.com
+  from_name: "${SMTP_FROM_NAME}"
+  use_tls: false
+  use_ssl: true                      # 465 端口用 SSL；587 端口改用 use_tls: true / use_ssl: false
+  verify_code:
+    expire_minutes: 10
+    send_interval_seconds: 60
+    max_attempts: 5
+    length: 6
+
+order:
+  payment_expire_minutes: 15        # 订单支付超时 15 分钟
+  max_refund_days: 30               # 付款后 30 天内可申请退款
+
+captcha:
+  # 生产建议开启 Cloudflare Turnstile（无感知、防机器人）。
+  # 在 Cloudflare 控制台获取 site_key / secret_key 后填入。
+  provider: "turnstile"
+  scenes:
+    login: true
+    register_send_code: true
+    reset_send_code: true
+    guest_create_order: true
+    gift_card_redeem: true
+  image:
+    length: 5
+    width: 240
+    height: 80
+    noise_count: 2
+    show_line: 2
+    expire_seconds: 300
+    max_store: 10240
+  turnstile:
+    site_key: "${TURNSTILE_SITE_KEY}"
+    secret_key: "${TURNSTILE_SECRET_KEY}"
+    verify_url: "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+    timeout_ms: 2000
+
+# 仅在 fullstack 二进制模式下生效。生产务必改成不易猜测的随机路径。
+web:
+  admin_path: "/dj-mgmt-REPLACE"
+
+reseller:
+  enabled: false
+  # 启用分销后，把正式主站域名写入这里（不要保留回环地址）。
+  main_hosts:
+    - "REPLACE_WITH_PRIMARY_DOMAIN"
+  trusted_forwarded_host: false
+  subdomain_base: ""                # 启用前配置为已做好 wildcard DNS/TLS 的基础域名
+  self_apply_enabled: true
+  settlement_confirm_days: 7
+
+# =============================================================================
+# 环境变量覆盖（viper.AutomaticEnv，. 替换为 _）：
+#   以下环境变量若设置，将覆盖文件中同名字段：
+#   APP_SECRET / JWT_SECRET / USER_JWT_SECRET / PG_PASSWORD / REDIS_PASSWORD /
+#   SERVER_MODE / DATABASE_DSN / EMAIL_PASSWORD 等。
+# 推荐做法：在容器/系统环境中注入敏感值，文件中保留 ${PLACEHOLDER} 不填真实值。
+# =============================================================================

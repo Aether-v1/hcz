@@ -205,6 +205,7 @@ func (c *Container) initApplicationServices() {
 
 	// 站点装修（sitebuilder）：首页入口 / 发现页区块 / 品牌 / 模板 / 审计。
 	c.SiteHomeEntryService = sitebuilderapp.NewHomeEntryService(c.SiteHomeEntryRepo)
+	c.SiteHomeEntryService.SetProductLookup(c.ProductRepo)
 	c.SiteDiscoveryBlockService = sitebuilderapp.NewDiscoveryBlockService(c.SiteDiscoveryBlockRepo)
 	c.SiteAuditService = sitebuilderapp.NewAuditService(c.SiteAuditRepo, c.SiteAuditRepo)
 	c.SiteBrandService = sitebuilderapp.NewBrandService(c.SettingService)

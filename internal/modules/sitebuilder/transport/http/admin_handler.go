@@ -68,6 +68,7 @@ type homeEntryRequest struct {
 	Title        string `json:"title" binding:"required"`
 	Subtitle     string `json:"subtitle"`
 	Icon         string `json:"icon"`
+	Image        string `json:"image"`
 	ActionType   string `json:"action_type" binding:"required"`
 	ActionTarget string `json:"action_target" binding:"required"`
 	Badge        string `json:"badge"`
@@ -83,7 +84,7 @@ func (h *AdminHandler) CreateHomeEntry(c *gin.Context) {
 		return
 	}
 	entry, err := h.svc.HomeEntries.Create(sitebuilderapp.HomeEntryInput{
-		Key: req.Key, Title: req.Title, Subtitle: req.Subtitle, Icon: req.Icon,
+		Key: req.Key, Title: req.Title, Subtitle: req.Subtitle, Icon: req.Icon, Image: req.Image,
 		ActionType: req.ActionType, ActionTarget: req.ActionTarget, Badge: req.Badge,
 		Recommended: req.Recommended, Enabled: req.Enabled, SortOrder: req.SortOrder,
 	})
@@ -109,7 +110,7 @@ func (h *AdminHandler) UpdateHomeEntry(c *gin.Context) {
 	}
 	before, _ := h.svc.HomeEntries.Get(id)
 	entry, err := h.svc.HomeEntries.Update(id, sitebuilderapp.HomeEntryInput{
-		Title: req.Title, Subtitle: req.Subtitle, Icon: req.Icon,
+		Title: req.Title, Subtitle: req.Subtitle, Icon: req.Icon, Image: req.Image,
 		ActionType: req.ActionType, ActionTarget: req.ActionTarget, Badge: req.Badge,
 		Recommended: req.Recommended, Enabled: req.Enabled, SortOrder: req.SortOrder,
 	})
