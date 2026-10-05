@@ -5,7 +5,6 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/cache"
 	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
-	"github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
 	ginutil "github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
@@ -177,9 +176,9 @@ func (h *AdminHandler) ReorderHomeEntries(c *gin.Context) {
 		ginutil.RespondBindError(c, err)
 		return
 	}
-	items := make([]gormstore.ReorderItem, 0, len(req.Items))
+	items := make([]sitebuilderapp.ReorderItem, 0, len(req.Items))
 	for i := range req.Items {
-		items = append(items, gormstore.ReorderItem{ID: req.Items[i].ID, SortOrder: req.Items[i].SortOrder})
+		items = append(items, sitebuilderapp.ReorderItem{ID: req.Items[i].ID, SortOrder: req.Items[i].SortOrder})
 	}
 	if err := h.svc.HomeEntries.Reorder(items); err != nil {
 		ginutil.RespondError(c, response.CodeInternal, "error.sitebuilder_save_failed", err)
@@ -316,9 +315,9 @@ func (h *AdminHandler) ReorderDiscoveryBlocks(c *gin.Context) {
 		ginutil.RespondBindError(c, err)
 		return
 	}
-	items := make([]gormstore.ReorderItem, 0, len(req.Items))
+	items := make([]sitebuilderapp.ReorderItem, 0, len(req.Items))
 	for i := range req.Items {
-		items = append(items, gormstore.ReorderItem{ID: req.Items[i].ID, SortOrder: req.Items[i].SortOrder})
+		items = append(items, sitebuilderapp.ReorderItem{ID: req.Items[i].ID, SortOrder: req.Items[i].SortOrder})
 	}
 	if err := h.svc.Discovery.Reorder(items); err != nil {
 		ginutil.RespondError(c, response.CodeInternal, "error.sitebuilder_save_failed", err)

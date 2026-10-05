@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
-	"github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
 )
 
 // HomeEntryStore 首页入口存储端口。
@@ -15,7 +14,7 @@ type HomeEntryStore interface {
 	Delete(id uint) error
 	GetByID(id uint) (*sitebuilderdomain.HomeEntry, error)
 	List(enabledOnly bool) ([]sitebuilderdomain.HomeEntry, error)
-	Reorder(items []gormstore.ReorderItem) error
+	Reorder(items []ReorderItem) error
 }
 
 // HomeEntryInput 创建/更新首页入口入参。
@@ -128,7 +127,7 @@ func (s *HomeEntryService) SetEnabled(id uint, enabled bool) (*sitebuilderdomain
 }
 
 // Reorder 批量排序。
-func (s *HomeEntryService) Reorder(items []gormstore.ReorderItem) error {
+func (s *HomeEntryService) Reorder(items []ReorderItem) error {
 	return s.store.Reorder(items)
 }
 

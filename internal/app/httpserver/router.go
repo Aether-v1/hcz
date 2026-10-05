@@ -309,6 +309,12 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	// SVG 强制下载并禁止脚本：即使上传校验被绕过，直接打开 /uploads/x.svg 也不会在站点源下执行脚本；
 	// <img src> 引用不受 Content-Disposition 影响，正常显示。
 	r.Group("/uploads", func(c *gin.Context) {
+		// 私有场景：工单附件属于用户/客服敏感材料，必须经带归属校验的鉴权端点
+		// （GET /api/v1/support/attachments/:id）下载，禁止通过公开静态路径直接访问。
+		if strings.HasPrefix(c.Request.URL.Path, "/uploads/support_ticket/") {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
 		if strings.EqualFold(path.Ext(c.Request.URL.Path), ".svg") {
 			c.Header("Content-Disposition", "attachment")
 			c.Header("Content-Security-Policy", "sandbox; script-src 'none'")

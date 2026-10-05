@@ -3,6 +3,7 @@ package gormstore
 import (
 	"errors"
 
+	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
 	"gorm.io/gorm"
 )
@@ -64,7 +65,7 @@ func (s *HomeEntryStore) List(enabledOnly bool) ([]sitebuilderdomain.HomeEntry, 
 }
 
 // Reorder 批量更新排序。
-func (s *HomeEntryStore) Reorder(items []ReorderItem) error {
+func (s *HomeEntryStore) Reorder(items []sitebuilderapp.ReorderItem) error {
 	if len(items) == 0 {
 		return nil
 	}

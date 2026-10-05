@@ -5,9 +5,14 @@ import (
 	"strings"
 
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
-	"github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 )
+
+// ReorderItem 批量排序单条。
+type ReorderItem struct {
+	ID        uint
+	SortOrder int
+}
 
 // DiscoveryBlockStore 发现页区块存储端口。
 type DiscoveryBlockStore interface {
@@ -16,7 +21,7 @@ type DiscoveryBlockStore interface {
 	Delete(id uint) error
 	GetByID(id uint) (*sitebuilderdomain.DiscoveryBlock, error)
 	List(enabledOnly bool) ([]sitebuilderdomain.DiscoveryBlock, error)
-	Reorder(items []gormstore.ReorderItem) error
+	Reorder(items []ReorderItem) error
 }
 
 // DiscoveryBlockInput 创建/更新区块入参。
@@ -135,7 +140,7 @@ func (s *DiscoveryBlockService) SetEnabled(id uint, enabled bool) (*sitebuilderd
 }
 
 // Reorder 批量排序。
-func (s *DiscoveryBlockService) Reorder(items []gormstore.ReorderItem) error {
+func (s *DiscoveryBlockService) Reorder(items []ReorderItem) error {
 	return s.store.Reorder(items)
 }
 

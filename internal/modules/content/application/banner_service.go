@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"time"
 
@@ -155,6 +156,11 @@ func buildBannerEntity(input BannerInput, existing *domain.Banner) (*domain.Bann
 	if linkType != constants.BannerLinkTypeNone && linkValue == "" {
 		return nil, contract.ErrInvalidBanner
 	}
+	// 外链 fail-closed：仅允许 http/https，拒绝 javascript:/data:/file: 等可执行协议，
+	// 避免后台配置的 Banner 链接在用户端触发存储型 XSS。
+	if linkType == constants.BannerLinkTypeExternal && !isAllowedExternalHTTPURL(linkValue) {
+		return nil, contract.ErrInvalidBanner
+	}
 
 	if existing == nil {
 		banner := &domain.Banner{
@@ -220,6 +226,20 @@ func normalizeBannerLinkType(raw string) string {
 	default:
 		return ""
 	}
+}
+
+// isAllowedExternalHTTPURL 校验外链仅为 http/https 且带 Host。
+// 与 sitebuilder.ValidateExternalURL 保持一致的 fail-closed 语义。
+func isAllowedExternalHTTPURL(raw string) bool {
+	lower := strings.ToLower(strings.TrimSpace(raw))
+	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
+		return false
+	}
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || u.Host == "" {
+		return false
+	}
+	return true
 }
 
 func normalizeMultiLangJSON(raw map[string]interface{}) jsonmap.JSON {

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
-	"github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 )
 
@@ -190,7 +189,7 @@ func (s *fakeHomeEntryStore) List(enabledOnly bool) ([]sitebuilderdomain.HomeEnt
 	}
 	return result, nil
 }
-func (s *fakeHomeEntryStore) Reorder(items []gormstore.ReorderItem) error { return nil }
+func (s *fakeHomeEntryStore) Reorder(items []ReorderItem) error { return nil }
 
 func TestHomeEntryServiceCreateInternalWhitelist(t *testing.T) {
 	svc := NewHomeEntryService(newFakeHomeEntryStore())

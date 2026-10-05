@@ -3,6 +3,7 @@ package gormstore
 import (
 	"errors"
 
+	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
 	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
 	"gorm.io/gorm"
 )
@@ -63,14 +64,8 @@ func (s *DiscoveryBlockStore) List(enabledOnly bool) ([]sitebuilderdomain.Discov
 	return rows, nil
 }
 
-// ReorderItem 批量排序单条。
-type ReorderItem struct {
-	ID        uint
-	SortOrder int
-}
-
 // Reorder 批量更新排序。
-func (s *DiscoveryBlockStore) Reorder(items []ReorderItem) error {
+func (s *DiscoveryBlockStore) Reorder(items []sitebuilderapp.ReorderItem) error {
 	if len(items) == 0 {
 		return nil
 	}

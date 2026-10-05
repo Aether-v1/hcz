@@ -46,7 +46,8 @@ func InitDefaultAdmin(store admincontract.Store, username, password string) erro
 		return err
 	}
 	if password == defaultBootstrapPassword {
-		logger.Warnw("default_admin_created_with_default_password", "username", bootstrapUsername, "password", password)
+		// 安全：禁止在日志中输出明文口令，仅提示需要改密。
+		logger.Warnw("default_admin_created_with_default_password", "username", bootstrapUsername)
 		logger.Warnw("default_admin_password_change_required", "username", bootstrapUsername)
 	} else {
 		logger.Warnw("default_admin_created", "username", bootstrapUsername, "password_hidden", true)
