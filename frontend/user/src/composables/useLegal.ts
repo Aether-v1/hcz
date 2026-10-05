@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import DOMPurify from 'dompurify'
 import { useAppStore } from '../stores/app'
 import { usePageSeo } from './usePageSeo'
 
@@ -31,12 +32,15 @@ export function useLegal(type: () => 'terms' | 'privacy') {
     const legal = config.legal
     const lang = locale.value
 
+    let raw = ''
     if (type() === 'terms' && legal.terms) {
-      return legal.terms[lang] || ''
+      raw = legal.terms[lang] || ''
     } else if (type() === 'privacy' && legal.privacy) {
-      return legal.privacy[lang] || ''
+      raw = legal.privacy[lang] || ''
     }
-    return ''
+    // legal 内容来自站点配置（站长/分销商可配），最终以 v-html 渲染，必须过 DOMPurify，
+    // 防止 <script>/<img onerror>/javascript: 等可执行载荷落到访客浏览器。
+    return raw ? DOMPurify.sanitize(raw) : ''
   })
 
   return {

@@ -325,7 +325,7 @@
             <span class="w-1.5 h-8 bg-primary rounded-full"></span>
             {{ t('productDetail.details') }}
           </h2>
-          <div v-html="processHtmlForDisplay(getLocalizedText(product.content))"
+          <div v-html="sanitizeRichHtml(getLocalizedText(product.content))"
             class="prose prose-gray dark:prose-invert prose-lg max-w-none theme-prose">
           </div>
         </div>
@@ -416,7 +416,7 @@ import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Lock, Minus, Pencil, Plus, RotateCw, Tag, UserPlus, Zap } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
 import { getServiceIcon } from '../utils/serviceIcon'
-import { processHtmlForDisplay } from '../utils/content'
+import { sanitizeRichHtml } from '../utils/content'
 import { useProductDetail } from '../composables/useProductDetail'
 import ProductMobileBar from '../components/product/ProductMobileBar.vue'
 import BreadcrumbNav from '../components/BreadcrumbNav.vue'

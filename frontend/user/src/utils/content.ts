@@ -1,4 +1,5 @@
 import { getImageUrl } from './image'
+import DOMPurify from 'dompurify'
 
 /**
  * 将 HTML 内容中的图片路径转换为显示用的绝对路径
@@ -12,6 +13,20 @@ export function processHtmlForDisplay(html: string): string {
     return html.replace(/src=["'](\/uploads\/.*?)["']/g, (_, path) => {
         return `src="${getImageUrl(path)}"`
     })
+}
+
+/**
+ * 把后端下发的富文本（博客正文 / 商品详情 / 装修富文本）安全地交给 v-html。
+ *
+ * 这些内容是管理员/站长/分销商在后台富文本编辑器录入的，理论可信，但 v-html 会原样
+ * 透传 <script>、<img onerror>、href="javascript:" 等可执行载荷（一旦后台账号被滥用，
+ * 脚本会落到所有访客浏览器）。因此先重写图片路径，再过一道 DOMPurify 默认白名单：
+ * 保留正常排版标签，剥离脚本/事件属性/可执行协议。与订单履约 instructions、公告弹窗、
+ * 分销商站点配置预览的既有消毒模式保持一致。
+ */
+export function sanitizeRichHtml(html: string): string {
+    if (!html) return ''
+    return DOMPurify.sanitize(processHtmlForDisplay(html))
 }
 
 /**
