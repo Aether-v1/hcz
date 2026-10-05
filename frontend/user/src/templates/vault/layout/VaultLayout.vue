@@ -122,7 +122,7 @@ const moreEl = ref<HTMLElement | null>(null)
 const brandName = computed(() => String(appStore.config?.brand?.site_name || '').trim() || 'HCZ')
 const brandLogo = computed(() => {
   const raw = String(appStore.config?.brand?.site_logo || '').trim()
-  return raw ? getImageUrl(raw) : ''
+  return raw ? getImageUrl(raw) : '/hcz1_logo.png'
 })
 const { secondaryNavItems } = useNavConfig()
 const { items: coreNavItems, isActive: isCoreActive } = useCoreNavigation()

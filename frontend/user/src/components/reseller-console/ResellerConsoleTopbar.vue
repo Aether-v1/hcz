@@ -233,7 +233,7 @@ const brandSiteName = computed(() => {
 
 const brandLogo = computed(() => {
   const raw = String(appStore.config?.brand?.site_logo || '').trim()
-  return raw ? getImageUrl(raw) : ''
+  return raw ? getImageUrl(raw) : '/hcz1_logo.png'
 })
 
 const isActive = (path: string) => {

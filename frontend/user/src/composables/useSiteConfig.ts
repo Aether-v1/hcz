@@ -57,7 +57,7 @@ export function useSiteConfig() {
 
   const siteLogo = computed(() => {
     const raw = String(config.value?.brand?.site_logo || '').trim()
-    return raw ? getImageUrl(raw) : ''
+    return raw ? getImageUrl(raw) : '/hcz1_logo.png'
   })
 
   const primaryColor = computed(() => {
