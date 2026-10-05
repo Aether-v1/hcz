@@ -5,6 +5,7 @@ db
 uploads
 *.db
 *.log
+*.bak
 .env
 .DS_Store
 node_modules/
