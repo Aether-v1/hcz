@@ -139,12 +139,12 @@ func (r *Store) GetPaymentOrderAlertCounts(startAt, endAt time.Time) (dashboard.
 	return result, nil
 }
 
-// GetTotalUserBalance 获取全站用户余额总数
+// GetTotalUserBalance 获取全站用户余额总数（可用 + 冻结 = 总资产）
 func (r *Store) GetTotalUserBalance() (float64, error) {
 	var total float64
 	if err := r.db.Model(&walletdomain.Account{}).
 		Where("deleted_at IS NULL").
-		Select("COALESCE(SUM(balance), 0)").
+		Select("COALESCE(SUM(available_balance + frozen_balance), 0)").
 		Scan(&total).Error; err != nil {
 		return 0, err
 	}
