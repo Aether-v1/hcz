@@ -194,11 +194,6 @@ export const useAdminAuthStore = defineStore('adminAuth', {
       this.token = ''
       localStorage.removeItem(TOKEN_KEY)
       this.clearAuthzCache()
-      // 重置合规声明 store，避免下次登录时残留旧状态
-      // 动态 import 防止模块加载期循环依赖
-      import('@/stores/compliance').then(({ useComplianceStore }) => {
-        useComplianceStore().reset()
-      }).catch(() => { /* ignore */ })
     },
   },
 })

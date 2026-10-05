@@ -20,6 +20,7 @@ import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { confirmAction } from '@/utils/confirm'
 import { useFormValidation, rules } from '@/composables/useFormValidation'
+import { notifySuccess } from '@/utils/notify'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-vue-next'
 
 const { t } = useI18n()
@@ -78,8 +79,11 @@ const form = reactive({
   locale: 'zh-CN',
   email_verified: 'unverified',
   status: 'active',
+  member_level_id: '' as string,
   admin_note: '',
 })
+
+const isCreate = computed(() => editingId.value === null)
 
 const { errors: formErrors, validate, clearErrors } = useFormValidation({
   email: [rules.required('This field is required'), rules.email('Invalid email')],
@@ -124,6 +128,7 @@ const fetchSiteCurrency = async () => {
 }
 
 const memberLevelsMap = ref<Map<number, AdminMemberLevel>>(new Map())
+const memberLevelOptions = computed(() => Array.from(memberLevelsMap.value.values()))
 
 const fetchMemberLevels = async () => {
   try {
@@ -214,6 +219,21 @@ const changePageSize = (size: number) => {
   fetchUsers(1)
 }
 
+const openCreateModal = () => {
+  editingId.value = null
+  form.email = ''
+  form.nickname = ''
+  form.password = ''
+  form.locale = 'zh-CN'
+  form.email_verified = 'unverified'
+  form.status = 'active'
+  form.member_level_id = ''
+  form.admin_note = ''
+  error.value = ''
+  clearErrors()
+  showModal.value = true
+}
+
 const openEditModal = (user: AdminUser) => {
   editingId.value = user.id
   form.email = user.email || ''
@@ -222,6 +242,7 @@ const openEditModal = (user: AdminUser) => {
   form.locale = user.locale || 'zh-CN'
   form.email_verified = user.email_verified_at ? 'verified' : 'unverified'
   form.status = user.status || 'active'
+  form.member_level_id = user.member_level_id ? String(user.member_level_id) : ''
   form.admin_note = (user.admin_note as string) || ''
   error.value = ''
   clearErrors()
@@ -236,23 +257,54 @@ const closeModal = () => {
 }
 
 const handleSubmit = async () => {
-  if (!editingId.value) return
-  if (!validate({ email: form.email, nickname: form.nickname } as Record<string, unknown>)) return
+  let editId: number | null = null
+  if (isCreate.value) {
+    clearErrors()
+    // 创建模式：昵称可选，复用邮箱校验规则（用邮箱占位通过 nickname 必填校验），密码必填手动校验
+    if (!validate({ email: form.email, nickname: form.nickname || form.email || 'create' } as Record<string, unknown>)) return
+    if (!form.password) {
+      formErrors.password = t('admin.users.errors.passwordRequired')
+      return
+    }
+  } else {
+    if (!editingId.value) return
+    editId = editingId.value
+    if (!validate({ email: form.email, nickname: form.nickname } as Record<string, unknown>)) return
+  }
   submitting.value = true
   try {
-    await adminAPI.updateUser(editingId.value, {
-      email: form.email,
-      nickname: form.nickname,
-      password: form.password || undefined,
-      locale: form.locale,
-      email_verified: form.email_verified === 'verified',
-      status: form.status,
-      admin_note: form.admin_note,
-    })
+    if (isCreate.value) {
+      await adminAPI.createUser({
+        email: form.email,
+        password: form.password,
+        nickname: form.nickname || undefined,
+        member_level_id: form.member_level_id ? Number(form.member_level_id) : undefined,
+        status: form.status,
+        admin_note: form.admin_note || undefined,
+      })
+      notifySuccess(t('admin.users.createSuccess'))
+    } else {
+      await adminAPI.updateUser(editId as number, {
+        email: form.email,
+        nickname: form.nickname,
+        password: form.password || undefined,
+        locale: form.locale,
+        email_verified: form.email_verified === 'verified',
+        status: form.status,
+        admin_note: form.admin_note,
+      })
+    }
     closeModal()
     fetchUsers(pagination.value.page)
   } catch (err: any) {
-    error.value = err?.message || t('admin.users.errors.updateFailed')
+    if (isCreate.value) {
+      error.value =
+        err?.status === 409
+          ? t('admin.users.errors.emailExists')
+          : err?.message || t('admin.users.errors.createFailed')
+    } else {
+      error.value = err?.message || t('admin.users.errors.updateFailed')
+    }
   } finally {
     submitting.value = false
   }
@@ -282,6 +334,7 @@ onMounted(() => {
   <div class="space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-semibold">{{ t('admin.users.title') }}</h1>
+      <Button size="sm" class="w-full sm:w-auto" @click="openCreateModal">{{ t('admin.users.addUser') }}</Button>
     </div>
 
     <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -488,7 +541,7 @@ onMounted(() => {
     <Dialog v-model:open="showModal" @update:open="(value) => { if (!value) closeModal() }">
       <DialogScrollContent class="w-[calc(100vw-1rem)] max-w-xl p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>{{ t('admin.users.modal.editTitle') }}</DialogTitle>
+          <DialogTitle>{{ isCreate ? t('admin.users.modal.createTitle') : t('admin.users.modal.editTitle') }}</DialogTitle>
         </DialogHeader>
         <form class="space-y-4" @submit.prevent="handleSubmit">
           <div class="grid grid-cols-1 gap-4">
@@ -504,8 +557,13 @@ onMounted(() => {
             </div>
             <div>
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.users.form.password') }}</label>
-              <Input v-model="form.password" type="password" :placeholder="t('admin.users.form.passwordPlaceholder')" />
-              <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.users.form.passwordTip') }}</p>
+              <Input
+                v-model="form.password"
+                type="password"
+                :placeholder="isCreate ? t('admin.users.form.passwordPlaceholderCreate') : t('admin.users.form.passwordPlaceholder')"
+              />
+              <p v-if="formErrors.password" class="text-xs text-destructive mt-1">{{ formErrors.password }}</p>
+              <p class="mt-1 text-xs text-muted-foreground">{{ isCreate ? t('admin.users.form.passwordTipCreate') : t('admin.users.form.passwordTip') }}</p>
             </div>
             <div>
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.users.form.locale') }}</label>
@@ -541,6 +599,20 @@ onMounted(() => {
                 <SelectContent>
                   <SelectItem value="active">{{ t('admin.users.status.active') }}</SelectItem>
                   <SelectItem value="disabled">{{ t('admin.users.status.disabled') }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.users.form.memberLevel') }}</label>
+              <Select v-model="form.member_level_id">
+                <SelectTrigger class="h-9 w-full">
+                  <SelectValue :placeholder="t('admin.users.form.memberLevelPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{{ t('admin.users.form.memberLevelPlaceholder') }}</SelectItem>
+                  <SelectItem v-for="level in memberLevelOptions" :key="level.id" :value="String(level.id)">
+                    {{ (level.icon ? level.icon + ' ' : '') + getLocalizedText(level.name) }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

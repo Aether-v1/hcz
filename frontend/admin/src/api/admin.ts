@@ -305,27 +305,9 @@ export interface AdminAffiliateSetting {
   level_rates: AffiliateLevelRate[]
 }
 
-export interface ComplianceStatus {
-  acknowledged: boolean
-  acknowledged_at?: string
-  acknowledged_by_admin_id?: number
-  acknowledged_by_username?: string
-  version?: string
-}
-
-export interface ComplianceAcknowledgePayload {
-  segment1: string
-  segment2: string
-  segment3: string
-}
-
 export const adminAPI = {
   login: (data: AdminLoginRequest) => api.post('/admin/login', data),
   verify2FA: (data: Verify2FAPayload) => api.post('/admin/login/verify-2fa', data),
-  // 合规声明
-  getComplianceStatus: () => api.get('/admin/compliance/status'),
-  acknowledgeCompliance: (data: ComplianceAcknowledgePayload) =>
-    api.post('/admin/compliance/acknowledge', data),
   get2FAStatus: () => api.get('/admin/2fa/status'),
   setup2FA: () => api.post('/admin/2fa/setup', {}),
   enable2FA: (data: { code: string }) => api.post('/admin/2fa/enable', data),
@@ -468,6 +450,14 @@ export const adminAPI = {
   adjustUserWallet: (id: number, data: AdminAdjustWalletPayload) =>
     api.post(`/admin/users/${id}/wallet/adjust`, data),
   updateUser: (id: number, data: Partial<AdminUser>) => api.put(`/admin/users/${id}`, data),
+  createUser: (data: {
+    email: string
+    password: string
+    nickname?: string
+    member_level_id?: number
+    status?: string
+    admin_note?: string
+  }) => api.post('/admin/users', data),
   unbindUserTelegram: (id: number) => api.delete(`/admin/users/${id}/oauth/telegram`),
   unbindUserGoogle: (id: number) => api.delete(`/admin/users/${id}/oauth/google`),
   resetUser2FA: (id: number) => api.delete(`/admin/users/${id}/2fa`),

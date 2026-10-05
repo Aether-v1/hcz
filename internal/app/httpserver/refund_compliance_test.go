@@ -52,10 +52,11 @@ func newRefundComplianceEngine(t *testing.T, handler *ordertransport.AdminRefund
 	return r, cs
 }
 
-// TestRefundWriteRoutesBlockedByComplianceWhenNotAcked 验证：
-// 退款写路由（refund-to-wallet / manual-refund / payment-fee）在合规声明未确认时，
-// 被 PaymentComplianceRequired 拦截，handler 不被调用（返回 403 compliance_required）。
-func TestRefundWriteRoutesBlockedByComplianceWhenNotAcked(t *testing.T) {
+// TestRefundWriteRoutesNotGatedByCompliance 验证：合规声明阻断已移除。
+// 退款写路由（refund-to-wallet / manual-refund / payment-fee）无论是否确认合规声明，
+// 都不再返回 compliance_required，请求会穿过 PaymentComplianceRequired（现为 no-op）到达下游。
+// handler 是否成功取决于测试桩依赖，这里只断言不再被合规闸门拦截。
+func TestRefundWriteRoutesNotGatedByCompliance(t *testing.T) {
 	handler, _ := setupAdminOrderRefundHandlerTest(t)
 	r, _ := newRefundComplianceEngine(t, handler)
 
@@ -76,45 +77,10 @@ func TestRefundWriteRoutesBlockedByComplianceWhenNotAcked(t *testing.T) {
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
 
-			var resp struct {
-				StatusCode int    `json:"status_code"`
-				Message    string `json:"msg"`
-			}
-			_ = json.Unmarshal(w.Body.Bytes(), &resp)
-			if resp.StatusCode != http.StatusForbidden {
-				t.Fatalf("want status_code=403 when compliance not acked, got %d body=%s", resp.StatusCode, w.Body.String())
-			}
-			if resp.Message != "compliance_required" {
-				t.Fatalf("want compliance_required for super admin not acked, got %q body=%s", resp.Message, w.Body.String())
+			if bytes.Contains(w.Body.Bytes(), []byte("compliance_required")) {
+				t.Fatalf("refund write must NOT be gated by compliance anymore, but got blocked: %s", w.Body.String())
 			}
 		})
-	}
-}
-
-// TestRefundWriteRoutesPassComplianceWhenAcked 验证合规已确认后闸门放行，请求到达 handler
-// （响应不再是 compliance_required）。handler 是否成功取决于测试桩依赖，这里只断言中间件已放行。
-func TestRefundWriteRoutesPassComplianceWhenAcked(t *testing.T) {
-	handler, _ := setupAdminOrderRefundHandlerTest(t)
-	r, cs := newRefundComplianceEngine(t, handler)
-
-	if err := cs.Acknowledge(complianceapp.AcknowledgeCommand{
-		Segment1: "我已阅读并理解上述合规声明提醒",
-		Segment2: "知悉相关法律风险",
-		Segment3: "并确认自行承担部署运营和收费行为产生的法律责任",
-		AdminID:  1, Username: "admin",
-	}); err != nil {
-		t.Fatalf("ack compliance: %v", err)
-	}
-
-	req := httptest.NewRequest(http.MethodPost, "/admin/orders/1/manual-refund",
-		bytes.NewBufferString(`{"amount":"1"}`))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Test-Super", "1")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	if bytes.Contains(w.Body.Bytes(), []byte("compliance_required")) {
-		t.Fatalf("after ack the refund write must pass compliance gate, but got blocked: %s", w.Body.String())
 	}
 }
 

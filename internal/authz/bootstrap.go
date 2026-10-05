@@ -118,6 +118,7 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/order-refunds/:id", Action: "GET"},
 				{Object: "/admin/fulfillments", Action: "POST"},
 				{Object: "/admin/users", Action: "GET"},
+				{Object: "/admin/users", Action: "POST"}, // 管理员手动创建用户（含密码策略校验 + 建钱包 + 审计）
 				{Object: "/admin/users/:id", Action: "GET"},
 				{Object: "/admin/users/:id", Action: "PUT"},
 				{Object: "/admin/users/batch-status", Action: "PUT"},

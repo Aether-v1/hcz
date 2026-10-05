@@ -693,6 +693,7 @@ const messages = {
         userList: '用户列表',
         walletManagement: '钱包管理',
         walletConfig: '钱包配置',
+        walletWithdrawals: '提现管理',
         userLoginLogs: '登录日志',
         banners: 'Banner管理',
         articleList: '文章列表',
@@ -2338,6 +2339,7 @@ const messages = {
       },
       users: {
         title: '用户管理',
+        addUser: '添加用户',
         filterUserId: '用户ID',
         filterKeyword: '搜索邮箱 / 昵称 / 第三方账号...',
         filterStatusAll: '全部状态',
@@ -2380,6 +2382,7 @@ const messages = {
         },
         modal: {
           editTitle: '编辑用户',
+          createTitle: '添加用户',
         },
         form: {
           email: '邮箱',
@@ -2389,15 +2392,24 @@ const messages = {
           password: '密码',
           passwordPlaceholder: '不修改请留空',
           passwordTip: '留空则不修改密码',
+          passwordPlaceholderCreate: '设置初始密码',
+          passwordTipCreate: '请为新用户设置初始密码',
           locale: '语言',
           emailVerifiedStatus: '邮箱验证状态',
           status: '状态',
+          memberLevel: '会员等级',
+          memberLevelPlaceholder: '选择会员等级（可选）',
           adminNote: '管理员备注',
           adminNotePlaceholder: '输入管理员备注（仅后台可见）',
         },
         errors: {
           updateFailed: '更新用户失败',
+          createFailed: '创建用户失败',
+          emailExists: '该邮箱已被注册',
+          passwordRequired: '请输入密码',
+          emailRequired: '请输入邮箱',
         },
+        createSuccess: '用户创建成功',
       },
 
       userLoginLogs: {
@@ -5359,6 +5371,7 @@ const messages = {
         userList: '用戶列表',
         walletManagement: '錢包管理',
         walletConfig: '錢包配置',
+        walletWithdrawals: '提現管理',
         userLoginLogs: '登入日誌',
         banners: 'Banner管理',
         articleList: '文章列表',
@@ -6997,6 +7010,7 @@ const messages = {
       },
       users: {
         title: '用戶管理',
+        addUser: '添加用戶',
         filterUserId: '用戶ID',
         filterKeyword: '搜尋信箱 / 暱稱 / 第三方帳號...',
         filterStatusAll: '全部狀態',
@@ -7039,6 +7053,7 @@ const messages = {
         },
         modal: {
           editTitle: '編輯用戶',
+          createTitle: '添加用戶',
         },
         form: {
           email: '信箱',
@@ -7048,15 +7063,24 @@ const messages = {
           password: '密碼',
           passwordPlaceholder: '不修改請留空',
           passwordTip: '留空則不修改密碼',
+          passwordPlaceholderCreate: '設置初始密碼',
+          passwordTipCreate: '請為新用戶設置初始密碼',
           locale: '語言',
           emailVerifiedStatus: '信箱驗證狀態',
           status: '狀態',
+          memberLevel: '會員等級',
+          memberLevelPlaceholder: '選擇會員等級（可選）',
           adminNote: '管理員備註',
           adminNotePlaceholder: '輸入管理員備註（僅後台可見）',
         },
         errors: {
           updateFailed: '更新用戶失敗',
+          createFailed: '創建用戶失敗',
+          emailExists: '該信箱已被註冊',
+          passwordRequired: '請輸入密碼',
+          emailRequired: '請輸入信箱',
         },
+        createSuccess: '用戶創建成功',
       },
 
       userLoginLogs: {
@@ -10018,6 +10042,7 @@ const messages = {
         userList: 'User List',
         walletManagement: 'Wallet Management',
         walletConfig: 'Wallet Config',
+        walletWithdrawals: 'Withdrawals',
         userLoginLogs: 'Login Logs',
         banners: 'Banner Management',
         articleList: 'Article List',
@@ -11656,6 +11681,7 @@ const messages = {
       },
       users: {
         title: 'Users',
+        addUser: 'Add User',
         filterUserId: 'User ID',
         filterKeyword: 'Search email / nickname / third-party account...',
         filterStatusAll: 'All status',
@@ -11698,6 +11724,7 @@ const messages = {
         },
         modal: {
           editTitle: 'Edit user',
+          createTitle: 'Add user',
         },
         form: {
           email: 'Email',
@@ -11707,15 +11734,24 @@ const messages = {
           password: 'Password',
           passwordPlaceholder: 'Leave blank to keep',
           passwordTip: 'Leave blank to keep password',
+          passwordPlaceholderCreate: 'Set initial password',
+          passwordTipCreate: 'Set an initial password for the new user',
           locale: 'Locale',
           emailVerifiedStatus: 'Email verification status',
           status: 'Status',
+          memberLevel: 'Member Level',
+          memberLevelPlaceholder: 'Select member level (optional)',
           adminNote: 'Admin Note',
           adminNotePlaceholder: 'Enter admin note (visible to admins only)',
         },
         errors: {
           updateFailed: 'Failed to update user',
+          createFailed: 'Failed to create user',
+          emailExists: 'This email is already registered',
+          passwordRequired: 'Please enter a password',
+          emailRequired: 'Please enter an email',
         },
+        createSuccess: 'User created successfully',
       },
 
       userLoginLogs: {

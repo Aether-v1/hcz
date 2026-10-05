@@ -2,6 +2,8 @@ package migrations
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
@@ -122,6 +124,9 @@ func AutoMigrate() error {
 		return err
 	}
 
+	if err := ensureUserIDSequenceStart(db); err != nil {
+		return err
+	}
 	if err := ensureUserOAuthIdentityUserProviderUniqueIndex(); err != nil {
 		return err
 	}
@@ -186,6 +191,61 @@ func AutoMigrate() error {
 	}
 	if err := ensureOrderIdempotencyUniqueIndex(); err != nil {
 		return err
+	}
+	return nil
+}
+
+// ensureUserIDSequenceStart 让 users 表自增主键从 1000 起步。
+//
+// 幂等且不会回退已有更大的 ID：
+//   - PostgreSQL：setval(pg_get_serial_sequence('users','id'), GREATEST(999, MAX(id)), true)。
+//     pg_get_serial_sequence 动态获取 sequence 名，避免 schema rename 后写死 users_id_seq。
+//     is_called=true 表示下一次 nextval 返回 value+increment（通常 value+1）。
+//     空表时 value=999 → 下一个 ID=1000；已有 max=2350 时 value=2350 → 下一个 ID=2351。
+//   - SQLite：驱动对主键使用 INTEGER PRIMARY KEY AUTOINCREMENT，当前值持久化在
+//     sqlite_sequence。仅当 max(id)<999 时插入一条 id=999 的占位行再硬删除，
+//     使 sqlite_sequence.seq=999，下一个自增 ID=1000；已有 ID>=999 时不做任何事。
+//
+// 调用时机：AutoMigrate 建表之后、其它数据迁移之前。
+func ensureUserIDSequenceStart(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	if !db.Migrator().HasTable(&userdomain.User{}) {
+		return nil
+	}
+
+	// Unscoped：连软删除行一起算入 max，避免软删占用过的 ID 导致 sequence 回退。
+	var maxID int64
+	if err := db.Unscoped().Model(&userdomain.User{}).
+		Select("COALESCE(MAX(id), 0)").Scan(&maxID).Error; err != nil {
+		return err
+	}
+
+	switch db.Dialector.Name() {
+	case "postgres":
+		// pg_get_serial_sequence 动态获取 users.id 对应的 sequence 名（如 public.users_id_seq）。
+		// setval(..., true)：is_called=true，下一次 nextval 返回 value+1。
+		// 空表 max=0 → value=999 → 下一 ID=1000；已有 max=2350 → value=2350 → 下一 ID=2351。
+		return db.Exec(
+			`SELECT setval(pg_get_serial_sequence('users', 'id')::regclass, GREATEST(999, ?), true)`, maxID,
+		).Error
+	case "sqlite":
+		if maxID >= 999 {
+			return nil
+		}
+		// 占位行满足 NOT NULL 约束后硬删除；AUTOINCREMENT 让 sqlite_sequence 记住 999，
+		// 下一次插入得到 1000。email 带时间戳避免唯一索引冲突。
+		seed := userdomain.User{
+			Email:        fmt.Sprintf("__seq_seed_%d__@local.invalid", time.Now().UnixNano()),
+			PasswordHash: "__seq_seed__",
+		}
+		seed.ID = 999
+		if err := db.Create(&seed).Error; err != nil {
+			// id=999 已被占用（maxID<999 时不应发生），视为无需调整。
+			return nil
+		}
+		return db.Unscoped().Delete(&userdomain.User{}, 999).Error
 	}
 	return nil
 }

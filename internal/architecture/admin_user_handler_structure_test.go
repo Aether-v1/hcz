@@ -18,10 +18,10 @@ func TestAdminUserHTTPLivesInTransport(t *testing.T) {
 		"AdminHandler", "UserDirectory", "WalletBalances", "OAuthIdentityUnbinder", "AuthStateCache",
 	})
 	assertFileDeclaresFunctions(t, filepath.Join(transportRoot, "admin_handler.go"), []string{
-		"NewAdminHandler", "GetAdminUsers", "GetAdminUser", "UpdateAdminUser",
+		"NewAdminHandler", "GetAdminUsers", "GetAdminUser", "UpdateAdminUser", "CreateAdminUser",
 		"UnbindAdminUserTelegram", "UnbindAdminUserGoogle", "GetAdminUserCouponUsages", "BatchUpdateUserStatus",
 	})
-	assertDirectoryGoFileBudget(t, transportRoot, 3)
+	assertDirectoryGoFileBudget(t, transportRoot, 4)
 
 	legacy := filepath.Join(repositoryRoot, "internal", "http", "handlers", "admin", "admin_user.go")
 	if _, err := os.Stat(legacy); err == nil {

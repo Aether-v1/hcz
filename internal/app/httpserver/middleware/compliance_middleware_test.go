@@ -16,7 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupComplianceMW(t *testing.T) (*gin.Engine, *complianceapp.Service) {
+// setupComplianceMW 构造一个挂了 PaymentComplianceRequired 的最小路由。
+// 该中间件已改为 no-op（合规声明不再阻断），这里只验证它始终放行到下游 handler。
+func setupComplianceMW(t *testing.T) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -35,53 +37,39 @@ func setupComplianceMW(t *testing.T) (*gin.Engine, *complianceapp.Service) {
 		PaymentComplianceRequired(cs),
 		func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) },
 	)
-	return r, cs
+	return r
 }
 
-func TestPaymentComplianceRequired_PassWhenAcked(t *testing.T) {
-	r, cs := setupComplianceMW(t)
-	require.NoError(t, cs.Acknowledge(complianceapp.AcknowledgeCommand{
-		Segment1: "我已阅读并理解上述合规声明提醒",
-		Segment2: "知悉相关法律风险",
-		Segment3: "并确认自行承担部署运营和收费行为产生的法律责任",
-		AdminID:  1, Username: "admin",
-	}))
+// TestPaymentComplianceRequired_AlwaysPass 验证合规声明阻断已移除：
+// 无论是否确认声明、是否超管、服务是否为 nil，中间件都直接放行到下游 handler。
+func TestPaymentComplianceRequired_AlwaysPass(t *testing.T) {
+	r := setupComplianceMW(t)
 
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/proto", nil))
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "\"ok\":true")
+	cases := []struct {
+		name       string
+		superAdmin bool
+	}{
+		{name: "super admin", superAdmin: true},
+		{name: "non-super admin", superAdmin: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/proto", nil)
+			if tc.superAdmin {
+				req.Header.Set("X-Test-Super", "1")
+			}
+			r.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.Contains(t, w.Body.String(), "\"ok\":true")
+			assert.NotContains(t, w.Body.String(), "compliance_required")
+		})
+	}
 }
 
-func TestPaymentComplianceRequired_SuperNotAcked(t *testing.T) {
-	r, _ := setupComplianceMW(t)
-	req := httptest.NewRequest(http.MethodGet, "/proto", nil)
-	req.Header.Set("X-Test-Super", "1")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.Contains(t, body, "\"status_code\":403")
-	assert.Contains(t, body, "compliance_required")
-	assert.NotContains(t, body, "compliance_required_by_super_admin")
-	assert.NotContains(t, body, "\"ok\":true")
-}
-
-func TestPaymentComplianceRequired_NonSuperNotAcked(t *testing.T) {
-	r, _ := setupComplianceMW(t)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/proto", nil))
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.Contains(t, body, "\"status_code\":403")
-	assert.Contains(t, body, "compliance_required_by_super_admin")
-	assert.NotContains(t, body, "\"ok\":true")
-}
-
+// TestPaymentComplianceRequired_NilService 防御性：服务为 nil 时也放行（no-op）。
 func TestPaymentComplianceRequired_NilService(t *testing.T) {
-	// 防御性：服务为 nil 时不放行（更安全的默认），但目前实现走 fallback 非超管分支
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/proto",
@@ -90,9 +78,7 @@ func TestPaymentComplianceRequired_NilService(t *testing.T) {
 	)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/proto", nil))
-	// nil service 视为未确认；执行非超管分支
 	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.Contains(t, body, "compliance_required_by_super_admin")
-	assert.NotContains(t, body, "\"ok\":true")
+	assert.Contains(t, w.Body.String(), "\"ok\":true")
+	assert.NotContains(t, w.Body.String(), "compliance_required")
 }

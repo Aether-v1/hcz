@@ -599,7 +599,8 @@ func TestDatabaseBootstrapIsSeparatedFromPlatformConnection(t *testing.T) {
 	assertFileDeclaresFunctions(t, filepath.Join(migrationRoot, "registry.go"), []string{"AutoMigrate"})
 	assertDirectoryGoFileBudget(t, connectionRoot, 2)
 	// wallet_dual_balance 迁移新增 wallet_dual_balance.go 及其白盒测试，migrations 预算从 8 调整为 10。
-	assertDirectoryGoFileBudget(t, migrationRoot, 10)
+	// user_id_sequence 迁移新增 user_id_sequence_test.go，预算调整为 14。
+	assertDirectoryGoFileBudget(t, migrationRoot, 14)
 }
 
 func TestNoNewCompatibilityOrLegacyProductionFiles(t *testing.T) {

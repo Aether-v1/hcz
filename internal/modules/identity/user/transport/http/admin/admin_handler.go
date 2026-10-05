@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
+	auditlogapp "github.com/Aether-v1/hcz/internal/modules/auditlog/application"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
 
 	coupondomain "github.com/Aether-v1/hcz/internal/modules/coupon/domain"
@@ -16,6 +19,7 @@ import (
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 
 	"github.com/Aether-v1/hcz/internal/constants"
+	"github.com/Aether-v1/hcz/internal/i18n"
 	couponcontract "github.com/Aether-v1/hcz/internal/modules/coupon/contract"
 	externalidentitydomain "github.com/Aether-v1/hcz/internal/modules/identity/externalidentity/domain"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
@@ -57,8 +61,25 @@ type UserDirectory interface {
 	List(filter UserListFilter) ([]userdomain.User, int64, error)
 	GetByID(id uint) (*userdomain.User, error)
 	GetByEmail(email string) (*userdomain.User, error)
+	GetByInviteCode(code string) (*userdomain.User, error)
+	Create(user *userdomain.User) error
 	Update(user *userdomain.User) error
 	BatchUpdateStatus(ids []uint, status string) error
+}
+
+// PasswordValidator 密码强度校验端口（管理端建号时复用与用户注册一致的策略）。
+type PasswordValidator interface {
+	ValidatePassword(password string) error
+}
+
+// AdminAuditRecorder 管理端审计日志写入端口。
+type AdminAuditRecorder interface {
+	Record(input auditlogapp.AuthzRecord) error
+}
+
+// DefaultMemberLevelAssigner 默认会员等级分配端口。
+type DefaultMemberLevelAssigner interface {
+	AssignDefaultLevel(userID uint) error
 }
 
 // EmailNormalizer 邮箱规范化端口。
@@ -115,6 +136,9 @@ type AdminHandler struct {
 	coupons       CouponDirectory
 	products      ProductDirectory
 	authState     AuthStateCache
+	passwords     PasswordValidator
+	audit         AdminAuditRecorder
+	memberLevels  DefaultMemberLevelAssigner
 }
 
 func NewAdminHandler(
@@ -127,6 +151,9 @@ func NewAdminHandler(
 	coupons CouponDirectory,
 	products ProductDirectory,
 	authState AuthStateCache,
+	passwords PasswordValidator,
+	audit AdminAuditRecorder,
+	memberLevels DefaultMemberLevelAssigner,
 ) *AdminHandler {
 	if users == nil {
 		panic("admin user handler: users is nil")
@@ -152,6 +179,12 @@ func NewAdminHandler(
 	if products == nil {
 		panic("admin user handler: products is nil")
 	}
+	if passwords == nil {
+		panic("admin user handler: passwords is nil")
+	}
+	if audit == nil {
+		panic("admin user handler: audit is nil")
+	}
 	return &AdminHandler{
 		users:         users,
 		emails:        emails,
@@ -162,6 +195,9 @@ func NewAdminHandler(
 		coupons:       coupons,
 		products:      products,
 		authState:     authState,
+		passwords:     passwords,
+		audit:         audit,
+		memberLevels:  memberLevels,
 	}
 }
 
@@ -664,4 +700,171 @@ func (h *AdminHandler) BatchUpdateUserStatus(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"updated": len(req.UserIDs)})
+}
+
+// CreateAdminUserRequest 管理员手动创建用户请求。
+// 与用户端 Register 不同：无需验证码 / 邀请码 / 协议确认，也不触发邀请奖励营销逻辑。
+type CreateAdminUserRequest struct {
+	Email         string `json:"email" binding:"required,email"`
+	Password      string `json:"password" binding:"required"`
+	Nickname      string `json:"nickname"`
+	MemberLevelID *uint  `json:"member_level_id"`
+	Status        string `json:"status"` // 留空默认 active
+	AdminNote     string `json:"admin_note"`
+}
+
+// CreateAdminUser 管理员手动创建用户。
+// POST /admin/users
+// 必须：bcrypt 哈希密码 + 密码策略校验、创建钱包账户、写入 Admin Audit Log。
+func (h *AdminHandler) CreateAdminUser(c *gin.Context) {
+	var req CreateAdminUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+
+	// 1. 密码强度校验（复用与用户注册一致的策略）。
+	if err := h.passwords.ValidatePassword(req.Password); err != nil {
+		respondWeakPassword(c, err)
+		return
+	}
+
+	// 2. 规范化邮箱。
+	normalized, err := h.emails.NormalizeEmail(req.Email)
+	if err != nil {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.email_invalid", nil)
+		return
+	}
+
+	// 3. 邮箱唯一性。
+	existing, err := h.users.GetByEmail(normalized)
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_create_failed", err)
+		return
+	}
+	if existing != nil {
+		ginutil.RespondError(c, response.CodeConflict, "error.email_already_exists", nil)
+		return
+	}
+
+	// 4. bcrypt 哈希密码。
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_create_failed", err)
+		return
+	}
+
+	// 5. 生成全局唯一邀请码。
+	inviteCode, err := h.generateUniqueInviteCode()
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_create_failed", err)
+		return
+	}
+
+	// 6. 组装用户对象。
+	nickname := strings.TrimSpace(req.Nickname)
+	if nickname == "" {
+		nickname = resolveAdminNicknameFromEmail(normalized)
+	}
+	status := strings.ToLower(strings.TrimSpace(req.Status))
+	if status == "" {
+		status = constants.UserStatusActive
+	}
+	if status != constants.UserStatusActive && status != constants.UserStatusDisabled {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		return
+	}
+
+	now := time.Now()
+	user := &userdomain.User{
+		Email:        normalized,
+		PasswordHash: string(hashed),
+		DisplayName:  nickname,
+		Status:       status,
+		AdminNote:    strings.TrimSpace(req.AdminNote),
+		InviteCode:   inviteCode,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if req.MemberLevelID != nil && *req.MemberLevelID > 0 {
+		user.MemberLevelID = *req.MemberLevelID
+	}
+
+	// 7. 落库。
+	if err := h.users.Create(user); err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_create_failed", err)
+		return
+	}
+
+	// 8. 创建钱包账户（GetAccount 在账户不存在时自动建零余额账户）。
+	if _, err := h.wallets.GetAccount(user.ID); err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_create_failed", err)
+		return
+	}
+
+	// 9. 未显式指定会员等级时分配默认等级。
+	if user.MemberLevelID == 0 && h.memberLevels != nil {
+		_ = h.memberLevels.AssignDefaultLevel(user.ID)
+	}
+
+	// 10. 写入 Admin Audit Log。
+	if h.audit != nil {
+		_ = h.audit.Record(auditlogapp.AuthzRecord{
+			OperatorAdminID:  c.GetUint("admin_id"),
+			OperatorUsername: strings.TrimSpace(c.GetString("username")),
+			Action:           "admin.user.create",
+			Object:           fmt.Sprintf("user:%d", user.ID),
+			Method:           http.MethodPost,
+			RequestID:        strings.TrimSpace(c.GetString("request_id")),
+			Detail: jsonmap.JSON{
+				"user_id": user.ID,
+				"email":   normalized,
+				"status":  status,
+			},
+		})
+	}
+
+	response.Success(c, user)
+}
+
+// generateUniqueInviteCode 生成全局未占用的个人邀请码，碰撞则重试。
+func (h *AdminHandler) generateUniqueInviteCode() (string, error) {
+	const maxAttempts = 16
+	for i := 0; i < maxAttempts; i++ {
+		code, err := userdomain.GenerateInviteCode()
+		if err != nil {
+			return "", err
+		}
+		existing, err := h.users.GetByInviteCode(code)
+		if err != nil {
+			return "", err
+		}
+		if existing == nil {
+			return code, nil
+		}
+	}
+	return "", errors.New("failed to allocate unique invite code after retries")
+}
+
+// resolveAdminNicknameFromEmail 从邮箱前缀推导默认昵称。
+func resolveAdminNicknameFromEmail(email string) string {
+	parts := strings.SplitN(email, "@", 2)
+	if len(parts) == 2 && strings.TrimSpace(parts[0]) != "" {
+		return strings.TrimSpace(parts[0])
+	}
+	return email
+}
+
+// respondWeakPassword 弱密码响应（与用户端一致：可本地化的策略详情 key）。
+func respondWeakPassword(c *gin.Context, err error) {
+	locale := i18n.ResolveLocale(c)
+	if perr, ok := err.(interface {
+		Key() string
+		Args() []interface{}
+	}); ok {
+		msg := i18n.Sprintf(locale, perr.Key(), perr.Args()...)
+		ginutil.RespondErrorWithMsg(c, response.CodeBadRequest, msg, nil)
+		return
+	}
+	ginutil.RespondError(c, response.CodeBadRequest, "error.password_weak", nil)
 }

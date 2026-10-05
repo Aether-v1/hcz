@@ -2,27 +2,18 @@ package middleware
 
 import (
 	complianceapp "github.com/Aether-v1/hcz/internal/modules/compliance/application"
-	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
-	"github.com/Aether-v1/hcz/internal/platform/http/response"
 
 	"github.com/gin-gonic/gin"
 )
 
-// PaymentComplianceRequired 拦截支付/财务路由：未确认合规声明则阻断。
-// - 已确认 → 放行
-// - 未确认 + 超管 → 业务码 403 + msg "compliance_required"（前端据此弹窗）
-// - 未确认 + 非超管 → 业务码 403 + msg "compliance_required_by_super_admin"（前端跳转提示页）
+// PaymentComplianceRequired 历史上用于拦截支付/财务路由：未确认合规声明则阻断。
+//
+// 该阻断已按业务要求移除：合规声明不再作为支付/财务路由的访问闸门。
+// 函数签名保留（避免破坏既有调用点与测试），内部改为直接放行（no-op）。
+// complianceapp.Service 仍被注入以保持构造形态，但不再参与鉴权决策。
 func PaymentComplianceRequired(cs *complianceapp.Service) gin.HandlerFunc {
+	_ = cs
 	return func(c *gin.Context) {
-		if cs != nil && cs.IsAcknowledged() {
-			c.Next()
-			return
-		}
-		if ginutil.IsSuperAdmin(c) {
-			response.Error(c, response.CodeForbidden, "compliance_required")
-		} else {
-			response.Error(c, response.CodeForbidden, "compliance_required_by_super_admin")
-		}
-		c.Abort()
+		c.Next()
 	}
 }

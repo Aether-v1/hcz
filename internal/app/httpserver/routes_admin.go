@@ -102,9 +102,8 @@ func registerAdminRoutes(
 
 	// 需要鉴权的接口
 	authorized := admin.Use(middleware.JWTAuthMiddleware(cfg.JWT.SecretKey, c.AdminStore), middleware.AdminRBACMiddleware(c.AuthzService))
-	// 支付/财务相关受保护子组：未确认合规声明时拦截
-	// 注：admin.Use(...) 已 mutate admin 自身，新 Group 继承 JWT + RBAC 中间件
-	paymentProtected := admin.Group("", middleware.PaymentComplianceRequired(c.ComplianceService))
+	// 注：历史上支付/财务路由另挂独立子组（合规声明闸门），该阻断已移除，
+	// 所有原受保护财务路由统一挂在 authorized（JWT + RBAC）下。
 
 	// 合规声明
 	compliancetransport.RegisterAdminRoutes(authorized, compliancetransport.NewAdminHandler(c.ComplianceService))
@@ -146,14 +145,14 @@ func registerAdminRoutes(
 	// 推广返利
 	adminAffiliateHandler := affiliatebootstrap.NewAdminHandler(c)
 	affiliatetransport.RegisterAdminRoutes(authorized, adminAffiliateHandler)
-	affiliatetransport.RegisterAdminFinanceRoutes(paymentProtected, adminAffiliateHandler)
+	affiliatetransport.RegisterAdminFinanceRoutes(authorized, adminAffiliateHandler)
 	resellertransport.RegisterOperationsOverviewRoutes(authorized, adminResellerOperationsHandler)
 	resellertransport.RegisterManagementRoutes(authorized, adminResellerManagementHandler)
 	resellertransport.RegisterProfileDetailRoutes(authorized, adminResellerProfileDetailHandler)
 	resellertransport.RegisterSiteConfigRoutes(authorized, adminResellerSiteConfigHandler)
 	resellertransport.RegisterProductSettingRoutes(authorized, adminResellerProductSettingHandler)
-	resellertransport.RegisterOperationsFinanceRoutes(paymentProtected, adminResellerOperationsHandler)
-	resellertransport.RegisterFinanceRoutes(paymentProtected, adminResellerFinanceHandler)
+	resellertransport.RegisterOperationsFinanceRoutes(authorized, adminResellerOperationsHandler)
+	resellertransport.RegisterFinanceRoutes(authorized, adminResellerFinanceHandler)
 
 	// 权限管理
 	adminauthztransport.RegisterAdminRoutes(authorized, adminAuthzHandler)
@@ -167,10 +166,10 @@ func registerAdminRoutes(
 
 	// 订单管理
 	ordertransport.RegisterAdminRoutes(authorized, adminOrderHandler)
-	ordertransport.RegisterAdminRefundWriteRoutes(paymentProtected, adminOrderRefundHandler)
+	ordertransport.RegisterAdminRefundWriteRoutes(authorized, adminOrderRefundHandler)
 	ordertransport.RegisterAdminRefundRoutes(authorized, adminOrderRefundHandler)
 	ordertransport.RegisterAdminAfterSaleRoutes(authorized, afterSaleHandler)
-	ordertransport.RegisterAdminAfterSaleWriteRoutes(paymentProtected, afterSaleHandler)
+	ordertransport.RegisterAdminAfterSaleWriteRoutes(authorized, afterSaleHandler)
 	fulfillmenttransport.RegisterAdminRoutes(authorized, adminFulfillmentHandler)
 	cardsecrettransport.RegisterAdminRoutes(authorized, adminCardSecretHandler)
 	giftcardtransport.RegisterAdminRoutes(authorized, adminGiftCardHandler)
@@ -183,13 +182,13 @@ func registerAdminRoutes(
 	memberleveltransport.RegisterAdminRoutes(authorized, adminMemberLevelHandler)
 
 	// 支付渠道与支付记录
-	paymenttransport.RegisterAdminChannelRoutes(paymentProtected, adminPaymentChannelHandler)
-	paymenttransport.RegisterAdminRoutes(paymentProtected, adminPaymentHandler)
+	paymenttransport.RegisterAdminChannelRoutes(authorized, adminPaymentChannelHandler)
+	paymenttransport.RegisterAdminRoutes(authorized, adminPaymentHandler)
 
 	// 用户管理
 	adminusertransport.RegisterAdminRoutes(authorized, adminUserHandler)
-	wallettransport.RegisterAdminRoutes(paymentProtected, adminWalletHandler)
-	withdrawalhttp.RegisterAdminRoutes(paymentProtected, adminWithdrawalHandler)
+	wallettransport.RegisterAdminRoutes(authorized, adminWalletHandler)
+	withdrawalhttp.RegisterAdminRoutes(authorized, adminWithdrawalHandler)
 	adminauthtransport.RegisterAdminUser2FARoutes(authorized, adminUser2FAHandler)
 
 	// API 凭证审核管理
@@ -208,7 +207,7 @@ func registerAdminRoutes(
 	procurementtransport.RegisterAdminRoutes(authorized, adminProcurementHandler)
 
 	// 对账管理
-	reconciliationtransport.RegisterAdminRoutes(paymentProtected, reconciliationtransport.NewAdminHandler(c.ReconciliationService))
+	reconciliationtransport.RegisterAdminRoutes(authorized, reconciliationtransport.NewAdminHandler(c.ReconciliationService))
 
 	// 渠道客户端管理
 	channelclienthttp.RegisterAdminRoutes(authorized, channelclienthttp.NewAdminHandler(c.ChannelClientService))
@@ -216,8 +215,8 @@ func registerAdminRoutes(
 	// Telegram Bot 群发
 	broadcasthttp.RegisterAdminRoutes(authorized, broadcasthttp.NewAdminHandler(c.TelegramBroadcastService))
 
-	// C2C 后台管理：普通读写在 authorized，仲裁在 paymentProtected（Handler 内做 Step-Up）
-	c2ctransport.RegisterAdminRoutes(authorized, paymentProtected, adminC2CHandler)
+	// C2C 后台管理：普通读写与仲裁均挂 authorized（Handler 内做 Step-Up），合规闸门已移除
+	c2ctransport.RegisterAdminRoutes(authorized, authorized, adminC2CHandler)
 
 	// 客服工单管理
 	supporttickethttp.RegisterAdminRoutes(authorized, supportAdminHandler)

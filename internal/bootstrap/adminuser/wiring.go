@@ -16,5 +16,8 @@ func NewHandler(c *container.Container) *adminusertransport.AdminHandler {
 		adminUserCouponAdapter{coupons: c.CouponRepo},
 		adminUserProductAdapter{products: c.ProductRepo},
 		adminUserAuthStateAdapter{},
+		adminUserPasswordValidator{policy: c.Config.Security.PasswordPolicy.ValidationPolicy()},
+		adminUserAuditRecorder{audit: c.AuthzAuditService},
+		adminUserMemberLevelAssigner{svc: c.MemberLevelService},
 	)
 }

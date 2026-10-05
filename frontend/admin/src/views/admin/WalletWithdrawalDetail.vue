@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import ComplianceGuardWrapper from '@/components/ComplianceGuardWrapper.vue'
 import { formatDate } from '@/utils/format'
 
 const { t } = useI18n()
@@ -151,7 +150,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <ComplianceGuardWrapper>
     <div class="space-y-6">
       <div class="flex items-center gap-3">
         <Button variant="outline" size="sm" @click="backToList">
@@ -289,5 +287,4 @@ onMounted(() => {
         </div>
       </template>
     </div>
-  </ComplianceGuardWrapper>
 </template>
