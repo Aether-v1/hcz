@@ -26,6 +26,10 @@ import (
 	orderriskapp "github.com/Aether-v1/hcz/internal/modules/orderrisk/application"
 	orderrisklimiter "github.com/Aether-v1/hcz/internal/modules/orderrisk/infrastructure/redislimiter"
 	promotionapp "github.com/Aether-v1/hcz/internal/modules/promotion/application"
+	supportapp "github.com/Aether-v1/hcz/internal/modules/supportticket/application"
+	supportlocalfile "github.com/Aether-v1/hcz/internal/modules/supportticket/infrastructure/localfile"
+	uploadapp "github.com/Aether-v1/hcz/internal/modules/upload/application"
+	uploadlocal "github.com/Aether-v1/hcz/internal/modules/upload/infrastructure/localstore"
 	sitemapapp "github.com/Aether-v1/hcz/internal/modules/sitemap/application"
 	sitemapcontract "github.com/Aether-v1/hcz/internal/modules/sitemap/contract"
 	sitemapcache "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/cacheadapter"
@@ -163,6 +167,35 @@ func (c *Container) initApplicationServices() {
 	c.CouponAdminService = couponapp.NewAdminService(c.CouponRepo)
 	c.PromotionAdminService = promotionapp.NewAdminService(c.PromotionRepo)
 	c.UserNotificationService = usernotificationapp.NewService(c.UserNotificationRepo)
+
+	// 工单系统：独立的严格上传策略（10MB，仅图片/PDF/文本），私有下载。
+	ticketUploader := uploadapp.NewService(uploadapp.Policy{
+		MaxSize:           10 * 1024 * 1024,
+		AllowedTypes:      []string{"image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain"},
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".webp", ".pdf", ".txt", ".log"},
+	}, uploadlocal.New("uploads"))
+	ticketFiler := supportlocalfile.New("uploads")
+	c.SupportTicketService = supportapp.NewService(supportapp.Options{
+		Repository: c.SupportTicketRepo,
+		UnitOfWork: c.SupportTicketRepo,
+		Users: &supportUserLookup{getByID: func(userID uint) (uint, string, string, error) {
+			u, err := c.UserStore.GetByID(userID)
+			if err != nil || u == nil {
+				return userID, "", "", err
+			}
+			return u.ID, u.Email, u.DisplayName, nil
+		}},
+		Admins: &supportAdminLookup{getAdminByID: func(adminID uint) (uint, string, error) {
+			a, err := c.AdminStore.GetByID(adminID)
+			if err != nil || a == nil {
+				return adminID, "", err
+			}
+			return a.ID, a.Username, nil
+		}},
+		Notifier: &supportNotifierAdapter{creator: c.UserNotificationService},
+		Uploader: ticketUploader,
+		Filer:    ticketFiler,
+	})
 	c.ContentBannerService = contentapp.NewBannerService(
 		gormstore.NewBannerStore(gormdb.DB),
 		contentapp.SystemClock{},

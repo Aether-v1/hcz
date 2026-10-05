@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute, RouterView, RouterLink } from 'vue-router'
+import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
 import {
   LayoutDashboard,
   LogOut,
@@ -49,6 +49,7 @@ import {
   Gavel,
   Radar,
   UserCog,
+  Headset,
 } from 'lucide-vue-next'
 import { Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { RefreshCw } from 'lucide-vue-next'
 import SystemUpdateDialog from '@/components/SystemUpdateDialog.vue'
 import { useAdminAuthStore } from '@/stores/auth'
+import { useTicketUnread } from '@/composables/useTicketUnread'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import { applySiteIcon } from '@/utils/favicon'
@@ -108,6 +110,7 @@ const readExpandedGroups = () => {
 
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const authStore = useAdminAuthStore()
 const isDark = ref(false)
 const appVersion = ref('')
@@ -117,6 +120,7 @@ const siteUrl = ref('')
 const updateCheckOpen = ref(false)
 
 const navSearch = ref('')
+const { unreadCount } = useTicketUnread()
 const expandedGroups = ref<Record<string, boolean>>(readExpandedGroups())
 const mobileNavOpen = ref(false)
 const sidebarCollapsed = ref(false)
@@ -262,6 +266,31 @@ const navGroups = computed<NavGroup[]>(() => {
           to: '/c2c/settings',
           icon: Settings,
           permission: 'GET:/admin/c2c/settings',
+        },
+      ],
+    },
+    {
+      id: 'support',
+      label: t('admin.navGroups.support'),
+      icon: Headset,
+      items: [
+        {
+          label: t('admin.navItems.supportDashboard'),
+          to: '/support/dashboard',
+          icon: LayoutDashboard,
+          permission: 'GET:/admin/support/overview',
+        },
+        {
+          label: t('admin.navItems.supportTickets'),
+          to: '/support/tickets',
+          icon: Headset,
+          permission: 'GET:/admin/support/tickets',
+        },
+        {
+          label: t('admin.navItems.supportCategories'),
+          to: '/support/categories',
+          icon: FolderTree,
+          permission: 'GET:/admin/support/categories',
         },
       ],
     },
@@ -1023,6 +1052,21 @@ onBeforeUnmount(() => {
                 <SelectItem value="en-US">{{ t('admin.common.lang.enUS') }}</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              size="icon-sm"
+              variant="outline"
+              :title="t('admin.support.tickets')"
+              @click="router?.push('/support/tickets')"
+              class="relative"
+            >
+              <Headset class="h-4 w-4" />
+              <span
+                v-if="unreadCount > 0"
+                class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
+              >
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            </Button>
             <Button
               size="icon-sm"
               variant="outline"

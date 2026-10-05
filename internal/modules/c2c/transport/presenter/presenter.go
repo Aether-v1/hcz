@@ -72,6 +72,7 @@ type ListingResp struct {
 	AvailableUSDT string `json:"available_usdt"`
 	Status        string `json:"status"`
 	Terms         string `json:"terms"`
+	CreatedAt     string `json:"created_at"`
 }
 
 // NewListingResp 单个挂单响应。
@@ -91,6 +92,7 @@ func NewListingResp(l *c2cdomain.Listing) ListingResp {
 		AvailableUSDT: l.AvailableUSDT.String(),
 		Status:        l.Status,
 		Terms:         l.Terms,
+		CreatedAt:     l.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 

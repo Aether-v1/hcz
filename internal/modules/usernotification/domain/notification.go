@@ -23,10 +23,17 @@ const (
 	TypeCommissionConfirmed = "commission_confirmed"
 	// TypeOrderCanceled 订单已取消/失败（Phase 1 不接入）。
 	TypeOrderCanceled = "order_canceled"
+	// TypeTicketAdminReplied 客服回复了工单。
+	TypeTicketAdminReplied = "ticket_admin_replied"
+	// TypeTicketResolved 工单被客服标记为已解决。
+	TypeTicketResolved = "ticket_resolved"
+	// TypeTicketClosed 工单被关闭。
+	TypeTicketClosed = "ticket_closed"
 )
 
 // 业务关联类型（biz_type）枚举，配合 biz_id 定位业务单据。
 const (
+	BizTypeSupportTicket  = "support_ticket"
 	BizTypeOrder          = "order"
 	BizTypeWalletRecharge = "wallet_recharge"
 	BizTypeRefund         = "refund"

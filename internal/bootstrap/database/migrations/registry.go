@@ -1,6 +1,8 @@
 package migrations
 
 import (
+	"errors"
+
 	"github.com/Aether-v1/hcz/internal/constants"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	apicredentialdomain "github.com/Aether-v1/hcz/internal/modules/apicredential/domain"
@@ -34,6 +36,7 @@ import (
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	siteconnectiondomain "github.com/Aether-v1/hcz/internal/modules/siteconnection/domain"
 	broadcastdomain "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/domain"
+	supportdomain "github.com/Aether-v1/hcz/internal/modules/supportticket/domain"
 	usernotificationdomain "github.com/Aether-v1/hcz/internal/modules/usernotification/domain"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
 	withdrawaldomain "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/domain"
@@ -106,6 +109,11 @@ func AutoMigrate() error {
 		&c2cdomain.Trade{},
 		&c2cdomain.Dispute{},
 		&c2cdomain.RiskSignal{},
+		&supportdomain.Category{},
+		&supportdomain.Ticket{},
+		&supportdomain.Message{},
+		&supportdomain.Attachment{},
+		&supportdomain.Audit{},
 	); err != nil {
 		return err
 	}
@@ -163,6 +171,37 @@ func AutoMigrate() error {
 	}
 	if db.Migrator().HasColumn(&productdomain.Product{}, "price_currency") {
 		if err := db.Migrator().DropColumn(&productdomain.Product{}, "price_currency"); err != nil {
+			return err
+		}
+	}
+	if err := SeedSupportTicketCategories(db); err != nil {
+		return err
+	}
+	return nil
+}
+
+// SeedSupportTicketCategories 写入预置工单分类（FirstOrCreate，可重复执行）。
+func SeedSupportTicketCategories(db *gorm.DB) error {
+	seeds := []supportdomain.Category{
+		{Code: "account", Name: "账户问题", Enabled: true, SortOrder: 1, DefaultPriority: "normal"},
+		{Code: "recharge", Name: "充值问题", Enabled: true, SortOrder: 2, DefaultPriority: "normal"},
+		{Code: "wallet", Name: "钱包问题", Enabled: true, SortOrder: 3, DefaultPriority: "high"},
+		{Code: "withdrawal", Name: "提现问题", Enabled: true, SortOrder: 4, DefaultPriority: "high"},
+		{Code: "c2c", Name: "C2C 交易", Enabled: true, SortOrder: 5, DefaultPriority: "high"},
+		{Code: "affiliate", Name: "推广返利", Enabled: true, SortOrder: 6, DefaultPriority: "normal"},
+		{Code: "technical", Name: "技术故障", Enabled: true, SortOrder: 7, DefaultPriority: "normal"},
+		{Code: "other", Name: "其他问题", Enabled: true, SortOrder: 99, DefaultPriority: "normal"},
+	}
+	for i := range seeds {
+		var existing supportdomain.Category
+		err := db.Where("code = ?", seeds[i].Code).First(&existing).Error
+		if err == nil {
+			continue
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err := db.Create(&seeds[i]).Error; err != nil {
 			return err
 		}
 	}

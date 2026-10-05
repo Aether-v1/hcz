@@ -76,6 +76,8 @@ import (
 	settingscontract "github.com/Aether-v1/hcz/internal/modules/settings/contract"
 	siteconnectionapp "github.com/Aether-v1/hcz/internal/modules/siteconnection/application"
 	siteconnectioncontract "github.com/Aether-v1/hcz/internal/modules/siteconnection/contract"
+	supportapp "github.com/Aether-v1/hcz/internal/modules/supportticket/application"
+	supportgormstore "github.com/Aether-v1/hcz/internal/modules/supportticket/infrastructure/gormstore"
 	sitemapapp "github.com/Aether-v1/hcz/internal/modules/sitemap/application"
 	broadcastapp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/application"
 	broadcastcontract "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/contract"
@@ -139,6 +141,7 @@ type Container struct {
 	MemberLevelPriceRepo   *memberlevelgormstore.PriceStore
 	MemberLevelUserRepo    memberlevelcontract.UserRepository
 	UserNotificationRepo   *usernotificationgormstore.Store
+	SupportTicketRepo      *supportgormstore.Store
 
 	// Services
 	AuthzService                  *authz.Service
@@ -206,6 +209,7 @@ type Container struct {
 	OrderRiskControlService       *orderriskapp.Service
 	ComplianceService             *complianceapp.Service
 	UserNotificationService       *usernotificationapp.Service
+	SupportTicketService          *supportapp.Service
 
 	PaymentProviderRegistry *paymentprovider.Registry
 }

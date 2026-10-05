@@ -434,6 +434,30 @@ const routes = [
         component: () => import('@/views/admin/C2CSettings.vue'),
         meta: { permission: 'GET:/admin/c2c/settings' },
       },
+      {
+        path: 'support/dashboard',
+        name: 'support-dashboard',
+        component: () => import('@/views/support/SupportDashboard.vue'),
+        meta: { permission: 'GET:/admin/support/overview' },
+      },
+      {
+        path: 'support/tickets',
+        name: 'support-tickets',
+        component: () => import('@/views/support/TicketList.vue'),
+        meta: { permission: 'GET:/admin/support/tickets' },
+      },
+      {
+        path: 'support/tickets/:id',
+        name: 'support-ticket-detail',
+        component: () => import('@/views/support/TicketDetail.vue'),
+        meta: { permission: 'GET:/admin/support/tickets' },
+      },
+      {
+        path: 'support/categories',
+        name: 'support-categories',
+        component: () => import('@/views/support/CategoriesManagement.vue'),
+        meta: { permission: 'GET:/admin/support/categories' },
+      },
     ],
   },
 ]

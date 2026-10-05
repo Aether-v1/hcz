@@ -25,6 +25,7 @@ import (
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/user"
 	publicconfigtransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http/public"
 	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
+	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 
@@ -69,6 +70,7 @@ func registerStorefrontRoutes(
 	userWithdrawalHandler *withdrawalhttp.UserHandler,
 	userNotificationHandler *usernotificationhttp.UserHandler,
 	c2cHandler *c2ctransport.Handler,
+	supportUserHandler *supporttickethttp.UserHandler,
 	redisClient *redis.Client,
 	loginRule middleware.RateLimitRule,
 	guestReadRule middleware.RateLimitRule,
@@ -77,6 +79,9 @@ func registerStorefrontRoutes(
 	registerRule middleware.RateLimitRule,
 	verifyRule middleware.RateLimitRule,
 	forgotRule middleware.RateLimitRule,
+	supportCreateRule middleware.RateLimitRule,
+	supportReplyRule middleware.RateLimitRule,
+	supportAttachmentRule middleware.RateLimitRule,
 ) {
 	storefront := apiV1.Group("")
 	storefront.Use(middleware.ResellerTenantMiddleware(c.ResellerDomainResolver))
@@ -145,6 +150,7 @@ func registerStorefrontRoutes(
 		withdrawalhttp.RegisterUserRoutes(user, userWithdrawalHandler)
 		c2ctransport.RegisterUserRoutes(user, c2cHandler)
 		usernotificationhttp.RegisterUserRoutes(user, userNotificationHandler)
+		supporttickethttp.RegisterUserRoutes(user, supportUserHandler, redisClient, supportCreateRule, supportReplyRule, supportAttachmentRule)
 		giftCardRedeem := user.Group("", middleware.RateLimitMiddleware(redisClient, giftCardRedeemRule, middleware.KeyByUserIDAndIP))
 		giftcardtransport.RegisterUserRoutes(giftCardRedeem, userGiftCardHandler)
 		affiliatetransport.RegisterUserRoutes(user, affiliateHandler)

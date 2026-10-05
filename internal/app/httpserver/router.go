@@ -54,6 +54,7 @@ import (
 	sitemaptransport "github.com/Aether-v1/hcz/internal/modules/sitemap/transport/http"
 	telegramchanneltransport "github.com/Aether-v1/hcz/internal/modules/telegram/channelbot/transport/http"
 	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
+	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	"github.com/Aether-v1/hcz/internal/web"
 
 	"github.com/gin-gonic/gin"
@@ -142,6 +143,8 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	adminWithdrawalHandler := withdrawalHandlers.Admin
 	c2cHandler := c2chttp.NewHandler(c.C2CService)
 	adminC2CHandler := c2cbootstrap.NewAdminHandler(c)
+	supportUserHandler := supporttickethttp.NewUserHandler(c.SupportTicketService)
+	supportAdminHandler := supporttickethttp.NewAdminHandler(c.SupportTicketService)
 	channelMemberLevelHandler := memberleveltransport.NewChannelHandler(c.MemberLevelService)
 	adminApiCredentialHandler := apicredentialtransport.NewAdminHandler(c.ApiCredentialService)
 	userApiCredentialHandler := apicredentialtransport.NewUserHandler(c.ApiCredentialService)
@@ -272,6 +275,28 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 		BlockSeconds:  1800,
 		MessageKey:    "error.rate_limited",
 	}
+	// 工单：创建 5/小时，回复 3/10s，附件上传 10/分钟。
+	supportCreateRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:support_create", redisPrefix),
+		WindowSeconds: 3600,
+		MaxRequests:   5,
+		BlockSeconds:  0,
+		MessageKey:    "error.rate_limited",
+	}
+	supportReplyRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:support_reply", redisPrefix),
+		WindowSeconds: 10,
+		MaxRequests:   3,
+		BlockSeconds:  0,
+		MessageKey:    "error.rate_limited",
+	}
+	supportAttachmentRule := middleware.RateLimitRule{
+		Prefix:        fmt.Sprintf("%s:rate:support_attachment", redisPrefix),
+		WindowSeconds: 60,
+		MaxRequests:   10,
+		BlockSeconds:  0,
+		MessageKey:    "error.rate_limited",
+	}
 
 	// middleware.RequestIDMiddleware 必须前置于 middleware.RecoveryMiddleware：panic 日志与响应都依赖 request_id。
 	r.Use(middleware.RequestIDMiddleware())
@@ -295,11 +320,11 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	sitemaptransport.RegisterRoutes(r, sitemaptransport.NewHandler(c.SitemapService, sitemapbrand.New(c.SettingService)))
 
 	apiV1 := r.Group("/api/v1")
-	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userWithdrawalHandler, userNotificationHandler, c2cHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule)
+	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userWithdrawalHandler, userNotificationHandler, c2cHandler, supportUserHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule, supportCreateRule, supportReplyRule, supportAttachmentRule)
 	registerUpstreamRoutes(apiV1, c, upstreamHandler, redisClient, upstreamAPIRule, callbackRule)
 	registerChannelRoutes(apiV1, c, channelHandler, channelMemberLevelHandler, channelGiftCardHandler, channelAffiliateHandler, channelTelegramBotHandler, channelWalletHandler, redisClient, channelAPIRule)
 	registerPaymentCallbackRoutes(apiV1, paymentCallbackHandler, paymentWebhookHandler, redisClient, callbackRule)
-	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, adminC2CHandler, redisClient, adminLoginRule)
+	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, adminC2CHandler, supportAdminHandler, redisClient, adminLoginRule)
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {

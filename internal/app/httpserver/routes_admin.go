@@ -38,6 +38,7 @@ import (
 	siteconnectiontransport "github.com/Aether-v1/hcz/internal/modules/siteconnection/transport/http"
 	broadcasthttp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/transport/http"
 	uploadtransport "github.com/Aether-v1/hcz/internal/modules/upload/transport/http"
+	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
@@ -87,6 +88,7 @@ func registerAdminRoutes(
 	adminPaymentHandler *paymenttransport.AdminHandler,
 	adminPaymentChannelHandler *paymenttransport.AdminChannelHandler,
 	adminC2CHandler *c2ctransport.AdminHandler,
+	supportAdminHandler *supporttickethttp.AdminHandler,
 	redisClient *redis.Client,
 	adminLoginRule middleware.RateLimitRule,
 ) {
@@ -214,4 +216,7 @@ func registerAdminRoutes(
 
 	// C2C 后台管理：普通读写在 authorized，仲裁在 paymentProtected（Handler 内做 Step-Up）
 	c2ctransport.RegisterAdminRoutes(authorized, paymentProtected, adminC2CHandler)
+
+	// 客服工单管理
+	supporttickethttp.RegisterAdminRoutes(authorized, supportAdminHandler)
 }

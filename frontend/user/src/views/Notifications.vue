@@ -82,9 +82,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import {
   Bell, CheckCheck, CheckCircle2, BadgeDollarSign, Loader2, MessageSquareWarning,
-  Package, TrendingUp, Wallet, XCircle,
+  Package, TrendingUp, Wallet, XCircle, ArrowLeftRight, Scale,
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -94,9 +95,21 @@ import { useAppStore } from '../stores/app'
 import { toast } from '../composables/useToast'
 
 const { t } = useI18n()
+const router = useRouter()
 const notificationStore = useNotificationStore()
 const appStore = useAppStore()
 const markingAll = ref(false)
+
+// C2C 交易相关通知类型，点击后跳转交易详情
+const C2C_TRADE_NOTIFICATION_TYPES = [
+  'c2c_trade_created',
+  'c2c_buyer_paid',
+  'c2c_trade_completed',
+  'c2c_trade_canceled',
+  'c2c_trade_expired',
+  'c2c_disputed',
+  'c2c_arbitrated',
+]
 
 const typeMetaMap: Record<string, { icon: any; box: string }> = {
   wallet_recharge: { icon: Wallet, box: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
@@ -106,6 +119,13 @@ const typeMetaMap: Record<string, { icon: any; box: string }> = {
   aftersale_update: { icon: MessageSquareWarning, box: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
   commission_confirmed: { icon: TrendingUp, box: 'bg-purple-500/10 text-purple-600 dark:text-purple-400' },
   order_canceled: { icon: XCircle, box: 'bg-zinc-500/10 text-zinc-500' },
+  c2c_trade_created: { icon: ArrowLeftRight, box: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+  c2c_buyer_paid: { icon: BadgeDollarSign, box: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  c2c_trade_completed: { icon: CheckCircle2, box: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  c2c_trade_canceled: { icon: XCircle, box: 'bg-zinc-500/10 text-zinc-500' },
+  c2c_trade_expired: { icon: XCircle, box: 'bg-zinc-500/10 text-zinc-500' },
+  c2c_disputed: { icon: Scale, box: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+  c2c_arbitrated: { icon: Scale, box: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
 }
 
 const defaultMeta = { icon: Bell, box: 'bg-secondary text-muted-foreground' }
@@ -125,6 +145,17 @@ const formatTime = (iso: string) => {
 }
 
 const handleItemClick = async (item: NotificationItem) => {
+  // C2C 交易通知：点击跳转交易详情
+  if (C2C_TRADE_NOTIFICATION_TYPES.includes(item.type)) {
+    const tradeId = item.data?.trade_id || item.biz_id
+    if (tradeId) {
+      if (!item.is_read) {
+        try { await notificationStore.markRead(item.id) } catch { /* ignore */ }
+      }
+      void router.push(`/c2c/trades/${tradeId}`)
+      return
+    }
+  }
   if (item.is_read) return
   try {
     await notificationStore.markRead(item.id)

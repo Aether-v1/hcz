@@ -59,6 +59,16 @@ export { userProfileAPI } from './user'
 export { userOrderAPI, guestOrderAPI, paymentAPI } from './order'
 export { walletAPI, giftCardAPI } from './wallet'
 export { notificationAPI } from './notification'
+export { c2cAPI } from './c2c'
+export type {
+    C2CPaymentMethod,
+    C2CListing,
+    C2CTrade,
+    C2CDispute,
+    C2CWallet,
+    C2CTradeStatus,
+    C2CListingStatus,
+} from './c2c'
 export { affiliateAPI } from './affiliate'
 export { resellerAPI } from './reseller'
 export { apiCredentialAPI } from './credential'
