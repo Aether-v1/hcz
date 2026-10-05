@@ -81,6 +81,7 @@ export function useCheckout() {
   const useBalance = ref(false)
   const walletLoading = ref(false)
   const walletBalance = ref('0')
+  const walletCurrency = ref('USDT')
 
   // Payment channels
   const paymentChannels = computed(() => {
@@ -910,7 +911,8 @@ export function useCheckout() {
     walletLoading.value = true
     try {
       const response = await walletAPI.account()
-      walletBalance.value = String(response.data.data?.available_balance || '0')
+      walletBalance.value = String(response.data.data?.balance || '0')
+      walletCurrency.value = String(response.data.data?.currency || 'USDT')
     } catch {
       walletBalance.value = '0'
     } finally {
@@ -1164,6 +1166,7 @@ export function useCheckout() {
     showBalanceOption,
     walletLoading,
     walletBalance,
+    walletCurrency,
     useBalance,
     walletOnlyPayment,
     expectedWalletPaidDisplay,

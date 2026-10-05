@@ -1,17 +1,28 @@
 <template>
-  <div class="rounded-2xl border bg-card p-7 shadow-sm">
-    <PanelHeading :title="t('personalCenter.wallet.rechargeTitle')" :description="t('personalCenter.wallet.rechargeSubtitle')" :icon="CreditCard" />
-    <form class="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1fr_2fr_auto]" @submit.prevent="$emit('submit')">
-      <div>
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.amountLabel') }}</Label>
+  <div class="rounded-2xl border bg-card p-6 shadow-sm md:p-7">
+    <div class="mb-6">
+      <h2 class="text-lg font-bold text-foreground">{{ t('personalCenter.wallet.rechargeTitle') }}</h2>
+      <p class="mt-1 text-sm text-muted-foreground">{{ t('personalCenter.wallet.rechargeSubtitle') }}</p>
+    </div>
+    <form class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="$emit('submit')">
+      <div class="sm:col-span-2">
+        <Label class="mb-2 block text-sm font-semibold">{{ t('personalCenter.wallet.amountLabel') }} · {{ currency }}</Label>
         <Input
           :model-value="amount"
           @update:model-value="(v) => $emit('update:amount', String(v).trim())"
           type="text"
           inputmode="decimal"
           :placeholder="t('personalCenter.wallet.amountPlaceholder')"
-          class="h-11"
+          class="h-12 text-base"
         />
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="mr-1 text-xs text-muted-foreground">{{ t('personalCenter.wallet.quickAmounts') }}</span>
+          <button v-for="value in quickAmounts" :key="value" type="button" :disabled="recharging"
+            :aria-pressed="amount === String(value)"
+            class="rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums transition-colors disabled:opacity-50"
+            :class="amount === String(value) ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900' : 'bg-card text-muted-foreground hover:border-foreground hover:text-foreground'"
+            @click="$emit('update:amount', String(value))">{{ value }}</button>
+        </div>
       </div>
       <div>
         <Label class="mb-2 block">{{ t('personalCenter.wallet.channelLabel') }}</Label>
@@ -41,11 +52,11 @@
           class="h-11"
         />
       </div>
-      <div class="flex items-end">
+      <div class="sm:col-span-2">
         <Button
           type="submit"
           :disabled="recharging || channelLoading || !hasChannels"
-          class="h-11 w-full font-bold"
+          class="h-11 w-full bg-slate-900 font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
         >
           {{ recharging ? t('personalCenter.wallet.recharging') : t('personalCenter.wallet.rechargeSubmit') }}
         </Button>
@@ -76,8 +87,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { CreditCard } from 'lucide-vue-next'
-import PanelHeading from '../shared/PanelHeading.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -85,6 +94,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 defineProps<{
   amount: string
+  currency: string
   channelId: number
   remark: string
   channels: Array<{ id: number; name: string }>
@@ -105,5 +115,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
+const quickAmounts = [50, 100, 200, 500]
 </script>
 

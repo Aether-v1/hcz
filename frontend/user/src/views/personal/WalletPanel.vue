@@ -1,41 +1,35 @@
 <template>
-  <div class="space-y-6">
-    <WalletBalanceCard
-      :alert="walletAlert"
-      :available-balance-display="availableBalanceDisplay"
-      :frozen-balance-display="frozenBalanceDisplay"
-      :total-balance-display="totalBalanceDisplay"
-      :total-transactions="pagination.total"
-      :current-page="pagination.page"
-      :total-pages="pagination.total_page"
-    />
-
+  <div class="space-y-5">
     <div class="flex flex-wrap gap-3">
-      <router-link to="/me/wallet/withdrawal" class="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
-        {{ t('personalCenter.wallet.withdraw.title') }}
-      </router-link>
-      <router-link to="/me/wallet/withdrawal-history" class="inline-flex h-10 items-center rounded-lg border px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent">
-        {{ t('personalCenter.wallet.withdraw.historyTitle') }}
-      </router-link>
+      <router-link to="/me/wallet/withdrawal" class="rounded-lg border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">{{ t('personalCenter.wallet.withdraw.formTitle') }}</router-link>
+      <router-link to="/me/wallet/withdrawal-history" class="rounded-lg border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">{{ t('personalCenter.wallet.withdraw.historyTitle') }}</router-link>
     </div>
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-stretch">
+      <WalletBalanceCard
+        :alert="walletAlert"
+        :balance-display="balanceDisplay"
+        :total-transactions="pagination.total"
+      />
 
-    <WalletRechargeForm
-      :amount="rechargeForm.amount"
-      :channel-id="rechargeForm.channelId"
-      :remark="rechargeForm.remark"
-      :channels="channels"
-      :has-channels="hasChannels"
-      :recharging="recharging"
-      :channel-loading="channelLoading"
-      :selected-channel="selectedChannel"
-      :fee-rate-display="selectedChannelFeeRateDisplay"
-      :fixed-fee-display="selectedChannelFixedFeeDisplay"
-      :fee-amount-display="selectedChannelFeeAmountDisplay"
-      @update:amount="rechargeForm.amount = $event"
-      @update:channel-id="rechargeForm.channelId = $event"
-      @update:remark="rechargeForm.remark = $event"
-      @submit="handleRecharge"
-    />
+      <WalletRechargeForm
+        :amount="rechargeForm.amount"
+        :channel-id="rechargeForm.channelId"
+        :remark="rechargeForm.remark"
+        :currency="selectedChannelCurrency"
+        :channels="channels"
+        :has-channels="hasChannels"
+        :recharging="recharging"
+        :channel-loading="channelLoading"
+        :selected-channel="selectedChannel"
+        :fee-rate-display="selectedChannelFeeRateDisplay"
+        :fixed-fee-display="selectedChannelFixedFeeDisplay"
+        :fee-amount-display="selectedChannelFeeAmountDisplay"
+        @update:amount="rechargeForm.amount = $event"
+        @update:channel-id="rechargeForm.channelId = $event"
+        @update:remark="rechargeForm.remark = $event"
+        @submit="handleRecharge"
+      />
+    </div>
 
     <WalletTransactionList
       :loading="loading"
@@ -283,17 +277,9 @@ const selectedChannelFeeAmountDisplay = computed(() => {
   return formatMoney(centsToAmount(variableFeeCents + fixedFeeCents), selectedChannelCurrency.value)
 })
 // P0-2: 钱包余额本位币固定 USDT，读 API 返回的 currency，不用 site config currency。
-const availableBalanceDisplay = computed(() => {
+const balanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.available_balance, ccy)
-})
-const frozenBalanceDisplay = computed(() => {
-  const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.frozen_balance, ccy)
-})
-const totalBalanceDisplay = computed(() => {
-  const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.total_balance, ccy)
+  return formatMoney(wallet.value?.balance, ccy)
 })
 
 const loadWallet = async () => {

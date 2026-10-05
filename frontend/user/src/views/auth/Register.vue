@@ -1,18 +1,6 @@
 <template>
   <div class="relative flex min-h-screen items-center justify-center bg-background text-foreground theme-auth-page px-4 py-16 sm:px-6">
     <div class="relative z-10 w-full max-w-lg">
-      <div class="mb-4 flex items-center justify-between px-1">
-        <Button as-child variant="ghost" size="sm" class="rounded-full gap-1 text-muted-foreground">
-          <router-link to="/">
-            <ArrowLeft class="h-4 w-4" />
-            {{ t('auth.login.backHome') }}
-          </router-link>
-        </Button>
-        <Badge variant="neutral" size="sm" class="rounded-full">
-          {{ t('auth.register.title') }}
-        </Badge>
-      </div>
-
       <Card class="rounded-3xl p-7 shadow-lg backdrop-blur-sm sm:p-9">
         <div v-if="!registrationEnabled" class="py-8 text-center">
           <p class="text-sm text-muted-foreground">{{ t('auth.register.registrationDisabled') }}</p>
@@ -224,9 +212,8 @@
 import { useI18n } from 'vue-i18n'
 import ImageCaptcha from '../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../components/captcha/TurnstileCaptcha.vue'
-import { ArrowLeft, Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus, Gift } from 'lucide-vue-next'
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus, Gift } from 'lucide-vue-next'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

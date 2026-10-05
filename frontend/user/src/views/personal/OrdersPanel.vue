@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <PanelHeading :title="t('orders.title')" :description="t('orders.subtitle')" :icon="ShoppingBag">
+    <PanelHeading :title="t('orders.title')" :description="t('orders.subtitle')" :icon="ReceiptText">
       <template #actions>
         <Badge variant="neutral" size="sm" class="rounded-full">
           {{ t('orders.pageInfo', { page: activePagination.page, total: activePagination.total_page }) }}
@@ -16,7 +16,7 @@
       <button
         type="button"
         class="flex-1 py-3 text-sm font-semibold text-center transition-colors"
-        :class="activeTab === 'product' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+        :class="activeTab === 'product' ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-muted-foreground hover:text-foreground'"
         @click="switchTab('product')"
       >
         {{ t('orders.tabs.product') }}
@@ -24,7 +24,7 @@
       <button
         type="button"
         class="flex-1 py-3 text-sm font-semibold text-center transition-colors"
-        :class="activeTab === 'recharge' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+        :class="activeTab === 'recharge' ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-muted-foreground hover:text-foreground'"
         @click="switchTab('recharge')"
       >
         {{ t('orders.tabs.recharge') }}
@@ -33,13 +33,6 @@
 
     <!-- 普通订单 Tab -->
     <template v-if="activeTab === 'product'">
-      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard :label="t('orders.stats.totalMatched')" :value="orderPagination.total" :icon="ShoppingBag" tone="info" mono />
-        <StatCard :label="t('orders.stats.currentPage')" :value="orders.length" :icon="Layers" tone="neutral" mono />
-        <StatCard :label="t('orders.stats.pendingPayment')" :value="pendingPaymentCount" :icon="Clock" tone="warning" mono />
-        <StatCard :label="t('orders.stats.finished')" :value="finishedCount" :icon="CheckCircle2" tone="success" mono />
-      </div>
-
       <div class="rounded-2xl border bg-card p-4 shadow-sm">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div class="w-full lg:max-w-sm">
@@ -67,7 +60,7 @@
           </div>
 
           <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-            <Button type="button" class="h-11 font-bold" @click="applyOrderFilters">
+            <Button type="button" class="h-11 bg-slate-900 font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" @click="applyOrderFilters">
               {{ t('orders.filters.search') }}
             </Button>
             <Button type="button" variant="outline" class="h-11 font-semibold" @click="resetOrderFilters">
@@ -96,17 +89,18 @@
         action-to="/products"
       />
 
-      <div v-else class="space-y-4">
+      <div v-else class="overflow-hidden rounded-2xl border bg-card">
         <div
           v-for="order in orders"
           :key="order.order_no"
-          class="rounded-2xl border bg-card p-6 shadow-sm transition-all transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+          class="border-b p-4 last:border-b-0 transition-colors hover:bg-accent/40"
         >
           <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div class="text-xs uppercase tracking-[0.16em] text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
-              <div class="mt-2 text-lg font-bold text-foreground">{{ formatMoney(order.total_amount, order.currency) }}</div>
-              <div class="mt-1 text-xs font-medium text-emerald-600">
+            <div class="min-w-0">
+              <div class="truncate text-sm font-semibold text-foreground">{{ getLocalizedText(order.items?.[0]?.title) || t('orders.serviceFallback') }}</div>
+              <div class="mt-1 text-xs text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
+              <div class="mt-2 text-sm font-bold tabular-nums text-foreground">{{ formatMoney(order.total_amount, order.currency) }}</div>
+              <div v-if="order.wallet_paid_amount != null || order.usdt_total_amount != null" class="mt-1 text-xs font-medium text-emerald-600">
                 {{ t('orderDetail.actualPaidLabel', '实际支付') }}：{{ usdtPaidDisplay(order) }}
               </div>
               <div v-if="hasDiscount(order)" class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -117,11 +111,11 @@
                   {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatDiscountMoney(order.promotion_discount_amount, order.currency) }}
                 </Badge>
               </div>
-              <div class="mt-2 text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</div>
+              <div class="mt-2 text-xs text-muted-foreground">{{ t('orders.submittedAt') }}：{{ formatDate(order.created_at) }}</div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <Badge :variant="statusVariant(order.status)" size="sm">
+              <Badge :variant="statusVariant(order.status) === 'info' ? 'neutral' : statusVariant(order.status)" size="sm">
                 {{ statusLabel(order.status) }}
               </Badge>
               <Button as-child variant="outline" size="sm">
@@ -179,7 +173,7 @@
           </div>
 
           <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-            <Button type="button" class="h-11 font-bold" @click="applyRechargeFilters">
+            <Button type="button" class="h-11 bg-slate-900 font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" @click="applyRechargeFilters">
               {{ t('orders.filters.search') }}
             </Button>
             <Button type="button" variant="outline" class="h-11 font-semibold" @click="resetRechargeFilters">
@@ -246,12 +240,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ShoppingBag, Layers, Clock, CheckCircle2, Wallet } from 'lucide-vue-next'
+import { Layers, Clock, ReceiptText, Wallet } from 'lucide-vue-next'
 import { userOrderAPI } from '../../api'
 import { walletAPI } from '../../api/wallet'
 import { orderStatusVariant, orderStatusLabel, type BadgeTone } from '../../utils/status'
 import { debounceAsync } from '../../utils/debounce'
 import { amountToCents } from '../../utils/money'
+import { useLocalized } from '../../composables/useProduct'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -263,6 +258,7 @@ import PanelHeading from '../../components/shared/PanelHeading.vue'
 import StatCard from '../../components/shared/StatCard.vue'
 
 const { t } = useI18n()
+const { getLocalizedText } = useLocalized()
 
 
 // ========== Tab 状态 ==========
@@ -289,7 +285,6 @@ const orderLoaded = ref(false)
 const orders = ref<any[]>([])
 const orderPagination = ref({ page: 1, page_size: 20, total: 0, total_page: 1 })
 const orderFilters = reactive({ orderNo: '', status: '' })
-const orderStats = ref<Record<string, number>>({})
 
 const orderStatusOptions = computed(() => [
   { value: '', label: t('orders.filters.statusAll') },
@@ -310,14 +305,6 @@ const currentOrderStatusLabel = computed(() => {
   const selected = orderStatusOptions.value.find((item) => item.value === orderFilters.status)
   return selected?.label || t('orders.filters.statusAll')
 })
-const pendingPaymentCount = computed(() => orderStats.value['pending_payment'] || 0)
-const finishedCount = computed(
-  () =>
-    (orderStats.value['delivered'] || 0) +
-    (orderStats.value['completed'] || 0) +
-    (orderStats.value['partially_refunded'] || 0) +
-    (orderStats.value['refunded'] || 0),
-)
 
 const loadOrders = async (page = 1) => {
   orderLoading.value = true
@@ -335,17 +322,6 @@ const loadOrders = async (page = 1) => {
     orders.value = []
   } finally {
     orderLoading.value = false
-  }
-  loadOrderStats()
-}
-
-// 按状态聚合的全量统计（不受分页与状态筛选影响，仅复用关键词筛选）
-const loadOrderStats = async () => {
-  try {
-    const response = await userOrderAPI.stats({ order_no: orderFilters.orderNo || undefined })
-    orderStats.value = response.data.data?.by_status || {}
-  } catch {
-    orderStats.value = {}
   }
 }
 

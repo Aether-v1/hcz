@@ -34,6 +34,7 @@ import (
 	reconciliationdomain "github.com/Aether-v1/hcz/internal/modules/reconciliation/domain"
 	resellerstore "github.com/Aether-v1/hcz/internal/modules/reseller/infrastructure/gormstore"
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
+	sitebuilderdomain "github.com/Aether-v1/hcz/internal/modules/sitebuilder/domain"
 	siteconnectiondomain "github.com/Aether-v1/hcz/internal/modules/siteconnection/domain"
 	supportdomain "github.com/Aether-v1/hcz/internal/modules/supportticket/domain"
 	broadcastdomain "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/domain"
@@ -114,6 +115,9 @@ func AutoMigrate() error {
 		&supportdomain.Message{},
 		&supportdomain.Attachment{},
 		&supportdomain.Audit{},
+		&sitebuilderdomain.HomeEntry{},
+		&sitebuilderdomain.DiscoveryBlock{},
+		&sitebuilderdomain.SiteAuditLog{},
 	); err != nil {
 		return err
 	}
@@ -177,6 +181,9 @@ func AutoMigrate() error {
 	if err := SeedSupportTicketCategories(db); err != nil {
 		return err
 	}
+	if err := SeedHomeEntries(db); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -208,7 +215,46 @@ func SeedSupportTicketCategories(db *gorm.DB) error {
 	return nil
 }
 
-// backfillPendingOrderRiskIPs 只迁移仍可能占用库存的在途订单，避免启动时扫描全部历史订单。
+// SeedHomeEntries 写入预置首页入口（FirstOrCreate，可重复执行）。
+// 使用 key 唯一约束，已存在的 key 跳过，不覆盖 Admin 的自定义改动。
+func SeedHomeEntries(db *gorm.DB) error {
+	seeds := []sitebuilderdomain.HomeEntry{
+		{
+			Key: "entry_recharge", Title: "生活充值", Icon: "recharge",
+			ActionType: "internal", ActionTarget: "recharge",
+			Recommended: true, Enabled: true, SortOrder: 1,
+		},
+		{
+			Key: "entry_c2c", Title: "C2C 交易", Icon: "c2c",
+			ActionType: "internal", ActionTarget: "c2c", Badge: "新",
+			Enabled: true, SortOrder: 2,
+		},
+		{
+			Key: "entry_wallet", Title: "Wallet", Icon: "wallet",
+			ActionType: "internal", ActionTarget: "wallet",
+			Enabled: true, SortOrder: 3,
+		},
+		{
+			Key: "entry_invitation", Title: "邀请中心", Icon: "invitation",
+			ActionType: "internal", ActionTarget: "invitation",
+			Enabled: true, SortOrder: 4,
+		},
+	}
+	for i := range seeds {
+		var existing sitebuilderdomain.HomeEntry
+		err := db.Where("key = ?", seeds[i].Key).First(&existing).Error
+		if err == nil {
+			continue
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err := db.Create(&seeds[i]).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func backfillPendingOrderRiskIPs(db *gorm.DB) error {
 	type orderIPRow struct {
 		ID       uint

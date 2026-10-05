@@ -35,6 +35,7 @@ import (
 	reconciliationtransport "github.com/Aether-v1/hcz/internal/modules/reconciliation/transport/http"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/admin"
 	settingstransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http"
+	sitebuilderttp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/transport/http"
 	siteconnectiontransport "github.com/Aether-v1/hcz/internal/modules/siteconnection/transport/http"
 	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	broadcasthttp "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/transport/http"
@@ -89,6 +90,7 @@ func registerAdminRoutes(
 	adminPaymentChannelHandler *paymenttransport.AdminChannelHandler,
 	adminC2CHandler *c2ctransport.AdminHandler,
 	supportAdminHandler *supporttickethttp.AdminHandler,
+	siteBuilderAdminHandler *sitebuilderttp.AdminHandler,
 	redisClient *redis.Client,
 	adminLoginRule middleware.RateLimitRule,
 ) {
@@ -219,4 +221,7 @@ func registerAdminRoutes(
 
 	// 客服工单管理
 	supporttickethttp.RegisterAdminRoutes(authorized, supportAdminHandler)
+
+	// 站点装修（首页入口 / 发现页区块 / 品牌 / 模板 / 审计）
+	sitebuilderttp.RegisterAdminRoutes(authorized, siteBuilderAdminHandler)
 }

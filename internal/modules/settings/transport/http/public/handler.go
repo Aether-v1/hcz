@@ -77,6 +77,14 @@ type ResellerOverlay interface {
 	ApplyPublicConfigOverlay(ctx context.Context, tenant reseller.TenantContext, base map[string]interface{}) (map[string]interface{}, error)
 }
 
+// SiteBuilderPublic 公开装修数据端口（首页入口 / 发现页区块 / Banner）。
+// 实现方必须对 DB 失败做防御，返回空切片与默认值，不得让公开配置整体失败。
+type SiteBuilderPublic interface {
+	PublicHomeEntries() []map[string]interface{}
+	PublicDiscoveryBlocks() []map[string]interface{}
+	PublicBanners() []map[string]interface{}
+}
+
 // Handler 处理公开站点配置 HTTP 请求。
 type Handler struct {
 	cache          ConfigCache
@@ -88,6 +96,7 @@ type Handler struct {
 	google         GoogleAuthPublic
 	googleFallback GoogleAuthFallback
 	overlay        ResellerOverlay
+	siteBuilder    SiteBuilderPublic
 }
 
 func NewHandler(
@@ -121,6 +130,11 @@ func NewHandler(
 		googleFallback: googleFallback,
 		overlay:        overlay,
 	}
+}
+
+// SetSiteBuilder 注入公开装修数据端口（可选，装配期调用）。
+func (h *Handler) SetSiteBuilder(sb SiteBuilderPublic) {
+	h.siteBuilder = sb
 }
 
 // GetConfig 获取全局配置。
@@ -226,6 +240,10 @@ func (h *Handler) GetConfig(c *gin.Context) {
 		data["announcement"] = announcement
 	}
 
+	// 站点装修公开数据：home_entries / banners / discovery_blocks。
+	// 实现方内部已做 DB 失败防御，这里始终注入（空时返回默认结构），保证 API 恒为 200。
+	h.attachSiteBuilderPublicData(data)
+
 	if h.overlay != nil {
 		overlaid, overlayErr := h.overlay.ApplyPublicConfigOverlay(c.Request.Context(), tenant, data)
 		if overlayErr != nil {
@@ -246,6 +264,36 @@ func (h *Handler) GetConfig(c *gin.Context) {
 func stringValue(value interface{}) string {
 	text, _ := value.(string)
 	return text
+}
+
+// defaultPublicHomeEntries 站点装修数据不可用时的兜底首页入口。
+func defaultPublicHomeEntries() []map[string]interface{} {
+	return []map[string]interface{}{
+		{"key": "entry_recharge", "title": "生活充值", "icon": "recharge", "action_type": "internal", "action_target": "recharge", "recommended": true, "sort_order": 1},
+		{"key": "entry_c2c", "title": "C2C 交易", "icon": "c2c", "action_type": "internal", "action_target": "c2c", "badge": "新", "sort_order": 2},
+		{"key": "entry_wallet", "title": "Wallet", "icon": "wallet", "action_type": "internal", "action_target": "wallet", "sort_order": 3},
+		{"key": "entry_invitation", "title": "邀请中心", "icon": "invitation", "action_type": "internal", "action_target": "invitation", "sort_order": 4},
+	}
+}
+
+// attachSiteBuilderPublicData 注入首页入口 / Banner / 发现页区块。
+// siteBuilder 未注入或查询失败时回退默认值，绝不阻断公开配置响应。
+func (h *Handler) attachSiteBuilderPublicData(data map[string]interface{}) {
+	if h.siteBuilder == nil {
+		data["home_entries"] = defaultPublicHomeEntries()
+		data["banners"] = make([]map[string]interface{}, 0)
+		data["discovery_blocks"] = make([]map[string]interface{}, 0)
+		return
+	}
+
+	homeEntries := h.siteBuilder.PublicHomeEntries()
+	if len(homeEntries) == 0 {
+		homeEntries = defaultPublicHomeEntries()
+	}
+	data["home_entries"] = homeEntries
+
+	data["banners"] = h.siteBuilder.PublicBanners()
+	data["discovery_blocks"] = h.siteBuilder.PublicDiscoveryBlocks()
 }
 
 func resolveGoogleAuthPublicConfig(source GoogleAuthPublic, fallback GoogleAuthFallback) map[string]interface{} {

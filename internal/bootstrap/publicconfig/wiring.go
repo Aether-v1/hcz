@@ -35,7 +35,7 @@ func NewHandler(c *container.Container) *publicconfigtransport.Handler {
 			ClientID: c.Config.GoogleAuth.ClientID,
 		}
 	}
-	return publicconfigtransport.NewHandler(
+	handler := publicconfigtransport.NewHandler(
 		publicConfigCacheAdapter{},
 		publicConfigSettingsAdapter{settings: c.SettingService, cfg: c.Config},
 		publicConfigPaymentAdapter{payments: c.PaymentService},
@@ -46,4 +46,20 @@ func NewHandler(c *container.Container) *publicconfigtransport.Handler {
 		googleFallback,
 		overlay,
 	)
+	if sb := initSiteBuilderPublic(c); sb != nil {
+		handler.SetSiteBuilder(sb)
+	}
+	return handler
+}
+
+// initSiteBuilderPublic 注入公开装修数据端口。
+func initSiteBuilderPublic(c *container.Container) publicconfigtransport.SiteBuilderPublic {
+	if c.SiteHomeEntryService == nil || c.SiteDiscoveryBlockService == nil || c.ContentBannerService == nil {
+		return nil
+	}
+	return publicConfigSiteBuilderAdapter{
+		homeEntries: c.SiteHomeEntryService,
+		discovery:   c.SiteDiscoveryBlockService,
+		banners:     c.ContentBannerService,
+	}
 }

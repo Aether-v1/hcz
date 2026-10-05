@@ -1,13 +1,6 @@
 <template>
-  <div class="flex min-h-[70vh] items-center justify-center px-4 py-12">
+  <div class="flex min-h-screen items-center justify-center px-4 py-12">
     <div class="w-full max-w-[460px]">
-      <div class="mb-3.5 flex items-center justify-between px-1">
-        <RouterLink to="/" class="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary">
-          <ArrowLeft class="h-4 w-4" /> {{ t('auth.login.backHome') }}
-        </RouterLink>
-        <Badge variant="neutral" size="sm" class="rounded-full">{{ t('navbar.personalCenter') }}</Badge>
-      </div>
-
       <Card class="p-7 shadow-[var(--shadow-lg)] sm:p-9">
         <div class="mb-7 text-center">
           <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">{{ brandSiteName }}</p>
@@ -192,13 +185,12 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, Mail, Lock, ShieldCheck, Eye, EyeOff, LogIn } from 'lucide-vue-next'
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, LogIn } from 'lucide-vue-next'
 import ImageCaptcha from '../../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../../components/captcha/TurnstileCaptcha.vue'
 import FormField from '../../../components/FormField.vue'
 import GoogleIdentityButton from '../../../components/auth/GoogleIdentityButton.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

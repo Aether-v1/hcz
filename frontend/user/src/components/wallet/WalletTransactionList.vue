@@ -39,7 +39,7 @@
               {{ signedAmount(item.direction, item.amount, item.currency) }}
             </TableCell>
             <TableCell class="px-4 font-mono text-sm text-foreground">
-              {{ formatMoney(item.total_after, item.currency) }}
+              {{ formatMoney(item.balance_after, item.currency) }}
             </TableCell>
             <TableCell class="px-4 text-xs text-muted-foreground">{{ item.remark || '-' }}</TableCell>
           </TableRow>
@@ -78,7 +78,7 @@ defineProps<{
     direction: string
     amount: string
     currency: string
-    total_after: string
+    balance_after: string
     remark: string
   }>
   currentPage: number

@@ -47,7 +47,7 @@
             {{ t('personalCenter.invitation.inviteUrl') }}
           </p>
           <div class="mt-3 flex flex-wrap items-center gap-3">
-            <span class="min-w-0 flex-1 break-all font-mono text-sm text-foreground">{{ data.invite_url || '—' }}</span>
+            <span class="min-w-0 flex-1 break-all font-mono text-sm text-foreground">{{ inviteUrlText || '—' }}</span>
             <Button type="button" variant="outline" size="sm" @click="copy('url', inviteUrlText)">
               <component :is="copiedKey === 'url' ? Check : Copy" class="h-3.5 w-3.5" />
               {{ copiedKey === 'url' ? t('personalCenter.invitation.copied') : t('personalCenter.invitation.copy') }}
@@ -108,7 +108,15 @@ const data = ref<MyInvitationData | null>(null)
 const copiedKey = ref<'' | 'code' | 'url'>('')
 
 const inviteCodeText = computed(() => data.value?.invite_code || '')
-const inviteUrlText = computed(() => data.value?.invite_url || '')
+const inviteUrlText = computed(() => {
+  const raw = data.value?.invite_url
+  if (!raw) return ''
+  try {
+    return new URL(raw, window.location.origin).href
+  } catch {
+    return raw
+  }
+})
 
 const boundAtText = computed(() => {
   const raw = data.value?.invite_bound_at

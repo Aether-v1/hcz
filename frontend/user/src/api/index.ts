@@ -59,20 +59,24 @@ export { userProfileAPI } from './user'
 export { userOrderAPI, guestOrderAPI, paymentAPI } from './order'
 export { walletAPI, giftCardAPI } from './wallet'
 export { notificationAPI } from './notification'
-export { c2cAPI } from './c2c'
+export { supportAPI } from './support'
 export type {
-    C2CPaymentMethod,
-    C2CListing,
-    C2CTrade,
-    C2CDispute,
-    C2CWallet,
-    C2CTradeStatus,
-    C2CListingStatus,
-} from './c2c'
+    SupportCategory,
+    SupportTicketSummary,
+    SupportTicketDetail,
+    SupportMessage,
+    SupportAttachment,
+    SupportTicketListData,
+    SupportTicketDetailData,
+    CreateTicketPayload,
+    CreateTicketResult,
+    UploadAttachmentResult,
+    CreateReplyPayload,
+} from '../types/support'
+export { invitationAPI, type MyInvitationData } from './invitation'
 export { affiliateAPI } from './affiliate'
 export { resellerAPI } from './reseller'
 export { apiCredentialAPI } from './credential'
-export { invitationAPI, type MyInvitationData } from './invitation'
 
 // Default export for backward compatibility
 export { default } from './client'

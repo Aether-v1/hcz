@@ -35,9 +35,12 @@
         <aside class="lg:col-span-3">
           <div class="rounded-2xl border bg-card p-4 shadow-sm lg:sticky lg:top-24">
             <div class="hidden flex-col gap-0.5 lg:flex">
+              <template v-for="item in visibleSectionItems" :key="item.key">
+              <p v-if="item.key === 'overview' || item.key === 'giftCard' || item.key === 'affiliate'"
+                class="px-4 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {{ t(`personalCenter.groups.${item.key === 'giftCard' ? 'orders' : item.key}`) }}
+              </p>
               <button
-                v-for="item in visibleSectionItems"
-                :key="item.key"
                 type="button"
                 @click="switchSection(item.key)"
                 class="group relative flex w-full items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-left text-sm font-semibold transition-colors"
@@ -52,6 +55,7 @@
                 <component :is="item.icon" class="h-4 w-4 shrink-0" />
                 <span class="truncate">{{ t(item.label) }}</span>
               </button>
+              </template>
             </div>
 
             <div class="lg:hidden">
@@ -87,14 +91,7 @@
 
           <template v-if="currentSection === 'overview'">
             <!-- 数据一览 -->
-            <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <StatCard
-                :label="t('personalCenter.tabs.orders')"
-                :value="userProfileStore.loadingOrders ? '—' : userProfileStore.ordersTotal"
-                :icon="ShoppingBag"
-                tone="info"
-                mono
-              />
+            <div class="grid gap-4 sm:grid-cols-3">
               <StatCard :label="t('personalCenter.memberLevel.currentLevel')" :icon="Crown" tone="accent">
                 <template #value>
                   <span class="flex items-center gap-1.5">
@@ -211,61 +208,10 @@
               </div>
             </div>
 
-            <div class="rounded-2xl border bg-card p-6 shadow-sm">
-              <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <h3 class="text-lg font-bold text-foreground">{{ t('personalCenter.overview.recentOrdersTitle') }}</h3>
-                <Button as-child variant="ghost" size="sm" class="rounded-full">
-                  <router-link to="/me/orders">{{ t('personalCenter.overview.viewAllOrders') }}</router-link>
-                </Button>
-              </div>
-
-              <div v-if="userProfileStore.loadingOrders" class="space-y-3">
-                <div
-                  v-for="idx in 3"
-                  :key="idx"
-                  class="h-16 animate-pulse rounded-xl border bg-muted"
-                ></div>
-              </div>
-
-              <div v-else-if="userProfileStore.recentOrders.length === 0" class="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
-                {{ t('personalCenter.overview.emptyOrders') }}
-              </div>
-
-              <div v-else class="space-y-3">
-                <div
-                  v-for="order in userProfileStore.recentOrders"
-                  :key="order.order_no"
-                  class="rounded-xl border bg-card px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
-                >
-                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div class="text-xs text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
-                      <div class="mt-1 text-sm font-semibold text-foreground">
-                        {{ formatMoney(order.total_amount, order.currency) }}
-                      </div>
-                      <div class="mt-1 text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Badge :variant="statusVariant(order.status)" size="sm">
-                        {{ statusLabel(order.status) }}
-                      </Badge>
-                      <Button as-child variant="outline" size="sm">
-                        <router-link :to="`/orders/${order.order_no}`">{{ t('orders.viewDetails') }}</router-link>
-                      </Button>
-                      <Button v-if="order.status === 'pending_payment'" as-child size="sm">
-                        <router-link :to="`/pay?order_no=${order.order_no}`">{{ t('orders.payNow') }}</router-link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </template>
 
           <ProfilePanel v-else-if="currentSection === 'profile'" />
           <SecurityPanel v-else-if="currentSection === 'security'" />
-          <OrdersPanel v-else-if="currentSection === 'orders'" />
-          <WalletPanel v-else-if="currentSection === 'wallet'" />
           <AffiliatePanel v-else-if="currentSection === 'affiliate'" />
           <InvitationPanel v-else-if="currentSection === 'invitation'" />
           <div v-else-if="currentSection === 'reseller' && canAccessResellerConsole" class="rounded-2xl border bg-card p-6 shadow-sm">
@@ -277,7 +223,7 @@
           </div>
           <GiftCardPanel v-else-if="currentSection === 'giftCard'" />
           <ApiPanel v-else-if="currentSection === 'api'" />
-          <OrdersPanel v-else />
+          <ProfilePanel v-else />
         </section>
       </div>
     </div>
@@ -286,7 +232,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Crown, ShoppingBag, ShieldCheck, Percent } from 'lucide-vue-next'
+import { Crown, ShieldCheck, Percent } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
 import { pageAlertVariant, pageAlertToneClass } from '../utils/alerts'
 import StatCard from '../components/shared/StatCard.vue'
@@ -295,8 +241,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import ProfilePanel from './personal/ProfilePanel.vue'
 import SecurityPanel from './personal/SecurityPanel.vue'
-import OrdersPanel from './personal/OrdersPanel.vue'
-import WalletPanel from './personal/WalletPanel.vue'
 import GiftCardPanel from './personal/GiftCardPanel.vue'
 import AffiliatePanel from './personal/AffiliatePanel.vue'
 import InvitationPanel from './personal/InvitationPanel.vue'
@@ -311,7 +255,7 @@ const props = withDefaults(defineProps<{ section?: PersonalSection }>(), {
 
 const {
   userProfileStore, canAccessResellerConsole, visibleSectionItems, currentSection, globalAlert,
-  displayInitial, switchSection, statusLabel, statusVariant, formatMoney, formatDate,
+  displayInitial, switchSection,
   emailVerifiedLabel, emailVerifiedVariant, discountText, isImagePath, levelName,
 } = usePersonalCenter(() => props.section)
 </script>

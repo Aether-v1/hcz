@@ -10,6 +10,7 @@ import (
 
 var settingSupportedLanguages = append([]string(nil), constants.SupportedLocales...)
 var settingCurrencyCodePattern = regexp.MustCompile(`^[A-Z]{3}$`)
+var sitePrimaryColorPattern = regexp.MustCompile(`^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$`)
 
 const (
 	settingSiteScriptsMaxCount       = 20
@@ -40,7 +41,9 @@ func normalizeSiteSetting(value map[string]interface{}) jsonmap.JSON {
 	normalized["seo"] = normalizeSiteLocalizedBlock(value["seo"], []string{"title", "keywords", "description"})
 	normalized["legal"] = normalizeSiteLocalizedBlock(value["legal"], []string{"terms", "privacy"})
 	normalized["about"] = normalizeSiteAbout(value["about"])
-	normalized["scripts"] = normalizeSiteScripts(value["scripts"])
+	// LEGACY_DISABLED: scripts 功能已禁用，存储型 XSS 高危，不再归一化任何输入。
+	// 始终返回空数组，即使 Admin 直接调 API 传入 scripts 也不会被存储/输出。
+	normalized["scripts"] = []interface{}{}
 	normalized["footer_links"] = normalizeSiteFooterLinks(value["footer_links"])
 	normalized[constants.SettingFieldSiteCurrency] = normalizeSiteCurrency(value[constants.SettingFieldSiteCurrency])
 	normalized["template_mode"] = normalizeSiteTemplateMode(value["template_mode"])
@@ -53,42 +56,10 @@ func normalizeSiteSetting(value map[string]interface{}) jsonmap.JSON {
 	return normalized
 }
 
+// normalizeSiteScripts 已禁用：scripts 功能存在存储型 XSS 高危风险。
+// LEGACY_DISABLED: 保留函数签名以兼容现有调用点，但直接丢弃所有输入并返回空数组。
 func normalizeSiteScripts(raw interface{}) []interface{} {
-	listRaw, ok := raw.([]interface{})
-	if !ok {
-		return make([]interface{}, 0)
-	}
-
-	result := make([]interface{}, 0, len(listRaw))
-	for _, itemRaw := range listRaw {
-		itemMap, ok := itemRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		code := normalizeSettingTextWithRuneLimit(itemMap["code"], settingSiteScriptCodeMaxRuneSize)
-		if code == "" {
-			continue
-		}
-
-		position := normalizeSettingText(itemMap["position"])
-		if position != "head" && position != "body_end" {
-			position = "head"
-		}
-
-		result = append(result, map[string]interface{}{
-			"name":     normalizeSettingTextWithRuneLimit(itemMap["name"], settingSiteScriptNameMaxRuneSize),
-			"enabled":  parseSettingBool(itemMap["enabled"]),
-			"position": position,
-			"code":     code,
-		})
-
-		if len(result) >= settingSiteScriptsMaxCount {
-			break
-		}
-	}
-
-	return result
+	return make([]interface{}, 0)
 }
 
 func normalizeSiteFooterLinks(raw interface{}) []interface{} {
@@ -126,8 +97,9 @@ func normalizeSiteFooterLinks(raw interface{}) []interface{} {
 
 func normalizeSiteContact(raw interface{}) map[string]interface{} {
 	result := map[string]interface{}{
-		"telegram": "",
-		"whatsapp": "",
+		"telegram":     "",
+		"whatsapp":     "",
+		"social_links": normalizeSiteSocialLinks(nil),
 	}
 	contactMap, ok := raw.(map[string]interface{})
 	if !ok {
@@ -135,6 +107,50 @@ func normalizeSiteContact(raw interface{}) map[string]interface{} {
 	}
 	result["telegram"] = normalizeSettingText(contactMap["telegram"])
 	result["whatsapp"] = normalizeSettingText(contactMap["whatsapp"])
+	result["social_links"] = normalizeSiteSocialLinks(contactMap["social_links"])
+	return result
+}
+
+// normalizeSiteSocialLinks 归一化社媒链接数组。
+// 保持向后兼容：contact 顶层 telegram/whatsapp 字符串字段继续保留。
+func normalizeSiteSocialLinks(raw interface{}) []interface{} {
+	channels := []string{"telegram", "whatsapp", "x", "discord", "email", "custom"}
+	// 默认返回全部渠道占位项（enabled=false），保证前端结构稳定。
+	result := make([]interface{}, 0, len(channels))
+	for _, channel := range channels {
+		result = append(result, map[string]interface{}{
+			"channel":      channel,
+			"label":        "",
+			"url_or_value": "",
+			"enabled":      false,
+		})
+	}
+	listRaw, ok := raw.([]interface{})
+	if !ok {
+		return result
+	}
+	index := make(map[string]int, len(result))
+	for i, item := range result {
+		m := item.(map[string]interface{})
+		index[m["channel"].(string)] = i
+	}
+	for _, itemRaw := range listRaw {
+		itemMap, ok := itemRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		channel := normalizeSettingText(itemMap["channel"])
+		pos, exists := index[channel]
+		if !exists {
+			continue
+		}
+		result[pos] = map[string]interface{}{
+			"channel":      channel,
+			"label":        normalizeSettingText(itemMap["label"]),
+			"url_or_value": normalizeSettingText(itemMap["url_or_value"]),
+			"enabled":      parseSettingBool(itemMap["enabled"]),
+		}
+	}
 	return result
 }
 
@@ -146,6 +162,8 @@ func normalizeSiteBrand(raw interface{}) map[string]interface{} {
 		"site_icon":        "",
 		"site_logo":        "",
 		"site_description": normalizeSiteLocalizedField(nil),
+		"primary_color":    "#4F46E5",
+		"copyright":        "",
 	}
 	brandMap, ok := raw.(map[string]interface{})
 	if !ok {
@@ -157,6 +175,12 @@ func normalizeSiteBrand(raw interface{}) map[string]interface{} {
 	// 未配置 Logo 时保留空字符串，让前台继续使用各主题原有的 fallback 行为。
 	result["site_logo"] = normalizeSettingText(brandMap["site_logo"])
 	result["site_description"] = normalizeSiteLocalizedField(brandMap["site_description"])
+	// primary_color：仅接受合法 HEX，否则回退默认值。
+	primaryColor := normalizeSettingText(brandMap["primary_color"])
+	if sitePrimaryColorPattern.MatchString(primaryColor) {
+		result["primary_color"] = primaryColor
+	}
+	result["copyright"] = normalizeSettingText(brandMap["copyright"])
 	return result
 }
 

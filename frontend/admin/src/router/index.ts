@@ -161,6 +161,49 @@ const routes = [
         meta: { permission: 'GET:/admin/banners' },
       },
       {
+        path: 'site-builder',
+        component: () => import('@/views/site-builder/SiteBuilder.vue'),
+        children: [
+          { path: '', redirect: '/site-builder/brand' },
+          {
+            path: 'brand',
+            name: 'site-builder-brand',
+            component: () => import('@/views/site-builder/BrandSettings.vue'),
+            meta: { permission: 'GET:/admin/site/brand' },
+          },
+          {
+            path: 'home',
+            name: 'site-builder-home',
+            component: () => import('@/views/site-builder/HomeEntries.vue'),
+            meta: { permission: 'GET:/admin/site/home-entries' },
+          },
+          {
+            path: 'banner',
+            name: 'site-builder-banner',
+            component: () => import('@/views/site-builder/BannerAnnouncement.vue'),
+            meta: { permission: 'GET:/admin/banners' },
+          },
+          {
+            path: 'discovery',
+            name: 'site-builder-discovery',
+            component: () => import('@/views/site-builder/DiscoveryBlocks.vue'),
+            meta: { permission: 'GET:/admin/site/discovery-blocks' },
+          },
+          {
+            path: 'nav-footer',
+            name: 'site-builder-nav-footer',
+            component: () => import('@/views/site-builder/NavFooter.vue'),
+            meta: { permission: 'GET:/admin/settings' },
+          },
+          {
+            path: 'template',
+            name: 'site-builder-template',
+            component: () => import('@/views/site-builder/TemplateSettings.vue'),
+            meta: { permission: 'GET:/admin/site/template' },
+          },
+        ],
+      },
+      {
         path: 'media',
         name: 'media',
         component: () => import('@/views/admin/Media.vue'),

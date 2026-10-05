@@ -50,6 +50,7 @@ import {
   Radar,
   UserCog,
   Headset,
+  Palette,
 } from 'lucide-vue-next'
 import { Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -378,6 +379,49 @@ const navGroups = computed<NavGroup[]>(() => {
           to: '/posts/notice',
           icon: Bell,
           permission: 'GET:/admin/posts',
+        },
+      ],
+    },
+    {
+      id: 'siteBuilder',
+      label: '站点装修',
+      icon: Palette,
+      items: [
+        {
+          label: '品牌设置',
+          to: '/site-builder/brand',
+          icon: Palette,
+          permission: 'GET:/admin/site/brand',
+        },
+        {
+          label: '首页装修',
+          to: '/site-builder/home',
+          icon: LayoutDashboard,
+          permission: 'GET:/admin/site/home-entries',
+        },
+        {
+          label: 'Banner / 公告',
+          to: '/site-builder/banner',
+          icon: Images,
+          permission: 'GET:/admin/banners',
+        },
+        {
+          label: '发现页装修',
+          to: '/site-builder/discovery',
+          icon: Boxes,
+          permission: 'GET:/admin/site/discovery-blocks',
+        },
+        {
+          label: '导航 / Footer',
+          to: '/site-builder/nav-footer',
+          icon: Link,
+          permission: 'GET:/admin/settings',
+        },
+        {
+          label: '模板设置',
+          to: '/site-builder/template',
+          icon: SlidersHorizontal,
+          permission: 'GET:/admin/site/template',
         },
       ],
     },

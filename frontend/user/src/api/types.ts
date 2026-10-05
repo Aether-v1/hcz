@@ -91,10 +91,7 @@ export interface GoogleBindingData extends TelegramBindingData {
 }
 
 export interface WalletAccountData {
-    available_balance: string
-    frozen_balance: string
-    total_balance: string
-    currency: string
+    balance: string
 }
 
 export interface WalletTransactionData {
@@ -102,13 +99,7 @@ export interface WalletTransactionData {
     type: string
     direction: string
     amount: string
-    total_before: string
-    total_after: string
-    available_before: string
-    available_after: string
-    frozen_before: string
-    frozen_after: string
-    currency: string
+    balance_after: string
     remark: string
     created_at: string
 }
@@ -185,9 +176,9 @@ export interface AffiliateCommissionData {
     id: number
     commission_type: string
     commission_amount: string
+    level?: number
     currency?: string
     status: string
-    level?: number
     confirm_at?: string
     available_at?: string
     created_at: string
@@ -508,7 +499,6 @@ export interface CaptchaPayload {
     turnstile_token?: string
 }
 
-// --- Wallet Withdrawal ---
 export interface Withdrawal {
     id: number
     withdrawal_no: string

@@ -31,6 +31,7 @@ import (
 	reconciliationgormstore "github.com/Aether-v1/hcz/internal/modules/reconciliation/infrastructure/gormstore"
 	resellergormstore "github.com/Aether-v1/hcz/internal/modules/reseller/infrastructure/gormstore"
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
+	sitebuildergormstore "github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
 	siteconnectiongormstore "github.com/Aether-v1/hcz/internal/modules/siteconnection/infrastructure/gormstore"
 	supportgormstore "github.com/Aether-v1/hcz/internal/modules/supportticket/infrastructure/gormstore"
 	broadcaststore "github.com/Aether-v1/hcz/internal/modules/telegram/broadcast/infrastructure/gormstore"
@@ -90,5 +91,8 @@ func (c *Container) initRepositories() error {
 	c.MemberLevelUserRepo = memberlevelgormstore.NewUserStore(db)
 	c.UserNotificationRepo = usernotificationgormstore.New(db)
 	c.SupportTicketRepo = supportgormstore.New(db)
+	c.SiteHomeEntryRepo = sitebuildergormstore.NewHomeEntryStore(db)
+	c.SiteDiscoveryBlockRepo = sitebuildergormstore.NewDiscoveryBlockStore(db)
+	c.SiteAuditRepo = sitebuildergormstore.NewSiteAuditStore(db)
 	return nil
 }

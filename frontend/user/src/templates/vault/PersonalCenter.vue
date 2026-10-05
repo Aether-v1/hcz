@@ -47,14 +47,7 @@
 
         <!-- 概览 -->
         <template v-if="currentSection === 'overview'">
-          <div class="grid gap-3.5 grid-cols-2 lg:grid-cols-4">
-            <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-              <div class="grid h-[42px] w-[42px] flex-none place-items-center rounded-xl bg-primary/10 text-primary"><ShoppingBag class="h-5 w-5" /></div>
-              <div>
-                <div class="text-xs text-muted-foreground">{{ t('personalCenter.tabs.orders') }}</div>
-                <div class="mt-[3px] text-lg font-extrabold tabular-nums">{{ userProfileStore.loadingOrders ? '—' : userProfileStore.ordersTotal }}</div>
-              </div>
-            </div>
+          <div class="grid gap-3.5 sm:grid-cols-3">
             <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
               <div class="grid h-[42px] w-[42px] flex-none place-items-center rounded-xl bg-[color:var(--plum-soft)] text-[color:var(--plum)]"><Crown class="h-5 w-5" /></div>
               <div>
@@ -139,40 +132,14 @@
             </div>
           </div>
 
-          <!-- 最近订单 -->
-          <div class="rounded-xl border bg-card p-[22px]">
-            <div class="mb-4 flex items-center justify-between gap-3.5">
-              <h3 class="text-lg font-bold">{{ t('personalCenter.overview.recentOrdersTitle') }}</h3>
-              <Button as-child variant="ghost" size="sm" class="rounded-full"><RouterLink to="/me/orders">{{ t('personalCenter.overview.viewAllOrders') }}</RouterLink></Button>
-            </div>
-            <div v-if="userProfileStore.loadingOrders" class="grid gap-2.5">
-              <div v-for="idx in 3" :key="idx" class="h-16 rounded-md bg-secondary"></div>
-            </div>
-            <div v-else-if="userProfileStore.recentOrders.length === 0" class="rounded-md border border-dashed p-[18px] text-[13px] text-muted-foreground">{{ t('personalCenter.overview.emptyOrders') }}</div>
-            <div v-else class="grid gap-2.5">
-              <div v-for="order in userProfileStore.recentOrders" :key="order.order_no" class="flex flex-wrap items-center justify-between gap-3.5 rounded-lg border p-4 transition hover:-translate-y-0.5 hover:border-hairline-strong hover:shadow-[var(--shadow)]">
-                <div>
-                  <div class="text-[12.5px] text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
-                  <div class="my-[3px] text-base font-bold tabular-nums">{{ formatMoney(order.total_amount, order.currency) }}</div>
-                  <div class="text-[12.5px] text-muted-foreground">{{ formatDate(order.created_at) }}</div>
-                </div>
-                <div class="flex flex-wrap items-center gap-2.5">
-                  <Badge :variant="statusVariant(order.status)" class="rounded-full">{{ statusLabel(order.status) }}</Badge>
-                  <Button as-child variant="outline" size="sm" class="rounded-full"><RouterLink :to="`/orders/${order.order_no}`">{{ t('orders.viewDetails') }}</RouterLink></Button>
-                  <Button v-if="order.status === 'pending_payment'" as-child size="sm" class="rounded-full"><RouterLink :to="`/pay?order_no=${order.order_no}`">{{ t('orders.payNow') }}</RouterLink></Button>
-                </div>
-              </div>
-            </div>
-          </div>
         </template>
 
         <!-- 其余面板：复用现有组件（shadcn 风，嵌于 vault 作用域内） -->
         <div v-else class="min-w-0">
           <ProfilePanel v-if="currentSection === 'profile'" />
           <SecurityPanel v-else-if="currentSection === 'security'" />
-          <OrdersPanel v-else-if="currentSection === 'orders'" />
-          <WalletPanel v-else-if="currentSection === 'wallet'" />
           <AffiliatePanel v-else-if="currentSection === 'affiliate'" />
+          <InvitationPanel v-else-if="currentSection === 'invitation'" />
           <div v-else-if="currentSection === 'reseller' && canAccessResellerConsole" class="rounded-xl border bg-card p-[22px]">
             <h2 class="text-lg font-bold">{{ t('resellerConsole.title') }}</h2>
             <p class="mt-2 text-muted-foreground">{{ t('resellerConsole.dashboard.description') }}</p>
@@ -180,7 +147,7 @@
           </div>
           <GiftCardPanel v-else-if="currentSection === 'giftCard'" />
           <ApiPanel v-else-if="currentSection === 'api'" />
-          <OrdersPanel v-else />
+          <ProfilePanel v-else />
         </div>
       </section>
     </div>
@@ -189,16 +156,14 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { Crown, ShoppingBag, ShieldCheck, Percent } from 'lucide-vue-next'
-import { Badge } from '@/components/ui/badge'
+import { Crown, ShieldCheck, Percent } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getImageUrl } from '../../utils/image'
 import ProfilePanel from '../../views/personal/ProfilePanel.vue'
 import SecurityPanel from '../../views/personal/SecurityPanel.vue'
-import OrdersPanel from '../../views/personal/OrdersPanel.vue'
-import WalletPanel from '../../views/personal/WalletPanel.vue'
 import GiftCardPanel from '../../views/personal/GiftCardPanel.vue'
 import AffiliatePanel from '../../views/personal/AffiliatePanel.vue'
+import InvitationPanel from '../../views/personal/InvitationPanel.vue'
 import ApiPanel from '../../views/personal/ApiPanel.vue'
 import { usePersonalCenter, type PersonalSection } from '../../composables/usePersonalCenter'
 
@@ -210,7 +175,7 @@ const props = withDefaults(defineProps<{ section?: PersonalSection }>(), {
 
 const {
   userProfileStore, canAccessResellerConsole, visibleSectionItems, currentSection, globalAlert,
-  displayInitial, switchSection, statusLabel, statusVariant, formatMoney, formatDate,
+  displayInitial, switchSection,
   emailVerifiedLabel, emailVerifiedVariant, discountText, isImagePath, levelName,
 } = usePersonalCenter(() => props.section)
 </script>

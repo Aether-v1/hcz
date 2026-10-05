@@ -45,9 +45,11 @@
     "email_invalid": "郵箱格式不正確"
   },
   "nav": {
+    "wallet": "USDT 錢包",
+    "orders": "儲值訂單",
     "home": "首頁",
-    "products": "商品中心",
-    "blog": "部落格",
+    "products": "儲值服務",
+    "blog": "資訊",
     "notice": "公告",
     "about": "關於"
   },
@@ -93,10 +95,10 @@
     "next": "下一頁"
   },
   "checkoutSteps": {
-    "label": "購買流程進度"
+    "label": "儲值流程進度"
   },
   "footer": {
-    "description": "專業的線上工作室，為您提供優質的產品和服務。",
+    "description": "便捷的生活儲值服務，訂單進度清晰可查。",
     "quickLinks": "快速連結",
     "contact": "聯絡我們",
     "rights": "保留所有權利",
@@ -111,11 +113,24 @@
     "backPrevious": "返回上一頁"
   },
   "home": {
+    "serviceIntro": {
+      "orderService": "儲值服務",
+      "recentOrders": "最近儲值訂單",
+      "allServices": "瀏覽全部儲值服務",
+      "categoryHint": "由後台設定的快捷入口",
+      "categories": "熱門業務",
+      "walletAction": "查看錢包",
+      "balance": "USDT 可用餘額",
+      "action": "選擇儲值服務",
+      "description": "選擇服務與面值，填寫儲值資料，確認金額後提交。訂單進度可隨時查看。",
+      "title": "生活儲值，一站完成",
+      "eyebrow": "HCZ · 生活服務"
+    },
     "hero": {
-      "title": "HCZ · D&N",
-      "subtitle": "專業的產品與服務提供商",
-      "cta": "瀏覽商品",
-      "badge": "新一代數位商店"
+      "title": "生活儲值",
+      "subtitle": "快速、安全地完成日常儲值服務",
+      "cta": "瀏覽儲值服務",
+      "badge": "HCZ 生活服務"
     },
     "stats": {
       "activeUsers": "活躍用戶",
@@ -124,10 +139,10 @@
       "support": "技術支援"
     },
     "featured": {
-      "title": "精選商品",
-      "description": "探索我們精心挑選的優質數位資產系列。",
-      "empty": "暫無商品",
-      "viewAll": "查看全部商品"
+      "title": "常用服務",
+      "description": "按分類查找需要的儲值服務。",
+      "empty": "暫無可用分類",
+      "viewAll": "查看全部服務"
     },
     "cta": {
       "title": "準備好開始了嗎？",
@@ -136,28 +151,78 @@
     },
     "latest": {
       "title": "最新動態",
-      "description": "隨時掌握我們的最新消息和公告"
+      "description": "隨時掌握我們的最新消息和公告",
+      "viewAll": "查看全部"
+    }
+  },
+  "homeV2": {
+    "brand": "匯充站",
+    "title": "讓生活更簡單",
+    "subtitle": "全球儲值 · 遊戲點卡 · 生活服務",
+    "wallet": "USDT 錢包",
+    "searchPlaceholder": "搜尋你需要的服務或商品",
+    "search": "搜尋",
+    "offline": "目前網路已斷開，服務資料可能無法更新。",
+    "quickEyebrow": "常用入口",
+    "quickTitle": "生活儲值",
+    "allServices": "全部服務",
+    "unavailable": "暫未提供",
+    "loadingCategories": "正在讀取可用服務分類…",
+    "categoriesError": "服務分類暫時無法載入。",
+    "usdtTitle": "USDT 交易",
+    "usdtDescription": "安全便捷 · 快速買賣",
+    "comingSoon": "即將開放",
+    "featuredEyebrow": "服務精選",
+    "featuredTitle": "熱門推薦",
+    "productsError": "推薦服務暫時無法載入。",
+    "retry": "重試",
+    "noProducts": "暫無可推薦的服務",
+    "moreEyebrow": "探索更多",
+    "moreTitle": "更多服務",
+    "activityEyebrow": "平台動態",
+    "activityTitle": "活動推薦",
+    "newsEyebrow": "最新消息",
+    "newsTitle": "最新動態",
+    "viewAll": "查看全部",
+    "offer": "優惠",
+    "viewDetails": "查看詳情",
+    "core": {
+      "phone": { "title": "話費儲值", "description": "手機話費" },
+      "data": { "title": "流量儲值", "description": "行動流量" },
+      "game": { "title": "遊戲點卡", "description": "遊戲娛樂" },
+      "bills": { "title": "生活繳費", "description": "便捷生活" }
     }
   },
   "products": {
-    "subtitle": "瀏覽我們的精選商品",
+    "serviceHeroTitle": "今天需要儲值什麼？",
+    "serviceHeroDescription": "按場景找到服務，選擇面額後填寫儲值資料。每一步都能查看金額與訂單進度。",
+    "stepChoose": "選擇服務",
+    "stepDetails": "填寫資料",
+    "stepSubmit": "確認提交",
+    "chooseCategory": "按場景選擇",
+    "categoryHint": "也可以直接搜尋具體服務",
+    "availableServices": "可辦理服務",
+    "listHint": "點擊服務，查看面額與儲值說明",
+    "enterService": "進入儲值",
+    "startingAt": " 起",
+    "subtitle": "選擇生活儲值服務",
     "priceAria": "價格 {price}",
     "promotionPriceAria": "促銷價 {price}",
     "originalPriceAria": "原價 {price}",
-    "quickBuyAria": "快速購買",
-    "categories": "分類",
-    "allCategories": "全部商品",
-    "empty": "暫無商品",
-    "emptyFiltered": "未找到匹配的商品",
+    "quickBuyAria": "查看儲值服務",
+    "categories": "儲值分類",
+    "allCategories": "全部服務",
+    "empty": "暫無儲值服務",
+    "emptyFiltered": "未找到相符服務",
     "clearFilters": "清除篩選條件",
     "previous": "上一頁",
     "next": "下一頁",
-    "price": "價格",
+    "price": "起儲金額",
     "categoryLabel": "分類",
     "searchLabel": "搜尋",
-    "searchPlaceholder": "搜尋商品名稱",
+    "searchPlaceholder": "搜尋服務名稱",
     "promotionTag": "活動價",
-    "wholesaleTag": "批發價",
+    "wholesaleTag": "批量優惠",
     "memberPriceTag": "會員價",
     "saveAmount": "現省",
     "stockStatus": {
@@ -168,13 +233,13 @@
       "outOfStock": "售罄"
     },
     "fulfillmentType": {
-      "manual": "人工交付",
-      "auto": "自動交付"
+      "manual": "人工儲值",
+      "auto": "即時儲值"
     },
     "filter": "篩選",
     "closeFilter": "關閉篩選",
     "promotionRulesTitle": "促銷活動",
-    "wholesaleRulesTitle": "批發價",
+    "wholesaleRulesTitle": "批量優惠",
     "wholesaleTier": "滿 {count} 件，每件 {price}",
     "promotionHintPercent": "購滿{amount}，每件優惠{value}%",
     "promotionHintFixed": "購滿{amount}，每件立減{value}",
@@ -183,25 +248,30 @@
     "promotionHintFixedNoMin": "每件立減{value}",
     "promotionHintSpecialNoMin": "單價降至{value}",
     "promotionBadge": "有活動",
-    "searchBoxPlaceholder": "搜尋商品名稱或關鍵詞...",
-    "viewDetails": "查看詳情",
-    "quickBuy": "購買"
+    "searchBoxPlaceholder": "搜尋儲值服務或關鍵字...",
+    "viewDetails": "服務詳情",
+    "quickBuy": "進入儲值"
   },
   "productDetail": {
-    "description": "商品描述",
+    "accountAtCheckout": "儲值帳號等服務所需資料將於下一步填寫，金額以提交時服務端確認為準。",
+    "rechargeOptions": "儲值選項",
+    "flowDescription": "選擇面值與次數後，在確認頁填寫儲值帳號等所需資料。",
+    "flowTitle": "儲值流程",
+    "serviceLabel": "儲值服務詳情",
+    "description": "服務說明",
     "details": "詳細資訊",
-    "quantity": "購買數量",
-    "notFound": "商品不存在",
-    "backToProducts": "返回商品列表",
+    "quantity": "儲值次數",
+    "notFound": "服務不存在",
+    "backToProducts": "返回服務列表",
     "relatedPosts": "相關文章",
     "deliveryReassurance": "付款成功後，兌換碼即時送達訂單頁與郵箱，憑證僅你本人可見。",
-    "loginToBuy": "登入後購買",
+    "loginToBuy": "登入後儲值",
     "addToCart": "加入購物車",
-    "buyNow": "立即購買",
-    "categoryLabel": "分類",
+    "buyNow": "確認儲值資料",
+    "categoryLabel": "服務分類",
     "fulfillmentLabel": "交付方式",
-    "skuTitle": "選擇規格",
-    "skuRequired": "請先選擇商品規格再購買",
+    "skuTitle": "選擇面值 / 規格",
+    "skuRequired": "請選擇儲值面值或規格",
     "skuFallback": "預設規格",
     "skuStockUnlimited": "庫存不限",
     "skuStockOut": "已售罄",
@@ -219,13 +289,13 @@
     "addCartLimitExceededWithCart": "當前商品單次最多可購買 {count} 件（購物車中已有 {cartCount} 件）"
   },
   "quickBuy": {
-    "title": "快速購買",
-    "selectSku": "選擇規格",
+    "title": "選擇儲值選項",
+    "selectSku": "面值 / 規格",
     "quantity": "數量",
     "stock": "庫存",
-    "addToCart": "加入購物車",
-    "buyNow": "立即購買",
-    "loginToBuy": "登入後購買",
+    "addToCart": "稍後提交",
+    "buyNow": "立即儲值",
+    "loginToBuy": "登入後儲值",
     "soldOut": "已售罄",
     "viewDetail": "查看詳情"
   },
@@ -269,21 +339,8 @@
     "contactUs": "聯絡我們",
     "contactText": "如果您對我們的產品或服務有任何疑問，歡迎透過以下方式聯絡我們："
   },
-  "notifications": {
-    "title": "通知",
-    "subtitle": "帳戶訂單、錢包與售後動態都會在這裡提醒你",
-    "markAllRead": "全部已讀",
-    "markAllReadSuccess": "已將全部通知標記為已讀",
-    "markAllReadFailed": "操作失敗，請重試",
-    "markReadFailed": "標記已讀失敗，請重試",
-    "loadMore": "載入更多",
-    "loading": "載入中…",
-    "empty": "暫無通知",
-    "read": "已讀",
-    "unread": "未讀"
-  },
   "navbar": {
-    "cart": "購物車",
+    "cart": "待提交",
     "login": "登入",
     "personalCenter": "個人中心",
     "guestOrders": "遊客查單",
@@ -292,53 +349,54 @@
     "more": "更多"
   },
   "toast": {
-    "addedToCart": "已加入購物車"
+    "addedToCart": "已加入待提交"
+  },
+  "coreNav": {
+    "ariaLabel": "主導覽",
+    "home": "首頁",
+    "orders": "訂單",
+    "discover": "發現",
+    "messages": "訊息",
+    "me": "我的"
   },
   "bottomNav": {
     "home": "首頁",
-    "products": "商品",
-    "cart": "購物車",
+    "products": "儲值服務",
+    "cart": "待提交",
     "me": "我的"
   },
   "personalCenter": {
+    "groups": {
+      "overview": "帳戶",
+      "wallet": "資金",
+      "orders": "服務",
+      "affiliate": "更多"
+    },
     "title": "個人中心",
     "subtitle": "管理帳號資料、安全設定與最近訂單",
     "tabs": {
       "overview": "概覽",
       "profile": "資料設定",
       "security": "安全中心",
-      "orders": "我的訂單",
-      "wallet": "我的錢包",
+      "orders": "我的儲值訂單",
+      "wallet": "USDT 錢包",
       "affiliate": "推廣返利",
-      "invitation": "邀請中心",
       "reseller": "分銷中心",
       "giftCard": "禮品卡兌換",
-      "api": "API 對接"
+      "api": "API 對接",
+      "invitation": "邀請中心"
     },
     "common": {
       "loadFailed": "個人中心資料載入失敗，請稍後重試",
-      "loadRetry": "重新載入",
       "saveSuccess": "儲存成功",
-      "saveFailed": "保存失敗，請稍後重試"
-    },
-    "invitation": {
-      "title": "邀請中心",
-      "subtitle": "分享你的邀請碼或邀請連結，邀請好友註冊並綁定上下級關係。",
-      "myCode": "我的邀請碼",
-      "inviteUrl": "邀請連結",
-      "myInviter": "我的上級",
-      "noInviter": "暫無上級",
-      "directCount": "直接邀請人數",
-      "boundAt": "綁定時間",
-      "copy": "複製",
-      "copied": "已複製",
-      "loadFailed": "邀請資訊載入失敗，請稍後重試"
+      "saveFailed": "保存失敗，請稍後重試",
+      "loadRetry": "重新載入"
     },
     "overview": {
       "accountLabel": "帳號資訊",
       "emailVerified": "信箱已驗證",
       "emailUnverified": "信箱未驗證",
-      "recentOrdersTitle": "最近訂單",
+      "recentOrdersTitle": "最近儲值訂單",
       "viewAllOrders": "查看全部訂單",
       "emptyOrders": "暫無最近訂單"
     },
@@ -548,6 +606,7 @@
       "rechargeTitle": "餘額儲值",
       "rechargeSubtitle": "儲值後可在支付時優先抵扣",
       "amountLabel": "儲值金額",
+      "quickAmounts": "快捷金額",
       "amountPlaceholder": "請輸入儲值金額",
       "channelLabel": "支付渠道",
       "channelPlaceholder": "請選擇支付渠道",
@@ -674,12 +733,6 @@
       "pendingCommission": "待確認佣金",
       "availableCommission": "可提現佣金",
       "withdrawnCommission": "累計提現佣金",
-      "stats": {
-        "total": "總返利",
-        "pending": "待確認",
-        "available": "可提現",
-        "withdrawn": "累計提現"
-      },
       "withdrawTitle": "申請提現",
       "withdrawSubtitle": "填寫金額、提現渠道與帳號後提交審核",
       "withdrawAmountLabel": "提現金額",
@@ -696,11 +749,11 @@
       "withdrawRecordTitle": "提現記錄",
       "withdrawEmpty": "暫無提現記錄",
       "table": {
-        "level": "層級",
         "orderNo": "訂單號",
         "amount": "佣金",
         "status": "狀態",
-        "createdAt": "時間"
+        "createdAt": "時間",
+        "level": "層級"
       },
       "withdrawTable": {
         "amount": "金額",
@@ -727,6 +780,12 @@
         "withdrawChannelRequired": "請輸入提現渠道",
         "withdrawAccountRequired": "請輸入提現帳號",
         "withdrawFailed": "提現申請提交失敗，請稍後重試"
+      },
+      "stats": {
+        "total": "總返利",
+        "pending": "待確認",
+        "available": "可提現",
+        "withdrawn": "累計提現"
       }
     },
     "reseller": {
@@ -1079,6 +1138,19 @@
       "disabled": "API 已停用。",
       "toggleFailed": "操作失敗，請稍後重試。",
       "cancel": "取消"
+    },
+    "invitation": {
+      "title": "邀請中心",
+      "subtitle": "分享你的邀請碼或邀請連結，邀請好友註冊並綁定上下級關係。",
+      "myCode": "我的邀請碼",
+      "inviteUrl": "邀請連結",
+      "myInviter": "我的上級",
+      "noInviter": "暫無上級",
+      "directCount": "直接邀請人數",
+      "boundAt": "綁定時間",
+      "copy": "複製",
+      "copied": "已複製",
+      "loadFailed": "邀請資訊載入失敗，請稍後重試"
     }
   },
   "auth": {
@@ -1171,7 +1243,6 @@
       "hasAccount": "已有帳號？直接登入",
       "agreementPrefix": "我已閱讀並同意",
       "agreementAnd": "與",
-      "inviteHint": "您將透過邀請連結註冊",
       "allowedEmailDomainsHint": "目前僅支援以下信箱後綴註冊：{domains}",
       "noAllowedEmailDomainsHint": "目前未設定允許註冊的信箱後綴，請聯絡管理員",
       "errors": {
@@ -1183,7 +1254,8 @@
         "emailDomainUnavailable": "目前未設定允許註冊的信箱後綴，請聯絡管理員",
         "invalidInviteCode": "邀請碼無效，請檢查後重試"
       },
-      "registrationDisabled": "註冊功能已關閉"
+      "registrationDisabled": "註冊功能已關閉",
+      "inviteHint": "您將透過邀請連結註冊"
     },
     "forgot": {
       "title": "找回密碼",
@@ -1208,25 +1280,25 @@
   },
   "order": {
     "status": {
-      "pending_recharge": "待儲值",
-      "processing": "處理中",
-      "failed": "失敗",
       "pending_payment": "待支付",
-      "paid": "已支付",
+      "paid": "待儲值",
       "fulfilling": "處理中",
-      "partially_delivered": "部分交付",
+      "partially_delivered": "部分完成",
       "partially_refunded": "部分退款",
-      "delivered": "已交付",
+      "delivered": "已完成",
       "completed": "已完成",
       "expired": "已過期",
       "canceled": "已取消",
-      "refunded": "已退款"
+      "refunded": "已退款",
+      "pending_recharge": "待儲值",
+      "processing": "處理中",
+      "failed": "失敗"
     }
   },
   "cart": {
-    "title": "購物車",
-    "subtitle": "確認商品後進入結算",
-    "empty": "購物車為空",
+    "title": "待提交服務",
+    "subtitle": "確認所選服務後填寫儲值資料",
+    "empty": "暫無待提交服務",
     "emptyAction": "去逛逛",
     "priceLabel": "價格",
     "skuLabel": "規格",
@@ -1234,10 +1306,10 @@
     "removed": "已從購物車移除",
     "undo": "撤銷",
     "summaryTitle": "結算資訊",
-    "itemsCount": "商品數量",
+    "itemsCount": "儲值次數",
     "totalLabel": "合計",
     "disclaimer": "實際金額以結算頁為準（活動價/優惠券在服務端計算）",
-    "checkout": "去結算",
+    "checkout": "確認儲值",
     "stockOut": "該規格已售罄，請減少數量或移除",
     "stockRemaining": "該規格剩餘 {count} 件",
     "stockExceeded": "該規格庫存不足，目前購物車最多 {count} 件",
@@ -1245,27 +1317,28 @@
     "minPurchaseNotMet": "該商品單次下單至少需購買 {count} 件"
   },
   "checkout": {
-    "title": "訂單結算",
-    "subtitle": "確認訂單資訊並提交",
-    "empty": "購物車為空",
-    "emptyAction": "去選購",
-    "itemsTitle": "訂單商品",
-    "quantityLabel": "數量",
-    "skuLabel": "規格",
+    "currencySettlementHint": "錢包以 USDT 計價；實際扣款與匯率以提交後訂單為準。",
+    "title": "確認儲值",
+    "subtitle": "核對服務與面值，填寫儲值資料後提交",
+    "empty": "暫無待提交服務",
+    "emptyAction": "選擇服務",
+    "itemsTitle": "儲值服務",
+    "quantityLabel": "儲值次數",
+    "skuLabel": "面值 / 規格",
     "couponTitle": "優惠券",
     "couponPlaceholder": "輸入優惠券代碼（可選）",
-    "modeTitle": "購買方式",
-    "guestPurchase": "遊客購買",
-    "memberPurchase": "登入會員購買",
+    "modeTitle": "下單方式",
+    "guestPurchase": "訪客下單",
+    "memberPurchase": "登入後下單",
     "guestEmailPlaceholder": "信箱（用於查詢訂單）",
     "guestPasswordPlaceholder": "訂單密碼",
     "guestInstructions": {
       "title": "填寫說明：",
-      "email": "信箱：請填寫一個可接收郵件的信箱，您在付款後我們可通過該信箱向您發送商品資訊並可通過該信箱聯絡您",
-      "password": "訂單密碼：請自行設置一個複雜密碼並妥善保管，該密碼用於您在購買之後，通過“遊客查單”菜單，查詢您所購買的商品"
+      "email": "信箱：請填寫可接收郵件的信箱，以便接收儲值訂單通知並與您聯絡",
+      "password": "訂單密碼：請設定並妥善保管密碼，提交後可透過「遊客查單」查詢儲值進度"
     },
-    "manualFormTitle": "交付資訊填寫",
-    "manualFormTip": "人工交付資訊按商品收集：同一商品購買多個 SKU 時僅需填寫一次。",
+    "manualFormTitle": "儲值資料",
+    "manualFormTip": "請依服務要求填寫儲值帳號等資料；同一服務的多個規格只需填寫一次。",
     "manualFormAppliesToSkuCount": "適用於已選 {count} 個 SKU",
     "manualFormSelectPlaceholder": "請選擇",
     "manualFormFieldRequired": "{name} 為必填項",
@@ -1274,14 +1347,14 @@
     "manualFormFieldNumberInvalid": "{name} 必須為數字",
     "manualFormFieldNumberRange": "{name} 超出允許範圍",
     "manualFormFieldMaxLength": "{name} 長度不可超過 {max}",
-    "submitTitle": "提交訂單",
-    "submitHint": "訂單金額以服務端計算為準（活動價/優惠券在服務端處理）",
+    "submitTitle": "確認金額",
+    "submitHint": "最終儲值金額與實際 USDT 扣款以後端訂單為準。",
     "totalLabel": "合計",
     "discountedPriceLabel": "優惠價",
-    "previewOriginal": "原始金額",
+    "previewOriginal": "儲值金額",
     "previewCoupon": "優惠券",
     "previewPromotion": "活動價",
-    "previewWholesale": "批發價",
+    "previewWholesale": "批量優惠",
     "previewMemberDiscount": "會員優惠",
     "previewTotal": "應付金額（預估）",
     "previewLoading": "正在計算優惠...",
@@ -1295,10 +1368,10 @@
     "channelAmountMinHint": "該渠道需滿足金額大於{min}",
     "channelAmountMaxHint": "該渠道需滿足金額小於{max}",
     "walletCoversAll": "錢包餘額足以支付全部金額",
-    "submitButton": "提交訂單並支付",
+    "submitButton": "提交儲值並付款",
     "submitting": "提交中...",
     "errors": {
-      "emptyCart": "購物車為空",
+      "emptyCart": "暫無待提交的服務",
       "missingGuest": "請輸入信箱與訂單密碼",
       "guestPasswordTooShort": "訂單密碼至少 6 位",
       "loginOrGuest": "請先登入或使用遊客購買",
@@ -1329,7 +1402,7 @@
     "fixedFeeLabel": "固定手續費",
     "feeAmountLabel": "手續費",
     "payableAmountLabel": "應付金額",
-    "walletBalanceLabel": "錢包餘額",
+    "walletBalanceLabel": "USDT 可用餘額",
     "useBalance": "優先使用餘額支付",
     "walletDeductLabel": "餘額抵扣",
     "onlinePayLabel": "線上支付",
@@ -1665,12 +1738,14 @@
     }
   },
   "orders": {
-    "title": "我的訂單",
-    "subtitle": "查看訂單狀態與支付進度",
-    "continueShopping": "繼續購物",
+    "title": "儲值訂單",
+    "serviceFallback": "儲值服務",
+    "submittedAt": "提交時間",
+    "subtitle": "查看儲值進度、金額與付款狀態",
+    "continueShopping": "繼續儲值",
     "empty": "暫無訂單",
     "emptyFiltered": "未找到符合篩選條件的訂單",
-    "emptyAction": "去下單",
+    "emptyAction": "選擇服務",
     "orderNo": "訂單號",
     "viewDetails": "查看詳情",
     "payNow": "去支付",
@@ -1678,8 +1753,8 @@
     "nextPage": "下一頁",
     "pageInfo": "第 {page} / {total} 頁",
     "tabs": {
-      "product": "普通訂單",
-      "recharge": "餘額儲值訂單"
+      "product": "服務儲值訂單",
+      "recharge": "USDT 錢包儲值"
     },
     "rechargeEmpty": "暫無儲值訂單",
     "rechargeEmptyAction": "去儲值",
@@ -1822,6 +1897,19 @@
     "authSubmit": "保存並查詢",
     "authClear": "清除已保存資訊"
   },
+  "notifications": {
+    "title": "通知",
+    "subtitle": "帳戶訂單、錢包與售後動態都會在這裡提醒你",
+    "markAllRead": "全部已讀",
+    "markAllReadSuccess": "已將全部通知標記為已讀",
+    "markAllReadFailed": "操作失敗，請重試",
+    "markReadFailed": "標記已讀失敗，請重試",
+    "loadMore": "載入更多",
+    "loading": "載入中…",
+    "empty": "暫無通知",
+    "read": "已讀",
+    "unread": "未讀"
+  },
   "afterSale": {
     "title": "售後",
     "notReceived": "未收到",
@@ -1842,11 +1930,96 @@
     "submitFailed": "提交失敗，請稍後重試",
     "submitting": "提交中..."
   },
-  "wallet": {
-    "availableBalance": "可用餘額",
-    "frozenBalance": "凍結餘額",
-    "totalBalance": "總資產",
-    "frozenNotWithdrawable": "凍結金額不可提現"
+  "support": {
+    "title": "工單支持",
+    "help_center": "幫助與支持",
+    "help_subtitle": "遇到問題？提交工單，客服會盡快回覆您",
+    "my_tickets": "我的工單",
+    "my_tickets_hint": "查看和跟進您提交的所有工單",
+    "list_subtitle": "追蹤您的工單處理進度與客服回覆",
+    "create_ticket": "建立工單",
+    "create_ticket_hint": "提交新的問題，客服將為您處理",
+    "create_subtitle": "請盡可能詳細地描述您遇到的問題",
+    "ticket_detail": "工單詳情",
+    "category": "問題分類",
+    "category_placeholder": "請選擇問題分類",
+    "category_required": "請選擇問題分類",
+    "subject": "主題",
+    "subject_placeholder": "一句話概括您的問題",
+    "subject_required": "請填寫主題",
+    "description": "問題描述",
+    "description_placeholder": "請詳細描述您遇到的問題",
+    "body_required": "請填寫問題描述",
+    "status": "狀態",
+    "priority": "優先級",
+    "status_open": "處理中",
+    "status_waiting_user": "待您回覆",
+    "status_waiting_support": "待客服回覆",
+    "status_resolved": "已解決",
+    "status_closed": "已關閉",
+    "priority_low": "低",
+    "priority_normal": "普通",
+    "priority_high": "高",
+    "priority_urgent": "緊急",
+    "reply": "回覆",
+    "send": "發送",
+    "close": "關閉工單",
+    "reopen": "重新開啟",
+    "reopen_to_reply": "重新開啟後繼續回覆",
+    "reopen_expired": "已超過重新開啟期限（解決後 7 天內）",
+    "attachments": "附件",
+    "upload": "點擊或拖拽上傳附件",
+    "upload_failed": "附件上傳失敗",
+    "attachment_limit": "支援 jpg/png/webp/pdf/txt/log，單個不超過 10MB",
+    "attachment_type_rejected": "不支援的檔案類型",
+    "attachment_size_rejected": "檔案大小超過 10MB 限制",
+    "unread": "未讀",
+    "last_reply": "最後回覆",
+    "created_at": "建立時間",
+    "all": "全部",
+    "tab_all": "全部",
+    "tab_waiting_support": "待客服回覆",
+    "tab_waiting_user": "待我回覆",
+    "tab_resolved": "已解決",
+    "tab_closed": "已關閉",
+    "no_tickets": "暫無工單",
+    "loading": "載入中…",
+    "load_more": "載入更多",
+    "select_ticket_hint": "選擇左側工單查看會話",
+    "write_reply": "輸入回覆內容…",
+    "biz_link": "關聯業務",
+    "biz_type": "業務類型",
+    "biz_type_none": "不關聯業務",
+    "biz_type_order": "訂單",
+    "biz_type_withdraw": "提現",
+    "biz_type_c2c": "C2C交易",
+    "biz_type_recharge": "儲值",
+    "biz_id": "業務單號",
+    "biz_id_placeholder": "請輸入業務單號",
+    "biz_link_hint": "僅可關聯您自己的業務單據",
+    "recharge_aftersale_warning": "若為儲值未到帳/退款問題，請使用訂單售後：",
+    "go_aftersale": "前往訂單售後",
+    "send_success": "發送成功",
+    "send_failed": "發送失敗，請重試",
+    "create_success": "工單建立成功",
+    "create_failed": "工單建立失敗，請重試",
+    "load_failed": "載入失敗，請稍後重試",
+    "closed_success": "工單已關閉",
+    "close_failed": "關閉失敗，請重試",
+    "reopened_success": "工單已重新開啟",
+    "reopen_failed": "重新開啟失敗，請重試",
+    "ticket_closed_notice": "工單已關閉，如需繼續諮詢請建立新工單",
+    "cancel": "取消",
+    "submit": "提交工單",
+    "you": "我",
+    "agent_name": "客服",
+    "download_failed": "附件下載失敗",
+    "faq": "常見問題",
+    "faq_q1": "工單多久會回覆？",
+    "faq_a1": "工作時間內通常 2 小時內首次回覆，緊急問題我們會優先處理。",
+    "faq_q2": "如何上傳附件？",
+    "faq_a2": "在建立或回覆工單時，可點擊或拖拽上傳圖片、PDF 等附件，單個不超過 10MB。",
+    "faq_q3": "工單關閉後還能繼續回覆嗎？",
+    "faq_a3": "工單解決後 7 天內可重新開啟繼續補充；超過期限請建立新工單。"
   }
 }
-

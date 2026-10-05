@@ -336,33 +336,13 @@ func TestUpdateSiteSettingNormalized(t *testing.T) {
 		t.Fatalf("unexpected currency: %s", currency)
 	}
 
+	// LEGACY_DISABLED: scripts 功能已禁用，无论输入多少条都归一化为空数组。
 	scripts, ok := result["scripts"].([]interface{})
 	if !ok {
 		t.Fatalf("invalid scripts payload type: %T", result["scripts"])
 	}
-	if len(scripts) != 3 {
-		t.Fatalf("unexpected scripts size: %d", len(scripts))
-	}
-	firstScript, ok := scripts[0].(map[string]interface{})
-	if !ok {
-		t.Fatalf("invalid scripts[0] payload type: %T", scripts[0])
-	}
-	if firstScript["name"] != "Google Analytics" || firstScript["enabled"] != true || firstScript["position"] != "head" || firstScript["code"] != "window.dataLayer = window.dataLayer || [];" {
-		t.Fatalf("unexpected scripts[0]: %+v", firstScript)
-	}
-	secondScript, ok := scripts[1].(map[string]interface{})
-	if !ok {
-		t.Fatalf("invalid scripts[1] payload type: %T", scripts[1])
-	}
-	if secondScript["position"] != "body_end" || secondScript["enabled"] != true {
-		t.Fatalf("unexpected scripts[1]: %+v", secondScript)
-	}
-	thirdScript, ok := scripts[2].(map[string]interface{})
-	if !ok {
-		t.Fatalf("invalid scripts[2] payload type: %T", scripts[2])
-	}
-	if thirdScript["position"] != "head" || thirdScript["enabled"] != false {
-		t.Fatalf("unexpected scripts[2]: %+v", thirdScript)
+	if len(scripts) != 0 {
+		t.Fatalf("scripts must always normalize to empty, got %d", len(scripts))
 	}
 }
 
@@ -650,10 +630,11 @@ func TestRegistrationEmailDomainPolicyAndChecker(t *testing.T) {
 	}
 }
 
-func TestUpdateSiteSettingNormalizedScriptsLimit(t *testing.T) {
+func TestUpdateSiteSettingNormalizedScriptsDisabled(t *testing.T) {
 	repo := newMockSettingRepo()
 	svc := NewService(repo)
 
+	// LEGACY_DISABLED: scripts 存在存储型 XSS 高危，归一化层必须丢弃任意输入。
 	scripts := make([]interface{}, 0, 25)
 	for i := 0; i < 25; i++ {
 		scripts = append(scripts, map[string]interface{}{
@@ -675,8 +656,8 @@ func TestUpdateSiteSettingNormalizedScriptsLimit(t *testing.T) {
 	if !ok {
 		t.Fatalf("invalid scripts payload type: %T", result["scripts"])
 	}
-	if len(normalizedScripts) != settingSiteScriptsMaxCount {
-		t.Fatalf("unexpected scripts size: %d", len(normalizedScripts))
+	if len(normalizedScripts) != 0 {
+		t.Fatalf("scripts must always be normalized to empty array, got %d items", len(normalizedScripts))
 	}
 }
 

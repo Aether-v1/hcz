@@ -564,7 +564,7 @@ export function usePayment() {
     walletLoading.value = true
     try {
       const response = await walletAPI.account()
-      walletBalance.value = String(response.data.data?.available_balance || '0')
+      walletBalance.value = String(response.data.data?.balance || '0')
     } catch {
       walletBalance.value = '0'
     } finally {

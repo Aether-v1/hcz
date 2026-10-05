@@ -16,7 +16,6 @@ const checkoutViewLoader: RouteComponentLoader = () => import('../views/Checkout
 const paymentViewLoader: RouteComponentLoader = () => import('../views/Payment.vue')
 const blogViewLoader: RouteComponentLoader = () => import('../views/Blog.vue')
 const noticeViewLoader: RouteComponentLoader = () => import('../views/Notice.vue')
-const notificationsViewLoader: RouteComponentLoader = () => import('../views/Notifications.vue')
 const loginViewLoader: RouteComponentLoader = () => import('../views/auth/Login.vue')
 const resellerLayoutLoader: RouteComponentLoader = () => import('../views/reseller/ResellerConsoleLayout.vue')
 
@@ -122,23 +121,13 @@ const router = createRouter({
         {
             path: '/products',
             name: 'products',
-            component: () => {
-                const appStore = useAppStore()
-                return appStore.config?.template_mode === 'list'
-                    ? templateView('Home', homeViewLoader)()
-                    : templateView('Products', productsViewLoader)()
-            },
+            component: templateView('Products', productsViewLoader),
             meta: { requiresUserAuth: true },
         },
         {
             path: '/categories/:slug',
             name: 'category-products',
-            component: () => {
-                const appStore = useAppStore()
-                return appStore.config?.template_mode === 'list'
-                    ? templateView('Home', homeViewLoader)()
-                    : templateView('Products', productsViewLoader)()
-            },
+            component: templateView('Products', productsViewLoader),
             meta: { requiresUserAuth: true },
         },
         {
@@ -166,6 +155,10 @@ const router = createRouter({
             meta: { requiresUserAuth: true },
         },
         {
+            path: '/guest/orders/:order_no?',
+            redirect: '/me/orders',
+        },
+        {
             path: '/me',
             name: 'personal-center',
             component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
@@ -189,27 +182,62 @@ const router = createRouter({
         {
             path: '/me/orders',
             name: 'personal-center-orders',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
-            props: { section: 'orders' },
+            component: templateView('Orders', () => import('../views/Orders.vue')),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/wallet',
             name: 'personal-center-wallet',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
-            props: { section: 'wallet' },
+            component: templateView('Wallet', () => import('../views/Wallet.vue')),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/wallet/withdrawal',
-            name: 'personal-wallet-withdrawal',
-            component: () => import('../views/personal/WalletWithdrawal.vue'),
+            name: 'wallet-withdrawal',
+            component: () => import('../views/WalletAction.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/wallet/withdrawal-history',
-            name: 'personal-wallet-withdrawal-history',
-            component: () => import('../views/personal/WalletWithdrawalHistory.vue'),
+            name: 'wallet-withdrawal-history',
+            component: () => import('../views/WalletAction.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/invitation',
+            name: 'personal-center-invitation',
+            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            props: { section: 'invitation' },
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/notifications',
+            name: 'notifications',
+            component: () => import('../views/Notifications.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/support',
+            name: 'support-home',
+            component: () => import('../views/support/HelpCenter.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/support/tickets',
+            name: 'support-tickets',
+            component: () => import('../views/support/Tickets.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/support/tickets/new',
+            name: 'support-ticket-new',
+            component: () => import('../views/support/NewTicket.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/support/tickets/:id',
+            name: 'support-ticket-detail',
+            component: () => import('../views/support/TicketDetail.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -231,13 +259,6 @@ const router = createRouter({
             name: 'personal-center-affiliate',
             component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
             props: { section: 'affiliate' },
-            meta: { requiresUserAuth: true }
-        },
-        {
-            path: '/me/invitation',
-            name: 'personal-center-invitation',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
-            props: { section: 'invitation' },
             meta: { requiresUserAuth: true }
         },
         {
@@ -294,64 +315,15 @@ const router = createRouter({
             meta: { requiresUserAuth: true },
         },
         {
-            path: '/notifications',
-            name: 'notifications',
-            component: templateView('Notifications', notificationsViewLoader),
-            meta: { requiresUserAuth: true },
-        },
-        // ── C2C 交易 ──
-        {
-            path: '/c2c',
-            name: 'c2c-home',
-            component: templateView('c2c/C2CHome', () => import('../views/c2c/C2CHome.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/buy',
-            name: 'c2c-buy',
-            component: templateView('c2c/BuyUSDT', () => import('../views/c2c/BuyUSDT.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/sell',
-            name: 'c2c-sell',
-            component: templateView('c2c/SellUSDT', () => import('../views/c2c/SellUSDT.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/listings/:id',
-            name: 'c2c-listing-detail',
-            component: templateView('c2c/ListingDetail', () => import('../views/c2c/ListingDetail.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/my-listings',
-            name: 'c2c-my-listings',
-            component: templateView('c2c/MyListings', () => import('../views/c2c/MyListings.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/trades',
-            name: 'c2c-my-trades',
-            component: templateView('c2c/MyTrades', () => import('../views/c2c/MyTrades.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/trades/:id',
-            name: 'c2c-trade-detail',
-            component: templateView('c2c/TradeDetail', () => import('../views/c2c/TradeDetail.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
-            path: '/c2c/payment-methods',
-            name: 'c2c-payment-methods',
-            component: templateView('c2c/PaymentMethods', () => import('../views/c2c/PaymentMethods.vue')),
-            meta: { requiresUserAuth: true },
-        },
-        {
             path: '/about',
             name: 'about',
             component: templateView('About', () => import('../views/About.vue')),
+            meta: { requiresUserAuth: true },
+        },
+        {
+            path: '/discovery',
+            name: 'discovery',
+            component: templateView('Discovery', () => import('../views/Discovery.vue')),
             meta: { requiresUserAuth: true },
         },
         {
@@ -411,6 +383,12 @@ router.beforeEach(async (to, _from, next) => {
     // Ensure config is loaded before checking template mode
     if (!appStore.config) {
         await appStore.loadConfig()
+    }
+
+    // 后端已停用游客支付；旧支付链接不能继续落入 /guest/* 请求分支。
+    if (to.path === '/pay' && to.query.guest) {
+        next('/me/orders')
+        return
     }
 
     if (to.meta.requiresUserAuth) {

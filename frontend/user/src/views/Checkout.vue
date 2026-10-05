@@ -1,20 +1,21 @@
 <template>
   <div class="min-h-screen bg-background text-foreground pt-24 pb-16">
     <div class="container mx-auto px-4">
-      <div class="mb-8">
-        <h1 class="mb-2 text-3xl font-black text-foreground">{{ t('checkout.title') }}</h1>
-        <p class="text-sm text-muted-foreground">{{ t('checkout.subtitle') }}</p>
+      <div class="mb-6 rounded-3xl bg-slate-950 p-7 text-white md:p-9">
+        <p class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-sky-300">HCZ / {{ t('products.stepDetails') }}</p>
+        <h1 class="mb-2 text-3xl font-bold">{{ t('checkout.title') }}</h1>
+        <p class="text-sm text-slate-300">{{ t('checkout.subtitle') }}</p>
       </div>
 
       <CheckoutSteps
         class="mb-8"
         current-step="checkout"
-        :step-keys="isBuyNowMode ? ['checkout', 'payment'] : ['cart', 'checkout', 'payment']"
+        :step-keys="['checkout', 'payment']"
       />
 
       <EmptyState
         v-if="cartItems.length === 0"
-        icon="cart"
+        icon="order"
         :title="t('checkout.empty')"
         :action-label="t('checkout.emptyAction')"
         action-to="/products"
@@ -31,15 +32,17 @@
                 class="rounded-xl border p-4"
                 :class="itemStockExceeded(item)
                   ? 'border-warning/40 bg-warning/10'
-                  : 'bg-secondary'"
+                  : 'bg-card'"
               >
                 <div class="flex min-w-0 items-start gap-3">
                   <div class="h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-muted transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm sm:h-20 sm:w-20">
                     <SmartImage
+                      v-if="checkoutItemImage(item)"
                       :src="checkoutItemImage(item)"
                       :alt="getLocalizedText(item.title)"
-                      img-class="h-full w-full object-cover"
+                      img-class="h-full w-full object-contain p-2"
                     />
+                    <div v-else class="flex h-full w-full items-center justify-center bg-primary/10 text-primary"><Zap class="h-7 w-7" aria-hidden="true" /></div>
                   </div>
                   <div class="min-w-0">
                     <router-link
@@ -242,9 +245,9 @@
             <div v-if="showBalanceOption" class="mb-3 rounded-lg border bg-secondary p-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-xs text-muted-foreground">{{ t('payment.walletBalanceLabel') }}</div>
+              <div class="text-xs text-muted-foreground">{{ t('payment.walletBalanceLabel') }}</div>
                   <div class="mt-0.5 text-sm font-semibold text-foreground">
-                    {{ walletLoading ? t('common.loading') : formatPrice(walletBalance, previewCurrency) }}
+                    {{ walletLoading ? t('common.loading') : formatPrice(walletBalance, walletCurrency) }}
                   </div>
                 </div>
                 <label class="inline-flex items-center gap-2 text-xs text-muted-foreground">
@@ -255,13 +258,14 @@
               <div v-if="walletOnlyPayment" class="mt-2 text-xs text-warning">
                 {{ t('payment.walletOnlyHint') }}
               </div>
-              <div v-if="useBalance" class="mt-2 space-y-1 text-xs text-muted-foreground">
+              <div v-if="useBalance && walletCurrency === previewCurrency" class="mt-2 space-y-1 text-xs text-muted-foreground">
                 <div>{{ t('payment.walletDeductLabel') }}：{{ expectedWalletPaidDisplay }}</div>
                 <div v-if="!walletOnlyPayment">{{ t('payment.onlinePayLabel') }}：{{ expectedOnlinePayDisplay }}</div>
                 <div v-if="walletOnlyPayment && expectedOnlinePayCents > 0" class="text-warning">
                   {{ t('payment.walletInsufficientHint') }}
                 </div>
               </div>
+              <p v-if="walletCurrency !== previewCurrency" class="mt-2 text-xs text-muted-foreground">{{ t('checkout.currencySettlementHint') }}</p>
             </div>
 
             <!-- Channel Grid (hidden in wallet-only mode) -->
@@ -312,6 +316,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { Zap } from 'lucide-vue-next'
 import { pageAlertVariant, pageAlertToneClass } from '../utils/alerts'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
@@ -328,7 +333,7 @@ const { t } = useI18n()
 
 const {
   userAuthStore, getLocalizedText, formatPrice, getImageUrl,
-  isBuyNowMode, cartItems, totalItems, cartItemKey, checkoutItemImage, itemSkuDisplay,
+  cartItems, totalItems, cartItemKey, checkoutItemImage, itemSkuDisplay,
   itemStockExceeded, itemStockHint,
   checkoutItemCurrency, checkoutItemPriceParts, checkoutItemOriginalPriceParts, checkoutItemHasPriceDiscount,
   manualFormProducts, manualFormData, submitAttempted, getManualFieldLabel, getManualFieldPlaceholder, manualFieldError,
@@ -338,7 +343,7 @@ const {
   guestImageCaptchaRef, guestTurnstileRef, handleGuestCaptchaConfigStale,
   previewCurrency, previewOriginal, previewCoupon, previewPromotion, previewWholesale, previewMemberDiscount, previewTotal,
   previewLoading, couponRefreshing, previewStatusText, hasPositiveAmount, formatDiscountPrice, checkoutAlert,
-  showBalanceOption, walletLoading, walletBalance, useBalance, walletOnlyPayment,
+  showBalanceOption, walletLoading, walletBalance, walletCurrency, useBalance, walletOnlyPayment,
   expectedWalletPaidDisplay, expectedOnlinePayDisplay, expectedOnlinePayCents,
   requiresOnlineChannel, paymentChannels, selectedChannelId, isChannelDisabledForAmount, channelAmountLimitHint,
   handleSelectChannel, formatChannelFeeRate, formatChannelFixedFee,

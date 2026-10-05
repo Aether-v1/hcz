@@ -1,13 +1,6 @@
 <template>
-  <div class="flex min-h-[70vh] items-center justify-center px-4 py-12">
+  <div class="flex min-h-screen items-center justify-center px-4 py-12">
     <div class="w-full max-w-[480px]">
-      <div class="mb-3.5 flex items-center justify-between px-1">
-        <RouterLink to="/" class="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary">
-          <ArrowLeft class="h-4 w-4" /> {{ t('auth.login.backHome') }}
-        </RouterLink>
-        <Badge variant="neutral" size="sm" class="rounded-full">{{ t('auth.register.title') }}</Badge>
-      </div>
-
       <Card class="p-7 shadow-[var(--shadow-lg)] sm:p-9">
         <div v-if="!registrationEnabled" class="py-7 text-center">
           <p class="text-sm text-muted-foreground">{{ t('auth.register.registrationDisabled') }}</p>
@@ -176,11 +169,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus } from 'lucide-vue-next'
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, UserPlus } from 'lucide-vue-next'
 import ImageCaptcha from '../../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../../components/captcha/TurnstileCaptcha.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

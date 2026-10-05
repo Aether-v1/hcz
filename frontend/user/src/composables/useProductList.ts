@@ -140,6 +140,13 @@ export function useProductList(options: UseProductListOptions = {}) {
     debouncedLoadProducts()
   }
 
+  const routeSearch = () => typeof route.query.search === 'string' ? route.query.search.trim() : ''
+
+  watch(() => route.query.search, () => {
+    const keyword = routeSearch()
+    if (searchQuery.value !== keyword) searchQuery.value = keyword
+  })
+
   const syncSelectedCategoryFromRoute = () => {
     if (route.name !== categoryRouteName) {
       if (selectedCategory.value !== null) {
@@ -193,6 +200,7 @@ export function useProductList(options: UseProductListOptions = {}) {
   )
 
   const initialize = async () => {
+    searchQuery.value = routeSearch()
     await loadCategories()
     if (syncSelectedCategoryFromRoute()) {
       syncExpandedCategoryState()

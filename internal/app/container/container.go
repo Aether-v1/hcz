@@ -76,6 +76,9 @@ import (
 	settingscontract "github.com/Aether-v1/hcz/internal/modules/settings/contract"
 	siteconnectionapp "github.com/Aether-v1/hcz/internal/modules/siteconnection/application"
 	siteconnectioncontract "github.com/Aether-v1/hcz/internal/modules/siteconnection/contract"
+	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
+	sitebuildergormstore "github.com/Aether-v1/hcz/internal/modules/sitebuilder/infrastructure/gormstore"
+	sitebuilderhttp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/transport/http"
 	sitemapapp "github.com/Aether-v1/hcz/internal/modules/sitemap/application"
 	supportapp "github.com/Aether-v1/hcz/internal/modules/supportticket/application"
 	supportgormstore "github.com/Aether-v1/hcz/internal/modules/supportticket/infrastructure/gormstore"
@@ -142,6 +145,9 @@ type Container struct {
 	MemberLevelUserRepo    memberlevelcontract.UserRepository
 	UserNotificationRepo   *usernotificationgormstore.Store
 	SupportTicketRepo      *supportgormstore.Store
+	SiteHomeEntryRepo      *sitebuildergormstore.HomeEntryStore
+	SiteDiscoveryBlockRepo *sitebuildergormstore.DiscoveryBlockStore
+	SiteAuditRepo          *sitebuildergormstore.SiteAuditStore
 
 	// Services
 	AuthzService                  *authz.Service
@@ -210,6 +216,12 @@ type Container struct {
 	ComplianceService             *complianceapp.Service
 	UserNotificationService       *usernotificationapp.Service
 	SupportTicketService          *supportapp.Service
+	SiteHomeEntryService          *sitebuilderapp.HomeEntryService
+	SiteDiscoveryBlockService     *sitebuilderapp.DiscoveryBlockService
+	SiteBrandService              *sitebuilderapp.BrandService
+	SiteTemplateService           *sitebuilderapp.TemplateService
+	SiteAuditService              *sitebuilderapp.AuditService
+	SiteBuilderAdminHandler       *sitebuilderhttp.AdminHandler
 
 	PaymentProviderRegistry *paymentprovider.Registry
 }

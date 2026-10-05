@@ -62,6 +62,15 @@
   --color-input: var(--ui-border);
   --color-ring: var(--ui-accent);
 
+  /*
+   * 站点品牌色（Phase 9 装修动态化）。
+   * --brand-primary 由 /public/config 的 brand.primary_color 在运行时注入；
+   * --brand-primary-light 为其 10% 透明度衍生色。
+   * 对应工具类：text-brand-primary / bg-brand-primary / border-brand-primary 等。
+   */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-light: var(--brand-primary-light);
+
   --radius-sm: var(--ui-radius-sm);
   --radius-md: var(--ui-radius-md);
   --radius-lg: var(--ui-radius-lg);
@@ -82,21 +91,25 @@
   line-height: 1.5;
   font-weight: 400;
 
-  --ui-bg-page: #f5f5f7;
+  /* 品牌色默认值（indigo-600）；config 加载后由 JS 覆盖 */
+  --brand-primary: #4F46E5;
+  --brand-primary-light: rgba(79, 70, 229, 0.1);
+
+  --ui-bg-page: #f5f8fd;
   --ui-bg-elevated: #ffffff;
-  --ui-bg-soft: #f2f2f4;
-  --ui-bg-muted: #ececf0;
+  --ui-bg-soft: #eef4fb;
+  --ui-bg-muted: #e8f0fa;
   --ui-bg-overlay: rgba(255, 255, 255, 0.8);
   --ui-bg-overlay-strong: rgba(255, 255, 255, 0.92);
-  --ui-text-primary: #1d1d1f;
-  --ui-text-secondary: #424245;
-  --ui-text-muted: #6e6e73;
+  --ui-text-primary: #10213e;
+  --ui-text-secondary: #445675;
+  --ui-text-muted: #6e7f9d;
   --ui-text-on-accent: #ffffff;
-  --ui-border: rgba(0, 0, 0, 0.12);
-  --ui-border-strong: rgba(0, 0, 0, 0.2);
-  --ui-accent: #0071e3;
-  --ui-accent-hover: #0067d2;
-  --ui-accent-soft: rgba(0, 113, 227, 0.14);
+  --ui-border: rgba(43, 76, 128, 0.12);
+  --ui-border-strong: rgba(43, 76, 128, 0.22);
+  --ui-accent: #0969ee;
+  --ui-accent-hover: #0758ce;
+  --ui-accent-soft: rgba(9, 105, 238, 0.1);
   --ui-success: #2f8f6f;
   --ui-success-soft: rgba(47, 143, 111, 0.14);
   --ui-warning: #b06b00;
@@ -105,16 +118,24 @@
   --ui-danger-soft: rgba(201, 52, 47, 0.15);
   --ui-info: #0a84ff;
   --ui-info-soft: rgba(10, 132, 255, 0.14);
-  --ui-focus-ring: rgba(0, 113, 227, 0.22);
+  --ui-focus-ring: rgba(9, 105, 238, 0.22);
   --ui-radius-sm: 0.5rem;
   --ui-radius-md: 0.75rem;
   --ui-radius-lg: 1rem;
   --ui-radius-xl: 1.5rem;
-  --ui-shadow-1: 0 10px 24px -18px rgba(0, 0, 0, 0.26);
-  --ui-shadow-2: 0 18px 38px -24px rgba(0, 0, 0, 0.3);
-  --ui-shadow-3: 0 30px 64px -34px rgba(0, 0, 0, 0.36);
-  --ui-shadow-soft: 0 12px 30px -24px rgba(0, 0, 0, 0.28);
-  --ui-shadow-card: 0 24px 52px -32px rgba(0, 0, 0, 0.35);
+  --ui-shadow-1: 0 8px 24px -18px rgba(30, 70, 125, 0.3);
+  --ui-shadow-2: 0 18px 40px -24px rgba(30, 70, 125, 0.32);
+  --ui-shadow-3: 0 28px 64px -34px rgba(30, 70, 125, 0.36);
+  --ui-shadow-soft: var(--ui-shadow-1);
+  --ui-shadow-card: var(--ui-shadow-2);
+  --ui-content-max: 80rem;
+  --ui-page-gutter: 1rem;
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-6: 1.5rem;
+  --ui-space-8: 2rem;
   --ui-leading-display: 1.1;
   --ui-leading-title: 1.2;
   --ui-leading-body: 1.62;
@@ -274,6 +295,97 @@ html[data-telegram-mini-app="true"] body {
 }
 
 @layer components {
+  .hcz-shell-container {
+    width: 100%;
+    max-width: var(--ui-content-max);
+    margin-inline: auto;
+    padding-inline: var(--ui-page-gutter);
+  }
+
+  .hcz-surface {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-xl);
+    background: var(--ui-bg-elevated);
+    box-shadow: var(--ui-shadow-soft);
+  }
+
+  .hcz-service-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ui-space-4);
+  }
+
+  .hcz-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ui-space-6);
+  }
+
+  .hcz-bottom-nav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 50;
+    border-top: 1px solid var(--ui-border);
+    background: var(--ui-bg-overlay-strong);
+    box-shadow: var(--ui-shadow-1);
+    backdrop-filter: blur(20px);
+  }
+
+  .hcz-bottom-nav__inner {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    max-width: 40rem;
+    min-height: 4rem;
+    margin-inline: auto;
+  }
+
+  .hcz-bottom-nav__item {
+    display: flex;
+    min-width: 0;
+    min-height: 4rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    color: var(--ui-text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .hcz-bottom-nav__item.is-active {
+    color: var(--ui-accent);
+  }
+
+  .hcz-bottom-nav__icon {
+    position: relative;
+    display: grid;
+    width: 2.5rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 999px;
+  }
+
+  .hcz-bottom-nav__item.is-active .hcz-bottom-nav__icon {
+    background: var(--ui-accent-soft);
+  }
+
+  .hcz-bottom-nav__dot {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.2rem;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--ui-danger);
+  }
+
+  .hcz-bottom-nav__item:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: -3px;
+  }
+
   .theme-overlay {
     background-color: var(--ui-bg-overlay-strong);
   }
@@ -699,5 +811,40 @@ html[data-telegram-mini-app="true"] body {
 .theme-prose p:has(> img) + p:has(> img),
 .theme-prose p:has(> img) + p:has(> img) > img {
   margin-top: 0;
+}
+
+@layer components {
+  @media (min-width: 768px) {
+    .hcz-service-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 1200px) {
+    .hcz-service-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .hcz-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 1023px) {
+    .hcz-shell-main--with-bottom-nav {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hcz-bottom-nav { display: none; }
+  }
+}
+
+@media (min-width: 768px) {
+  :root { --ui-page-gutter: 1.5rem; }
+}
+
+@media (min-width: 1200px) {
+  :root { --ui-page-gutter: 2rem; }
+}
+
+@layer utilities {
+  #app.hcz-storefront .container {
+    max-width: var(--ui-content-max);
+  }
 }
 

@@ -1,11 +1,12 @@
 import { computed, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-    Home, LayoutGrid, Newspaper, Bell, Info,
+    Home, ReceiptText, Wallet, Newspaper, Bell, Info,
     Link2, FileText, Globe, Star, Heart, MessageCircle, Gift, Zap, Shield,
     BookOpen, Code, Phone, MapPin, Music, Camera,
 } from 'lucide-vue-next'
 import { useAppStore } from '../stores/app'
+import { useUserAuthStore } from '../stores/userAuth'
 import { getLocalizedText } from '../utils/resellerSiteConfig'
 
 /**
@@ -77,8 +78,12 @@ const isExternalUrl = (url: string): boolean =>
 export const useNavConfig = () => {
     const { t, locale } = useI18n()
     const appStore = useAppStore()
+    const userAuthStore = useUserAuthStore()
 
-    const navConfig = computed(() => appStore.config?.nav_config as NavConfigRaw | undefined)
+    // 兼容两种字段名：新装修字段 navigation，历史字段 nav_config
+    const navConfig = computed(() =>
+        (appStore.config?.navigation || appStore.config?.nav_config) as NavConfigRaw | undefined,
+    )
 
     /** 列表模式下首页即商品列表，/products 与首页同页，导航里不再单独列一项 */
     const isListMode = computed(() => appStore.config?.template_mode === 'list')
@@ -123,13 +128,14 @@ export const useNavConfig = () => {
             .filter((item) => item.label && item.path)
     })
 
-    /** 首页 + 商品 + 内置 + 自定义，供顶栏主导航使用 */
+    /** 页头主导航；服务列表仍可从首页业务入口进入。 */
     const primaryNavItems = computed<NavItem[]>(() => {
         const items: NavItem[] = [
             { key: 'home', path: '/', label: t('nav.home'), icon: Home, type: 'route', target: '_self' },
         ]
-        if (!isListMode.value) {
-            items.push({ key: 'products', path: '/products', label: t('nav.products'), icon: LayoutGrid, type: 'route', target: '_self' })
+        if (userAuthStore.isAuthenticated) {
+            items.push({ key: 'orders', path: '/me/orders', label: t('nav.orders'), icon: ReceiptText, type: 'route', target: '_self' })
+            items.push({ key: 'wallet', path: '/me/wallet', label: t('nav.wallet'), icon: Wallet, type: 'route', target: '_self' })
         }
         items.push(...builtinNavItems.value, ...customNavItems.value)
         return items

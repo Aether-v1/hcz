@@ -6,11 +6,9 @@
       <div v-if="loading" class="space-y-8">
         <div class="h-5 w-48 rounded theme-skeleton"></div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 bg-card border rounded-3xl overflow-hidden">
-          <div class="p-4 md:p-8 bg-secondary border-r">
-            <div class="h-[300px] md:h-[500px] rounded-xl theme-skeleton"></div>
-            <div class="mt-4 flex gap-3 overflow-hidden">
-              <div v-for="i in 4" :key="i" class="w-16 h-16 rounded-lg theme-skeleton shrink-0"></div>
-            </div>
+          <div class="p-8 bg-secondary border-r">
+            <div class="h-20 w-20 rounded-xl theme-skeleton"></div>
+            <div class="mt-8 h-8 w-2/3 rounded theme-skeleton"></div>
           </div>
           <div class="p-6 md:p-12 space-y-6">
             <div class="h-3 w-24 rounded theme-skeleton"></div>
@@ -44,18 +42,32 @@
 
         <!-- Main Info Card -->
         <div
-          class="bg-card backdrop-blur-xl border rounded-3xl overflow-hidden mb-8 shadow-2xl">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            <!-- Product Images (Left) -->
-            <ProductImageGallery
-              :images="images"
-              :current-image="currentImage"
-              :product-title="getLocalizedText(product.title)"
-              @update:current-image="currentImage = $event"
-            />
+          class="mx-auto mb-8 max-w-6xl overflow-hidden rounded-3xl border bg-card shadow-sm">
+          <div class="grid grid-cols-1 gap-0 lg:grid-cols-[340px_minmax(0,1fr)]">
+            <!-- Service identity and guidance -->
+            <div class="flex flex-col gap-8 border-b border-sky-100 bg-[linear-gradient(160deg,#edf7fc_0%,#f6fafb_100%)] p-6 text-slate-900 dark:border-slate-700 dark:bg-[linear-gradient(160deg,#263747_0%,#22313b_100%)] dark:text-slate-100 md:p-8 lg:border-b-0 lg:border-r lg:p-9">
+              <div>
+                <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-sky-100 bg-white/80 p-3 dark:border-slate-600 dark:bg-slate-700/80">
+                  <img v-if="product.category?.icon || images[0]" :src="product.category?.icon ? getImageUrl(product.category.icon) : images[0]" :alt="getLocalizedText(product.title)" class="h-full w-full object-contain" />
+                  <component :is="getServiceIcon(product.category)" v-else class="h-8 w-8 text-slate-600 dark:text-slate-300" aria-hidden="true" />
+                </div>
+                <p class="mt-7 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-300">{{ t('productDetail.serviceLabel') }}</p>
+                <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ getLocalizedText(product.description) }}</p>
+              </div>
+              <div class="border-t border-sky-200/70 pt-6 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                <p class="font-semibold text-slate-900 dark:text-slate-100">{{ t('productDetail.flowTitle') }}</p>
+                <ol class="mt-4 space-y-4">
+                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">01</span>{{ t('products.stepChoose') }}</li>
+                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">02</span>{{ t('products.stepDetails') }}</li>
+                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">03</span>{{ t('products.stepSubmit') }}</li>
+                </ol>
+                <p class="mt-5 text-xs leading-6 text-slate-500 dark:text-slate-400">{{ t('productDetail.flowDescription') }}</p>
+              </div>
+            </div>
 
-            <!-- Product Info (Right) -->
-            <div class="p-6 md:p-8 lg:p-12 flex flex-col justify-center">
+            <!-- Recharge options (Right) -->
+            <div class="flex flex-col justify-center p-6 md:p-8 lg:px-12 lg:py-10">
+              <p class="mb-5 text-sm font-semibold text-muted-foreground">{{ t('productDetail.rechargeOptions') }}</p>
               <div class="mb-6">
                 <div v-if="categoryName" class="mb-3 text-xs uppercase tracking-wider text-muted-foreground">
                   {{ t('productDetail.categoryLabel') }} · {{ categoryName }}
@@ -88,9 +100,6 @@
                     {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
                   </Badge>
 
-                  <Badge :variant="getStockBadgeVariant(product.stock_status)">
-                    {{ getStockStatusLabel(product) }}
-                  </Badge>
                 </div>
 
                 <div class="mb-8 border-b pb-8" ref="priceSection">
@@ -109,7 +118,7 @@
                   <div v-if="selectedSku && hasSelectedSkuWholesalePrice" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
                       <span
-                        class="theme-price-lg"
+                        class="text-3xl font-bold tracking-tight tabular-nums"
                         :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
                       >
                         {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
@@ -129,10 +138,10 @@
                   <!-- 选中 SKU 且有促销价 -->
                   <div v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
-                      <span v-if="selectedSkuPromotionFinalIsMember" class="theme-price-lg text-amber-600 dark:text-amber-300">
+                      <span v-if="selectedSkuPromotionFinalIsMember" class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
                         {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
                       </span>
-                      <span v-else class="theme-price-lg text-rose-600 dark:text-rose-300">
+                      <span v-else class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
                         {{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
@@ -149,7 +158,7 @@
                   <!-- 选中 SKU 有会员价但无促销价 -->
                   <div v-else-if="selectedSku && hasMemberPrice" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
-                      <span class="theme-price-lg text-amber-600 dark:text-amber-300">
+                      <span class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
                         {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
@@ -162,14 +171,14 @@
                   </div>
                   <!-- 选中 SKU 但无促销价也无会员价 -->
                   <div v-else-if="selectedSku" class="flex items-end gap-4">
-                    <span class="theme-price-lg text-primary">
+                    <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
                       {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
                     </span>
                   </div>
                   <!-- 未选 SKU，产品级有促销价 -->
                   <div v-else-if="hasPromotionPrice(product)" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
-                      <span class="theme-price-lg text-rose-600 dark:text-rose-300">
+                      <span class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
                         {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
@@ -182,7 +191,7 @@
                   </div>
                   <!-- 未选 SKU，无促销 -->
                   <div v-else class="flex items-end gap-4">
-                    <span class="theme-price-lg text-primary">
+                    <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
                       {{ formatPrice(product.price_amount, siteCurrency) }}
                     </span>
                   </div>
@@ -232,12 +241,6 @@
                       @click="selectedSkuId = normalizeSkuId(sku.id)"
                     >
                       <span class="font-semibold leading-tight">{{ skuDisplayText(sku) }}</span>
-                      <span
-                        class="mt-1 rounded-full border px-2 py-0.5 text-[11px]"
-                        :class="skuStockBadgeClass(sku)"
-                      >
-                        {{ skuStockText(sku) }}
-                      </span>
                     </button>
                   </div>
                   <p v-if="requiresSKUSelection" class="mt-2 text-xs text-amber-500">
@@ -301,14 +304,12 @@
                   <Button v-if="requiresLogin" class="w-full h-12 font-bold" @click="goLogin">
                     {{ t('productDetail.loginToBuy') }}
                   </Button>
-                  <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Button variant="secondary" class="h-12 font-bold" :disabled="!canPurchase" @click="addToCart">
-                      {{ t('productDetail.addToCart') }}
-                    </Button>
+                  <div v-else>
                     <Button class="h-12 font-bold" :disabled="!canPurchase" @click="buyNow">
                       {{ t('productDetail.buyNow') }}
                     </Button>
                   </div>
+                  <p class="text-xs leading-5 text-muted-foreground">{{ t('productDetail.accountAtCheckout') }}</p>
                 </div>
 
               </div>
@@ -383,7 +384,6 @@
           :show-product-promotion-price="mobileBarShowProductPromotionPrice"
           :product-promotion-price-display="mobileBarProductPromotionPriceDisplay"
           :product-price-display="mobileBarProductPriceDisplay"
-          @add-to-cart="addToCart"
           @buy-now="buyNow"
           @go-login="goLogin"
         />
@@ -415,9 +415,9 @@ import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Lock, Minus, Pencil, Plus, RotateCw, Tag, UserPlus, Zap } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
+import { getServiceIcon } from '../utils/serviceIcon'
 import { processHtmlForDisplay } from '../utils/content'
 import { useProductDetail } from '../composables/useProductDetail'
-import ProductImageGallery from '../components/product/ProductImageGallery.vue'
 import ProductMobileBar from '../components/product/ProductMobileBar.vue'
 import BreadcrumbNav from '../components/BreadcrumbNav.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -450,23 +450,23 @@ const setupMobileBarObserver = () => {
 // 全部业务逻辑由 useProductDetail 提供（与 vault 模板共用，保证功能一致）
 const {
   getLocalizedText, siteCurrency, formatPrice,
-  getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
+  getPurchaseTypeLabel, getFulfillmentTypeLabel,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
-  loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
+  loading, product, relatedPosts, selectedSkuId, quantity, purchaseWarning,
   activeSkus, selectedSku,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
   selectedSkuWholesaleRules,
   selectedSkuPromotionPrice, selectedSkuPromotionFinalIsMember, selectedSkuPromotionFinalPrice,
   showSelectedSkuMemberBadge,
-  isSkuPurchasable, skuDisplayText, skuStockText, skuStockBadgeClass,
+  isSkuPurchasable, skuDisplayText,
   quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput,
   requiresLogin, requiresSKUSelection, canPurchase, cannotPurchaseReason,
   categoryName, images,
-  addToCart, buyNow, goLogin, loadProduct,
+  buyNow, goLogin, loadProduct,
   mobileBarShowMemberPrice, mobileBarMemberPriceDisplay,
   mobileBarShowSkuPromotionPrice, mobileBarSkuPromotionPriceDisplay,
   mobileBarShowSkuPrice, mobileBarSkuPriceDisplay,

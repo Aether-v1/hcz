@@ -1,14 +1,13 @@
 import { computed, onMounted, ref, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Banknote, Home, ShoppingBag, Wallet, Gift, ShieldCheck, UserCircle, Megaphone, Key, Share2 } from 'lucide-vue-next'
-import { orderStatusLabel, orderStatusVariant } from '../utils/status'
+import { Banknote, Home, Gift, ShieldCheck, UserCircle, Megaphone, Key, Share2 } from 'lucide-vue-next'
 import type { PageAlert } from '../utils/alerts'
 import { useAppStore } from '../stores/app'
 import { useUserProfileStore } from '../stores/userProfile'
 import type { PublicMemberLevel } from '../api'
 
-export type PersonalSection = 'overview' | 'profile' | 'security' | 'orders' | 'wallet' | 'giftCard' | 'affiliate' | 'invitation' | 'reseller' | 'api'
+export type PersonalSection = 'overview' | 'profile' | 'security' | 'giftCard' | 'affiliate' | 'invitation' | 'reseller' | 'api'
 
 export interface PersonalSectionItem {
   key: PersonalSection
@@ -27,23 +26,19 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
 
   const sectionItems: PersonalSectionItem[] = [
     { key: 'overview', label: 'personalCenter.tabs.overview', icon: Home },
-    { key: 'orders', label: 'personalCenter.tabs.orders', icon: ShoppingBag },
-    { key: 'wallet', label: 'personalCenter.tabs.wallet', icon: Wallet },
+    { key: 'profile', label: 'personalCenter.tabs.profile', icon: UserCircle },
+    { key: 'security', label: 'personalCenter.tabs.security', icon: ShieldCheck },
+    { key: 'giftCard', label: 'personalCenter.tabs.giftCard', icon: Gift },
     { key: 'affiliate', label: 'personalCenter.tabs.affiliate', icon: Megaphone },
     { key: 'invitation', label: 'personalCenter.tabs.invitation', icon: Share2 },
     { key: 'reseller', label: 'personalCenter.tabs.reseller', icon: Banknote },
-    { key: 'giftCard', label: 'personalCenter.tabs.giftCard', icon: Gift },
-    { key: 'security', label: 'personalCenter.tabs.security', icon: ShieldCheck },
     { key: 'api', label: 'personalCenter.tabs.api', icon: Key },
-    { key: 'profile', label: 'personalCenter.tabs.profile', icon: UserCircle },
   ]
 
   const sectionRouteMap: Record<PersonalSection, string> = {
     overview: '/me',
     profile: '/me/profile',
     security: '/me/security',
-    orders: '/me/orders',
-    wallet: '/me/wallet',
     affiliate: '/me/affiliate',
     invitation: '/me/invitation',
     reseller: '/me/reseller',
@@ -72,35 +67,6 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
 
   const switchSection = (section: PersonalSection) => {
     router.push(sectionRouteMap[section])
-  }
-
-  const statusLabel = (status?: string) => orderStatusLabel(t, status)
-  const statusVariant = (status?: string) => orderStatusVariant(status)
-
-  // vault 模板：BadgeTone → vault pill 类名（classic 不使用）
-  const statusPillClass = (status?: string) => {
-    const map: Record<string, string> = {
-      success: 'pill-done',
-      warning: 'pill-low',
-      danger: 'pill-sale',
-      info: 'pill-stock',
-      accent: 'pill-sale',
-      neutral: 'pill-out',
-    }
-    return map[orderStatusVariant(status)] || 'pill-out'
-  }
-
-  const formatMoney = (amount?: string, currency?: string) => {
-    if (!amount) return '-'
-    if (!currency) return amount
-    return `${amount} ${currency}`
-  }
-
-  const formatDate = (raw?: string) => {
-    if (!raw) return '-'
-    const date = new Date(raw)
-    if (Number.isNaN(date.getTime())) return raw
-    return date.toLocaleString()
   }
 
   const emailVerifiedLabel = computed(() => {
@@ -134,7 +100,6 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
     globalAlert.value = null
     const [profileOk] = await Promise.all([
       userProfileStore.loadProfile(),
-      userProfileStore.loadRecentOrders(5),
       userProfileStore.loadMemberLevels(),
     ])
     if (!profileOk) {
@@ -157,11 +122,6 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
     globalAlert,
     displayInitial,
     switchSection,
-    statusLabel,
-    statusVariant,
-    statusPillClass,
-    formatMoney,
-    formatDate,
     emailVerifiedLabel,
     emailVerifiedVariant,
     discountText,

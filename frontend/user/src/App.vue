@@ -1,7 +1,7 @@
 <template>
-  <div id="app" class="min-h-screen bg-background text-foreground flex flex-col">
+  <div id="app" class="min-h-screen bg-background text-foreground flex flex-col" :class="{ 'hcz-storefront': !isResellerConsole }">
     <!-- vault 模板：自带顶栏/页脚的外壳包裹页面（控制台仍走下方分支） -->
-    <VaultLayout v-if="isVault && !isResellerConsole">
+    <VaultLayout v-if="isVault && !isResellerConsole" :hide-header="isLoginOrRegister">
       <ErrorBoundary>
         <RouterView v-slot="{ Component }">
           <Transition name="page-fade" mode="out-in">
@@ -13,8 +13,8 @@
 
     <!-- classic 模板 / 分销控制台（保持原有结构不变） -->
     <template v-else>
-      <Navbar v-if="!isResellerConsole" />
-      <main class="flex-1" :class="isResellerConsole ? '' : 'pb-14 lg:pb-0'">
+      <Navbar v-if="!isResellerConsole && !isLoginOrRegister" />
+      <main class="flex-1" :class="{ 'hcz-shell-main--with-bottom-nav': !isLoginOrRegister && !isResellerConsole }">
         <ErrorBoundary>
           <RouterView v-slot="{ Component }">
             <Transition name="page-fade" mode="out-in">
@@ -23,9 +23,9 @@
           </RouterView>
         </ErrorBoundary>
       </main>
-      <Footer v-if="!isResellerConsole" />
-      <BackToTop v-if="!isResellerConsole" />
-      <MobileBottomNav v-if="!isResellerConsole" />
+      <Footer v-if="!isResellerConsole && !isLoginOrRegister" />
+      <BackToTop v-if="!isResellerConsole && !isLoginOrRegister" />
+      <MobileBottomNav v-if="!isResellerConsole && !isLoginOrRegister" />
     </template>
 
     <Loading :loading="appStore.loading" />
@@ -55,6 +55,7 @@ const VaultLayout = defineAsyncComponent(() => import('./templates/vault/layout/
 const appStore = useAppStore()
 const route = useRoute()
 const isResellerConsole = computed(() => route.meta.resellerConsole === true)
+const isLoginOrRegister = computed(() => route.name === 'user-login' || route.name === 'user-register')
 // getActiveTemplate 读取 appStore.config（响应式），config 加载后会重新计算
 const isVault = computed(() => getActiveTemplate() === 'vault')
 </script>

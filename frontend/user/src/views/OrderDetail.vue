@@ -461,7 +461,7 @@
             <div class="mt-6 flex justify-end gap-3">
               <Button variant="outline" size="sm" @click="afterSaleCloseForm()" :disabled="afterSaleSubmitting">{{ t('common.cancel') }}</Button>
               <Button size="sm" @click="afterSaleSubmit()" :disabled="afterSaleSubmitting">
-                {{ afterSaleSubmitting ? t('afterSaleSubmitting') : t('common.confirm') }}
+                {{ afterSaleSubmitting ? t('afterSale.submitting') : t('common.confirm') }}
               </Button>
             </div>
           </div>

@@ -1065,7 +1065,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="rounded-xl border border-border bg-card">
+      <!-- scripts 编辑已按 Phase 9 要求隐藏（数据仍随 site_config 回写，不删除） -->
+      <div v-show="false" class="rounded-xl border border-border bg-card">
         <div class="flex flex-col gap-3 border-b border-border bg-muted/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 class="text-lg font-semibold">{{ t('admin.settings.scripts.title') }}</h2>

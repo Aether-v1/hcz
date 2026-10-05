@@ -7,9 +7,9 @@
     </nav>
     <h1 class="mb-3.5 break-words text-3xl font-extrabold">{{ pageTitle }}</h1>
 
-    <div class="grid items-start gap-7 py-1.5 pb-9 lg:grid-cols-[248px_1fr]">
-      <!-- 筛选侧栏：桌面竖排 + 移动端横向 chips -->
-      <div class="grid min-w-0 gap-3 lg:sticky lg:top-[88px] lg:gap-5">
+    <div class="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-3 py-1.5 pb-9 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-7">
+      <!-- 左侧纵向分类和搜索 -->
+      <div class="sticky top-[88px] grid min-w-0 gap-3 lg:gap-5">
         <!-- 搜索框 -->
         <div class="relative">
           <Search class="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
@@ -33,7 +33,7 @@
       </div>
 
       <!-- 商品区 -->
-      <section>
+      <section class="min-w-0">
         <div v-if="loading" class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(228px,1fr))]">
           <div v-for="i in 9" :key="i" class="h-[280px] rounded-lg border bg-card"></div>
         </div>

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { configAPI } from '../api'
-import { applyCustomScripts } from '../utils/customScripts'
+import { applyBrandColor } from '../composables/useSiteConfig'
 import { getImageUrl } from '../utils/image'
 import { getLocalizedText } from '../utils/resellerSiteConfig'
 import { detectLocale, setI18nLocale } from '../i18n'
@@ -72,7 +72,7 @@ export const useAppStore = defineStore('app', () => {
     const loadConfig = async (force = false) => {
         if (config.value && !force) {
             applySEO()
-            applyCustomScripts(config.value?.scripts)
+            applyBrandColor(config.value?.brand?.primary_color)
             return
         }
         if (!force) loading.value = true
@@ -88,7 +88,8 @@ export const useAppStore = defineStore('app', () => {
                 serverTimeOffset.value = estimatedServerNow - responseTime
             }
             applySEO()
-            applyCustomScripts(config.value?.scripts)
+            // 品牌主色注入 CSS variable（不再执行后台下发的任何 JS）
+            applyBrandColor(config.value?.brand?.primary_color)
             // Print version to console
             if (config.value?.app_version) {
                 console.log(

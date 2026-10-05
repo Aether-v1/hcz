@@ -17,13 +17,13 @@
           <span v-else-if="showSkuPromotionPrice" class="theme-price-sm text-rose-600 dark:text-rose-300 truncate block">
             {{ skuPromotionPriceDisplay }}
           </span>
-          <span v-else-if="showSkuPrice" class="theme-price-sm text-primary truncate block">
+          <span v-else-if="showSkuPrice" class="theme-price-sm text-foreground truncate block">
             {{ skuPriceDisplay }}
           </span>
           <span v-else-if="showProductPromotionPrice" class="theme-price-sm text-rose-600 dark:text-rose-300 truncate block">
             {{ productPromotionPriceDisplay }}
           </span>
-          <span v-else class="theme-price-sm text-primary truncate block">
+          <span v-else class="theme-price-sm text-foreground truncate block">
             {{ productPriceDisplay }}
           </span>
         </div>
@@ -32,9 +32,6 @@
           {{ t('productDetail.loginToBuy') }}
         </Button>
         <template v-else>
-          <Button variant="secondary" size="lg" class="rounded-xl font-bold" :disabled="!canPurchase" @click="$emit('addToCart')">
-            {{ t('productDetail.addToCart') }}
-          </Button>
           <Button size="lg" class="rounded-xl font-bold" :disabled="!canPurchase" @click="$emit('buyNow')">
             {{ t('productDetail.buyNow') }}
           </Button>
@@ -66,7 +63,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  addToCart: []
   buyNow: []
   goLogin: []
 }>()

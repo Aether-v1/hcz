@@ -30,6 +30,8 @@ import (
 	sitemapcontract "github.com/Aether-v1/hcz/internal/modules/sitemap/contract"
 	sitemapcache "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/cacheadapter"
 	sitemapcatalog "github.com/Aether-v1/hcz/internal/modules/sitemap/infrastructure/catalogreader"
+	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
+	sitebuilderhttp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/transport/http"
 	supportapp "github.com/Aether-v1/hcz/internal/modules/supportticket/application"
 	supportlocalfile "github.com/Aether-v1/hcz/internal/modules/supportticket/infrastructure/localfile"
 	uploadapp "github.com/Aether-v1/hcz/internal/modules/upload/application"
@@ -200,4 +202,18 @@ func (c *Container) initApplicationServices() {
 		gormstore.NewBannerStore(gormdb.DB),
 		contentapp.SystemClock{},
 	)
+
+	// 站点装修（sitebuilder）：首页入口 / 发现页区块 / 品牌 / 模板 / 审计。
+	c.SiteHomeEntryService = sitebuilderapp.NewHomeEntryService(c.SiteHomeEntryRepo)
+	c.SiteDiscoveryBlockService = sitebuilderapp.NewDiscoveryBlockService(c.SiteDiscoveryBlockRepo)
+	c.SiteAuditService = sitebuilderapp.NewAuditService(c.SiteAuditRepo, c.SiteAuditRepo)
+	c.SiteBrandService = sitebuilderapp.NewBrandService(c.SettingService)
+	c.SiteTemplateService = sitebuilderapp.NewTemplateService(c.SettingService)
+	c.SiteBuilderAdminHandler = sitebuilderhttp.NewAdminHandler(sitebuilderhttp.Services{
+		HomeEntries: c.SiteHomeEntryService,
+		Discovery:   c.SiteDiscoveryBlockService,
+		Brand:       c.SiteBrandService,
+		Template:    c.SiteTemplateService,
+		Audit:       c.SiteAuditService,
+	})
 }
