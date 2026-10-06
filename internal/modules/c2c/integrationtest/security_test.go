@@ -132,9 +132,9 @@ func TestSecurity_SelfTradeRejectedAndRiskSignaled(t *testing.T) {
 		t.Fatalf("self trade want ErrSelfTrade, got %v", err)
 	}
 
-	// 卖家余额未被动
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0, got %s", got)
+	// 卖家余额：CreateListing 已 freeze 1000，self-trade 拒绝后 wallet 不变（frozen=1000, available=0）
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen want 1000.00 (listing freeze, self-trade rejected), got %s", got)
 	}
 	// 注意：生产代码在事务内写 risk_signal 后返回 ErrSelfTrade，事务回滚，
 	// 因此 self_trade_attempt 信号不会被持久化。这里验证实际可观察行为：

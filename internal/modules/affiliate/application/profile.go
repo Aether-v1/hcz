@@ -53,68 +53,10 @@ func (s *Service) BatchUpdateAffiliateProfileStatus(profileIDs []uint, rawStatus
 	return s.repo.BatchUpdateProfileStatus(normalizedIDs, nextStatus, time.Now())
 }
 
-// OpenAffiliate 为用户开通推广返利
+// OpenAffiliate 为用户开通推广返利（已退休，请使用 ApplyAffiliate）。
+// 旧直接创建 active profile 的入口已关闭，现在需要用户提交申请 → 管理员审核 → 开通。
 func (s *Service) OpenAffiliate(userID uint) (*affiliatedomain.Profile, error) {
-	if userID == 0 {
-		return nil, ErrUserDisabled
-	}
-	if s.repo == nil || s.userRepo == nil {
-		return nil, ErrNotFound
-	}
-	setting, err := s.settings.GetAffiliateSetting()
-	if err != nil {
-		return nil, err
-	}
-	if !setting.Enabled {
-		return nil, ErrDisabled
-	}
-
-	user, err := s.userRepo.GetByID(userID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, ErrNotFound
-	}
-	if strings.TrimSpace(user.Status) == constants.UserStatusDisabled {
-		return nil, ErrUserDisabled
-	}
-
-	existing, err := s.repo.GetProfileByUserID(userID)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
-	const maxRetry = 8
-	for i := 0; i < maxRetry; i++ {
-		code, genErr := generateAffiliateCode()
-		if genErr != nil {
-			return nil, genErr
-		}
-		profile := &affiliatedomain.Profile{
-			UserID:        userID,
-			AffiliateCode: code,
-			Status:        constants.AffiliateProfileStatusActive,
-		}
-		if err := s.repo.CreateProfile(profile); err != nil {
-			if isUniqueViolation(err) {
-				continue
-			}
-			return nil, err
-		}
-		created, err := s.repo.GetProfileByID(profile.ID)
-		if err != nil {
-			return nil, err
-		}
-		if created != nil {
-			return created, nil
-		}
-		return profile, nil
-	}
-	return nil, ErrCodeInvalid
+	return nil, ErrOpenRetired
 }
 
 func normalizeAffiliateProfileIDs(ids []uint) []uint {

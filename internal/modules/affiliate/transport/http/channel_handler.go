@@ -87,6 +87,7 @@ type channelApplyWithdrawRequest struct {
 }
 
 // OpenAffiliate POST /api/v1/channel/affiliate/open
+// 渠道端开通改为提交申请（pending），不再直接创建 active profile。
 func (h *ChannelHandler) OpenAffiliate(c *gin.Context) {
 	var req channelIdentityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -107,7 +108,7 @@ func (h *ChannelHandler) OpenAffiliate(c *gin.Context) {
 		return
 	}
 
-	profile, err := h.affiliate.OpenAffiliate(userID)
+	app, err := h.affiliate.ApplyAffiliate(userID, "")
 	if err != nil {
 		switch {
 		case errors.Is(err, affiliateapp.ErrDisabled):
@@ -116,6 +117,17 @@ func (h *ChannelHandler) OpenAffiliate(c *gin.Context) {
 			channelresponse.Error(c, http.StatusNotFound, response.CodeNotFound, "user_not_found", "error.user_not_found", nil)
 		case errors.Is(err, affiliateapp.ErrUserDisabled):
 			channelresponse.Error(c, http.StatusUnauthorized, response.CodeUnauthorized, "user_disabled", "error.user_disabled", nil)
+		case errors.Is(err, affiliateapp.ErrAlreadyActive):
+			// 已有 active profile，返回现有 profile 信息（幂等）
+			profile, pErr := h.affiliate.GetUserProfileForGateway(userID)
+			if pErr != nil || profile == nil {
+				channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_already_active", "error.affiliate_already_active", nil)
+				return
+			}
+			channelresponse.Success(c, buildChannelAffiliateProfileResponse(profile))
+			return
+		case errors.Is(err, affiliateapp.ErrApplicationPending):
+			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_application_pending", "error.affiliate_application_pending", nil)
 		default:
 			ginutil.RequestLog(c).Errorw("channel_affiliate_open_failed", "user_id", userID, "error", err)
 			channelresponse.Error(c, http.StatusInternalServerError, response.CodeInternal, "affiliate_open_failed", "error.save_failed", err)
@@ -123,7 +135,12 @@ func (h *ChannelHandler) OpenAffiliate(c *gin.Context) {
 		return
 	}
 
-	channelresponse.Success(c, buildChannelAffiliateProfileResponse(profile))
+	channelresponse.Success(c, gin.H{
+		"application_id": app.ID,
+		"user_id":        app.UserID,
+		"status":         app.Status,
+		"created_at":     app.CreatedAt,
+	})
 }
 
 // TrackAffiliateClick POST /api/v1/channel/affiliate/click
@@ -182,17 +199,20 @@ func (h *ChannelHandler) GetAffiliateDashboard(c *gin.Context) {
 	}
 
 	channelresponse.Success(c, gin.H{
-		"opened":               dashboard.Opened,
-		"affiliate_code":       dashboard.AffiliateCode,
-		"promotion_path":       dashboard.PromotionPath,
-		"click_count":          dashboard.ClickCount,
-		"valid_order_count":    dashboard.ValidOrderCount,
-		"conversion_rate":      dashboard.ConversionRate,
-		"pending_commission":   dashboard.PendingCommission,
-		"available_commission": dashboard.AvailableCommission,
-		"withdrawn_commission": dashboard.WithdrawnCommission,
-		"min_withdraw_amount":  setting.MinWithdrawAmount,
-		"withdraw_channels":    setting.WithdrawChannels,
+		"opened":                   dashboard.Opened,
+		"affiliate_code":           dashboard.AffiliateCode,
+		"promotion_path":           dashboard.PromotionPath,
+		"click_count":               dashboard.ClickCount,
+		"valid_order_count":        dashboard.ValidOrderCount,
+		"conversion_rate":           dashboard.ConversionRate,
+		"pending_commission":       dashboard.PendingCommission,
+		"available_commission":     dashboard.AvailableCommission,
+		"withdrawn_commission":     dashboard.WithdrawnCommission,
+		"available_transfer_balance": dashboard.AvailableTransferBalance,
+		"debt_amount":              dashboard.DebtAmount,
+		"transferred_amount":       dashboard.TransferredAmount,
+		"min_withdraw_amount":      setting.MinWithdrawAmount,
+		"withdraw_channels":        setting.WithdrawChannels,
 	})
 }
 
@@ -287,9 +307,22 @@ func (h *ChannelHandler) ListAffiliateWithdraws(c *gin.Context) {
 	})
 }
 
-// ApplyAffiliateWithdraw POST /api/v1/channel/affiliate/withdraws
+// ApplyAffiliateWithdraw POST /api/v1/channel/affiliate/withdraws（已退休，返回 410 Gone）。
 func (h *ChannelHandler) ApplyAffiliateWithdraw(c *gin.Context) {
-	var req channelApplyWithdrawRequest
+	channelresponse.Error(c, http.StatusGone, http.StatusGone,
+		"affiliate_withdraw_retired", "error.bad_request", nil)
+}
+
+type channelTransferToWalletRequest struct {
+	ChannelUserID  string `json:"channel_user_id,omitempty"`
+	TelegramUserID string `json:"telegram_user_id,omitempty"`
+	Amount         string `json:"amount"`
+	All            bool   `json:"all"`
+}
+
+// TransferToWallet POST /api/v1/channel/affiliate/transfer-to-wallet
+func (h *ChannelHandler) TransferToWallet(c *gin.Context) {
+	var req channelTransferToWalletRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		channelresponse.BindError(c, err)
 		return
@@ -301,55 +334,84 @@ func (h *ChannelHandler) ApplyAffiliateWithdraw(c *gin.Context) {
 		return
 	}
 
-	amount, err := decimal.NewFromString(strings.TrimSpace(req.Amount))
-	if err != nil {
-		channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_withdraw_amount_invalid", "error.bad_request", nil)
-		return
-	}
-
 	userID, err := h.users.ProvisionUserID(ChannelIdentity{ChannelUserID: channelUserID})
 	if err != nil {
-		ginutil.RequestLog(c).Errorw("channel_affiliate_apply_withdraw_resolve_user", "channel_user_id", channelUserID, "error", err)
+		ginutil.RequestLog(c).Errorw("channel_affiliate_transfer_resolve_user", "channel_user_id", channelUserID, "error", err)
 		respondChannelIdentityError(c, err)
 		return
 	}
 
-	row, err := h.affiliate.ApplyWithdraw(userID, affiliateapp.WithdrawApplyInput{
-		Amount:  amount,
-		Channel: strings.TrimSpace(req.Channel),
-		Account: strings.TrimSpace(req.Account),
-	})
+	input := affiliateapp.TransferToWalletInput{All: req.All}
+	if !req.All {
+		amount, err := decimal.NewFromString(strings.TrimSpace(req.Amount))
+		if err != nil {
+			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_transfer_amount_invalid", "error.bad_request", nil)
+			return
+		}
+		input.Amount = amount
+	}
+
+	ledger, walletTxn, err := h.affiliate.TransferToWallet(userID, input)
 	if err != nil {
 		switch {
-		case errors.Is(err, affiliateapp.ErrDisabled):
-			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_disabled", "error.forbidden", nil)
 		case errors.Is(err, affiliateapp.ErrNotOpened):
 			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_not_opened", "error.bad_request", nil)
-		case errors.Is(err, affiliateapp.ErrWithdrawAmountInvalid):
-			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_withdraw_amount_invalid", "error.bad_request", nil)
-		case errors.Is(err, affiliateapp.ErrWithdrawChannelInvalid):
-			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_withdraw_channel_invalid", "error.bad_request", nil)
-		case errors.Is(err, affiliateapp.ErrWithdrawInsufficient):
-			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_withdraw_insufficient", "error.bad_request", nil)
+		case errors.Is(err, affiliateapp.ErrTransferAmountInvalid):
+			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_transfer_amount_invalid", "error.bad_request", nil)
+		case errors.Is(err, affiliateapp.ErrTransferInsufficient):
+			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_transfer_insufficient", "error.bad_request", nil)
+		case errors.Is(err, affiliateapp.ErrTransferInDebt):
+			channelresponse.Error(c, http.StatusBadRequest, response.CodeBadRequest, "affiliate_in_debt", "error.bad_request", nil)
 		default:
-			ginutil.RequestLog(c).Errorw("channel_affiliate_apply_withdraw_failed", "user_id", userID, "channel_user_id", channelUserID, "error", err)
-			channelresponse.Error(c, http.StatusInternalServerError, response.CodeInternal, "affiliate_withdraw_apply_failed", "error.save_failed", err)
+			ginutil.RequestLog(c).Errorw("channel_affiliate_transfer_failed", "user_id", userID, "channel_user_id", channelUserID, "error", err)
+			channelresponse.Error(c, http.StatusInternalServerError, response.CodeInternal, "affiliate_transfer_failed", "error.save_failed", err)
 		}
 		return
 	}
 
 	channelresponse.Success(c, gin.H{
-		"id":                   row.ID,
-		"affiliate_profile_id": row.AffiliateProfileID,
-		"amount":               row.Amount,
-		"channel":              row.Channel,
-		"account":              row.Account,
-		"status":               row.Status,
-		"reject_reason":        row.RejectReason,
-		"processed_by":         channelAffiliateUintValue(row.ProcessedBy),
-		"processed_at":         channelAffiliateTimeValue(row.ProcessedAt),
-		"created_at":           row.CreatedAt,
-		"updated_at":           row.UpdatedAt,
+		"ledger_id":      ledger.ID,
+		"amount":         ledger.Amount,
+		"wallet_txn_id":  walletTxn.ID,
+		"reference":      ledger.Reference,
+		"created_at":     ledger.CreatedAt,
+	})
+}
+
+// ListAffiliateTransfers GET /api/v1/channel/affiliate/transfers
+func (h *ChannelHandler) ListAffiliateTransfers(c *gin.Context) {
+	userID, channelUserID, ok := h.resolveChannelAffiliateUserID(c)
+	if !ok {
+		return
+	}
+
+	page, pageSize := ginutil.ParsePagination(c)
+
+	rows, total, err := h.affiliate.ListTransferHistory(userID, page, pageSize)
+	if err != nil {
+		ginutil.RequestLog(c).Errorw("channel_affiliate_transfers_failed", "user_id", userID, "channel_user_id", channelUserID, "error", err)
+		channelresponse.Error(c, http.StatusInternalServerError, response.CodeInternal, "affiliate_transfers_failed", "error.user_fetch_failed", err)
+		return
+	}
+
+	items := make([]gin.H, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, gin.H{
+			"id":         row.ID,
+			"amount":     row.Amount,
+			"type":       row.Type,
+			"reference":  row.Reference,
+			"remark":     row.Remark,
+			"created_at": row.CreatedAt,
+		})
+	}
+
+	channelresponse.Success(c, gin.H{
+		"items":       items,
+		"page":        page,
+		"page_size":   pageSize,
+		"total":       total,
+		"total_pages": (total + int64(pageSize) - 1) / int64(pageSize),
 	})
 }
 

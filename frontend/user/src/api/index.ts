@@ -24,8 +24,7 @@ export type {
     GiftCardRedeemResult,
     AffiliateDashboardData,
     AffiliateCommissionData,
-    AffiliateWithdrawData,
-    AffiliateWithdrawApplyPayload,
+    AffiliateTransferRecord,
     ResellerProfileSummaryData,
     ResellerManagementProfileData,
     ResellerDomainData,
@@ -56,7 +55,7 @@ export type {
 export { productAPI, postAPI, bannerAPI, categoryAPI, memberLevelAPI } from './product'
 export { userAuthAPI, captchaAPI, configAPI } from './auth'
 export { userProfileAPI } from './user'
-export { userOrderAPI, guestOrderAPI, paymentAPI } from './order'
+export { userOrderAPI, paymentAPI } from './order'
 export { walletAPI, giftCardAPI } from './wallet'
 export { notificationAPI } from './notification'
 export { supportAPI } from './support'
@@ -74,7 +73,7 @@ export type {
     CreateReplyPayload,
 } from '../types/support'
 export { invitationAPI, type MyInvitationData } from './invitation'
-export { affiliateAPI } from './affiliate'
+export { affiliateAPI, type AffiliateApplicationData } from './affiliate'
 export { resellerAPI } from './reseller'
 export { apiCredentialAPI } from './credential'
 

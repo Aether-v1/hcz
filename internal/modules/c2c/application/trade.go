@@ -15,8 +15,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// CreateTrade 买家发起一笔 C2C 交易：同一事务内行锁挂单、冻结卖家 USDT、
-// 写交易单、原子扣减挂单余量。任一步失败整体回滚。
+// CreateTrade 买家发起一笔 C2C 交易：同一事务内行锁挂单、写交易单、原子扣减挂单余量。
+// 新模型：只占用 listing 可售额度，不再 Freeze（卖家 USDT 在 CreateListing 时已冻结）。
+// 任一步失败整体回滚。
 func (s *Service) CreateTrade(input c2ccontract.CreateTradeInput) (*c2cdomain.Trade, error) {
 	buyerID := input.BuyerUserID
 	if buyerID == 0 {
@@ -115,20 +116,11 @@ func (s *Service) CreateTrade(input c2ccontract.CreateTradeInput) (*c2cdomain.Tr
 			UpdatedAt:             now,
 		}
 
-		// 6. 冻结卖家 USDT（reference 幂等）
-		if _, _, err := s.wallet.Freeze(tx, walletcontract.FreezeInput{
-			UserID:    listing.SellerUserID,
-			Amount:    money.FromDecimal(amount),
-			Reference: "c2c_freeze:trade:" + tradeNo,
-			Remark:    "C2C挂单成交冻结",
-		}); err != nil {
-			return err
-		}
-		// 7. 写交易单
+		// 6. 写交易单（不再 Freeze：卖家 USDT 在 CreateListing 时已冻结，这里只占用 listing 可售额度）。
 		if err := tx.C2C().CreateTrade(trade); err != nil {
 			return err
 		}
-		// 8. 原子扣减挂单可售余量
+		// 7. 原子扣减挂单可售余量
 		affected, err := tx.C2C().DecrementListingAvailableUSDT(listing.ID, amount)
 		if err != nil {
 			return err
@@ -261,7 +253,8 @@ func (s *Service) Confirm(input c2ccontract.ConfirmTradeInput) (*c2cdomain.Trade
 	return result, nil
 }
 
-// Cancel 买家取消待付款交易：pending_payment -> canceled，解冻卖家并恢复挂单余量。
+// Cancel 买家取消待付款交易：pending_payment -> canceled。
+// 新模型：seller wallet frozen 不变（资金仍属于 listing），仅恢复 listing 可售余量。
 func (s *Service) Cancel(input c2ccontract.CancelTradeInput) (*c2cdomain.Trade, error) {
 	var result *c2cdomain.Trade
 	err := s.uow.WithinTransaction(func(tx c2ccontract.Transaction) error {
@@ -282,16 +275,7 @@ func (s *Service) Cancel(input c2ccontract.CancelTradeInput) (*c2cdomain.Trade, 
 		if err != nil {
 			return c2ccontract.ErrTradeStatusInvalid
 		}
-		// 解冻卖家（reference 与超时共用，幂等）
-		if _, _, err := s.wallet.Unfreeze(tx, walletcontract.UnfreezeInput{
-			UserID:    t.SellerUserID,
-			Amount:    t.USDTAmount,
-			Reference: "c2c_unfreeze:trade:" + t.TradeNo,
-			Remark:    "C2C交易取消解冻",
-		}); err != nil {
-			return err
-		}
-		// 恢复挂单可售余量
+		// 恢复挂单可售余量（seller frozen 不变，资金仍属于 listing）。
 		if err := tx.C2C().IncrementListingAvailableUSDT(t.ListingID, t.USDTAmount.Decimal.Round(2)); err != nil {
 			return err
 		}

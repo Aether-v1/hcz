@@ -47,7 +47,6 @@ func normalizeSiteSetting(value map[string]interface{}) jsonmap.JSON {
 	normalized["footer_links"] = normalizeSiteFooterLinks(value["footer_links"])
 	normalized[constants.SettingFieldSiteCurrency] = normalizeSiteCurrency(value[constants.SettingFieldSiteCurrency])
 	normalized["template_mode"] = normalizeSiteTemplateMode(value["template_mode"])
-	normalized[constants.SettingFieldStorefrontTemplate] = normalizeStorefrontTemplate(value[constants.SettingFieldStorefrontTemplate])
 
 	if raw, ok := value["languages"]; ok {
 		normalized["languages"] = normalizeSiteLanguages(raw)
@@ -331,14 +330,6 @@ func normalizeSiteTemplateMode(raw interface{}) string {
 		return "list"
 	}
 	return "card"
-}
-
-// normalizeStorefrontTemplate 归一化店面模板，允许 "classic" 或 "vault"，默认 "classic"。
-func normalizeStorefrontTemplate(raw interface{}) string {
-	if normalizeSettingText(raw) == constants.StorefrontTemplateVault {
-		return constants.StorefrontTemplateVault
-	}
-	return constants.StorefrontTemplateDefault
 }
 
 func normalizeNavConfig(value map[string]interface{}) jsonmap.JSON {

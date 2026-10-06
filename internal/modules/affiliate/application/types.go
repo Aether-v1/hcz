@@ -1,6 +1,8 @@
 package application
 
 import (
+	"time"
+
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
@@ -24,6 +26,12 @@ type WithdrawApplyInput struct {
 	Account string
 }
 
+// TransferToWalletInput 佣金划转至主钱包输入。
+type TransferToWalletInput struct {
+	Amount decimal.Decimal // 划转金额（All=true 时忽略）
+	All    bool            // 是否划转全部可划转余额
+}
+
 // Dashboard 推广用户中心数据。
 type Dashboard struct {
 	Opened              bool         `json:"opened"`
@@ -33,18 +41,24 @@ type Dashboard struct {
 	ValidOrderCount     int64        `json:"valid_order_count"`
 	ConversionRate      float64      `json:"conversion_rate"`
 	PendingCommission   money.Amount `json:"pending_commission"`
-	AvailableCommission money.Amount `json:"available_commission"`
-	WithdrawnCommission money.Amount `json:"withdrawn_commission"`
+	AvailableCommission money.Amount `json:"available_commission"`  // 兼容旧前端：=可划转余额
+	WithdrawnCommission money.Amount `json:"withdrawn_commission"`  // 兼容旧前端：=累计已出金（历史提现+划转）
+	AvailableTransferBalance money.Amount `json:"available_transfer_balance"` // 可划转余额
+	DebtAmount          money.Amount `json:"debt_amount"`          // 欠款（正数表示欠多少，0=无欠款）
+	TransferredAmount   money.Amount `json:"transferred_amount"`   // 累计已划转至主钱包
 }
 
 // Stats 推广统计数据。
 type Stats struct {
-	ClickCount          int64
-	ValidOrderCount     int64
-	ConversionRate      float64
-	PendingCommission   money.Amount
-	AvailableCommission money.Amount
-	WithdrawnCommission money.Amount
+	ClickCount               int64
+	ValidOrderCount          int64
+	ConversionRate           float64
+	PendingCommission        money.Amount
+	AvailableCommission      money.Amount
+	WithdrawnCommission      money.Amount
+	AvailableTransferBalance money.Amount
+	DebtAmount               money.Amount
+	TransferredAmount        money.Amount
 }
 
 // AdminUserItem 后台推广用户列表项。
@@ -81,4 +95,25 @@ type AdminWithdrawListFilter struct {
 	AffiliateProfileID uint
 	Status             string
 	Keyword            string
+}
+
+// AffiliateApplicationListFilter 推广申请列表过滤。
+type AffiliateApplicationListFilter struct {
+	Page        int
+	PageSize    int
+	UserID      uint
+	Status      string
+	Keyword     string
+	CreatedFrom *time.Time
+	CreatedTo   *time.Time
+}
+
+// TransferRecord 划转历史记录（从 affiliate ledger 的 transfer_to_wallet 类型读取）。
+type TransferRecord struct {
+	ID        uint          `json:"id"`
+	Amount    money.Amount  `json:"amount"` // 划转金额（正数展示）
+	Type      string        `json:"type"`
+	Reference string        `json:"reference"`
+	Remark    string        `json:"remark"`
+	CreatedAt time.Time     `json:"created_at"`
 }

@@ -44,4 +44,9 @@ var (
 	// P1：订单创建幂等
 	ErrIdempotencyKeyRequired    = errors.New("order idempotency key required")
 	ErrIdempotencyPayloadConflict = errors.New("order idempotency key reused with different payload")
+
+	// HCZ Profit Guard V1（P3/P7）。用户端文案统一为"当前商品暂时不可购买"，
+	// 不得暴露成本/利润/Affiliate rate/FX buffer。
+	ErrProductCostNotConfigured = errors.New("product cost not configured")
+	ErrProductUnprofitable       = errors.New("order not profitable")
 )

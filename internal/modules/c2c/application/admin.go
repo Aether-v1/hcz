@@ -1,8 +1,6 @@
 package application
 
 import (
-	"time"
-
 	c2ccontract "github.com/Aether-v1/hcz/internal/modules/c2c/contract"
 	c2cdomain "github.com/Aether-v1/hcz/internal/modules/c2c/domain"
 )
@@ -23,7 +21,13 @@ func (s *Service) GetListingByIDAdmin(id uint) (*c2cdomain.Listing, error) {
 }
 
 // AdminCloseListing 管理员强制关闭挂单（不校验卖家归属）。
+// 新模型：复用 closeListingWithinTx —— 行锁 listing、检查 active trade、Unfreeze 剩余 frozen、status=closed。
+// 不能只改 status，否则卖家冻结资金会泄漏。
 func (s *Service) AdminCloseListing(adminID, id uint) (*c2cdomain.Listing, error) {
+	if id == 0 {
+		return nil, c2ccontract.ErrListingNotFound
+	}
+	// 预检查存在性与当前状态（事务内会再行锁校验一次）。
 	l, err := s.repo.GetListingByID(id)
 	if err != nil {
 		return nil, err
@@ -34,12 +38,19 @@ func (s *Service) AdminCloseListing(adminID, id uint) (*c2cdomain.Listing, error
 	if l.Status == listingClosed {
 		return l, nil
 	}
-	l.Status = listingClosed
-	l.UpdatedAt = time.Now()
-	if err := s.repo.UpdateListing(l); err != nil {
+	var out *c2cdomain.Listing
+	err = s.uow.WithinTransaction(func(tx c2ccontract.Transaction) error {
+		closed, cerr := s.closeListingWithinTx(tx, id)
+		if cerr != nil {
+			return cerr
+		}
+		out = closed
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
-	return l, nil
+	return out, nil
 }
 
 // ListAdminTrades 管理员交易列表。

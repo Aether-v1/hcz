@@ -60,8 +60,8 @@
             <TableRow v-for="item in list" :key="item.id" class="cursor-pointer" @click="goDetail(item.id)">
               <TableCell class="font-mono text-xs">{{ item.listing_no }}</TableCell>
               <TableCell>
-                <div class="text-sm font-medium">{{ item.available_usdt }} USDT</div>
-                <div class="text-xs text-muted-foreground">/ {{ item.total_usdt }}</div>
+                <div class="text-sm font-medium">{{ formatUsdt(item.available_usdt) }}</div>
+                <div class="text-xs text-muted-foreground">/ {{ formatUsdt(item.total_usdt) }}</div>
               </TableCell>
               <TableCell class="font-mono text-sm">
                 {{ item.price }} <span class="text-xs text-muted-foreground">{{ item.fiat_currency }}</span>
@@ -134,7 +134,7 @@
             <div>
               <div class="text-lg font-bold font-mono">{{ item.price }} <span class="text-xs text-muted-foreground">{{ item.fiat_currency }}</span></div>
               <div class="mt-1 text-xs text-muted-foreground">
-                {{ t('c2c.market.available') }} {{ item.available_usdt }} / {{ item.total_usdt }} USDT
+                {{ t('c2c.market.available') }} {{ formatUsdt(item.available_usdt) }} / {{ formatUsdt(item.total_usdt) }}
               </div>
             </div>
           </div>
@@ -242,6 +242,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import EmptyState from '@/components/EmptyState.vue'
+import { formatUsdt } from '@/utils/money'
 import { useC2CStore } from '@/stores/c2c'
 import { c2cAPI, type C2CListing, type C2CListingStatus } from '@/api/c2c'
 import {

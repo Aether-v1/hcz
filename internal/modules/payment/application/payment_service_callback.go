@@ -284,7 +284,8 @@ func (s *PaymentService) applyPaymentUpdate(payment *paymentdomain.Payment, orde
 		// 金额守恒：一笔支付只有覆盖订单当前的在线应付额才允许履约。
 		// 混合支付切换渠道会退回余额并抬高在线应付额，而旧链接在网关侧依然可付，
 		// 缺少这道校验就能用旧链接的小额付款换到整单商品。
-		requiredOnlineAmount := normalizeOrderAmount(lockedOrder.TotalAmount.Decimal.Sub(lockedOrder.WalletPaidAmount.Decimal))
+		// P0 修复：在线应付按 CNY 口径计算（USDT 钱包扣款需先按冻结汇率折回 CNY）。
+		requiredOnlineAmount := orderapp.RemainingOnlineAmountCNY(lockedOrder)
 		coveredOnlineAmount := paymentCoveredOrderAmount(lockedPayment, input.Amount.Decimal)
 		underpaid := status == constants.PaymentStatusSuccess && orderOpen &&
 			coveredOnlineAmount.LessThan(requiredOnlineAmount)
@@ -452,7 +453,8 @@ func (s *PaymentService) markOrderPaid(tx paymentcontract.Transaction, order *or
 		productSKURepo = tx.ProductSKUs()
 	}
 
-	onlineAmount := normalizeOrderAmount(order.TotalAmount.Decimal.Sub(order.WalletPaidAmount.Decimal))
+	// P0 修复：在线应付按 CNY 口径计算（USDT 钱包扣款需先按冻结汇率折回 CNY）。
+	onlineAmount := orderapp.RemainingOnlineAmountCNY(order)
 	orderUpdates := map[string]interface{}{
 		"paid_at":            now,
 		"online_paid_amount": money.FromDecimal(onlineAmount),

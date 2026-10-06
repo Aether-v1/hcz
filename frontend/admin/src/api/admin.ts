@@ -289,6 +289,36 @@ export interface AdminExportGiftCardsPayload {
   format: 'txt' | 'csv'
 }
 
+export type AffiliateApplicationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface AffiliateApplicationUser {
+  id: number
+  email?: string
+  username?: string
+  display_name?: string
+}
+
+export interface AffiliateApplication {
+  id: number
+  user_id: number
+  status: AffiliateApplicationStatus
+  reason: string
+  review_note: string
+  reviewed_by: number
+  reviewed_at?: string | null
+  created_at: string
+  updated_at: string
+  user?: AffiliateApplicationUser
+}
+
+export interface AffiliateApplicationApproveResponse {
+  profile?: Record<string, unknown>
+}
+
+export interface AffiliateApplicationRejectRequest {
+  reason: string
+}
+
 export interface AffiliateLevelRate {
   level: number
   enabled: boolean
@@ -303,6 +333,58 @@ export interface AdminAffiliateSetting {
   withdraw_channels: string[]
   max_level: number
   level_rates: AffiliateLevelRate[]
+}
+
+export interface ProfitGuardSetting {
+  enabled: boolean
+  require_cost_price: boolean
+  rate_safety_buffer_percent: number
+  minimum_profit_amount_cny: number
+  minimum_profit_rate_percent: number
+}
+
+export interface ExchangeRateState {
+  site_currency: string
+  provider: string
+  auto_enabled: boolean
+  refresh_interval: number
+  auto_rate: string
+  manual_fallback_rate: string
+  fetched_at: string
+  last_success_at: string
+  last_error: string
+  api_key_masked: string
+  status: string
+  effective_rate: string
+  effective_source: string
+  rate_safety_buffer_percent: number
+  max_auto_rate_age_minutes: number
+  manual_rate_updated_at: string
+}
+
+export interface PricingPreviewResult {
+  product_id: number
+  quantity: number
+  sale_price_cny: string
+  cost_price_cny: string
+  is_cost_exempt: boolean
+  rate_safety_buffer_percent: number
+  max_auto_rate_age_minutes: number
+  manual_fallback_rate: string
+  manual_rate_updated_at: string
+  fx_available: boolean
+  market_rate: string
+  effective_rate: string
+  effective_source: string
+  theoretical_usdt: string
+  final_usdt: string
+  max_affiliate_cost_cny: string
+  fee_cost_cny: string
+  expected_profit_cny: string
+  required_profit_cny: string
+  guard_result: 'PASS' | 'BLOCKED'
+  guard_reason: string
+  warnings: string[]
 }
 
 export const adminAPI = {
@@ -380,6 +462,10 @@ export const adminAPI = {
   getExchangeRateSettings: () => api.get('/admin/settings/exchange-rate'),
   updateExchangeRateSettings: (data: Record<string, unknown>) => api.put('/admin/settings/exchange-rate', data),
   refreshExchangeRate: () => api.post('/admin/settings/exchange-rate/refresh'),
+  getProfitGuardSettings: () => api.get('/admin/settings/profit-guard'),
+  updateProfitGuardSettings: (data: ProfitGuardSetting) => api.put('/admin/settings/profit-guard', data),
+  previewPricing: (data: { product_id: number; quantity?: number }) =>
+    api.post('/admin/pricing/preview', data),
   getCaptchaSettings: () => api.get('/admin/settings/captcha'),
   updateCaptchaSettings: (data: Record<string, unknown>) => api.put('/admin/settings/captcha', data),
   getTelegramAuthSettings: () => api.get('/admin/settings/telegram-auth'),
@@ -470,8 +556,15 @@ export const adminAPI = {
     api.patch('/admin/affiliates/users/batch-status', data),
   getAffiliateCommissions: (params?: Record<string, unknown>) => api.get('/admin/affiliates/commissions', { params }),
   getAffiliateWithdraws: (params?: Record<string, unknown>) => api.get('/admin/affiliates/withdraws', { params }),
-  rejectAffiliateWithdraw: (id: number, data: { reason?: string }) => api.post(`/admin/affiliates/withdraws/${id}/reject`, data),
-  payAffiliateWithdraw: (id: number) => api.post(`/admin/affiliates/withdraws/${id}/pay`, {}),
+  // Affiliate 独立提现已退休，以下 API 返回 410，前端不再调用
+  // rejectAffiliateWithdraw: (id: number, data: { reason?: string }) => api.post(`/admin/affiliates/withdraws/${id}/reject`, data),
+  // payAffiliateWithdraw: (id: number) => api.post(`/admin/affiliates/withdraws/${id}/pay`, {}),
+  // Affiliate 申请审核
+  getAffiliateApplications: (params?: Record<string, unknown>) => api.get('/admin/affiliates/applications', { params }),
+  getAffiliateApplication: (id: number) => api.get(`/admin/affiliates/applications/${id}`),
+  approveAffiliateApplication: (id: number) => api.post(`/admin/affiliates/applications/${id}/approve`, {}),
+  rejectAffiliateApplication: (id: number, data: AffiliateApplicationRejectRequest) =>
+    api.post(`/admin/affiliates/applications/${id}/reject`, data),
   getResellerOperationsOverview: (params?: Record<string, unknown>) =>
     api.get('/admin/resellers/operations/overview', { params }),
   getResellerOperationsFinance: (params?: Record<string, unknown>) =>

@@ -65,6 +65,9 @@ func (s *WriteService) Update(id string, input CreateProductInput) (*productdoma
 	if input.IsAffiliateEnabled != nil {
 		product.IsAffiliateEnabled = *input.IsAffiliateEnabled
 	}
+	if input.IsCostExempt != nil {
+		product.IsCostExempt = *input.IsCostExempt
+	}
 	rawPurchaseType := strings.TrimSpace(input.PurchaseType)
 	if rawPurchaseType == "" {
 		rawPurchaseType = product.PurchaseType

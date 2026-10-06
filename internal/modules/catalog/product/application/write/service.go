@@ -109,6 +109,8 @@ type CreateProductInput struct {
 	IsAffiliateEnabled  *bool
 	IsActive            *bool
 	SortOrder           int
+	// IsCostExempt 真零成本商品豁免（数字权益/赠品/内测），nil 表示保留默认 false。
+	IsCostExempt *bool
 }
 
 // ProductSKUInput 描述商品 SKU 的完整写入值。

@@ -13,9 +13,9 @@ import (
 
 // Arbitrate 管理员仲裁一笔 open 申诉。同一事务内完成状态机流转、资金动作与申诉结案。
 //   - release_to_buyer：disputed -> completed，SettleFrozen(卖家冻结 USDT -> 买家可用)
-//   - return_to_seller：disputed -> canceled，Unfreeze 卖家并恢复挂单可售余量
+//   - return_to_seller：disputed -> canceled，恢复挂单可售余量（seller frozen 不变，资金仍属于 listing）
 //
-// 幂等：申诉已结案（resolved）直接返回，不重复资金动作；底层 SettleFrozen/Unfreeze
+// 幂等：申诉已结案（resolved）直接返回，不重复资金动作；底层 SettleFrozen
 // 亦按 ledger reference 幂等。
 func (s *Service) Arbitrate(input c2ccontract.ArbitrateInput) (*c2cdomain.Trade, *c2cdomain.Dispute, error) {
 	if input.AdminID == 0 || input.TradeID == 0 {
@@ -95,16 +95,7 @@ func (s *Service) Arbitrate(input c2ccontract.ArbitrateInput) (*c2cdomain.Trade,
 			if err != nil {
 				return c2ccontract.ErrTradeStatusInvalid
 			}
-			// 解冻卖家（reference 与 cancel/expire 区分开，使用仲裁专用 reference，幂等）
-			if _, _, err := s.wallet.Unfreeze(tx, walletcontract.UnfreezeInput{
-				UserID:    t.SellerUserID,
-				Amount:    t.USDTAmount,
-				Reference: "c2c_unfreeze:trade:" + t.TradeNo,
-				Remark:    "C2C仲裁退回解冻",
-			}); err != nil {
-				return err
-			}
-			// 恢复挂单可售余量
+			// 新模型：seller frozen 不变（资金仍属于 listing），仅恢复挂单可售余量。
 			if err := tx.C2C().IncrementListingAvailableUSDT(t.ListingID, t.USDTAmount.Decimal.Round(2)); err != nil {
 				return err
 			}

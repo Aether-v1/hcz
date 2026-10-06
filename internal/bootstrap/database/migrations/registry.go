@@ -59,6 +59,8 @@ func AutoMigrate() error {
 		&affiliatedomain.Click{},
 		&affiliatedomain.Commission{},
 		&affiliatedomain.WithdrawRequest{},
+		&affiliatedomain.CommissionLedger{},
+		&affiliatedomain.Application{},
 		&walletdomain.Account{},
 		&walletdomain.Transaction{},
 		&walletdomain.RechargeOrder{},
@@ -190,6 +192,12 @@ func AutoMigrate() error {
 		return err
 	}
 	if err := ensureOrderIdempotencyUniqueIndex(); err != nil {
+		return err
+	}
+	if err := ensureAffiliateApplicationPendingUniqueIndex(db); err != nil {
+		return err
+	}
+	if err := migrateGrandfatheredAffiliateApplications(db); err != nil {
 		return err
 	}
 	return nil
@@ -344,4 +352,94 @@ func backfillPendingOrderRiskIPs(db *gorm.DB) error {
 		}
 		return nil
 	})
+}
+
+// ensureAffiliateApplicationPendingUniqueIndex 创建部分唯一索引，
+// 防止同一用户存在多条 pending application（并发兜底）。
+// 幂等：先 DROP INDEX IF EXISTS 再 CREATE。
+func ensureAffiliateApplicationPendingUniqueIndex(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	if db.Dialector.Name() != "postgres" {
+		// SQLite 不支持 partial index WHERE 子句的标准语法，
+		// 但 GORM/SQLite 会通过部分唯一索引的变体处理；这里跳过非 postgres。
+		return nil
+	}
+	if !db.Migrator().HasTable(&affiliatedomain.Application{}) {
+		return nil
+	}
+	if err := db.Exec(`DROP INDEX IF EXISTS idx_affiliate_apps_user_pending`).Error; err != nil {
+		return err
+	}
+	return db.Exec(
+		`CREATE UNIQUE INDEX idx_affiliate_apps_user_pending ON affiliate_applications(user_id) WHERE status = 'pending'`,
+	).Error
+}
+
+// migrateGrandfatheredAffiliateApplications 为现有 active Profile 创建 approved application 历史记录。
+// 幂等：已存在 application 的 user_id 跳过。disabled profile 不创建。
+func migrateGrandfatheredAffiliateApplications(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	if !db.Migrator().HasTable(&affiliatedomain.Application{}) || !db.Migrator().HasTable(&affiliatedomain.Profile{}) {
+		return nil
+	}
+
+	// 查询所有 active profile，且对应用户没有任何 application 记录。
+	var profiles []affiliatedomain.Profile
+	if err := db.Where("status = ? AND deleted_at IS NULL", constants.AffiliateProfileStatusActive).
+		Find(&profiles).Error; err != nil {
+		return err
+	}
+	if len(profiles) == 0 {
+		return nil
+	}
+
+	// 收集所有 user_id
+	userIDs := make([]uint, 0, len(profiles))
+	profileByUserID := make(map[uint]affiliatedomain.Profile, len(profiles))
+	for _, p := range profiles {
+		userIDs = append(userIDs, p.UserID)
+		profileByUserID[p.UserID] = p
+	}
+
+	// 查询已有 application 的 user_id
+	var existingUserIDs []uint
+	if err := db.Model(&affiliatedomain.Application{}).
+		Where("user_id IN ?", userIDs).
+		Distinct("user_id").
+		Pluck("user_id", &existingUserIDs).Error; err != nil {
+		return err
+	}
+	existingSet := make(map[uint]struct{}, len(existingUserIDs))
+	for _, id := range existingUserIDs {
+		existingSet[id] = struct{}{}
+	}
+
+	// 构造待插入的 application 列表
+	var toCreate []affiliatedomain.Application
+	for _, uid := range userIDs {
+		if _, ok := existingSet[uid]; ok {
+			continue
+		}
+		p := profileByUserID[uid]
+		reviewedAt := p.CreatedAt
+		toCreate = append(toCreate, affiliatedomain.Application{
+			UserID:     uid,
+			Status:     constants.AffiliateAppStatusApproved,
+			Reason:     "migration",
+			ReviewNote: "grandfathered: legacy auto-open",
+			ReviewedBy: 0,
+			ReviewedAt: &reviewedAt,
+		})
+	}
+
+	if len(toCreate) == 0 {
+		return nil
+	}
+
+	// 批量插入，每批 100 条
+	return db.CreateInBatches(toCreate, 100).Error
 }

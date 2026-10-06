@@ -81,6 +81,7 @@ export interface AdminProduct {
   auto_stock_sold: number
   is_mapped: boolean
   is_active: boolean
+  is_cost_exempt?: boolean
   sort_order: number
   created_at: string
   updated_at: string

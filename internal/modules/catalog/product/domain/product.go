@@ -41,6 +41,7 @@ type Product struct {
 	AutoStockSold        int64               `gorm:"-" json:"auto_stock_sold"`                                            // 自动发货库存已售量（仅结构，不写入数据库）
 	IsMapped             bool                `gorm:"not null;default:false;index" json:"is_mapped"`                       // 是否为对接商品
 	IsActive             bool                `gorm:"default:false;index" json:"is_active"`                                // 是否上架
+	IsCostExempt         bool                `gorm:"not null;default:false" json:"is_cost_exempt"`                        // 真零成本商品豁免（数字权益/赠品/内测），成本门跳过
 	SortOrder            int                 `gorm:"default:0;index" json:"sort_order"`                                   // 排序权重
 	CreatedAt            time.Time           `gorm:"index" json:"created_at"`                                             // 创建时间
 	UpdatedAt            time.Time           `json:"updated_at"`                                                          // 更新时间

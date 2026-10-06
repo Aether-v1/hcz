@@ -179,6 +179,13 @@ const (
 	AffiliateProfileStatusDisabled = "disabled"
 )
 
+// 推广申请审核状态常量
+const (
+	AffiliateAppStatusPending  = "pending"
+	AffiliateAppStatusApproved  = "approved"
+	AffiliateAppStatusRejected  = "rejected"
+)
+
 // 推广返利佣金状态常量
 const (
 	AffiliateCommissionStatusPendingConfirm = "pending_confirm"
@@ -203,6 +210,30 @@ const (
 const (
 	AffiliateWithdrawActionReject = "reject"
 	AffiliateWithdrawActionPay    = "pay"
+	AffiliateWithdrawActionApprove = "approve"
+)
+
+// 推广返利提现状态常量（扩展）
+const (
+	AffiliateWithdrawStatusApproved = "approved"
+)
+
+// 推广返利佣金账本类型常量（append-only）
+const (
+	AffiliateLedgerTypeCredit          = "credit"           // 佣金入账（订单完成）
+	AffiliateLedgerTypeReversal        = "reversal"         // 退款冲正
+	AffiliateLedgerTypeWithdrawLock    = "withdraw_lock"     // 提现锁定（历史，已退休）
+	AffiliateLedgerTypeWithdrawSettle  = "withdraw_settle"   // 提现结算（出金完成，历史）
+	AffiliateLedgerTypeWithdrawRelease = "withdraw_release"  // 提现拒绝释放（历史）
+	AffiliateLedgerTypeAdjustment      = "adjustment"        // 管理员调整
+	AffiliateLedgerTypeDebt            = "debt"              // 已出金后退款产生的债务
+	AffiliateLedgerTypeTransferToWallet = "transfer_to_wallet" // 佣金划转至主钱包（负金额）
+)
+
+// 钱包交易类型：推广佣金出金（历史）与划转入账。
+const (
+	WalletTxnTypeAffiliatePayout    = "affiliate_payout"     // 历史：独立提现出金
+	WalletTxnTypeAffiliateTransferIn = "affiliate_transfer_in" // 佣金划转至主钱包入账
 )
 
 // 易支付回调常量
@@ -518,8 +549,7 @@ const (
 	SettingKeyTelegramBotRuntimeStatus = "telegram_bot_runtime_status"
 	SettingKeyOrderEmailTemplateConfig = "order_email_template_config"
 	SettingFieldSiteCurrency           = "currency"
-	SettingFieldStorefrontTemplate     = "storefront_template"
-	SettingFieldPaymentExpireMinutes   = "payment_expire_minutes"
+	SettingFieldPaymentExpireMinutes  = "payment_expire_minutes"
 
 	SettingKeyNavConfig = "nav_config"
 
@@ -539,6 +569,9 @@ const (
 	SettingKeyOrderRiskControlConfig = "order_risk_control_config"
 
 	SettingKeyWithdrawalConfig = "withdrawal_config"
+
+	// HCZ Profit Guard V1：下单前资金安全校验（成本门/汇率缓冲/最低利润）。
+	SettingKeyProfitGuardConfig = "profit_guard_config"
 
 	SettingKeyUpstreamSyncConfig        = "upstream_sync_config"
 	SettingFieldUpstreamSyncIntervalMin = "interval_minutes"
@@ -567,13 +600,6 @@ const (
 // 币种常量
 const (
 	SiteCurrencyDefault = "CNY"
-)
-
-// 店面模板常量（站长全局选择的用户前台模板）
-const (
-	StorefrontTemplateClassic = "classic"
-	StorefrontTemplateVault   = "vault"
-	StorefrontTemplateDefault = StorefrontTemplateClassic
 )
 
 // 站点语言常量

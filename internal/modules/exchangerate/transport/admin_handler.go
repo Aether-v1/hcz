@@ -47,6 +47,9 @@ func (h *AdminHandler) Get(c *gin.Context) {
 		"status":               "unknown",
 		"effective_rate":       "",
 		"effective_source":     "",
+		"rate_safety_buffer_percent": state.RateSafetyBufferPercent,
+		"max_auto_rate_age_minutes":  state.MaxAutoRateAgeMinutes,
+		"manual_rate_updated_at":     fmtTime(state.ManualRateUpdatedAt),
 	}
 	if effective.Rate.GreaterThan(decimal.Zero) {
 		resp["effective_rate"] = effective.Rate.String()
@@ -62,10 +65,12 @@ func (h *AdminHandler) Get(c *gin.Context) {
 }
 
 type updateReq struct {
-	APIKey             string `json:"api_key"`
-	AutoEnabled        *bool  `json:"auto_enabled"`
-	RefreshIntervalMin int    `json:"refresh_interval_min"`
-	ManualFallbackRate string `json:"manual_fallback_rate"`
+	APIKey                 string  `json:"api_key"`
+	AutoEnabled            *bool   `json:"auto_enabled"`
+	RefreshIntervalMin     int     `json:"refresh_interval_min"`
+	ManualFallbackRate     string  `json:"manual_fallback_rate"`
+	RateSafetyBufferPercent float64 `json:"rate_safety_buffer_percent"`
+	MaxAutoRateAgeMinutes  int     `json:"max_auto_rate_age_minutes"`
 }
 
 // PUT /admin/settings/exchange-rate
@@ -83,7 +88,7 @@ func (h *AdminHandler) Update(c *gin.Context) {
 	if req.AutoEnabled != nil {
 		autoEnabled = *req.AutoEnabled
 	}
-	if err := h.svc.UpdateConfig(req.APIKey, autoEnabled, req.RefreshIntervalMin); err != nil {
+	if err := h.svc.UpdateConfig(req.APIKey, autoEnabled, req.RefreshIntervalMin, req.RateSafetyBufferPercent, req.MaxAutoRateAgeMinutes); err != nil {
 		ginutil.RespondError(c, response.CodeInternal, "error.exchangerate_update_failed", err)
 		return
 	}

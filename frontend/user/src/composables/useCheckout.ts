@@ -5,7 +5,7 @@ import { useCartStore, type CartItem } from '../stores/cart'
 import { useBuyNowStore } from '../stores/buyNow'
 import { useAppStore } from '../stores/app'
 import { useUserAuthStore } from '../stores/userAuth'
-import { guestOrderAPI, userOrderAPI, walletAPI, type CaptchaPayload } from '../api'
+import { userOrderAPI, walletAPI, type CaptchaPayload } from '../api'
 import { debounceAsync } from '../utils/debounce'
 import { type PageAlert } from '../utils/alerts'
 import { amountToCents, basisPointsToPercent, centsToAmount, parseInteger, rateToBasisPoints } from '../utils/money'
@@ -13,7 +13,6 @@ import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
 import { refreshCartStockSnapshots, cartItemPurchaseLimit as itemPurchaseLimit, cartItemPurchaseMin as itemPurchaseMin } from '../utils/cartStock'
 import { getImageUrl } from '../utils/image'
 import { getAffiliateCode, getAffiliateVisitorKey } from '../utils/affiliate'
-import { saveGuestOrderAuth } from '../utils/guestOrderAuth'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
 import { useLocalized, useProductLabels } from './useProduct'
@@ -569,22 +568,6 @@ export function useCheckout() {
   })
   const guestTurnstileSiteKey = computed(() => String(captchaConfig.value?.turnstile?.site_key || ''))
 
-  const getGuestCaptchaPayload = (): CaptchaPayload | undefined => {
-    if (!guestCaptchaEnabled.value) return undefined
-    if (captchaProvider.value === 'image') {
-      return {
-        captcha_id: guestCaptchaPayload.value.captcha_id || '',
-        captcha_code: guestCaptchaPayload.value.captcha_code || '',
-      }
-    }
-    if (captchaProvider.value === 'turnstile') {
-      return {
-        turnstile_token: guestTurnstileToken.value,
-      }
-    }
-    return undefined
-  }
-
   const handleGuestCaptchaConfigStale = async () => {
     await appStore.loadConfig(true)
     guestCaptchaPayload.value = {}
@@ -766,24 +749,11 @@ export function useCheckout() {
     try {
       const payload: any = buildOrderPayload()
 
-      let response
-      if (userAuthStore.isAuthenticated) {
-        response = await userOrderAPI.preview(payload)
-      } else {
-        response = await guestOrderAPI.preview({
-          ...payload,
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-        })
-      }
+      const response = await userOrderAPI.preview(payload)
 
       if (requestId !== previewRequestId.value) return
       preview.value = response.data.data
-      if (userAuthStore.isAuthenticated) {
-        debouncedLoadOrderPaymentChannels()
-      } else {
-        orderPaymentChannels.value = []
-      }
+      debouncedLoadOrderPaymentChannels()
     } catch (err: any) {
       if (requestId !== previewRequestId.value) return
       preview.value = null
@@ -836,27 +806,11 @@ export function useCheckout() {
         use_balance: useBalance.value,
       }
 
-      let responseData: any
-
-      if (userAuthStore.isAuthenticated) {
-        // P1：确保幂等 key 存在。同一次提交内的重试复用同一个 key；
-        // 购物车变化时 key 已被重置，此处会生成新 key。
-        const idemKey = ensureIdempotencyKey()
-        const response = await userOrderAPI.createAndPay(payload, idemKey)
-        responseData = response.data.data
-      } else {
-        const response = await guestOrderAPI.createAndPay({
-          ...payload,
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-          captcha_payload: getGuestCaptchaPayload(),
-        })
-        saveGuestOrderAuth({
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-        })
-        responseData = response.data.data
-      }
+      // P1：确保幂等 key 存在。同一次提交内的重试复用同一个 key；
+      // 购物车变化时 key 已被重置，此处会生成新 key。
+      const idemKey = ensureIdempotencyKey()
+      const response = await userOrderAPI.createAndPay(payload, idemKey)
+      const responseData = response.data.data
 
       if (!responseData?.order_no) {
         throw new Error(t('checkout.errors.submitFailed'))
@@ -865,10 +819,7 @@ export function useCheckout() {
       clearSourceStore()
 
       // Redirect to the existing Payment page which handles all payment display
-      const query = userAuthStore.isAuthenticated
-        ? `order_no=${encodeURIComponent(responseData.order_no)}`
-        : `guest=1&order_no=${encodeURIComponent(responseData.order_no)}`
-      router.push(`/pay?${query}`)
+      router.push(`/pay?order_no=${encodeURIComponent(responseData.order_no)}`)
     } catch (err: any) {
       error.value = err.message || t('checkout.errors.submitFailed')
       if (guestCaptchaEnabled.value && captchaProvider.value === 'image') {

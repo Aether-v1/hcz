@@ -235,6 +235,7 @@ type CreateProductRequest struct {
 	PaymentChannelIDs   []uint                   `json:"payment_channel_ids"`
 	IsAffiliateEnabled  *bool                    `json:"is_affiliate_enabled"`
 	IsActive            *bool                    `json:"is_active"`
+	IsCostExempt        *bool                    `json:"is_cost_exempt"`
 	SortOrder           int                      `json:"sort_order"`
 }
 
@@ -308,6 +309,7 @@ func (h *AdminProductHandler) CreateProduct(c *gin.Context) {
 		PaymentChannelIDs:    req.PaymentChannelIDs,
 		IsAffiliateEnabled:   req.IsAffiliateEnabled,
 		IsActive:             req.IsActive,
+		IsCostExempt:         req.IsCostExempt,
 		SortOrder:            req.SortOrder,
 	})
 	if err != nil {
@@ -400,6 +402,7 @@ func (h *AdminProductHandler) UpdateProduct(c *gin.Context) {
 		PaymentChannelIDs:    req.PaymentChannelIDs,
 		IsAffiliateEnabled:   req.IsAffiliateEnabled,
 		IsActive:             req.IsActive,
+		IsCostExempt:         req.IsCostExempt,
 		SortOrder:            req.SortOrder,
 	})
 	if err != nil {

@@ -53,30 +53,6 @@
     "notice": "Notice",
     "about": "About"
   },
-  "vault": {
-    "hero": {
-      "badge": "Instant delivery · Digital goods",
-      "titleLead": "Top-ups, keys, memberships — ",
-      "titleHl": "delivered in seconds.",
-      "lede": "Game cards, streaming memberships, software licenses, gift cards and AI tools — auto-delivered the moment you pay.",
-      "searchButton": "Search",
-      "hot": "Popular:",
-      "trustFast": "Lightning-fast auto delivery",
-      "trustSecure": "Encrypted checkout · vouchers stay private",
-      "trustRefund": "Issues handled promptly"
-    },
-    "categoriesTitle": "Browse by category",
-    "allCategories": "All categories",
-    "footer": {
-      "shop": "Shop",
-      "support": "Support",
-      "legal": "Legal",
-      "tagline": "Digital goods, auto-delivered. Keys, licenses and top-ups delivered on payment.",
-      "faq": "FAQ",
-      "payAlipay": "Alipay",
-      "payWechat": "WeChat"
-    }
-  },
   "breadcrumb": {
     "label": "Breadcrumb",
     "back": "Back to {name}"
@@ -367,13 +343,34 @@
     "ariaLabel": "Main navigation",
     "home": "Home",
     "orders": "Orders",
+    "c2c": "C2C",
     "discover": "Discover",
     "messages": "Messages",
     "me": "Me"
   },
   "discover": {
-    "comingSoon": "Coming soon",
-    "description": "More services are on the way. Stay tuned."
+    "title": "Discover",
+    "subtitle": "Browse platform services, categories, announcements and events in one place.",
+    "hotEyebrow": "Popular",
+    "hotTitle": "Trending services",
+    "hotEmpty": "No popular services yet",
+    "hotError": "Failed to load popular services",
+    "categoryEyebrow": "Categories",
+    "categoryTitle": "Browse by category",
+    "categoryEmpty": "No categories yet",
+    "categoryError": "Failed to load categories",
+    "noticeEyebrow": "Announcements",
+    "noticeTitle": "News & events",
+    "noticeEmpty": "No announcements yet",
+    "noticeError": "Failed to load announcements",
+    "benefitEyebrow": "Picked for you",
+    "benefitTitle": "More digital benefits",
+    "benefitEmpty": "No more recommendations yet",
+    "benefitError": "Failed to load recommendations",
+    "allServices": "All services",
+    "viewAll": "View all",
+    "retry": "Retry",
+    "loading": "Loading…"
   },
   "bottomNav": {
     "home": "Home",
@@ -642,6 +639,7 @@
       "pendingHint": "The system will refresh the recharge status automatically after payment, or you can check it manually.",
       "detailTitle": "Wallet Transactions",
       "empty": "No wallet transactions yet",
+      "retry": "Retry",
       "directionIn": "In",
       "directionOut": "Out",
       "rechargeStatus": {
@@ -665,7 +663,14 @@
         "gift_card_redeem": "Gift card redeem",
         "admin_adjust": "Admin adjustment",
         "admin_refund": "Admin refund",
-        "order_underpaid_credit": "Underpaid order credit"
+        "order_underpaid_credit": "Underpaid order credit",
+        "withdrawal_debit": "Withdrawal debit",
+        "withdrawal_refund": "Withdrawal refund",
+        "c2c_freeze": "C2C freeze",
+        "c2c_unfreeze": "C2C unfreeze",
+        "c2c_settle": "C2C settle out",
+        "c2c_receive": "C2C receive",
+        "affiliate_transfer_in": "Affiliate commission in"
       },
       "errors": {
         "loadFailed": "Failed to load wallet data, please try again later",
@@ -1759,6 +1764,7 @@
     "submittedAt": "Submitted",
     "subtitle": "Track recharge progress, amounts and payments",
     "continueShopping": "Recharge again",
+    "goServiceHall": "Service Hall",
     "empty": "No orders yet",
     "emptyFiltered": "No orders match current filters",
     "emptyAction": "Choose a service",

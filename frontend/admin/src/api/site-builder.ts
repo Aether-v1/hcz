@@ -102,12 +102,6 @@ export interface DiscoveryBlock {
   config: Record<string, any>
 }
 
-export type StorefrontTemplate = 'classic' | 'vault'
-
-export interface TemplateConfig {
-  storefront_template: StorefrontTemplate
-}
-
 // ─────────────────────────── 品牌设置 ───────────────────────────
 
 export const getBrand = () => api.get('/admin/site/brand')
@@ -133,11 +127,6 @@ export const deleteDiscoveryBlock = (id: number) => api.delete(`/admin/site/disc
 export const toggleDiscoveryBlock = (id: number) => api.patch(`/admin/site/discovery-blocks/${id}/toggle`)
 export const reorderDiscoveryBlocks = (ids: number[]) =>
   api.post('/admin/site/discovery-blocks/reorder', { ids })
-
-// ─────────────────────────── 模板 ───────────────────────────
-
-export const getTemplate = () => api.get('/admin/site/template')
-export const updateTemplate = (data: TemplateConfig) => api.put('/admin/site/template', data)
 
 // ─────────────────────────── 校验工具 ───────────────────────────
 

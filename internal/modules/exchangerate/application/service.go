@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Aether-v1/hcz/internal/logger"
 	exchangerate "github.com/Aether-v1/hcz/internal/modules/exchangerate/contract"
 	exchangeratedomain "github.com/Aether-v1/hcz/internal/modules/exchangerate/domain"
 	"github.com/shopspring/decimal"
@@ -49,22 +50,48 @@ func (s *Service) Resolve(ctx context.Context) (exchangeratedomain.Rate, error) 
 	}
 	now := s.now()
 
+	// P4: AUTO stale 阈值优先用后台配置 max_auto_rate_age_minutes，未配置则回退构造默认值。
+	autoMaxAge := s.staleness
+	if state.MaxAutoRateAgeMinutes > 0 {
+		autoMaxAge = time.Duration(state.MaxAutoRateAgeMinutes) * time.Minute
+	}
+
 	// 1. 自动汇率有效且未过期
 	if state.AutoRate.GreaterThan(decimal.Zero) && !state.AutoFetchedAt.IsZero() &&
-		now.Sub(state.AutoFetchedAt) <= s.staleness {
+		now.Sub(state.AutoFetchedAt) <= autoMaxAge {
 		return exchangeratedomain.Rate{
 			Rate: state.AutoRate, Currency: state.Currency,
 			Source: exchangeratedomain.SourceAuto, FetchedAt: state.AutoFetchedAt,
 		}, nil
 	}
-	// 2. 手动兜底
+	// 2. 手动兜底。
+	// P4 修复：FetchedAt 必须回显该手动汇率值本身的写入时间（ManualRateUpdatedAt），
+	// 禁止填 now——那会把"读取一条旧手动汇率"误报为"刚刚更新"。
 	if state.ManualRate.GreaterThan(decimal.Zero) {
+		manualAt := state.ManualRateUpdatedAt
+		if manualAt.IsZero() {
+			manualAt = now
+		}
+		// METRICS_PENDING: fx_auto_stale_total + fx_manual_fallback_total
+		logger.Warnw("fx_fallback_manual",
+			"reason", "auto_rate_stale_or_unavailable",
+			"auto_fetched_at", state.AutoFetchedAt.Format(time.RFC3339),
+			"auto_max_age_minutes", state.MaxAutoRateAgeMinutes,
+			"manual_rate", state.ManualRate.String(),
+		)
 		return exchangeratedomain.Rate{
 			Rate: state.ManualRate, Currency: state.Currency,
-			Source: exchangeratedomain.SourceManual, FetchedAt: now,
+			Source: exchangeratedomain.SourceManual, FetchedAt: manualAt,
 		}, nil
 	}
 	// 3. fail-closed
+	// METRICS_PENDING: fx_unavailable_total
+	logger.Errorw("fx_unavailable",
+		"reason", "no_valid_auto_or_manual_rate",
+		"auto_rate", state.AutoRate.String(),
+		"auto_fetched_at", state.AutoFetchedAt.Format(time.RFC3339),
+		"manual_rate", state.ManualRate.String(),
+	)
 	return exchangeratedomain.Rate{}, exchangeratedomain.ErrRateUnavailable
 }
 
@@ -123,11 +150,16 @@ func (s *Service) SetManual(rate decimal.Decimal) error {
 		state.Currency = s.currency
 	}
 	state.ManualRate = rate
+	if rate.GreaterThan(decimal.Zero) {
+		// P4: 记录手动汇率值本身的写入时间（供 Resolve 回显，禁止用 now 冒充新鲜）。
+		state.ManualRateUpdatedAt = s.now()
+	}
 	return s.store.SaveState(state)
 }
 
 // UpdateConfig 由 Admin 更新配置。apiKey 传非空才更新；空串保留现有 key（避免误清空）。
-func (s *Service) UpdateConfig(apiKey string, autoEnabled bool, refreshIntervalMin int) error {
+// rateSafetyBufferPercent / maxAutoRateAgeMinutes <=0 表示保留现有值。
+func (s *Service) UpdateConfig(apiKey string, autoEnabled bool, refreshIntervalMin int, rateSafetyBufferPercent float64, maxAutoRateAgeMinutes int) error {
 	if s == nil || s.store == nil {
 		return exchangeratedomain.ErrRateUnavailable
 	}
@@ -145,6 +177,15 @@ func (s *Service) UpdateConfig(apiKey string, autoEnabled bool, refreshIntervalM
 	state.AutoEnabled = autoEnabled
 	if refreshIntervalMin > 0 {
 		state.RefreshIntervalMin = refreshIntervalMin
+	}
+	if rateSafetyBufferPercent > 0 {
+		if rateSafetyBufferPercent > 5 {
+			rateSafetyBufferPercent = 5
+		}
+		state.RateSafetyBufferPercent = rateSafetyBufferPercent
+	}
+	if maxAutoRateAgeMinutes > 0 {
+		state.MaxAutoRateAgeMinutes = maxAutoRateAgeMinutes
 	}
 	return s.store.SaveState(state)
 }

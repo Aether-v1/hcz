@@ -17,7 +17,6 @@ type Services struct {
 	HomeEntries *sitebuilderapp.HomeEntryService
 	Discovery   *sitebuilderapp.DiscoveryBlockService
 	Brand       *sitebuilderapp.BrandService
-	Template    *sitebuilderapp.TemplateService
 	Audit       *sitebuilderapp.AuditService
 }
 
@@ -330,7 +329,7 @@ func (h *AdminHandler) ReorderDiscoveryBlocks(c *gin.Context) {
 	response.Success(c, gin.H{"reordered": len(items)})
 }
 
-// ==================== Brand / Template ====================
+// ==================== Brand ====================
 
 func (h *AdminHandler) GetBrand(c *gin.Context) {
 	brand, err := h.svc.Brand.Get()
@@ -362,26 +361,6 @@ func (h *AdminHandler) UpdateBrand(c *gin.Context) {
 	h.svc.Audit.Record(adminID, "brand", "update", before, brand)
 	h.invalidate(c)
 	response.Success(c, brand)
-}
-
-func (h *AdminHandler) UpdateTemplate(c *gin.Context) {
-	var req struct {
-		Template string `json:"template" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		ginutil.RespondBindError(c, err)
-		return
-	}
-	before, _ := h.svc.Template.Get()
-	tpl, err := h.svc.Template.Switch(req.Template)
-	if err != nil {
-		ginutil.RespondErrorWithMsg(c, response.CodeBadRequest, err.Error(), err)
-		return
-	}
-	adminID, _ := ginutil.GetAdminID(c)
-	h.svc.Audit.Record(adminID, "template", "switch", before, tpl)
-	h.invalidate(c)
-	response.Success(c, gin.H{"template": tpl})
 }
 
 // ==================== Audit Logs ====================

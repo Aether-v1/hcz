@@ -15,11 +15,15 @@ import (
 
 // GetUserDashboard 获取用户返利中心数据
 func (s *Service) GetUserDashboard(userID uint) (Dashboard, error) {
+	zero := money.FromDecimal(decimal.Zero)
 	dashboard := Dashboard{
-		Opened:              false,
-		PendingCommission:   money.FromDecimal(decimal.Zero),
-		AvailableCommission: money.FromDecimal(decimal.Zero),
-		WithdrawnCommission: money.FromDecimal(decimal.Zero),
+		Opened:                  false,
+		PendingCommission:       zero,
+		AvailableCommission:      zero,
+		WithdrawnCommission:     zero,
+		AvailableTransferBalance: zero,
+		DebtAmount:              zero,
+		TransferredAmount:       zero,
 	}
 	if userID == 0 || s.repo == nil {
 		return dashboard, nil
@@ -45,6 +49,9 @@ func (s *Service) GetUserDashboard(userID uint) (Dashboard, error) {
 	dashboard.PendingCommission = stats.PendingCommission
 	dashboard.AvailableCommission = stats.AvailableCommission
 	dashboard.WithdrawnCommission = stats.WithdrawnCommission
+	dashboard.AvailableTransferBalance = stats.AvailableTransferBalance
+	dashboard.DebtAmount = stats.DebtAmount
+	dashboard.TransferredAmount = stats.TransferredAmount
 	return dashboard, nil
 }
 
@@ -165,10 +172,14 @@ func (s *Service) ListAdminWithdraws(filter AdminWithdrawListFilter) ([]affiliat
 }
 
 func (s *Service) buildProfileStats(profileID uint) (Stats, error) {
+	zero := money.FromDecimal(decimal.Zero)
 	stats := Stats{
-		PendingCommission:   money.FromDecimal(decimal.Zero),
-		AvailableCommission: money.FromDecimal(decimal.Zero),
-		WithdrawnCommission: money.FromDecimal(decimal.Zero),
+		PendingCommission:       zero,
+		AvailableCommission:     zero,
+		WithdrawnCommission:     zero,
+		AvailableTransferBalance: zero,
+		DebtAmount:              zero,
+		TransferredAmount:       zero,
 	}
 	if profileID == 0 || s.repo == nil {
 		return stats, nil
@@ -187,25 +198,48 @@ func (s *Service) buildProfileStats(profileID uint) (Stats, error) {
 	if err != nil {
 		return stats, err
 	}
-	availableAmount, err := s.repo.SumCommissionByProfile(profileID, []string{
-		constants.AffiliateCommissionStatusAvailable,
-	}, true)
+
+	// ---- 基于 ledger 的余额计算（划转时代）----
+	// 可划转余额 = totalEarned - settled(历史提现) - transferred(划转)
+	availableTransfer, err := s.computeAvailableTransferBalance(s.repo, profileID)
 	if err != nil {
 		return stats, err
 	}
-	withdrawnAmount, err := s.repo.SumCommissionByProfile(profileID, []string{
-		constants.AffiliateCommissionStatusWithdrawn,
-	}, false)
+	// 历史已出金 = ABS(SUM(withdraw_settle))
+	settled, err := s.getSettledAmount(s.repo, profileID)
 	if err != nil {
 		return stats, err
+	}
+	// 累计划转 = ABS(SUM(transfer_to_wallet))
+	transferSum, err := s.sumLedgerByProfile(s.repo, profileID, []string{
+		constants.AffiliateLedgerTypeTransferToWallet,
+	})
+	if err != nil {
+		return stats, err
+	}
+	transferred := transferSum.Abs().Round(2)
+	// 累计已出金（兼容旧字段）= 历史提现 + 累计划转
+	withdrawnTotal := settled.Add(transferred).Round(2)
+
+	// 欠款 = MAX(0, -netBalance)，netBalance = SUM(all ledger)
+	netBalance, err := s.getNetLedgerBalance(s.repo, profileID)
+	if err != nil {
+		return stats, err
+	}
+	debt := decimal.Zero
+	if netBalance.LessThan(decimal.Zero) {
+		debt = netBalance.Neg().Round(2)
 	}
 
 	stats.ClickCount = clickCount
 	stats.ValidOrderCount = validOrders
 	stats.ConversionRate = calcAffiliateConversion(validOrders, clickCount)
 	stats.PendingCommission = money.FromDecimal(pendingAmount)
-	stats.AvailableCommission = money.FromDecimal(availableAmount)
-	stats.WithdrawnCommission = money.FromDecimal(withdrawnAmount)
+	stats.AvailableCommission = money.FromDecimal(availableTransfer)
+	stats.WithdrawnCommission = money.FromDecimal(withdrawnTotal)
+	stats.AvailableTransferBalance = money.FromDecimal(availableTransfer)
+	stats.DebtAmount = money.FromDecimal(debt)
+	stats.TransferredAmount = money.FromDecimal(transferred)
 	return stats, nil
 }
 

@@ -15,6 +15,9 @@ import (
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	orderriskcontract "github.com/Aether-v1/hcz/internal/modules/orderrisk/contract"
+	exchangeratedomain "github.com/Aether-v1/hcz/internal/modules/exchangerate/domain"
+	profitguarddomain "github.com/Aether-v1/hcz/internal/modules/profitguard/domain"
+	settingsintegration "github.com/Aether-v1/hcz/internal/modules/settings/schema/integration"
 	promotioncontract "github.com/Aether-v1/hcz/internal/modules/promotion/contract"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
@@ -62,8 +65,10 @@ type OrderService struct {
 }
 
 // rateResolverPort 是订单域对 Global Exchange Rate 的最小依赖端口，避免直接依赖具体源。
+// P2：端口直接返回 exchangerate domain Rate 值对象，Site→USDT 换算统一收口到
+// Rate.ToUSDT()（domain 唯一权威实现），order 侧不再自行 Div+Round。
 type rateResolverPort interface {
-	Resolve(ctx context.Context) (rate decimal.Decimal, source string, at time.Time, err error)
+	Resolve(ctx context.Context) (exchangeratedomain.Rate, error)
 }
 
 type OrderMemberLevelService interface {
@@ -170,6 +175,77 @@ func (s *OrderService) SetRateResolver(r rateResolverPort) {
 		return
 	}
 	s.rateResolver = r
+}
+
+// profitGuardConfig 读取 Profit Guard V1 设置（失败回退安全默认：关闭所有拒单门）。
+func (s *OrderService) profitGuardConfig() (settingsintegration.ProfitGuardSetting, error) {
+	if s.settingService == nil {
+		return settingsintegration.DefaultProfitGuardSetting(), nil
+	}
+	return s.settingService.GetProfitGuardSetting()
+}
+
+// runProfitGuard 在金额与汇率确定后、DB 写单前执行资金安全校验（P3/P5/P7）。
+// 关闭时（安全默认）直接放行，返回空 Result。拒单错误对用户只返回"商品暂时不可购买"。
+func (s *OrderService) runProfitGuard(result *orderBuildResult, usdtTotal decimal.Decimal, marketRate decimal.NullDecimal, pg settingsintegration.ProfitGuardSetting) (profitguarddomain.Result, error) {
+	empty := profitguarddomain.Result{}
+	if !pg.Enabled {
+		return empty, nil
+	}
+	lines := make([]profitguarddomain.OrderLine, 0, len(result.Plans))
+	for i := range result.Plans {
+		p := result.Plans[i]
+		costExempt := false
+		if p.Product != nil {
+			costExempt = p.Product.IsCostExempt
+		}
+		lines = append(lines, profitguarddomain.OrderLine{
+			CostPriceCNY: p.Item.CostPrice.Decimal,
+			Quantity:     p.Item.Quantity,
+			CostExempt:   costExempt,
+		})
+	}
+	var aff settingsintegration.AffiliateSetting
+	if s.settingService != nil {
+		if a, err := s.settingService.GetAffiliateSetting(); err == nil {
+			aff = a
+		}
+	}
+	in := profitguarddomain.Input{
+		RevenueCNY:          result.TotalAmount,
+		Lines:               lines,
+		MarketRate:          marketRate.Decimal,
+		BufferPct:           decimal.NewFromFloat(pg.RateSafetyBufferPercent),
+		AffiliateEnabled:    aff.Enabled,
+		AffiliateSetting:    aff,
+		MinProfitAmountCNY:  decimal.NewFromFloat(pg.MinimumProfitAmountCNY),
+		MinProfitRatePct:    decimal.NewFromFloat(pg.MinimumProfitRatePercent),
+	}
+	res := profitguarddomain.Evaluate(in, usdtTotal)
+	if err := res.Guard(pg.RequireCostPrice, lines); err != nil {
+		switch {
+		case errors.Is(err, profitguarddomain.ErrProductCostNotConfigured):
+			// METRICS_PENDING: profit_guard_reject_total + cost_missing_total
+			logger.Warnw("profit_guard_reject",
+				"reason", "product_cost_not_configured",
+				"expected_profit_cny", res.ExpectedProfitCNY.String(),
+				"required_profit_cny", res.RequiredProfitCNY.String(),
+				"usdt_total", res.UsdtTotal.String(),
+			)
+			return empty, ErrProductCostNotConfigured
+		case errors.Is(err, profitguarddomain.ErrUnprofitableOrder):
+			// METRICS_PENDING: profit_guard_reject_total
+			logger.Warnw("profit_guard_reject",
+				"reason", "product_unprofitable",
+				"expected_profit_cny", res.ExpectedProfitCNY.String(),
+				"required_profit_cny", res.RequiredProfitCNY.String(),
+				"usdt_total", res.UsdtTotal.String(),
+			)
+			return empty, ErrProductUnprofitable
+		}
+		return empty, err
+	}
+	return res, nil
 }
 
 // NewOrderService 创建订单服务
@@ -548,26 +624,40 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 	}
 
 	// P0-2: 解析全局汇率，把 Site Currency 总额换算为 USDT 并快照。
-	// 方向固定：1 USDT = R SiteCurrency，usdtTotal = siteTotal / R（Round half-up, 2dp）。
+	// 方向固定：1 USDT = R SiteCurrency。
+	// P4：effective_rate = market × (1 - buffer/100)，应收 USDT 由 Rate.ToUSDTWithBuffer 统一计算（CEIL 2dp）。
 	// 无有效汇率时 Resolve 返回错误 → 直接拒单（fail-closed）。
+	pgSetting, _ := s.profitGuardConfig()
 	var (
 		orderUsdtTotal decimal.Decimal
 		orderRate      decimal.NullDecimal
 		orderRateSrc   string
 		orderRateAt    *time.Time
+		orderBufferPct decimal.Decimal
 	)
 	if s.rateResolver != nil {
-		rRate, rSrc, rAt, rErr := s.rateResolver.Resolve(context.Background())
+		r, rErr := s.rateResolver.Resolve(context.Background())
 		if rErr != nil {
 			return nil, rErr
 		}
-		if rRate.LessThanOrEqual(decimal.Zero) {
+		if r.Rate.LessThanOrEqual(decimal.Zero) {
 			return nil, walletcontract.ErrInsufficientBalance
 		}
-		orderUsdtTotal = result.TotalAmount.Div(rRate).Round(2)
-		orderRate = decimal.NullDecimal{Decimal: rRate, Valid: true}
-		orderRateSrc = rSrc
-		orderRateAt = &rAt
+		// P2/P4: 唯一权威换算路径 = Rate.ToUSDTWithBuffer(含 safety buffer，CEIL 2dp)。
+		orderBufferPct = decimal.NewFromFloat(pgSetting.RateSafetyBufferPercent)
+		if orderUsdtTotal, rErr = r.ToUSDTWithBuffer(result.TotalAmount, orderBufferPct); rErr != nil {
+			return nil, rErr
+		}
+		orderRate = decimal.NullDecimal{Decimal: r.Rate, Valid: true}
+		orderRateSrc = r.Source
+		orderRateAt = &r.FetchedAt
+	}
+
+	// Profit Guard V1（P3/P5/P7）：金额与汇率确定后、DB 写单前执行资金安全校验。
+	// 关闭时（安全默认）直接放行。拒单错误对用户只返回"商品暂时不可购买"。
+	pgResult, err := s.runProfitGuard(result, orderUsdtTotal, orderRate, pgSetting)
+	if err != nil {
+		return nil, err
 	}
 
 	// 仅允许钱包余额支付时，在创建订单（锁库存）前预校验余额是否充足
@@ -650,6 +740,9 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		ExchangeRate:            orderRate,
 		ExchangeRateSource:      orderRateSrc,
 		ExchangeRateAt:          orderRateAt,
+		RateBufferPercent:       decimal.NullDecimal{Decimal: orderBufferPct, Valid: !orderBufferPct.IsZero()},
+		ExpectedProfitCNY:       decimal.NullDecimal{Decimal: pgResult.ExpectedProfitCNY, Valid: pgSetting.Enabled},
+		PricingVersion:          "profit_guard_v1",
 		MemberLevelID:           result.MemberLevelID,
 		CouponID:                nil,
 		PromotionID:             result.OrderPromotionID,

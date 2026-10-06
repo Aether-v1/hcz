@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Aether-v1/hcz/internal/constants"
+	"github.com/Aether-v1/hcz/internal/logger"
 	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
 	walletdomain "github.com/Aether-v1/hcz/internal/modules/wallet/domain"
 	"github.com/Aether-v1/hcz/internal/shared/money"
@@ -133,6 +134,21 @@ func (s *Service) Freeze(tx walletcontract.Transaction, input walletcontract.Fre
 	beforeFrozen := account.FrozenBalance.Decimal.Round(2)
 	afterAvailable := beforeAvailable.Sub(amount).Round(2)
 	afterFrozen := beforeFrozen.Add(amount).Round(2)
+
+	// METRICS_PENDING: wallet_invariant_violation — 资金守恒校验（total = available + frozen 不变）。
+	beforeTotal := beforeAvailable.Add(beforeFrozen).Round(2)
+	afterTotal := afterAvailable.Add(afterFrozen).Round(2)
+	if !beforeTotal.Equal(afterTotal) {
+		logger.Errorw("wallet_invariant_violation",
+			"user_id", input.UserID,
+			"operation", "freeze",
+			"before_total", beforeTotal.String(),
+			"after_total", afterTotal.String(),
+			"amount", amount.String(),
+			"reference", reference,
+		)
+		return nil, nil, walletcontract.ErrAccountUpdateFailed
+	}
 
 	account.AvailableBalance = money.FromDecimal(afterAvailable)
 	account.FrozenBalance = money.FromDecimal(afterFrozen)

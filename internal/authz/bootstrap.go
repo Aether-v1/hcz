@@ -91,7 +91,7 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/post-categories/:id", Action: "PUT"},
 				{Object: "/admin/post-categories/:id", Action: "DELETE"},
 				{Object: "/admin/post-categories/:id/status", Action: "PATCH"},
-				// 站点装修（首页入口 / 发现页区块 / 品牌 / 模板）
+				// 站点装修（首页入口 / 发现页区块 / 品牌）
 				{Object: "/admin/site/home-entries", Action: "*"},
 				{Object: "/admin/site/home-entries/:id", Action: "*"},
 				{Object: "/admin/site/home-entries/:id/toggle", Action: "PATCH"},
@@ -101,7 +101,6 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/site/discovery-blocks/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/discovery-blocks/reorder", Action: "POST"},
 				{Object: "/admin/site/brand", Action: "*"},
-				{Object: "/admin/site/template", Action: "*"},
 				{Object: "/admin/site/audit-logs", Action: "GET"},
 			},
 			Immutable: true,
@@ -275,6 +274,8 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/settings/affiliate", Action: "*"},
 				{Object: "/admin/settings/exchange-rate", Action: "*"},
 				{Object: "/admin/settings/exchange-rate/refresh", Action: "POST"},
+				{Object: "/admin/settings/profit-guard", Action: "*"},
+				{Object: "/admin/pricing/preview", Action: "POST"},
 				{Object: "/admin/settings/telegram-bot", Action: "*"},
 				{Object: "/admin/settings/telegram-bot/runtime-status", Action: "GET"},
 				// 权限管理（仅 system_admin 可操作）
@@ -324,7 +325,7 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/support/tickets/:id/audits", Action: "GET"},
 				{Object: "/admin/support/categories", Action: "*"},
 				{Object: "/admin/support/categories/:id", Action: "*"},
-				// 站点装修（首页入口 / 发现页区块 / 品牌 / 模板 / 审计）
+				// 站点装修（首页入口 / 发现页区块 / 品牌 / 审计）
 				{Object: "/admin/site/home-entries", Action: "*"},
 				{Object: "/admin/site/home-entries/:id", Action: "*"},
 				{Object: "/admin/site/home-entries/:id/toggle", Action: "PATCH"},
@@ -334,7 +335,6 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/site/discovery-blocks/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/discovery-blocks/reorder", Action: "POST"},
 				{Object: "/admin/site/brand", Action: "*"},
-				{Object: "/admin/site/template", Action: "*"},
 				{Object: "/admin/site/audit-logs", Action: "GET"},
 			},
 			Immutable: true,

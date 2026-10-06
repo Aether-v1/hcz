@@ -7,8 +7,15 @@
     <div class="grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-stretch">
       <WalletBalanceCard
         :alert="walletAlert"
-        :balance-display="balanceDisplay"
+        :total-balance="totalBalance"
+        :available-balance="availableBalance"
+        :frozen-balance="frozenBalance"
+        :currency="walletCurrency"
+        :frozen-note="frozenNote"
         :total-transactions="pagination.total"
+        :error="walletError"
+        :loading="walletLoading"
+        @retry="loadWallet"
       />
 
       <WalletRechargeForm
@@ -33,6 +40,7 @@
 
     <WalletTransactionList
       :loading="loading"
+      :error="transactionError"
       :transactions="transactions"
       :current-page="pagination.page"
       :total-pages="pagination.total_page"
@@ -62,6 +70,9 @@ const appStore = useAppStore()
 const loading = ref(true)
 const recharging = ref(false)
 const wallet = ref<any>(null)
+const walletError = ref(false)
+const walletLoading = ref(false)
+const transactionError = ref(false)
 const transactions = ref<any[]>([])
 const pagination = ref({
   page: 1,
@@ -277,18 +288,33 @@ const selectedChannelFeeAmountDisplay = computed(() => {
   return formatMoney(centsToAmount(variableFeeCents + fixedFeeCents), selectedChannelCurrency.value)
 })
 // P0-2: 钱包余额本位币固定 USDT，读 API 返回的 currency，不用 site config currency。
-const balanceDisplay = computed(() => {
-  const ccy = String(wallet.value?.currency || 'USDT')
-  return formatMoney(wallet.value?.available_balance, ccy)
-})
+// 三栏语义：total = available + frozen（后端已用 decimal 精确计算）
+const walletCurrency = computed(() => String(wallet.value?.currency || 'USDT'))
+const totalBalance = computed(() => String(wallet.value?.total_balance ?? ''))
+const availableBalance = computed(() => String(wallet.value?.available_balance ?? ''))
+const frozenBalance = computed(() => String(wallet.value?.frozen_balance ?? ''))
+const frozenNote = computed(() =>
+  String(wallet.value?.frozen_note || t('personalCenter.wallet.frozenNote'))
+)
 
+// 钱包余额加载：失败时置 walletError，余额区显示"加载失败+重试"，绝不显示假 0。
+// 只有真实 API 返回 0 才显示 0.00 USDT。
 const loadWallet = async () => {
-  const response = await walletAPI.account()
-  wallet.value = response.data.data
+  walletLoading.value = true
+  walletError.value = false
+  try {
+    const response = await walletAPI.account()
+    wallet.value = response.data.data
+  } catch {
+    walletError.value = true
+  } finally {
+    walletLoading.value = false
+  }
 }
 
 const loadTransactions = async (page = 1) => {
   loading.value = true
+  transactionError.value = false
   try {
     const response = await walletAPI.transactions({
       page,
@@ -298,6 +324,7 @@ const loadTransactions = async (page = 1) => {
     pagination.value = response.data.pagination || pagination.value
   } catch {
     transactions.value = []
+    transactionError.value = true
   } finally {
     loading.value = false
   }

@@ -105,7 +105,9 @@ func setupChannelAffiliateHandlerTest(t *testing.T) (*gorm.DB, *httptest.Server)
 		&affiliatedomain.Profile{},
 		&affiliatedomain.Click{},
 		&affiliatedomain.Commission{},
+		&affiliatedomain.CommissionLedger{},
 		&affiliatedomain.WithdrawRequest{},
+		&affiliatedomain.Application{},
 	); err != nil {
 		t.Fatalf("auto migrate failed: %v", err)
 	}
@@ -179,8 +181,15 @@ func TestChannelAffiliateOpenAndDashboard(t *testing.T) {
 	if payload.StatusCode != 0 {
 		t.Fatalf("expected status_code=0, got %d", payload.StatusCode)
 	}
-	if payload.Data["code"] == "" {
-		t.Fatalf("expected affiliate code in open response, got=%v", payload.Data["code"])
+	// 新合约：channel open 现在是提交推广申请（pending），不再直接开通 profile / 返回 code。
+	if payload.Data["application_id"] == nil || payload.Data["application_id"].(float64) == 0 {
+		t.Fatalf("expected application_id in open response, got=%v", payload.Data["application_id"])
+	}
+	if payload.Data["status"] != "pending" {
+		t.Fatalf("expected application status=pending, got=%v", payload.Data["status"])
+	}
+	if payload.Data["code"] != nil {
+		t.Fatalf("open (pending) must NOT return an affiliate code, got=%v", payload.Data["code"])
 	}
 
 	var identity externalidentitydomain.Identity
@@ -198,11 +207,12 @@ func TestChannelAffiliateOpenAndDashboard(t *testing.T) {
 	}
 
 	dashboardPayload := decodeChannelAffiliateResponse(t, dashboardResp)
-	if opened, ok := dashboardPayload.Data["opened"].(bool); !ok || !opened {
-		t.Fatalf("expected opened=true, got=%v", dashboardPayload.Data["opened"])
+	// 申请刚提交、管理员尚未审核 → 未开通，无 affiliate_code。
+	if opened, ok := dashboardPayload.Data["opened"].(bool); !ok || opened {
+		t.Fatalf("expected opened=false (pending review), got=%v", dashboardPayload.Data["opened"])
 	}
-	if dashboardPayload.Data["affiliate_code"] == "" {
-		t.Fatalf("expected affiliate_code in dashboard response, got=%v", dashboardPayload.Data["affiliate_code"])
+	if dashboardPayload.Data["affiliate_code"] != "" {
+		t.Fatalf("expected empty affiliate_code before approval, got=%v", dashboardPayload.Data["affiliate_code"])
 	}
 	if dashboardPayload.Data["click_count"] != float64(0) {
 		t.Fatalf("expected click_count=0, got=%v", dashboardPayload.Data["click_count"])
@@ -473,6 +483,22 @@ func TestChannelAffiliateApplyWithdraw(t *testing.T) {
 	if err := db.Create(&commission).Error; err != nil {
 		t.Fatalf("create commission failed: %v", err)
 	}
+	// 补充创建对应的 CREDIT ledger（ledger-based 余额计算依赖它）
+	creditLedger := affiliatedomain.CommissionLedger{
+		CommissionID:       commission.ID,
+		AffiliateProfileID: profile.ID,
+		BeneficiaryUserID:  user.ID,
+		OrderID:            order.ID,
+		Type:               constants.AffiliateLedgerTypeCredit,
+		Amount:             money.FromDecimal(decimal.RequireFromString("20.00")),
+		BalanceAfter:       money.FromDecimal(decimal.RequireFromString("20.00")),
+		Reference:          fmt.Sprintf("affiliate_credit:order:%d:comm:%d", order.ID, commission.ID),
+		Remark:             "Test seed commission",
+		CreatedAt:          time.Now(),
+	}
+	if err := db.Create(&creditLedger).Error; err != nil {
+		t.Fatalf("create credit ledger failed: %v", err)
+	}
 
 	raw, err := json.Marshal(map[string]any{
 		"channel_user_id": "667788",
@@ -484,31 +510,26 @@ func TestChannelAffiliateApplyWithdraw(t *testing.T) {
 		t.Fatalf("marshal withdraw request failed: %v", err)
 	}
 
+	// 独立提现已退休：POST /withdraws 返回 410 Gone，不得创建任何提现记录。
 	resp, err := http.Post(server.URL+"/api/v1/channel/affiliate/withdraws", "application/json", bytes.NewReader(raw))
 	if err != nil {
 		t.Fatalf("post affiliate withdraw failed: %v", err)
 	}
 	t.Cleanup(func() { _ = resp.Body.Close() })
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected withdraw apply http status 200, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusGone {
+		t.Fatalf("expected withdraw apply http status 410 Gone, got %d", resp.StatusCode)
 	}
 
 	payload := decodeChannelAffiliateResponse(t, resp)
-	if payload.StatusCode != 0 {
-		t.Fatalf("expected status_code=0, got %d", payload.StatusCode)
-	}
-	if payload.Data["status"] != constants.AffiliateWithdrawStatusPendingReview {
-		t.Fatalf("expected pending_review status, got=%v", payload.Data["status"])
-	}
-	if payload.Data["amount"] != "12.00" {
-		t.Fatalf("expected amount=12.00, got=%v", payload.Data["amount"])
+	if payload.ErrorCode != "affiliate_withdraw_retired" {
+		t.Fatalf("expected error_code=affiliate_withdraw_retired, got=%q", payload.ErrorCode)
 	}
 
 	var withdrawCount int64
 	if err := db.Model(&affiliatedomain.WithdrawRequest{}).Where("affiliate_profile_id = ?", profile.ID).Count(&withdrawCount).Error; err != nil {
 		t.Fatalf("count withdraw requests failed: %v", err)
 	}
-	if withdrawCount != 1 {
-		t.Fatalf("expected 1 withdraw request, got %d", withdrawCount)
+	if withdrawCount != 0 {
+		t.Fatalf("retired withdraw must create 0 withdraw requests, got %d", withdrawCount)
 	}
 }

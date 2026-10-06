@@ -10,7 +10,6 @@ import {
   isHexColor,
   toBool,
 } from '../src/utils/siteConfig.ts'
-import { resolveBlockAction } from '../src/components/discovery/shared.ts'
 
 const ROUTE_MAP: Record<string, string> = {
   recharge: '/products',
@@ -97,12 +96,4 @@ test('discovery blocks filter enabled and sort', () => {
   ]
   const blocks = normalizeDiscoveryBlocks(raw, 'zh-CN')
   assert.deepEqual(blocks.map((b) => b.type), ['announcement', 'banner'])
-})
-
-test('resolveBlockAction handles internal/external', () => {
-  assert.deepEqual(resolveBlockAction('internal', '/products'), { href: '/products', external: false })
-  assert.deepEqual(resolveBlockAction('external', 'https://a.com'), { href: 'https://a.com', external: true })
-  assert.deepEqual(resolveBlockAction('external', '/relative'), { href: '', external: true })
-  assert.deepEqual(resolveBlockAction('internal', 'https://a.com'), { href: 'https://a.com', external: true })
-  assert.deepEqual(resolveBlockAction('internal', 'javascript:alert(1)'), { href: '', external: false })
 })

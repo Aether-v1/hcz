@@ -52,7 +52,7 @@ func setupMultilevelTest(t *testing.T, setting settingsintegration.AffiliateSett
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&userdomain.User{}, &affiliatedomain.Profile{}, &affiliatedomain.Click{}, &affiliatedomain.Commission{}); err != nil {
+	if err := db.AutoMigrate(&userdomain.User{}, &affiliatedomain.Profile{}, &affiliatedomain.Click{}, &affiliatedomain.Commission{}, &affiliatedomain.CommissionLedger{}, &affiliatedomain.WithdrawRequest{}); err != nil {
 		t.Fatalf("auto migrate: %v", err)
 	}
 
@@ -494,7 +494,21 @@ func seedThreeLevelCommissions(t *testing.T) (*affiliateapp.Service, affiliateco
 	return svc, repo, order
 }
 
-// 13. partial refund delta=20/original=100，每条佣金按比例扣减 5 -> 4。
+// getNetBalanceByCommission 从 ledger 计算某条佣金的净余额 = credit + reversal + adjustment + debt
+func getNetBalanceByCommission(t *testing.T, repo affiliatecontract.Store, commissionID uint) decimal.Decimal {
+	t.Helper()
+	ledgers, err := repo.ListLedgersByCommission(commissionID)
+	if err != nil {
+		t.Fatalf("list ledgers by commission %d: %v", commissionID, err)
+	}
+	net := decimal.Zero
+	for _, l := range ledgers {
+		net = net.Add(l.Amount.Decimal).Round(2)
+	}
+	return net
+}
+
+// 13. partial refund delta=20/original=100，每条佣金按比例扣减 1（净余额从5→4）。
 func TestHandleOrderRefunded_PartialRefund_MultiLevel(t *testing.T) {
 	svc, repo, order := seedThreeLevelCommissions(t)
 
@@ -506,8 +520,14 @@ func TestHandleOrderRefunded_PartialRefund_MultiLevel(t *testing.T) {
 		t.Fatalf("expected 3 rows, got %d", len(rows))
 	}
 	for _, c := range rows {
-		if !c.CommissionAmount.Decimal.Equal(decimal.NewFromFloat(4)) {
-			t.Fatalf("level %d: expected commission=4 after partial refund, got %s", c.Level, c.CommissionAmount.String())
+		// commission_amount 保持原始值不变（append-only）
+		if !c.CommissionAmount.Decimal.Equal(decimal.NewFromFloat(5)) {
+			t.Fatalf("level %d: expected original commission=5 (immutable), got %s", c.Level, c.CommissionAmount.String())
+		}
+		// 净余额 = 5 - 1 = 4（从 ledger 计算）
+		net := getNetBalanceByCommission(t, repo, c.ID)
+		if !net.Equal(decimal.NewFromFloat(4)) {
+			t.Fatalf("level %d: expected net balance=4 after partial refund, got %s", c.Level, net.String())
 		}
 		if c.Status != constants.AffiliateCommissionStatusAvailable {
 			t.Fatalf("level %d: expected still available, got %s", c.Level, c.Status)
@@ -515,7 +535,7 @@ func TestHandleOrderRefunded_PartialRefund_MultiLevel(t *testing.T) {
 	}
 }
 
-// 14. full refund 后所有级别佣金归零且 rejected。
+// 14. full refund 后所有级别佣金净余额=0且 rejected。
 func TestHandleOrderRefunded_FullRefund_AllLevelsZero(t *testing.T) {
 	svc, repo, order := seedThreeLevelCommissions(t)
 
@@ -524,8 +544,10 @@ func TestHandleOrderRefunded_FullRefund_AllLevelsZero(t *testing.T) {
 	}
 	rows := commissionsForOrder(t, repo, 1)
 	for _, c := range rows {
-		if !c.CommissionAmount.Decimal.Equal(decimal.Zero) {
-			t.Fatalf("level %d: expected commission=0 after full refund, got %s", c.Level, c.CommissionAmount.String())
+		// commission_amount 保持原始值不变
+		net := getNetBalanceByCommission(t, repo, c.ID)
+		if !net.Equal(decimal.Zero) {
+			t.Fatalf("level %d: expected net balance=0 after full refund, got %s", c.Level, net.String())
 		}
 		if c.Status != constants.AffiliateCommissionStatusRejected {
 			t.Fatalf("level %d: expected rejected, got %s", c.Level, c.Status)
@@ -533,7 +555,7 @@ func TestHandleOrderRefunded_FullRefund_AllLevelsZero(t *testing.T) {
 	}
 }
 
-// 15. 同一退款重复调用不重复扣减：全退后再次调用为 no-op。
+// 15. 同一退款重复调用不重复扣减（幂等 reference）。
 func TestHandleOrderRefunded_RetryNoDuplicateReversal(t *testing.T) {
 	svc, repo, order := seedThreeLevelCommissions(t)
 
@@ -546,8 +568,9 @@ func TestHandleOrderRefunded_RetryNoDuplicateReversal(t *testing.T) {
 	}
 	rows := commissionsForOrder(t, repo, 1)
 	for _, c := range rows {
-		if !c.CommissionAmount.Decimal.Equal(decimal.Zero) {
-			t.Fatalf("level %d: retry must not re-process, expected 0, got %s", c.Level, c.CommissionAmount.String())
+		net := getNetBalanceByCommission(t, repo, c.ID)
+		if !net.Equal(decimal.Zero) {
+			t.Fatalf("level %d: retry must not re-process, expected net=0, got %s", c.Level, net.String())
 		}
 		if c.Status != constants.AffiliateCommissionStatusRejected {
 			t.Fatalf("level %d: expected rejected after retry, got %s", c.Level, c.Status)
@@ -581,8 +604,9 @@ func TestHandleOrderRefunded_NoRoundingResidue(t *testing.T) {
 		t.Fatalf("final refund: %v", err)
 	}
 	rows = commissionsForOrder(t, repo, 1)
-	if !rows[0].CommissionAmount.Decimal.Equal(decimal.Zero) {
-		t.Fatalf("expected exact zero (no rounding residue), got %s", rows[0].CommissionAmount.String())
+	net := getNetBalanceByCommission(t, repo, rows[0].ID)
+	if !net.Equal(decimal.Zero) {
+		t.Fatalf("expected net balance=0 (no rounding residue), got %s", net.String())
 	}
 	if rows[0].Status != constants.AffiliateCommissionStatusRejected {
 		t.Fatalf("expected rejected, got %s", rows[0].Status)

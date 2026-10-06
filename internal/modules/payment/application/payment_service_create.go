@@ -166,7 +166,10 @@ func (s *PaymentService) CreatePayment(input CreatePaymentInput) (*CreatePayment
 			}
 		}
 
-		onlineAmount := normalizeOrderAmount(lockedOrder.TotalAmount.Decimal.Sub(lockedOrder.WalletPaidAmount.Decimal))
+		// P0 修复：USDT 结算单的钱包扣款是 USDT，在线应付是 CNY，
+		// 必须按订单冻结汇率折回 CNY 后再减，禁止 CNY-USDT 直接相减。
+		// wallet-only 全额扣款后残余 ≈ 0，订单走钱包支付成功分支。
+		onlineAmount := orderapp.RemainingOnlineAmountCNY(&lockedOrder)
 		if onlineAmount.LessThanOrEqual(decimal.Zero) {
 			walletPaidAmount := normalizeOrderAmount(lockedOrder.WalletPaidAmount.Decimal)
 			paidAt := time.Now()

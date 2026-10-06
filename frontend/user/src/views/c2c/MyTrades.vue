@@ -91,7 +91,7 @@
           </div>
           <div class="mt-3 flex items-end justify-between">
             <div>
-              <div class="text-lg font-bold font-mono">{{ trade.usdt_amount }} <span class="text-xs text-muted-foreground">USDT</span></div>
+              <div class="text-lg font-bold font-mono">{{ formatUsdt(trade.usdt_amount) }}</div>
               <div class="mt-0.5 text-xs text-muted-foreground">
                 {{ trade.fiat_amount }} {{ trade.fiat_currency }} · @ {{ trade.price }}
               </div>
@@ -129,6 +129,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import EmptyState from '@/components/EmptyState.vue'
+import { formatUsdt } from '@/utils/money'
 import { useC2CStore } from '@/stores/c2c'
 import { useUserAuthStore } from '@/stores/userAuth'
 import { c2cAPI, type C2CTrade, type C2CTradeStatus } from '@/api/c2c'

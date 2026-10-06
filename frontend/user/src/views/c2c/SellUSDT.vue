@@ -51,7 +51,7 @@
         <div>
           <Label class="mb-2 block">{{ t('c2c.sell.totalUsdt') }}</Label>
           <Input v-model="form.total_usdt" inputmode="decimal" class="h-11 font-mono" />
-          <p class="mt-1 text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}：{{ wallet?.available_balance ?? '0' }} USDT</p>
+          <p class="mt-1 text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}：{{ formatUsdt(wallet?.available_balance, wallet?.currency) }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -86,6 +86,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useC2CStore } from '@/stores/c2c'
 import { c2cAPI } from '@/api/c2c'
+import { formatUsdt } from '@/utils/money'
 import { toast } from '@/composables/useToast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

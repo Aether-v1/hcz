@@ -219,7 +219,6 @@ type Container struct {
 	SiteHomeEntryService          *sitebuilderapp.HomeEntryService
 	SiteDiscoveryBlockService     *sitebuilderapp.DiscoveryBlockService
 	SiteBrandService              *sitebuilderapp.BrandService
-	SiteTemplateService           *sitebuilderapp.TemplateService
 	SiteAuditService              *sitebuilderapp.AuditService
 	SiteBuilderAdminHandler       *sitebuilderhttp.AdminHandler
 

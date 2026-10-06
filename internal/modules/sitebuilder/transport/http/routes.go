@@ -27,10 +27,9 @@ func RegisterAdminRoutes(authorized gin.IRoutes, handler *AdminHandler) {
 	authorized.PATCH("/site/discovery-blocks/:id/toggle", handler.ToggleDiscoveryBlock)
 	authorized.POST("/site/discovery-blocks/reorder", handler.ReorderDiscoveryBlocks)
 
-	// 品牌与模板
+	// 品牌
 	authorized.GET("/site/brand", handler.GetBrand)
 	authorized.PUT("/site/brand", handler.UpdateBrand)
-	authorized.PUT("/site/template", handler.UpdateTemplate)
 
 	// 审计日志
 	authorized.GET("/site/audit-logs", handler.ListAuditLogs)

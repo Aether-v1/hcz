@@ -3,7 +3,6 @@ import { useUserAuthStore } from '../stores/userAuth'
 import { useAppStore } from '../stores/app'
 import { useTelegramMiniAppStore } from '../stores/telegramMiniApp'
 import { captureAffiliateFromRoute } from '../utils/affiliate'
-import { templateView } from '../templates/registry'
 import { GOOGLE_REDIRECT_FRONTEND_CALLBACK_PATH } from '../utils/googleRedirect'
 
 type RouteComponentLoader = () => Promise<unknown>
@@ -115,43 +114,43 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            component: templateView('Home', homeViewLoader),
+            component: homeViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/products',
             name: 'products',
-            component: templateView('Products', productsViewLoader),
+            component: productsViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/categories/:slug',
             name: 'category-products',
-            component: templateView('Products', productsViewLoader),
+            component: productsViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/products/:slug',
             name: 'product-detail',
-            component: templateView('ProductDetail', productDetailViewLoader),
+            component: productDetailViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/cart',
             name: 'cart',
-            component: templateView('Cart', cartViewLoader),
+            component: cartViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/checkout',
             name: 'checkout',
-            component: templateView('Checkout', checkoutViewLoader),
+            component: checkoutViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/pay',
             name: 'payment',
-            component: templateView('Payment', paymentViewLoader),
+            component: paymentViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
@@ -161,34 +160,34 @@ const router = createRouter({
         {
             path: '/me',
             name: 'personal-center',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'overview' },
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/profile',
             name: 'personal-center-profile',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'profile' },
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/security',
             name: 'personal-center-security',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'security' },
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/orders',
             name: 'personal-center-orders',
-            component: templateView('Orders', () => import('../views/Orders.vue')),
+            component: () => import('../views/Orders.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/wallet',
             name: 'personal-center-wallet',
-            component: templateView('Wallet', () => import('../views/Wallet.vue')),
+            component: () => import('../views/Wallet.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -206,7 +205,7 @@ const router = createRouter({
         {
             path: '/me/invitation',
             name: 'personal-center-invitation',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'invitation' },
             meta: { requiresUserAuth: true }
         },
@@ -291,21 +290,21 @@ const router = createRouter({
         {
             path: '/me/gift-cards',
             name: 'personal-center-gift-cards',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'giftCard' },
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/api',
             name: 'personal-center-api',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'api' },
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/affiliate',
             name: 'personal-center-affiliate',
-            component: templateView('PersonalCenter', () => import('../views/PersonalCenter.vue')),
+            component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'affiliate' },
             meta: { requiresUserAuth: true }
         },
@@ -335,89 +334,89 @@ const router = createRouter({
         {
             path: '/orders/:order_no',
             name: 'order-detail',
-            component: templateView('OrderDetail', () => import('../views/OrderDetail.vue')),
+            component: () => import('../views/OrderDetail.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/recharge-orders/:recharge_no',
             name: 'recharge-order-detail',
-            component: templateView('RechargeOrderDetail', () => import('../views/RechargeOrderDetail.vue')),
+            component: () => import('../views/RechargeOrderDetail.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/blog',
             name: 'blog',
-            component: templateView('Blog', blogViewLoader),
+            component: blogViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/blog/:slug',
             name: 'blog-detail',
-            component: templateView('BlogDetail', () => import('../views/BlogDetail.vue')),
+            component: () => import('../views/BlogDetail.vue'),
             meta: { requiresUserAuth: true },
         },
         {
             path: '/notice',
             name: 'notice',
-            component: templateView('Notice', noticeViewLoader),
+            component: noticeViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
             path: '/about',
             name: 'about',
-            component: templateView('About', () => import('../views/About.vue')),
+            component: () => import('../views/About.vue'),
             meta: { requiresUserAuth: true },
         },
         {
             path: '/discovery',
             name: 'discovery',
-            component: templateView('Discovery', () => import('../views/Discovery.vue')),
+            component: () => import('../views/Discovery.vue'),
             meta: { requiresUserAuth: true },
         },
         {
             path: '/terms',
             name: 'terms',
-            component: templateView('Legal', () => import('../views/Legal.vue')),
+            component: () => import('../views/Legal.vue'),
             props: { type: 'terms' }
         },
         {
             path: '/privacy',
             name: 'privacy',
-            component: templateView('Legal', () => import('../views/Legal.vue')),
+            component: () => import('../views/Legal.vue'),
             props: { type: 'privacy' }
         },
         {
             path: '/auth/login',
             name: 'user-login',
-            component: templateView('auth/Login', loginViewLoader),
+            component: loginViewLoader,
             meta: { userGuest: true }
         },
         {
             path: '/auth/register',
             name: 'user-register',
-            component: templateView('auth/Register', () => import('../views/auth/Register.vue')),
+            component: () => import('../views/auth/Register.vue'),
             meta: { userGuest: true }
         },
         {
             path: '/auth/forgot',
             name: 'user-forgot',
-            component: templateView('auth/Forgot', () => import('../views/auth/Forgot.vue')),
+            component: () => import('../views/auth/Forgot.vue'),
             meta: { userGuest: true }
         },
         {
             path: '/auth/telegram/callback',
             name: 'user-telegram-callback',
-            component: templateView('auth/TelegramCallback', () => import('../views/auth/TelegramCallback.vue')),
+            component: () => import('../views/auth/TelegramCallback.vue'),
         },
         {
             path: GOOGLE_REDIRECT_FRONTEND_CALLBACK_PATH,
             name: 'user-google-callback',
-            component: templateView('auth/GoogleCallback', () => import('../views/auth/GoogleCallback.vue')),
+            component: () => import('../views/auth/GoogleCallback.vue'),
         },
         {
             path: '/:pathMatch(.*)*',
             name: 'not-found',
-            component: templateView('NotFound', () => import('../views/NotFound.vue')),
+            component: () => import('../views/NotFound.vue'),
         },
     ],
 })
@@ -428,7 +427,7 @@ router.beforeEach(async (to, _from, next) => {
     const appStore = useAppStore()
     void captureAffiliateFromRoute(to)
 
-    // Ensure config is loaded before checking template mode
+    // Ensure config is loaded before navigation
     if (!appStore.config) {
         await appStore.loadConfig()
     }

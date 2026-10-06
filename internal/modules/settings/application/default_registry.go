@@ -71,6 +71,10 @@ var defaultSettingRegistry = MustNewRegistry(
 		Normalize: settingssecurity.NormalizeOrderRiskControlConfigJSON,
 	},
 	Definition{
+		Key:       constants.SettingKeyProfitGuardConfig,
+		Normalize: settingsintegration.NormalizeProfitGuardSettingJSON,
+	},
+	Definition{
 		Key:       constants.SettingKeyWithdrawalConfig,
 		Normalize: settingssecurity.NormalizeWithdrawalConfigJSON,
 	},

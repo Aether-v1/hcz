@@ -46,11 +46,11 @@
             <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-border/60">
               <div>
                 <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.availableQty') }}</div>
-                <div class="mt-1 text-sm font-semibold font-mono">{{ listing.available_usdt }} USDT</div>
+                <div class="mt-1 text-sm font-semibold font-mono">{{ formatUsdt(listing.available_usdt) }}</div>
               </div>
               <div>
                 <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.listingTotal') }}</div>
-                <div class="mt-1 text-sm font-semibold font-mono">{{ listing.total_usdt }} USDT</div>
+                <div class="mt-1 text-sm font-semibold font-mono">{{ formatUsdt(listing.total_usdt) }}</div>
               </div>
               <div>
                 <div class="text-xs text-muted-foreground">{{ t('c2c.listingDetailLabels.seller') }}</div>
@@ -176,6 +176,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import EmptyState from '@/components/EmptyState.vue'
+import { formatUsdt } from '@/utils/money'
 import { c2cAPI, type C2CListing } from '@/api/c2c'
 import { useUserAuthStore } from '@/stores/userAuth'
 import {

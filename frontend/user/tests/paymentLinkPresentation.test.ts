@@ -1,33 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { basename, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const userSourceRoot = fileURLToPath(new URL('../src', import.meta.url))
-const paymentViewNames = new Set(['Payment.vue', 'RechargeOrderDetail.vue'])
 const defaultPaymentView = join(userSourceRoot, 'views', 'Payment.vue')
-
-const collectPaymentViews = (directory: string): string[] => {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name)
-    if (entry.isDirectory()) return collectPaymentViews(path)
-    return paymentViewNames.has(entry.name) ? [path] : []
-  })
-}
 
 const defaultPaymentViews = [
   defaultPaymentView,
   join(userSourceRoot, 'views', 'RechargeOrderDetail.vue'),
 ]
 
-const paymentViews = [
-  ...defaultPaymentViews,
-  ...collectPaymentViews(join(userSourceRoot, 'templates')),
-]
+const paymentViews = [...defaultPaymentViews]
 
 test('payment views keep pay URLs behind actions instead of rendering the raw link', () => {
-  assert.ok(paymentViews.length >= 4, 'default and themed payment views should be covered')
+  assert.ok(paymentViews.length >= 2, 'default payment views should be covered')
 
   for (const path of paymentViews) {
     const source = readFileSync(path, 'utf8')

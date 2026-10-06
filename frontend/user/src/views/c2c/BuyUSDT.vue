@@ -83,7 +83,7 @@
           <!-- available -->
           <div class="md:col-span-2 mt-2 md:mt-0">
             <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.available') }}</div>
-            <div class="font-mono text-sm">{{ listing.available_usdt }} USDT</div>
+            <div class="font-mono text-sm">{{ formatUsdt(listing.available_usdt) }}</div>
           </div>
           <!-- min/max -->
           <div class="md:col-span-3 mt-2 md:mt-0">
@@ -161,6 +161,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import EmptyState from '@/components/EmptyState.vue'
+import { formatUsdt } from '@/utils/money'
 
 const { t } = useI18n()
 const router = useRouter()

@@ -11,6 +11,12 @@
     <div v-if="loading" class="space-y-3">
       <div v-for="idx in 3" :key="idx" class="h-16 animate-pulse rounded-xl border bg-muted"></div>
     </div>
+    <div v-else-if="error" class="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">
+      <p class="text-sm text-destructive">{{ t('personalCenter.wallet.errors.loadFailed') }}</p>
+      <Button type="button" variant="outline" size="sm" class="mt-3" @click="$emit('refresh')">
+        {{ t('personalCenter.wallet.retry') }}
+      </Button>
+    </div>
     <div v-else-if="transactions.length === 0" class="rounded-xl border border-dashed px-4 py-6 text-sm text-muted-foreground">
       {{ t('personalCenter.wallet.empty') }}
     </div>
@@ -39,7 +45,7 @@
               {{ signedAmount(item.direction, item.amount, item.currency) }}
             </TableCell>
             <TableCell class="px-4 font-mono text-sm text-foreground">
-              {{ formatMoney(item.balance_after, item.currency) }}
+              {{ formatMoney(item.total_after, item.currency) }}
             </TableCell>
             <TableCell class="px-4 text-xs text-muted-foreground">{{ item.remark || '-' }}</TableCell>
           </TableRow>
@@ -68,9 +74,11 @@ import PanelHeading from '../shared/PanelHeading.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatUsdt } from '../../utils/money'
 
 defineProps<{
   loading: boolean
+  error?: boolean
   transactions: Array<{
     id: number
     created_at: string
@@ -78,7 +86,7 @@ defineProps<{
     direction: string
     amount: string
     currency: string
-    balance_after: string
+    total_after: string
     remark: string
   }>
   currentPage: number
@@ -92,11 +100,8 @@ defineEmits<{
 
 const { t } = useI18n()
 
-const formatMoney = (amount?: string, currency?: string) => {
-  if (amount === null || amount === undefined || amount === '') return '-'
-  const ccy = currency || 'USDT'
-  return `${amount} ${ccy}`
-}
+// USDT 金额统一走 formatUsdt（ROUND_HALF_UP 2 位；空/非法 → '--'）。
+const formatMoney = (amount?: string, currency?: string) => formatUsdt(amount, currency || 'USDT')
 
 const formatDate = (raw?: string) => {
   if (!raw) return '-'
@@ -125,8 +130,8 @@ const transactionTypeLabel = (type?: string) => {
 }
 
 const signedAmount = (direction: string, amount?: string, currency?: string) => {
-  const base = formatMoney(amount, currency)
-  if (base === '-') return base
+  const base = formatUsdt(amount, currency || 'USDT')
+  if (base === '--') return base
   if (direction === 'out') return `-${base}`
   return `+${base}`
 }

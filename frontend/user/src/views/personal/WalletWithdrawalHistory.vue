@@ -64,15 +64,15 @@
           </div>
           <div>
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.requestAmount') }}</div>
-            <div class="mt-0.5 font-mono text-foreground">{{ item.request_amount }} USDT</div>
+            <div class="mt-0.5 font-mono text-foreground">{{ formatUsdt(item.request_amount) }}</div>
           </div>
           <div>
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.feeLabel') }}</div>
-            <div class="mt-0.5 font-mono text-foreground">{{ item.fee_amount }} USDT</div>
+            <div class="mt-0.5 font-mono text-foreground">{{ formatUsdt(item.fee_amount) }}</div>
           </div>
           <div class="col-span-2">
             <div class="text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.netLabel') }}</div>
-            <div class="mt-0.5 font-mono font-semibold text-primary">{{ item.net_amount }} USDT</div>
+            <div class="mt-0.5 font-mono font-semibold text-primary">{{ formatUsdt(item.net_amount) }}</div>
           </div>
           <div v-if="item.txid" class="col-span-2">
             <div class="text-xs text-muted-foreground">TxID</div>
@@ -133,6 +133,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { walletAPI } from '../../api'
 import type { Withdrawal } from '../../api/types'
+import { formatUsdt } from '../../utils/money'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'

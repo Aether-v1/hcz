@@ -36,6 +36,11 @@ type Repository interface {
 	DecrementListingAvailableUSDT(id uint, amount decimal.Decimal) (int64, error)
 	// IncrementListingAvailableUSDT 原子恢复可售余量（取消/超时退回）。
 	IncrementListingAvailableUSDT(id uint, amount decimal.Decimal) error
+	// CountActiveTradesByListingID 统计挂单下非终态交易数
+	// （pending_payment / paid / disputed），用于 CloseListing 前置检查。
+	CountActiveTradesByListingID(listingID uint) (int64, error)
+	// ListListingsByStatus 按 status 批量查询挂单（迁移脚本使用）。
+	ListListingsByStatus(statuses []string) ([]c2cdomain.Listing, error)
 
 	// ---- 交易 ----
 	CreateTrade(t *c2cdomain.Trade) error

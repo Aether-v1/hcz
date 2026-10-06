@@ -59,6 +59,16 @@ type WithdrawListFilter struct {
 	CreatedTo          *time.Time
 }
 
+type ApplicationListFilter struct {
+	Page        int
+	PageSize    int
+	UserID      uint
+	Status      string
+	Keyword     string
+	CreatedFrom *time.Time
+	CreatedTo   *time.Time
+}
+
 type ProfileStatsAggregate struct {
 	ClickCount          int64
 	ValidOrderCount     int64
@@ -109,4 +119,24 @@ type Store interface {
 	GetWithdrawByIDForUpdate(id uint) (*domain.WithdrawRequest, error)
 	ListWithdraws(filter WithdrawListFilter) ([]domain.WithdrawRequest, int64, error)
 	GetProfileStatsBatch(profileIDs []uint) (map[uint]ProfileStatsAggregate, error)
+
+	// ---- Commission Ledger（append-only 佣金账本）----
+	CreateCommissionLedger(ledger *domain.CommissionLedger) error
+	GetCommissionLedgerByReference(reference string) (*domain.CommissionLedger, error)
+	SumLedgerByProfile(profileID uint, types []string) (decimal.Decimal, error)
+	ListLedgersByCommission(commissionID uint) ([]domain.CommissionLedger, error)
+	ListLedgersByProfileForUpdate(profileID uint) ([]domain.CommissionLedger, error)
+	GetLastLedgerByProfileForUpdate(profileID uint) (*domain.CommissionLedger, error)
+	// ListLedgersByProfileAndType 按 profile + 类型分页查询账本（划转历史等）。
+	ListLedgersByProfileAndType(profileID uint, ledgerType string, page, pageSize int) ([]domain.CommissionLedger, int64, error)
+
+	// ---- Affiliate Application（推广申请审核）----
+	CreateApplication(app *domain.Application) error
+	GetApplicationByID(id uint) (*domain.Application, error)
+	GetApplicationByIDForUpdate(id uint) (*domain.Application, error)
+	GetLatestApplicationByUserID(userID uint) (*domain.Application, error)
+	GetPendingApplicationByUserID(userID uint) (*domain.Application, error)
+	ListApplications(filter ApplicationListFilter) ([]domain.Application, int64, error)
+	UpdateApplicationStatus(id uint, status string, reviewNote string, reviewedBy uint, reviewedAt time.Time) error
+	CountApplicationsByUserID(userID uint) (int64, error)
 }

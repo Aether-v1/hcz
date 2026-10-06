@@ -188,7 +188,7 @@ func (f *pgFixture) pgFrozen(t *testing.T, userID uint) decimal.Decimal {
 // TestConcurrent_ListingNoOversell 两人并发各买 80，listing total=100，不超卖。
 func TestConcurrent_ListingNoOversell(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerA, buyerB = uint(1), uint(2), uint(3)
 	f.pgCreateUser(t, sellerID)
@@ -254,7 +254,7 @@ func TestConcurrent_ListingNoOversell(t *testing.T) {
 // TestConcurrent_SellerMultipleTradesFreeze 同一 seller 两个 listing 并发创建 trade，freeze 正确累加。
 func TestConcurrent_SellerMultipleTradesFreeze(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerA, buyerB = uint(1), uint(2), uint(3)
 	f.pgCreateUser(t, sellerID)
@@ -312,7 +312,7 @@ func TestConcurrent_SellerMultipleTradesFreeze(t *testing.T) {
 // TestConcurrent_CancelVsConfirm 同一 trade，一个 cancel 一个 confirm，只有一个成功，状态一致。
 func TestConcurrent_CancelVsConfirm(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerID = uint(1), uint(2)
 	f.pgCreateUser(t, sellerID)
@@ -367,19 +367,24 @@ func TestConcurrent_CancelVsConfirm(t *testing.T) {
 		t.Fatalf("trade must be terminal (canceled/completed), got %s", reloaded.Status)
 	}
 
-	// 资金一致性：若 canceled → seller available=1000, frozen=0；若 completed → seller available=900, frozen=0, buyer available=100
+	// 资金一致性（新模型：CreateListing 已 freeze 1000，available=0, frozen=1000）：
+	// 若 canceled → seller frozen=1000, available=0（cancel 不动 wallet）
+	// 若 completed → seller frozen=900, available=0, buyer available=100
 	sellerAvail := f.pgAvail(t, sellerID)
 	sellerFrozen := f.pgFrozen(t, sellerID)
-	if !sellerFrozen.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen must be 0 after cancel/confirm race, got %s", sellerFrozen)
-	}
 	if reloaded.Status == "canceled" {
-		if !sellerAvail.Equal(mustDec("1000.00")) {
-			t.Fatalf("canceled: seller avail want 1000, got %s", sellerAvail)
+		if !sellerFrozen.Equal(mustDec("1000.00")) {
+			t.Fatalf("canceled: seller frozen want 1000, got %s", sellerFrozen)
+		}
+		if !sellerAvail.Equal(mustDec("0.00")) {
+			t.Fatalf("canceled: seller avail want 0, got %s", sellerAvail)
 		}
 	} else {
-		if !sellerAvail.Equal(mustDec("900.00")) {
-			t.Fatalf("completed: seller avail want 900, got %s", sellerAvail)
+		if !sellerFrozen.Equal(mustDec("900.00")) {
+			t.Fatalf("completed: seller frozen want 900, got %s", sellerFrozen)
+		}
+		if !sellerAvail.Equal(mustDec("0.00")) {
+			t.Fatalf("completed: seller avail want 0, got %s", sellerAvail)
 		}
 		if got := f.pgAvail(t, buyerID); !got.Equal(mustDec("100.00")) {
 			t.Fatalf("completed: buyer avail want 100, got %s", got)
@@ -390,7 +395,7 @@ func TestConcurrent_CancelVsConfirm(t *testing.T) {
 // TestConcurrent_ExpireVsMarkPaid 同一 trade，一个 mark-paid 一个 expire，只有一个成功。
 func TestConcurrent_ExpireVsMarkPaid(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerID = uint(1), uint(2)
 	f.pgCreateUser(t, sellerID)
@@ -431,26 +436,23 @@ func TestConcurrent_ExpireVsMarkPaid(t *testing.T) {
 		t.Fatalf("trade must be paid or expired after race, got %s", reloaded.Status)
 	}
 
-	// 资金一致性：
-	// 若 paid → seller frozen=100, available=900
-	// 若 expired → seller frozen=0, available=1000
+	// 资金一致性（新模型：CreateListing 已 freeze 1000，available=0, frozen=1000）：
+	// 若 paid → seller frozen=1000, available=0
+	// 若 expired → seller frozen=1000, available=0（expire 不动 wallet）
 	sellerAvail := f.pgAvail(t, sellerID)
 	sellerFrozen := f.pgFrozen(t, sellerID)
-	if reloaded.Status == "paid" {
-		if !sellerAvail.Equal(mustDec("900.00")) || !sellerFrozen.Equal(mustDec("100.00")) {
-			t.Fatalf("paid: seller avail=900 frozen=100, got avail=%s frozen=%s", sellerAvail, sellerFrozen)
-		}
-	} else {
-		if !sellerAvail.Equal(mustDec("1000.00")) || !sellerFrozen.Equal(mustDec("0.00")) {
-			t.Fatalf("expired: seller avail=1000 frozen=0, got avail=%s frozen=%s", sellerAvail, sellerFrozen)
-		}
+	if !sellerFrozen.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen want 1000 regardless of paid/expired, got %s", sellerFrozen)
+	}
+	if !sellerAvail.Equal(mustDec("0.00")) {
+		t.Fatalf("seller avail want 0 regardless of paid/expired, got %s", sellerAvail)
 	}
 }
 
 // TestConcurrent_DisputeVsConfirm 同一 paid 交易，一个 dispute 一个 confirm，只有一个成功。
 func TestConcurrent_DisputeVsConfirm(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerID = uint(1), uint(2)
 	f.pgCreateUser(t, sellerID)
@@ -494,18 +496,18 @@ func TestConcurrent_DisputeVsConfirm(t *testing.T) {
 		t.Fatalf("trade must be completed or disputed, got %s", reloaded.Status)
 	}
 
-	// 资金一致性：
-	// completed → buyer available=100, seller frozen=0
-	// disputed → seller frozen=100, buyer available=0
+	// 资金一致性（新模型：CreateListing 已 freeze 1000，available=0, frozen=1000）：
+	// completed → buyer available=100, seller frozen=900
+	// disputed → seller frozen=1000, buyer available=0
 	sellerFrozen := f.pgFrozen(t, sellerID)
 	buyerAvail := f.pgAvail(t, buyerID)
 	if reloaded.Status == "completed" {
-		if !sellerFrozen.Equal(mustDec("0.00")) || !buyerAvail.Equal(mustDec("100.00")) {
-			t.Fatalf("completed: seller frozen=0 buyer avail=100, got f=%s b=%s", sellerFrozen, buyerAvail)
+		if !sellerFrozen.Equal(mustDec("900.00")) || !buyerAvail.Equal(mustDec("100.00")) {
+			t.Fatalf("completed: seller frozen=900 buyer avail=100, got f=%s b=%s", sellerFrozen, buyerAvail)
 		}
 	} else {
-		if !sellerFrozen.Equal(mustDec("100.00")) || !buyerAvail.Equal(mustDec("0.00")) {
-			t.Fatalf("disputed: seller frozen=100 buyer avail=0, got f=%s b=%s", sellerFrozen, buyerAvail)
+		if !sellerFrozen.Equal(mustDec("1000.00")) || !buyerAvail.Equal(mustDec("0.00")) {
+			t.Fatalf("disputed: seller frozen=1000 buyer avail=0, got f=%s b=%s", sellerFrozen, buyerAvail)
 		}
 	}
 }
@@ -513,7 +515,7 @@ func TestConcurrent_DisputeVsConfirm(t *testing.T) {
 // TestConcurrent_ArbitrationRetry 同一 dispute 并发两个 arbitration（同 result），资金动作只执行一次。
 func TestConcurrent_ArbitrationRetry(t *testing.T) {
 	f := newPGFixture(t)
-	t.Parallel()
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
 
 	const sellerID, buyerID = uint(1), uint(2)
 	f.pgCreateUser(t, sellerID)
@@ -565,9 +567,277 @@ func TestConcurrent_ArbitrationRetry(t *testing.T) {
 	if got := f.pgAvail(t, buyerID); !got.Equal(mustDec("100.00")) {
 		t.Fatalf("buyer avail want 100.00 (single receive), got %s", got)
 	}
-	// seller frozen = 0
+	// seller frozen = 1000 - 100 = 900（listing 剩余仍 frozen）
+	if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("900.00")) {
+		t.Fatalf("seller frozen want 900, got %s", got)
+	}
+}
+
+// TestConcurrent_CreateListingsNoOverFreeze available=100, 并发创建两个 listing=60，只能一个成功。
+func TestConcurrent_CreateListingsNoOverFreeze(t *testing.T) {
+	f := newPGFixture(t)
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
+
+	const sellerID = uint(1)
+	f.pgCreateUser(t, sellerID)
+	f.pgSetBalance(t, sellerID, "100.00")
+	f.pgCreatePM(t, sellerID)
+
+	var wg sync.WaitGroup
+	errs := make([]error, 2)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, err := f.svc.CreateListing(c2ccontract.CreateListingInput{
+				UserID: sellerID, FiatCurrency: "CNY",
+				Price:         money.FromDecimal(mustDec("7.00")),
+				MinFiatAmount: money.FromDecimal(mustDec("1.00")),
+				MaxFiatAmount: money.FromDecimal(mustDec("100000.00")),
+				TotalUSDT:     money.FromDecimal(mustDec("60.00")),
+			})
+			errs[i] = err
+		}(i)
+	}
+	wg.Wait()
+
+	success := 0
+	for _, err := range errs {
+		if err == nil {
+			success++
+		}
+	}
+	if success != 1 {
+		t.Fatalf("want exactly 1 successful listing (60+60>100), got %d (errors: %v)", success, errs)
+	}
+	// seller: available=40, frozen=60
+	if got := f.pgAvail(t, sellerID); !got.Equal(mustDec("40.00")) {
+		t.Fatalf("seller avail want 40, got %s", got)
+	}
+	if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("60.00")) {
+		t.Fatalf("seller frozen want 60, got %s", got)
+	}
+}
+
+// TestConcurrent_CloseVsCreateTrade 并发 close listing 和 create trade，只有一个成功。
+func TestConcurrent_CloseVsCreateTrade(t *testing.T) {
+	f := newPGFixture(t)
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
+
+	const sellerID, buyerID = uint(1), uint(2)
+	f.pgCreateUser(t, sellerID)
+	f.pgCreateUser(t, buyerID)
+	f.pgSetBalance(t, sellerID, "1000.00")
+	f.pgCreatePM(t, sellerID)
+	listing := f.pgCreateListing(t, sellerID, "100.00")
+
+	var wg sync.WaitGroup
+	ch := make(chan error, 2)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.CloseListing(sellerID, listing.ID)
+		ch <- err
+	}()
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.CreateTrade(c2ccontract.CreateTradeInput{
+			BuyerUserID: buyerID, ListingID: listing.ID,
+			USDTAmount: money.FromDecimal(mustDec("50.00")), IdempotencyKey: "cvt-trade",
+		})
+		ch <- err
+	}()
+	wg.Wait()
+	close(ch)
+
+	success := 0
+	for err := range ch {
+		if err == nil {
+			success++
+		}
+	}
+	if success != 1 {
+		t.Fatalf("want exactly 1 winner between close/createTrade, got %d", success)
+	}
+
+	reloaded, err := f.c2cDB.GetListingByID(listing.ID)
+	if err != nil || reloaded == nil {
+		t.Fatalf("reload listing: %v", err)
+	}
+	// 若 close 赢：listing closed, seller frozen=0, available=1000
+	// 若 trade 赢：listing active, seller frozen=100, available=900, listing available=50
+	if reloaded.Status == "closed" {
+		if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
+			t.Fatalf("close won: seller frozen want 0, got %s", got)
+		}
+		if got := f.pgAvail(t, sellerID); !got.Equal(mustDec("1000.00")) {
+			t.Fatalf("close won: seller avail want 1000, got %s", got)
+		}
+	} else {
+		if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("100.00")) {
+			t.Fatalf("trade won: seller frozen want 100, got %s", got)
+		}
+	}
+}
+
+// TestConcurrent_CloseVsSettle 并发 close listing 和 confirm trade。
+func TestConcurrent_CloseVsSettle(t *testing.T) {
+	f := newPGFixture(t)
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
+
+	const sellerID, buyerID = uint(1), uint(2)
+	f.pgCreateUser(t, sellerID)
+	f.pgCreateUser(t, buyerID)
+	f.pgSetBalance(t, sellerID, "1000.00")
+	f.pgCreatePM(t, sellerID)
+	listing := f.pgCreateListing(t, sellerID, "100.00")
+	f.pgSetBalance(t, buyerID, "0.00")
+
+	tr := mustCreateTradePG(t, f, buyerID, listing.ID, "100.00", "cvss-base")
+	if _, err := f.svc.MarkPaid(c2ccontract.MarkPaidInput{TradeID: tr.ID, BuyerUserID: buyerID, PaymentReference: "x"}); err != nil {
+		t.Fatalf("mark paid: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	ch := make(chan error, 2)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.CloseListing(sellerID, listing.ID)
+		ch <- err
+	}()
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.Confirm(c2ccontract.ConfirmTradeInput{TradeID: tr.ID, SellerID: sellerID})
+		ch <- err
+	}()
+	wg.Wait()
+	close(ch)
+
+	// 至少一个成功；close 会因 active trade 被拒（ErrListingNotClosable），confirm 成功。
+	// 允许 close 失败，验证最终状态一致：trade completed, seller frozen=0, buyer=100。
+	reloadedTrade, err := f.c2cDB.GetTradeByID(tr.ID)
+	if err != nil || reloadedTrade == nil {
+		t.Fatalf("reload trade: %v", err)
+	}
+	if reloadedTrade.Status != "completed" {
+		t.Fatalf("trade should be completed, got %s", reloadedTrade.Status)
+	}
+	if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller frozen want 0 after settle, got %s", got)
+	}
+	if got := f.pgAvail(t, buyerID); !got.Equal(mustDec("100.00")) {
+		t.Fatalf("buyer avail want 100, got %s", got)
+	}
+}
+
+// TestConcurrent_MultipleTradesSettle 多 trade 并发成交，资金守恒。
+func TestConcurrent_MultipleTradesSettle(t *testing.T) {
+	f := newPGFixture(t)
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
+
+	const sellerID, buyerA, buyerB = uint(1), uint(2), uint(3)
+	f.pgCreateUser(t, sellerID)
+	f.pgCreateUser(t, buyerA)
+	f.pgCreateUser(t, buyerB)
+	f.pgSetBalance(t, sellerID, "1000.00")
+	f.pgCreatePM(t, sellerID)
+	listing := f.pgCreateListing(t, sellerID, "100.00")
+	f.pgSetBalance(t, buyerA, "0.00")
+	f.pgSetBalance(t, buyerB, "0.00")
+
+	trA := mustCreateTradePG(t, f, buyerA, listing.ID, "40.00", "mts-a")
+	trB := mustCreateTradePG(t, f, buyerB, listing.ID, "40.00", "mts-b")
+	if _, err := f.svc.MarkPaid(c2ccontract.MarkPaidInput{TradeID: trA.ID, BuyerUserID: buyerA, PaymentReference: "x"}); err != nil {
+		t.Fatalf("mark paid A: %v", err)
+	}
+	if _, err := f.svc.MarkPaid(c2ccontract.MarkPaidInput{TradeID: trB.ID, BuyerUserID: buyerB, PaymentReference: "x"}); err != nil {
+		t.Fatalf("mark paid B: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	ch := make(chan error, 2)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.Confirm(c2ccontract.ConfirmTradeInput{TradeID: trA.ID, SellerID: sellerID})
+		ch <- err
+	}()
+	go func() {
+		defer wg.Done()
+		_, err := f.svc.Confirm(c2ccontract.ConfirmTradeInput{TradeID: trB.ID, SellerID: sellerID})
+		ch <- err
+	}()
+	wg.Wait()
+	close(ch)
+	for err := range ch {
+		if err != nil {
+			t.Fatalf("concurrent confirm: %v", err)
+		}
+	}
+
+	// seller: frozen=100-40-40=20, available=900
+	if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("20.00")) {
+		t.Fatalf("seller frozen want 20, got %s", got)
+	}
+	if got := f.pgAvail(t, sellerID); !got.Equal(mustDec("900.00")) {
+		t.Fatalf("seller avail want 900, got %s", got)
+	}
+	// buyerA=40, buyerB=40
+	if got := f.pgAvail(t, buyerA); !got.Equal(mustDec("40.00")) {
+		t.Fatalf("buyerA avail want 40, got %s", got)
+	}
+	if got := f.pgAvail(t, buyerB); !got.Equal(mustDec("40.00")) {
+		t.Fatalf("buyerB avail want 40, got %s", got)
+	}
+	// 资金守恒: seller total=920, buyers=80, global=1000
+	globalTotal := f.pgAvail(t, sellerID).Add(f.pgFrozen(t, sellerID)).
+		Add(f.pgAvail(t, buyerA)).Add(f.pgAvail(t, buyerB))
+	if !globalTotal.Equal(mustDec("1000.00")) {
+		t.Fatalf("global total want 1000, got %s", globalTotal)
+	}
+}
+
+// TestConcurrent_DuplicateClose 并发 duplicate close，只解冻一次。
+func TestConcurrent_DuplicateClose(t *testing.T) {
+	f := newPGFixture(t)
+	// PG 集成测试共享同一数据库，禁止 t.Parallel() 避免 fixture 互相 DropTable；测试内部 goroutine 仍并发
+
+	const sellerID = uint(1)
+	f.pgCreateUser(t, sellerID)
+	f.pgSetBalance(t, sellerID, "1000.00")
+	f.pgCreatePM(t, sellerID)
+	listing := f.pgCreateListing(t, sellerID, "100.00")
+
+	var wg sync.WaitGroup
+	ch := make(chan error, 4)
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := f.svc.CloseListing(sellerID, listing.ID)
+			ch <- err
+		}()
+	}
+	wg.Wait()
+	close(ch)
+
+	success := 0
+	for err := range ch {
+		if err == nil {
+			success++
+		}
+	}
+	// 第一次成功，后续三次幂等返回（也 nil）
+	if success != 4 {
+		t.Fatalf("want all 4 closes to succeed (1 real + 3 idempotent), got %d", success)
+	}
+	// seller frozen=0, available=1000
 	if got := f.pgFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
 		t.Fatalf("seller frozen want 0, got %s", got)
+	}
+	if got := f.pgAvail(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller avail want 1000, got %s", got)
 	}
 }
 

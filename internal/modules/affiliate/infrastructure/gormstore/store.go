@@ -8,6 +8,8 @@ import (
 	"github.com/Aether-v1/hcz/internal/constants"
 	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
+	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
+	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -26,6 +28,16 @@ func New(db *gorm.DB) *Store {
 func (r *Store) WithinTransaction(fn func(affiliatecontract.Store) error) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		return fn(New(tx))
+	})
+}
+
+// WithinCombinedTransaction 在同一个 gorm 事务内同时操作 affiliate 和 wallet。
+// 用于提现出金时，保证 affiliate ledger 更新和 wallet 入账的原子性。
+func (r *Store) WithinCombinedTransaction(fn func(affiliatecontract.Store, walletcontract.Transaction) error) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		affiliateTx := New(tx)
+		walletTx := walletgormstore.UseTransaction(tx)
+		return fn(affiliateTx, walletTx)
 	})
 }
 
@@ -703,6 +715,258 @@ func applyPagination(query *gorm.DB, page, pageSize int) *gorm.DB {
 		pageSize = 20
 	}
 	return query.Offset((page - 1) * pageSize).Limit(pageSize)
+}
+
+// ---- Commission Ledger（append-only 佣金账本）----
+
+// CreateCommissionLedger 创建一条佣金账本记录（只 INSERT）
+func (r *Store) CreateCommissionLedger(ledger *affiliatedomain.CommissionLedger) error {
+	if ledger == nil {
+		return nil
+	}
+	return r.db.Create(ledger).Error
+}
+
+// GetCommissionLedgerByReference 按幂等唯一键查询账本记录
+func (r *Store) GetCommissionLedgerByReference(reference string) (*affiliatedomain.CommissionLedger, error) {
+	reference = strings.TrimSpace(reference)
+	if reference == "" {
+		return nil, nil
+	}
+	var ledger affiliatedomain.CommissionLedger
+	if err := r.db.Where("reference = ?", reference).First(&ledger).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &ledger, nil
+}
+
+// SumLedgerByProfile 按类型过滤求和某 profile 的账本金额
+func (r *Store) SumLedgerByProfile(profileID uint, types []string) (decimal.Decimal, error) {
+	if profileID == 0 {
+		return decimal.Zero, nil
+	}
+	query := r.db.Model(&affiliatedomain.CommissionLedger{}).
+		Where("affiliate_profile_id = ?", profileID)
+	if len(types) > 0 {
+		query = query.Where("type IN ?", types)
+	}
+	var row struct {
+		Total decimal.Decimal `gorm:"column:total"`
+	}
+	if err := query.Select("COALESCE(SUM(amount), 0) AS total").Scan(&row).Error; err != nil {
+		return decimal.Zero, err
+	}
+	return row.Total.Round(2), nil
+}
+
+// ListLedgersByCommission 按佣金ID列出所有账本记录
+func (r *Store) ListLedgersByCommission(commissionID uint) ([]affiliatedomain.CommissionLedger, error) {
+	if commissionID == 0 {
+		return []affiliatedomain.CommissionLedger{}, nil
+	}
+	var rows []affiliatedomain.CommissionLedger
+	if err := r.db.Where("commission_id = ?", commissionID).Order("id asc").Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+// ListLedgersByProfileForUpdate 锁定查询某 profile 的所有账本记录（行锁）
+func (r *Store) ListLedgersByProfileForUpdate(profileID uint) ([]affiliatedomain.CommissionLedger, error) {
+	if profileID == 0 {
+		return []affiliatedomain.CommissionLedger{}, nil
+	}
+	var rows []affiliatedomain.CommissionLedger
+	if err := r.db.Model(&affiliatedomain.CommissionLedger{}).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("affiliate_profile_id = ?", profileID).
+		Order("id asc").
+		Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+// GetLastLedgerByProfileForUpdate 取某 profile 最新一条账本记录并加锁（用于计算 BalanceAfter）
+func (r *Store) GetLastLedgerByProfileForUpdate(profileID uint) (*affiliatedomain.CommissionLedger, error) {
+	if profileID == 0 {
+		return nil, nil
+	}
+	var ledger affiliatedomain.CommissionLedger
+	err := r.db.Model(&affiliatedomain.CommissionLedger{}).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("affiliate_profile_id = ?", profileID).
+		Order("id desc").
+		First(&ledger).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &ledger, nil
+}
+
+// ListLedgersByProfileAndType 按 profile + 类型分页查询账本（划转历史等）。
+func (r *Store) ListLedgersByProfileAndType(profileID uint, ledgerType string, page, pageSize int) ([]affiliatedomain.CommissionLedger, int64, error) {
+	if profileID == 0 {
+		return nil, 0, nil
+	}
+	query := r.db.Model(&affiliatedomain.CommissionLedger{}).
+		Where("affiliate_profile_id = ?", profileID)
+	if t := strings.TrimSpace(ledgerType); t != "" {
+		query = query.Where("type = ?", t)
+	}
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	query = applyPagination(query, page, pageSize)
+	var rows []affiliatedomain.CommissionLedger
+	if err := query.Order("id desc").Find(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+	return rows, total, nil
+}
+
+// ---- Affiliate Application（推广申请审核）----
+
+// CreateApplication 创建推广申请
+func (r *Store) CreateApplication(app *affiliatedomain.Application) error {
+	if app == nil {
+		return nil
+	}
+	return r.db.Create(app).Error
+}
+
+// GetApplicationByID 按ID查询推广申请
+func (r *Store) GetApplicationByID(id uint) (*affiliatedomain.Application, error) {
+	if id == 0 {
+		return nil, nil
+	}
+	var app affiliatedomain.Application
+	if err := r.db.Preload("User", "deleted_at IS NULL").First(&app, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+// GetApplicationByIDForUpdate 按ID锁定查询推广申请（行锁）
+func (r *Store) GetApplicationByIDForUpdate(id uint) (*affiliatedomain.Application, error) {
+	if id == 0 {
+		return nil, nil
+	}
+	var app affiliatedomain.Application
+	if err := r.db.Clauses(clause.Locking{Strength: "UPDATE"}).First(&app, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+// GetLatestApplicationByUserID 获取用户最新的申请（按 created_at DESC）
+func (r *Store) GetLatestApplicationByUserID(userID uint) (*affiliatedomain.Application, error) {
+	if userID == 0 {
+		return nil, nil
+	}
+	var app affiliatedomain.Application
+	if err := r.db.Preload("User", "deleted_at IS NULL").
+		Where("user_id = ?", userID).
+		Order("created_at DESC, id DESC").
+		First(&app).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+// GetPendingApplicationByUserID 获取用户的 pending 申请
+func (r *Store) GetPendingApplicationByUserID(userID uint) (*affiliatedomain.Application, error) {
+	if userID == 0 {
+		return nil, nil
+	}
+	var app affiliatedomain.Application
+	if err := r.db.Where("user_id = ? AND status = ?", userID, constants.AffiliateAppStatusPending).
+		First(&app).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &app, nil
+}
+
+// ListApplications 分页查询推广申请列表
+func (r *Store) ListApplications(filter affiliatecontract.ApplicationListFilter) ([]affiliatedomain.Application, int64, error) {
+	query := r.db.Model(&affiliatedomain.Application{}).Preload("User", "deleted_at IS NULL")
+	if filter.UserID != 0 {
+		query = query.Where("affiliate_applications.user_id = ?", filter.UserID)
+	}
+	if status := strings.TrimSpace(filter.Status); status != "" {
+		query = query.Where("affiliate_applications.status = ?", status)
+	}
+	if keyword := strings.TrimSpace(filter.Keyword); keyword != "" {
+		like := "%" + keyword + "%"
+		query = query.
+			Joins("LEFT JOIN users ON users.id = affiliate_applications.user_id").
+			Where("(users.email LIKE ? OR users.display_name LIKE ? OR affiliate_applications.reason LIKE ? OR affiliate_applications.review_note LIKE ?)",
+				like, like, like, like)
+	}
+	if filter.CreatedFrom != nil {
+		query = query.Where("affiliate_applications.created_at >= ?", *filter.CreatedFrom)
+	}
+	if filter.CreatedTo != nil {
+		query = query.Where("affiliate_applications.created_at <= ?", *filter.CreatedTo)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	query = applyPagination(query, filter.Page, filter.PageSize)
+
+	var rows []affiliatedomain.Application
+	if err := query.Order("affiliate_applications.id desc").Find(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+	return rows, total, nil
+}
+
+// UpdateApplicationStatus 更新申请审核状态
+func (r *Store) UpdateApplicationStatus(id uint, status string, reviewNote string, reviewedBy uint, reviewedAt time.Time) error {
+	if id == 0 {
+		return nil
+	}
+	return r.db.Model(&affiliatedomain.Application{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"status":      strings.TrimSpace(status),
+			"review_note": strings.TrimSpace(reviewNote),
+			"reviewed_by": reviewedBy,
+			"reviewed_at": reviewedAt,
+		}).Error
+}
+
+// CountApplicationsByUserID 统计用户的申请总数
+func (r *Store) CountApplicationsByUserID(userID uint) (int64, error) {
+	if userID == 0 {
+		return 0, nil
+	}
+	var total int64
+	if err := r.db.Model(&affiliatedomain.Application{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+		return 0, err
+	}
+	return total, nil
 }
 
 var _ affiliatecontract.Store = (*Store)(nil)

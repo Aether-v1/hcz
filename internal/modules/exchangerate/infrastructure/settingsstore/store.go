@@ -45,6 +45,9 @@ func (s *Store) GetState() (exchangerate.State, error) {
 	state.RefreshIntervalMin = parseInt(raw["refresh_interval_min"])
 	state.AutoFetchedAt = ts(raw["auto_fetched_at"])
 	state.LastSuccessAt = ts(raw["last_success_at"])
+	state.ManualRateUpdatedAt = ts(raw["manual_rate_updated_at"])
+	state.RateSafetyBufferPercent = floatVal(raw["rate_safety_buffer_percent"])
+	state.MaxAutoRateAgeMinutes = parseInt(raw["max_auto_rate_age_minutes"])
 	return state, nil
 }
 
@@ -53,16 +56,19 @@ func (s *Store) SaveState(state exchangerate.State) error {
 		return nil
 	}
 	value := jsonmap.JSON{
-		"currency":             state.Currency,
-		"auto_rate":            state.AutoRate.String(),
-		"manual_rate":          state.ManualRate.String(),
-		"last_error":           state.LastError,
-		"provider":             state.Provider,
-		"api_key":              state.APIKey,
-		"auto_enabled":         state.AutoEnabled,
-		"refresh_interval_min": state.RefreshIntervalMin,
-		"auto_fetched_at":      state.AutoFetchedAt.Unix(),
-		"last_success_at":      state.LastSuccessAt.Unix(),
+		"currency":                  state.Currency,
+		"auto_rate":                 state.AutoRate.String(),
+		"manual_rate":               state.ManualRate.String(),
+		"last_error":                state.LastError,
+		"provider":                  state.Provider,
+		"api_key":                   state.APIKey,
+		"auto_enabled":              state.AutoEnabled,
+		"refresh_interval_min":      state.RefreshIntervalMin,
+		"auto_fetched_at":           state.AutoFetchedAt.Unix(),
+		"last_success_at":           state.LastSuccessAt.Unix(),
+		"manual_rate_updated_at":    state.ManualRateUpdatedAt.Unix(),
+		"rate_safety_buffer_percent": state.RateSafetyBufferPercent,
+		"max_auto_rate_age_minutes": state.MaxAutoRateAgeMinutes,
 	}
 	_, err := s.kv.Upsert(key, value)
 	return err
@@ -103,6 +109,16 @@ func parseInt(v interface{}) int {
 		return int(n)
 	case int:
 		return n
+	}
+	return 0
+}
+
+func floatVal(v interface{}) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case int:
+		return float64(n)
 	}
 	return 0
 }

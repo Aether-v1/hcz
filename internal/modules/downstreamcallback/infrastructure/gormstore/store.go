@@ -91,7 +91,8 @@ func (s *Store) ListByCredentialID(credentialID uint, filter downstreamcontract.
 		return nil, 0, err
 	}
 
-	query = query.Order("created_at DESC")
+	// created_at 在 Windows/SQLite 下毫秒级可能并列，追加 id DESC 作为确定性次级排序键。
+	query = query.Order("created_at DESC, id DESC")
 	if filter.Page > 0 && filter.PageSize > 0 {
 		query = query.Offset((filter.Page - 1) * filter.PageSize).Limit(filter.PageSize)
 	}

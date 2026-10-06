@@ -2,12 +2,12 @@ package affiliatehttp
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 
-	"github.com/Aether-v1/hcz/internal/constants"
 	affiliateapp "github.com/Aether-v1/hcz/internal/modules/affiliate/application"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
@@ -22,7 +22,11 @@ type AdminService interface {
 	ListAdminWithdraws(filter affiliateapp.AdminWithdrawListFilter) ([]affiliatedomain.WithdrawRequest, int64, error)
 	UpdateAffiliateProfileStatus(profileID uint, status string) (*affiliatedomain.Profile, error)
 	BatchUpdateAffiliateProfileStatus(profileIDs []uint, status string) (int64, error)
-	ReviewWithdraw(adminID, withdrawID uint, action, reason string) (*affiliatedomain.WithdrawRequest, error)
+	// 申请审核相关
+	ListAdminApplications(filter affiliateapp.AffiliateApplicationListFilter) ([]affiliatedomain.Application, int64, error)
+	GetApplicationDetail(applicationID uint) (*affiliatedomain.Application, error)
+	ApproveApplication(applicationID uint, adminID uint) (*affiliatedomain.Profile, error)
+	RejectApplication(applicationID uint, adminID uint, reason string) error
 }
 
 type profileStatusRequest struct {
@@ -164,60 +168,123 @@ func (h *AdminHandler) BatchUpdateAffiliateUserStatus(c *gin.Context) {
 	response.Success(c, gin.H{"updated": updated})
 }
 
-// RejectAffiliateWithdraw 拒绝提现申请
+// RejectAffiliateWithdraw 拒绝提现申请（已退休，返回 410 Gone）。
 func (h *AdminHandler) RejectAffiliateWithdraw(c *gin.Context) {
-	adminID, ok := ginutil.GetAdminID(c)
-	if !ok {
+	response.ErrorWithHTTPStatus(c, http.StatusGone, http.StatusGone,
+		"affiliate withdrawal retired, use transfer-to-wallet instead")
+}
+
+// PayAffiliateWithdraw 标记提现已支付（已退休，返回 410 Gone）。
+func (h *AdminHandler) PayAffiliateWithdraw(c *gin.Context) {
+	response.ErrorWithHTTPStatus(c, http.StatusGone, http.StatusGone,
+		"affiliate withdrawal retired, use transfer-to-wallet instead")
+}
+
+// ---- 推广申请审核 ----
+
+type rejectApplicationRequest struct {
+	Reason string `json:"reason" binding:"required"`
+}
+
+// ListAffiliateApplications GET /admin/affiliates/applications
+func (h *AdminHandler) ListAffiliateApplications(c *gin.Context) {
+	page, pageSize := ginutil.ParsePagination(c)
+	userID, _ := ginutil.ParseQueryUint(c.Query("user_id"), false)
+
+	rows, total, err := h.svc.ListAdminApplications(affiliateapp.AffiliateApplicationListFilter{
+		Page:     page,
+		PageSize: pageSize,
+		UserID:   userID,
+		Status:   strings.TrimSpace(c.Query("status")),
+		Keyword:  strings.TrimSpace(c.Query("keyword")),
+	})
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.user_fetch_failed", err)
 		return
 	}
+	response.SuccessWithPage(c, rows, response.BuildPagination(page, pageSize, total))
+}
+
+// GetAffiliateApplication GET /admin/affiliates/applications/:id
+func (h *AdminHandler) GetAffiliateApplication(c *gin.Context) {
 	id, err := ginutil.ParseParamUint(c, "id")
 	if err != nil {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
 		return
 	}
 
-	var req reviewWithdrawRequest
+	app, err := h.svc.GetApplicationDetail(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, affiliateapp.ErrApplicationNotFound):
+			ginutil.RespondError(c, response.CodeNotFound, "error.not_found", nil)
+		default:
+			ginutil.RespondError(c, response.CodeInternal, "error.user_fetch_failed", err)
+		}
+		return
+	}
+	response.Success(c, app)
+}
+
+// ApproveAffiliateApplication POST /admin/affiliates/applications/:id/approve
+func (h *AdminHandler) ApproveAffiliateApplication(c *gin.Context) {
+	id, err := ginutil.ParseParamUint(c, "id")
+	if err != nil {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		return
+	}
+
+	adminID, ok := ginutil.GetAdminID(c)
+	if !ok {
+		return
+	}
+
+	profile, err := h.svc.ApproveApplication(id, adminID)
+	if err != nil {
+		switch {
+		case errors.Is(err, affiliateapp.ErrApplicationNotFound):
+			ginutil.RespondError(c, response.CodeNotFound, "error.not_found", nil)
+		case errors.Is(err, affiliateapp.ErrApplicationAlreadyReviewed):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.affiliate_application_already_reviewed", nil)
+		default:
+			ginutil.RespondError(c, response.CodeInternal, "error.save_failed", err)
+		}
+		return
+	}
+	response.Success(c, gin.H{
+		"profile": profile,
+	})
+}
+
+// RejectAffiliateApplication POST /admin/affiliates/applications/:id/reject
+func (h *AdminHandler) RejectAffiliateApplication(c *gin.Context) {
+	id, err := ginutil.ParseParamUint(c, "id")
+	if err != nil {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		return
+	}
+
+	adminID, ok := ginutil.GetAdminID(c)
+	if !ok {
+		return
+	}
+
+	var req rejectApplicationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutil.RespondBindError(c, err)
 		return
 	}
-	row, err := h.svc.ReviewWithdraw(adminID, id, constants.AffiliateWithdrawActionReject, req.Reason)
-	if err != nil {
-		switch {
-		case errors.Is(err, affiliateapp.ErrNotFound):
-			ginutil.RespondError(c, response.CodeNotFound, "error.bad_request", nil)
-		case errors.Is(err, affiliateapp.ErrWithdrawStatusInvalid):
-			ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
-		default:
-			ginutil.RespondError(c, response.CodeInternal, "error.save_failed", err)
-		}
-		return
-	}
-	response.Success(c, row)
-}
 
-// PayAffiliateWithdraw 标记提现已支付
-func (h *AdminHandler) PayAffiliateWithdraw(c *gin.Context) {
-	adminID, ok := ginutil.GetAdminID(c)
-	if !ok {
-		return
-	}
-	id, err := ginutil.ParseParamUint(c, "id")
-	if err != nil {
-		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
-		return
-	}
-	row, err := h.svc.ReviewWithdraw(adminID, id, constants.AffiliateWithdrawActionPay, "")
-	if err != nil {
+	if err := h.svc.RejectApplication(id, adminID, strings.TrimSpace(req.Reason)); err != nil {
 		switch {
-		case errors.Is(err, affiliateapp.ErrNotFound):
-			ginutil.RespondError(c, response.CodeNotFound, "error.bad_request", nil)
-		case errors.Is(err, affiliateapp.ErrWithdrawStatusInvalid):
-			ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		case errors.Is(err, affiliateapp.ErrApplicationNotFound):
+			ginutil.RespondError(c, response.CodeNotFound, "error.not_found", nil)
+		case errors.Is(err, affiliateapp.ErrApplicationAlreadyReviewed):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.affiliate_application_already_reviewed", nil)
 		default:
 			ginutil.RespondError(c, response.CodeInternal, "error.save_failed", err)
 		}
 		return
 	}
-	response.Success(c, row)
+	response.Success(c, gin.H{"ok": true})
 }

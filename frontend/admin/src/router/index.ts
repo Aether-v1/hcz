@@ -195,12 +195,6 @@ const routes = [
             component: () => import('@/views/site-builder/NavFooter.vue'),
             meta: { permission: 'GET:/admin/settings' },
           },
-          {
-            path: 'template',
-            name: 'site-builder-template',
-            component: () => import('@/views/site-builder/TemplateSettings.vue'),
-            meta: { permission: 'GET:/admin/site/template' },
-          },
         ],
       },
       {
@@ -240,6 +234,12 @@ const routes = [
         meta: { permission: 'GET:/admin/settings' },
       },
       {
+        path: 'pricing',
+        name: 'pricing',
+        component: () => import('@/views/admin/Pricing.vue'),
+        meta: { permission: 'GET:/admin/settings' },
+      },
+      {
         path: 'settings/notifications',
         name: 'notifications',
         component: () => import('@/views/admin/Notifications.vue'),
@@ -273,6 +273,12 @@ const routes = [
         name: 'affiliates-withdraws',
         component: () => import('@/views/admin/AffiliateWithdraws.vue'),
         meta: { permission: 'GET:/admin/affiliates/withdraws' },
+      },
+      {
+        path: 'affiliates/applications',
+        name: 'affiliates-applications',
+        component: () => import('@/views/admin/AffiliateApplications.vue'),
+        meta: { permission: 'GET:/admin/affiliates/applications' },
       },
       {
         path: 'resellers/operations',

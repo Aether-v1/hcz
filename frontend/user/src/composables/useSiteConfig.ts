@@ -1,4 +1,4 @@
-import { computed, type ComputedRef } from 'vue'
+import { computed } from 'vue'
 import { useAppStore } from '../stores/app'
 import { useI18n } from 'vue-i18n'
 import { getImageUrl } from '../utils/image'
@@ -43,12 +43,6 @@ export function useSiteConfig() {
   const { locale } = useI18n()
 
   const config = computed(() => appStore.config || {})
-
-  /** 模板：config.template > config.storefront_template，非法值回落 classic */
-  const template: ComputedRef<'classic' | 'vault'> = computed(() => {
-    const raw = String(config.value?.template || config.value?.storefront_template || '').trim()
-    return raw === 'vault' ? 'vault' : 'classic'
-  })
 
   const siteName = computed(() => {
     const v = String(config.value?.brand?.site_name || '').trim()
@@ -131,7 +125,6 @@ export function useSiteConfig() {
 
   return {
     config,
-    template,
     siteName,
     siteLogo,
     primaryColor,

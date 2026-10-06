@@ -56,6 +56,34 @@ func (s *Service) GetAffiliateSetting() (settingsintegration.AffiliateSetting, e
 	return settingsintegration.DecodeAffiliateSetting(value, fallback), nil
 }
 
+// GetProfitGuardSetting 获取 Profit Guard V1 设置（优先 settings，空时回退安全默认）。
+func (s *Service) GetProfitGuardSetting() (settingsintegration.ProfitGuardSetting, error) {
+	fallback := settingsintegration.DefaultProfitGuardSetting()
+	if s == nil {
+		return fallback, nil
+	}
+	value, err := s.GetByKey(constants.SettingKeyProfitGuardConfig)
+	if err != nil {
+		return fallback, err
+	}
+	if value == nil {
+		return fallback, nil
+	}
+	return settingsintegration.DecodeProfitGuardSetting(value, fallback), nil
+}
+
+// UpdateProfitGuardSetting 更新 Profit Guard 设置。
+func (s *Service) UpdateProfitGuardSetting(setting settingsintegration.ProfitGuardSetting) (settingsintegration.ProfitGuardSetting, error) {
+	normalized := settingsintegration.NormalizeProfitGuardSetting(setting)
+	if err := settingsintegration.ValidateProfitGuardSetting(normalized); err != nil {
+		return settingsintegration.DefaultProfitGuardSetting(), err
+	}
+	if _, err := s.Update(constants.SettingKeyProfitGuardConfig, map[string]interface{}(settingsintegration.EncodeProfitGuardSetting(normalized))); err != nil {
+		return settingsintegration.DefaultProfitGuardSetting(), err
+	}
+	return normalized, nil
+}
+
 // UpdateAffiliateSetting 更新推广返利设置。
 func (s *Service) UpdateAffiliateSetting(setting settingsintegration.AffiliateSetting) (settingsintegration.AffiliateSetting, error) {
 	normalized := settingsintegration.NormalizeAffiliateSetting(setting)

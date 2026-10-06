@@ -39,11 +39,42 @@ type Rate struct {
 	FetchedAt time.Time
 }
 
-// ToUSDT 把 Site Currency 金额换算为 USDT，结果 Round half-up 到 2 位小数。
-// siteAmount 以 Site Currency 计。
+// ToUSDT 把 Site Currency 金额换算为 USDT，结果 Round 到 2 位小数。
+// siteAmount 以 Site Currency 计。rate<=0 时返回 ErrRateUnavailable。
 func (r Rate) ToUSDT(siteAmount decimal.Decimal) (decimal.Decimal, error) {
 	if r.Rate.LessThanOrEqual(decimal.Zero) {
 		return decimal.Zero, ErrRateUnavailable
 	}
 	return siteAmount.Div(r.Rate).Round(2), nil
+}
+
+// EffectiveRate applies the safety buffer: the settlement rate the user is
+// charged at is discounted so the platform collects slightly more USDT.
+//
+//	effective_rate = market_rate × (1 - bufferPercent/100)
+//
+// bufferPercent is a percentage number (e.g. 0.5 means 0.5%). Non-positive
+// buffer returns the raw market rate.
+func (r Rate) EffectiveRate(bufferPercent decimal.Decimal) (decimal.Decimal, error) {
+	if r.Rate.LessThanOrEqual(decimal.Zero) {
+		return decimal.Zero, ErrRateUnavailable
+	}
+	if bufferPercent.LessThanOrEqual(decimal.Zero) {
+		return r.Rate, nil
+	}
+	factor := decimal.NewFromInt(1).Sub(bufferPercent.Div(decimal.NewFromInt(100)))
+	return r.Rate.Mul(factor), nil
+}
+
+// ToUSDTWithBuffer converts a Site Currency amount to USDT using the buffered
+// effective rate, then CEILs to 2dp (forward settlement).
+//
+//	effective_rate = market_rate × (1 - bufferPercent/100)
+//	usdt           = ceil(siteAmount / effective_rate, 2dp)
+func (r Rate) ToUSDTWithBuffer(siteAmount decimal.Decimal, bufferPercent decimal.Decimal) (decimal.Decimal, error) {
+	effective, err := r.EffectiveRate(bufferPercent)
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return siteAmount.Div(effective).RoundCeil(2), nil
 }

@@ -161,6 +161,7 @@ const form = reactive({
   payment_channel_ids: [] as number[],
   is_affiliate_enabled: false,
   is_active: true,
+  is_cost_exempt: false,
   sort_order: 0,
   manual_form_schema: { fields: [] as ManualFormField[] },
 })
@@ -551,6 +552,7 @@ const populateForm = (product: AdminProduct) => {
     payment_channel_ids: parsePaymentChannelIDs(product.payment_channel_ids),
     is_affiliate_enabled: Boolean(product.is_affiliate_enabled),
     is_active: product.is_active ?? true,
+    is_cost_exempt: Boolean((product as AdminProduct).is_cost_exempt),
     sort_order: Number(product.sort_order || 0),
     manual_form_schema: parseManualFormSchemaForEdit(product.manual_form_schema),
   })
@@ -623,6 +625,7 @@ const handleSubmit = async () => {
       payment_channel_ids: form.payment_channel_ids.length > 0 ? form.payment_channel_ids : [],
       is_affiliate_enabled: form.is_affiliate_enabled,
       is_active: form.is_active,
+      is_cost_exempt: form.is_cost_exempt,
       sort_order: Number(form.sort_order) || 0,
       manual_form_schema: normalizeManualFormSchemaForSubmit(),
     }
@@ -1042,6 +1045,14 @@ watch(
               {{ t('admin.products.form.costPriceAmountSkuTip') }}
             </p>
             <p v-else-if="editingIsMapped" class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.costPriceAutoFromUpstream') }}</p>
+          </div>
+
+          <div class="col-span-1">
+            <div class="flex items-center gap-2">
+              <Switch id="form-is-cost-exempt" v-model="form.is_cost_exempt" />
+              <Label for="form-is-cost-exempt" class="text-xs font-medium text-muted-foreground">Is Cost Exempt（真零成本豁免）</Label>
+            </div>
+            <p class="mt-1 text-xs text-muted-foreground">真零成本商品豁免：数字权益 / 赠品 / 内测，成本门跳过。</p>
           </div>
 
           <div class="col-span-1">

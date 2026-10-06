@@ -33,6 +33,11 @@ func RegisterAdminAffiliateRoutes(admin gin.IRoutes, handler *AffiliateHandler) 
 	admin.PUT("/settings/affiliate", handler.UpdateAffiliate)
 }
 
+func RegisterAdminProfitGuardRoutes(admin gin.IRoutes, handler *ProfitGuardHandler) {
+	admin.GET("/settings/profit-guard", handler.GetProfitGuard)
+	admin.PUT("/settings/profit-guard", handler.UpdateProfitGuard)
+}
+
 func RegisterAdminOrderEmailTemplateRoutes(admin gin.IRoutes, handler *OrderEmailTemplateHandler) {
 	admin.GET("/settings/order-email-template", handler.GetOrderEmailTemplate)
 	admin.PUT("/settings/order-email-template", handler.UpdateOrderEmailTemplate)

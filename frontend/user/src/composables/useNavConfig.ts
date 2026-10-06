@@ -11,10 +11,7 @@ import { getLocalizedText } from '../utils/resellerSiteConfig'
 
 /**
  * 站点导航配置（后台「设置 → 导航」写入的 nav_config）。
- *
- * classic 与 vault 两套模板都从这里取导航项 —— 之前各写一份，vault 那份漏了
- * custom_items，导致后台配的自定义导航在 vault 模板下不显示。新模板接入导航时
- * 一律用这个 composable，不要再抄一遍解析逻辑。
+ * 全站统一从这里取导航项，不要在各页面重复解析。
  */
 
 export interface NavItem {

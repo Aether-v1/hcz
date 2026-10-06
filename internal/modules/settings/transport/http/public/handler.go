@@ -140,9 +140,8 @@ func (h *Handler) SetSiteBuilder(sb SiteBuilderPublic) {
 // GetConfig 获取全局配置。
 func (h *Handler) GetConfig(c *gin.Context) {
 	defaults := map[string]interface{}{
-		"languages":                              append([]string(nil), constants.SupportedLocales...),
-		constants.SettingFieldSiteCurrency:       constants.SiteCurrencyDefault,
-		constants.SettingFieldStorefrontTemplate: constants.StorefrontTemplateDefault,
+		"languages":                        append([]string(nil), constants.SupportedLocales...),
+		constants.SettingFieldSiteCurrency: constants.SiteCurrencyDefault,
 		"contact": map[string]interface{}{
 			"telegram": "https://telegram.me/hcz",
 			"whatsapp": "https://wa.me/1234567890",

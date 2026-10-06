@@ -13,6 +13,7 @@ import (
 	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	"github.com/Aether-v1/hcz/internal/modules/catalog/product/manualform"
 	couponcontract "github.com/Aether-v1/hcz/internal/modules/coupon/contract"
+	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
 	promotioncontract "github.com/Aether-v1/hcz/internal/modules/promotion/contract"
 	resellermodule "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
@@ -350,6 +351,8 @@ var userOrderCommonErrorRules = []mappedError{
 	{target: ErrOrderCurrencyMismatch, code: response.CodeBadRequest, key: "error.order_currency_mismatch"},
 	{target: productcontract.ErrProductPriceInvalid, code: response.CodeBadRequest, key: "error.product_price_invalid"},
 	{target: ErrProductNotAvailable, code: response.CodeBadRequest, key: "error.product_not_available"},
+	{target: orderapp.ErrProductCostNotConfigured, code: response.CodeBadRequest, key: "error.product_unavailable"},
+	{target: orderapp.ErrProductUnprofitable, code: response.CodeBadRequest, key: "error.product_unavailable"},
 	{target: productcontract.ErrResellerProductNotListed, code: response.CodeBadRequest, key: "error.reseller_product_not_listed"},
 	{target: resellermodule.ErrPriceBelowBase, code: response.CodeBadRequest, key: "error.reseller_price_invalid"},
 	{target: resellermodule.ErrMarkupExceeded, code: response.CodeBadRequest, key: "error.reseller_markup_exceeded"},

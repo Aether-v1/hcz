@@ -138,11 +138,11 @@
       <div v-if="quote" class="grid grid-cols-2 gap-3">
         <div class="rounded-xl border border-border p-4">
           <div class="text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.feeLabel') }}</div>
-          <div class="mt-1 font-semibold font-mono text-foreground">{{ quote.fee_amount }} USDT</div>
+          <div class="mt-1 font-semibold font-mono text-foreground">{{ formatUsdt(quote.fee_amount, 'USDT') }}</div>
         </div>
         <div class="rounded-xl border border-primary/40 bg-primary/5 p-4">
           <div class="text-xs text-primary">{{ t('personalCenter.wallet.withdraw.netLabel') }}</div>
-          <div class="mt-1 font-semibold font-mono text-primary">{{ quote.net_amount }} USDT</div>
+          <div class="mt-1 font-semibold font-mono text-primary">{{ formatUsdt(quote.net_amount, 'USDT') }}</div>
         </div>
       </div>
       <p v-else-if="quoteLoading" class="text-xs text-muted-foreground">
@@ -190,6 +190,7 @@ import { Wallet, ArrowUpRight } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
 import type { WithdrawalAddress, WithdrawalQuote } from '../../api/types'
 import PanelHeading from '../../components/shared/PanelHeading.vue'
+import { formatUsdt } from '../../utils/money'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -215,10 +216,10 @@ const quoteLoading = ref(false)
 let quoteTimer: number | null = null
 let quoteSeq = 0
 
+// 可提现余额：走 formatUsdt。钱包未加载（null）时显示 '--'，不显示假 0.00。
 const balanceDisplay = computed(() => {
   const ccy = String(wallet.value?.currency || 'USDT')
-  const bal = wallet.value?.available_balance ?? '0.00'
-  return `${bal} ${ccy}`
+  return formatUsdt(wallet.value?.available_balance, ccy)
 })
 
 const alertClass = computed(() => {

@@ -13,7 +13,6 @@ const tabs = [
   { key: 'banner', label: 'Banner / 公告', to: '/site-builder/banner' },
   { key: 'discovery', label: '发现页装修', to: '/site-builder/discovery' },
   { key: 'nav-footer', label: '导航 / Footer', to: '/site-builder/nav-footer' },
-  { key: 'template', label: '模板设置', to: '/site-builder/template' },
 ]
 
 const siteUrl = ref('')
@@ -40,7 +39,7 @@ const openPreview = () => {
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-semibold">站点装修</h1>
-        <p class="mt-1 text-xs text-muted-foreground">统一配置前台品牌、首页入口、Banner、发现页、导航与模板</p>
+        <p class="mt-1 text-xs text-muted-foreground">统一配置前台品牌、首页入口、Banner、发现页、导航</p>
       </div>
       <Button
         variant="outline"

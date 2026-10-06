@@ -222,6 +222,30 @@ func (s *Store) IncrementListingAvailableUSDT(id uint, amount decimal.Decimal) e
 		UpdateColumn("available_usdt", gorm.Expr("available_usdt + ?", amount)).Error
 }
 
+// CountActiveTradesByListingID 统计挂单下非终态交易数（pending_payment/paid/disputed）。
+func (s *Store) CountActiveTradesByListingID(listingID uint) (int64, error) {
+	if listingID == 0 {
+		return 0, nil
+	}
+	var count int64
+	err := s.db.Model(&c2cdomain.Trade{}).
+		Where("listing_id = ? AND status IN ?", listingID, []string{"pending_payment", "paid", "disputed"}).
+		Count(&count).Error
+	return count, err
+}
+
+// ListListingsByStatus 按 status 批量查询挂单（迁移脚本使用）。
+func (s *Store) ListListingsByStatus(statuses []string) ([]c2cdomain.Listing, error) {
+	if len(statuses) == 0 {
+		return []c2cdomain.Listing{}, nil
+	}
+	var rows []c2cdomain.Listing
+	if err := s.db.Where("status IN ?", statuses).Order("id asc").Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 // ==================== 交易 ====================
 
 func (s *Store) CreateTrade(t *c2cdomain.Trade) error {

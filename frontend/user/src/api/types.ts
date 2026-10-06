@@ -173,6 +173,9 @@ export interface AffiliateDashboardData {
     pending_commission: string
     available_commission: string
     withdrawn_commission: string
+    available_transfer_balance?: string
+    debt_amount?: string
+    transferred_amount?: string
 }
 
 export interface AffiliateCommissionData {
@@ -187,20 +190,13 @@ export interface AffiliateCommissionData {
     created_at: string
 }
 
-export interface AffiliateWithdrawData {
+export interface AffiliateTransferRecord {
     id: number
     amount: string
-    channel: string
-    account: string
-    status: string
-    reject_reason?: string
+    type: string
+    reference?: string
+    remark?: string
     created_at: string
-}
-
-export interface AffiliateWithdrawApplyPayload {
-    amount: string
-    channel: string
-    account: string
 }
 
 export interface ResellerProfileSummaryData {

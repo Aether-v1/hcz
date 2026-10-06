@@ -18,16 +18,16 @@
             <span class="text-xs text-muted-foreground font-mono">{{ wallet?.currency || 'USDT' }}</span>
           </div>
           <div class="mt-2 text-3xl font-bold tracking-tight font-mono">
-            {{ wallet?.available_balance || '0.00' }}
+            {{ formatUsdt(wallet?.available_balance, wallet?.currency) }}
           </div>
           <div class="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-border/60">
             <div>
               <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.frozen') }}</div>
-              <div class="mt-1 text-sm font-semibold font-mono">{{ wallet?.frozen_balance || '0.00' }}</div>
+              <div class="mt-1 text-sm font-semibold font-mono">{{ formatUsdt(wallet?.frozen_balance, wallet?.currency) }}</div>
             </div>
             <div>
               <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.total') }}</div>
-              <div class="mt-1 text-sm font-semibold font-mono">{{ wallet?.total_balance || '0.00' }}</div>
+              <div class="mt-1 text-sm font-semibold font-mono">{{ formatUsdt(wallet?.total_balance, wallet?.currency) }}</div>
             </div>
           </div>
         </CardContent>
@@ -73,7 +73,7 @@
             <div class="min-w-0 flex-1">
               <div class="font-mono text-xs text-muted-foreground">{{ trade.trade_no }}</div>
               <div class="mt-0.5 text-sm font-medium truncate">
-                {{ trade.usdt_amount }} USDT · {{ trade.fiat_amount }} {{ trade.fiat_currency }}
+                {{ formatUsdt(trade.usdt_amount) }} · {{ trade.fiat_amount }} {{ trade.fiat_currency }}
               </div>
             </div>
             <Badge size="sm" :class="TRADE_STATUS_VARIANTS[trade.status]">
@@ -104,6 +104,7 @@ import {
   TRADE_STATUS_LABELS,
   TRADE_STATUS_VARIANTS,
 } from '@/composables/useC2C'
+import { formatUsdt } from '@/utils/money'
 
 const { t } = useI18n()
 const c2cStore = useC2CStore()

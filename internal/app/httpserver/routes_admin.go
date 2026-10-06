@@ -31,6 +31,7 @@ import (
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
 	paymenttransport "github.com/Aether-v1/hcz/internal/modules/payment/transport/http"
 	procurementtransport "github.com/Aether-v1/hcz/internal/modules/procurement/transport/http"
+	pricinghttp "github.com/Aether-v1/hcz/internal/modules/pricing/transport/http"
 	promotiontransport "github.com/Aether-v1/hcz/internal/modules/promotion/transport/http"
 	reconciliationtransport "github.com/Aether-v1/hcz/internal/modules/reconciliation/transport/http"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/admin"
@@ -128,6 +129,7 @@ func registerAdminRoutes(
 	notificationtransport.RegisterAdminRoutes(authorized, adminNotificationHandler)
 	settingstransport.RegisterAdminOrderEmailTemplateRoutes(authorized, settingstransport.NewOrderEmailTemplateHandler(c.SettingService))
 	settingstransport.RegisterAdminAffiliateRoutes(authorized, settingstransport.NewAffiliateHandler(c.SettingService))
+	settingstransport.RegisterAdminProfitGuardRoutes(authorized, settingstransport.NewProfitGuardHandler(c.SettingService))
 	settingstransport.RegisterAdminTelegramBotRoutes(authorized, settingstransport.NewTelegramBotHandler(c.SettingService))
 
 	// HCZ P0-2: 全局汇率（USDT 结算）管理，挂在 /admin/settings 下复用现有 JWT/RBAC。
@@ -135,6 +137,11 @@ func registerAdminRoutes(
 	authorized.GET("/settings/exchange-rate", exchRateHandler.Get)
 	authorized.PUT("/settings/exchange-rate", exchRateHandler.Update)
 	authorized.POST("/settings/exchange-rate/refresh", exchRateHandler.Refresh)
+
+	// HCZ Profit Guard：管理员定价预览（只读核算明细，敏感成本字段不进 user DTO）。
+	pricingPreviewHandler := pricinghttp.NewAdminHandler(c.ProductReadService, c.SettingService, c.ExchangeRateService)
+	authorized.POST("/pricing/preview", pricingPreviewHandler.Preview)
+
 	adminauthtransport.RegisterAdminPasswordRoutes(authorized, adminLoginHandler)
 
 	// 系统信息与版本检测

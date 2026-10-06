@@ -15,12 +15,14 @@ type WithdrawRequest struct {
 	Channel            string       `gorm:"type:varchar(50);not null" json:"channel"`            // 提现渠道
 	Account            string       `gorm:"type:varchar(255);not null" json:"account"`           // 提现账号
 	Status             string       `gorm:"type:varchar(32);not null;index" json:"status"`       // 提现状态
+	Reference          string       `gorm:"type:varchar(120);uniqueIndex" json:"reference"`      // 幂等唯一键
+	WalletTxnID        *uint        `gorm:"index" json:"wallet_txn_id,omitempty"`                // 关联钱包交易ID
 	RejectReason       string       `gorm:"type:varchar(255)" json:"reject_reason"`              // 拒绝原因
 	ProcessedBy        *uint        `gorm:"index" json:"processed_by,omitempty"`                 // 审核管理员ID
 	ProcessedAt        *time.Time   `gorm:"index" json:"processed_at,omitempty"`                 // 审核时间
 	CreatedAt          time.Time    `gorm:"index" json:"created_at"`                             // 创建时间
 	UpdatedAt          time.Time    `gorm:"index" json:"updated_at"`                             // 更新时间
-	DeletedAt          *time.Time   `gorm:"index" json:"-"`                                      // 软删除时间
+	DeletedAt          *time.Time   `gorm:"index" json:"-"`                                       // 软删除时间
 
 	AffiliateProfile Profile            `gorm:"foreignKey:AffiliateProfileID" json:"affiliate_profile,omitempty"` // 推广用户
 	Processor        *admindomain.Admin `gorm:"foreignKey:ProcessedBy" json:"processor,omitempty"`                // 审核管理员

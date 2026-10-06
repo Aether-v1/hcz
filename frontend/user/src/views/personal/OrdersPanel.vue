@@ -6,7 +6,7 @@
           {{ t('orders.pageInfo', { page: activePagination.page, total: activePagination.total_page }) }}
         </Badge>
         <Button as-child variant="ghost" size="sm" class="rounded-full">
-          <router-link to="/products">{{ t('orders.continueShopping') }}</router-link>
+          <router-link to="/products">{{ t('orders.goServiceHall') }}</router-link>
         </Button>
       </template>
     </PanelHeading>
@@ -202,7 +202,7 @@
         <div
           v-for="ro in rechargeOrders"
           :key="ro.recharge_no"
-          class="rounded-2xl border bg-card p-6 shadow-sm transition-all transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+          class="rounded-2xl border bg-card p-6 transition-colors hover:bg-accent/40"
         >
           <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>

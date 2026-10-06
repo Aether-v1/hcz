@@ -87,6 +87,8 @@ func (c *Container) initApplicationServices() {
 	c.WalletService = walletapp.NewService(walletapp.Options{
 		Repository: c.WalletRepo, Transactions: c.WalletRepo,
 	})
+	// Affiliate 提现出金需要调用钱包服务真实入账。
+	c.AffiliateService.SetWalletService(c.WalletService, c.WalletRepo)
 	c.WithdrawalService = withdrawalapp.NewService(withdrawalapp.Options{
 		Repository: c.WithdrawalRepo,
 		UnitOfWork: c.WithdrawalRepo,
@@ -203,18 +205,16 @@ func (c *Container) initApplicationServices() {
 		contentapp.SystemClock{},
 	)
 
-	// 站点装修（sitebuilder）：首页入口 / 发现页区块 / 品牌 / 模板 / 审计。
+	// 站点装修（sitebuilder）：首页入口 / 发现页区块 / 品牌 / 审计。
 	c.SiteHomeEntryService = sitebuilderapp.NewHomeEntryService(c.SiteHomeEntryRepo)
 	c.SiteHomeEntryService.SetProductLookup(c.ProductRepo)
 	c.SiteDiscoveryBlockService = sitebuilderapp.NewDiscoveryBlockService(c.SiteDiscoveryBlockRepo)
 	c.SiteAuditService = sitebuilderapp.NewAuditService(c.SiteAuditRepo, c.SiteAuditRepo)
 	c.SiteBrandService = sitebuilderapp.NewBrandService(c.SettingService)
-	c.SiteTemplateService = sitebuilderapp.NewTemplateService(c.SettingService)
 	c.SiteBuilderAdminHandler = sitebuilderhttp.NewAdminHandler(sitebuilderhttp.Services{
 		HomeEntries: c.SiteHomeEntryService,
 		Discovery:   c.SiteDiscoveryBlockService,
 		Brand:       c.SiteBrandService,
-		Template:    c.SiteTemplateService,
 		Audit:       c.SiteAuditService,
 	})
 }

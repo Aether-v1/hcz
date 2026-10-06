@@ -53,30 +53,6 @@
     "notice": "公告",
     "about": "关于"
   },
-  "vault": {
-    "hero": {
-      "badge": "即时发货 · 数字商品",
-      "titleLead": "买卡密、充值、会员，",
-      "titleHl": "秒到账。",
-      "lede": "游戏点卡、流媒体会员、软件授权、礼品卡、AI 工具 —— 付款后自动发货，凭证立即送达。",
-      "searchButton": "搜索",
-      "hot": "热门：",
-      "trustFast": "极速自动发货",
-      "trustSecure": "加密结算 · 凭证仅你可见",
-      "trustRefund": "问题订单及时处理"
-    },
-    "categoriesTitle": "按分类逛",
-    "allCategories": "全部分类",
-    "footer": {
-      "shop": "商城",
-      "support": "支持",
-      "legal": "条款",
-      "tagline": "数字商品自动发货平台。卡密、授权、充值，付款即交付。",
-      "faq": "常见问题",
-      "payAlipay": "支付宝",
-      "payWechat": "微信"
-    }
-  },
   "breadcrumb": {
     "label": "面包屑导航",
     "back": "返回{name}"
@@ -315,13 +291,34 @@
     "ariaLabel": "主导航",
     "home": "首页",
     "orders": "订单",
+    "c2c": "C2C",
     "discover": "发现",
     "messages": "消息",
     "me": "我的"
   },
   "discover": {
-    "comingSoon": "即将开放",
-    "description": "更多服务正在准备中，敬请期待"
+    "title": "发现",
+    "subtitle": "平台服务、分类入口与最新公告活动，一站浏览。",
+    "hotEyebrow": "热门服务",
+    "hotTitle": "大家都在买",
+    "hotEmpty": "暂无热门服务",
+    "hotError": "热门服务加载失败",
+    "categoryEyebrow": "服务分类",
+    "categoryTitle": "按分类浏览",
+    "categoryEmpty": "暂无服务分类",
+    "categoryError": "服务分类加载失败",
+    "noticeEyebrow": "公告活动",
+    "noticeTitle": "平台公告与活动",
+    "noticeEmpty": "暂无公告",
+    "noticeError": "公告加载失败",
+    "benefitEyebrow": "精选推荐",
+    "benefitTitle": "更多数字权益",
+    "benefitEmpty": "暂无更多推荐",
+    "benefitError": "推荐内容加载失败",
+    "allServices": "全部服务",
+    "viewAll": "查看全部",
+    "retry": "重试",
+    "loading": "加载中…"
   },
   "bottomNav": {
     "home": "首页",
@@ -565,6 +562,10 @@
       "title": "我的钱包",
       "subtitle": "管理余额、充值与资金明细",
       "balanceLabel": "当前余额",
+      "totalBalanceLabel": "总资产",
+      "availableLabel": "可用余额",
+      "frozenLabel": "冻结余额",
+      "frozenNote": "交易、订单或提现处理中暂时不可用的金额",
       "transactionsLabel": "明细总数",
       "currentPageLabel": "当前页",
       "rechargeTitle": "余额充值",
@@ -590,6 +591,7 @@
       "pendingHint": "支付完成后系统将自动刷新到账状态，也可手动点击“检查支付状态”。",
       "detailTitle": "钱包明细",
       "empty": "暂无钱包明细",
+      "retry": "重试",
       "directionIn": "收入",
       "directionOut": "支出",
       "rechargeStatus": {
@@ -613,7 +615,14 @@
         "gift_card_redeem": "礼品卡兑换",
         "admin_adjust": "管理员调账",
         "admin_refund": "管理员退款",
-        "order_underpaid_credit": "订单收款不足转入"
+        "order_underpaid_credit": "订单收款不足转入",
+        "withdrawal_debit": "提现扣款",
+        "withdrawal_refund": "提现退回",
+        "c2c_freeze": "C2C资金冻结",
+        "c2c_unfreeze": "C2C资金解冻",
+        "c2c_settle": "C2C结算划出",
+        "c2c_receive": "C2C结算划入",
+        "affiliate_transfer_in": "推广佣金划入"
       },
       "errors": {
         "loadFailed": "钱包数据加载失败，请稍后重试",
@@ -684,7 +693,7 @@
     },
     "affiliate": {
       "title": "推广返利",
-      "subtitle": "查看推广数据与佣金，并提交提现申请",
+      "subtitle": "查看推广数据与佣金，并将佣金划转到主钱包",
       "notOpened": "你还没有开通推广返利，开通后可获得专属联盟ID与推广链接。",
       "openButton": "立即开通",
       "opening": "开通中...",
@@ -727,9 +736,9 @@
       },
       "commissionStatus": {
         "pendingConfirm": "待确认",
-        "available": "可提现",
+        "available": "可划转",
         "rejected": "已失效",
-        "withdrawn": "已提现"
+        "withdrawn": "已划转"
       },
       "withdrawStatus": {
         "pendingReview": "待审核",
@@ -1707,6 +1716,7 @@
     "submittedAt": "提交时间",
     "subtitle": "查看充值进度、金额与支付状态",
     "continueShopping": "继续充值",
+    "goServiceHall": "去服务大厅",
     "empty": "暂无订单",
     "emptyFiltered": "未找到符合筛选条件的订单",
     "emptyAction": "选择服务",

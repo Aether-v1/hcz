@@ -17,15 +17,12 @@ import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefresh'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { confirmAction } from '@/utils/confirm'
-import { notifyError, notifySuccess } from '@/utils/notify'
 import { formatDate } from '@/utils/format'
 import { adminUrl } from '@/utils/adminBase'
 
 const { t } = useI18n()
 const loading = ref(true)
 const { refreshing, refreshList } = useListRefresh()
-const operating = ref(false)
 const rows = ref<AdminAffiliateWithdraw[]>([])
 const pagination = ref({
   page: 1,
@@ -99,41 +96,6 @@ const statusClass = (status?: string) => {
   return 'border-border bg-muted/30 text-muted-foreground'
 }
 
-const rejectWithdraw = async (row: AdminAffiliateWithdraw) => {
-  const confirmed = await confirmAction({
-    description: t('admin.affiliatesWithdraws.actions.rejectConfirm', { id: row.id }),
-    variant: 'destructive',
-  })
-  if (!confirmed) return
-
-  const reason = window.prompt(t('admin.affiliatesWithdraws.actions.rejectReasonPrompt')) ?? ''
-  operating.value = true
-  try {
-    await adminAPI.rejectAffiliateWithdraw(row.id, { reason: reason.trim() || undefined })
-    notifySuccess(t('admin.affiliatesWithdraws.actions.rejectSuccess'))
-    await fetchRows(pagination.value.page)
-  } catch (err: any) {
-    notifyError(err?.message || t('admin.affiliatesWithdraws.actions.rejectFailed'))
-  } finally {
-    operating.value = false
-  }
-}
-
-const payWithdraw = async (row: AdminAffiliateWithdraw) => {
-  const confirmed = await confirmAction({ description: t('admin.affiliatesWithdraws.actions.payConfirm', { id: row.id }) })
-  if (!confirmed) return
-  operating.value = true
-  try {
-    await adminAPI.payAffiliateWithdraw(row.id)
-    notifySuccess(t('admin.affiliatesWithdraws.actions.paySuccess'))
-    await fetchRows(pagination.value.page)
-  } catch (err: any) {
-    notifyError(err?.message || t('admin.affiliatesWithdraws.actions.payFailed'))
-  } finally {
-    operating.value = false
-  }
-}
-
 onMounted(() => {
   fetchRows()
 })
@@ -142,7 +104,11 @@ onMounted(() => {
 <template>
   <div class="space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold">{{ t('admin.affiliatesWithdraws.title') }}</h1>
+      <h1 class="text-2xl font-semibold">Affiliate 提现记录（历史归档）</h1>
+    </div>
+
+    <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      Affiliate 独立提现已退休，新业务请使用佣金划转功能。本页面仅用于历史记录查询，不再支持审核操作。
     </div>
 
     <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -184,17 +150,16 @@ onMounted(() => {
             <TableHead class="min-w-[160px] px-6 py-3">{{ t('admin.affiliatesWithdraws.table.rejectReason') }}</TableHead>
             <TableHead class="min-w-[100px] px-6 py-3">{{ t('admin.affiliatesWithdraws.table.processedBy') }}</TableHead>
             <TableHead class="min-w-[100px] px-6 py-3">{{ t('admin.affiliatesWithdraws.table.createdAt') }}</TableHead>
-            <TableHead class="min-w-[100px] px-6 py-3 text-right">{{ t('admin.affiliatesWithdraws.table.action') }}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody class="divide-y divide-border">
           <TableRow v-if="loading">
-            <TableCell :colspan="10" class="p-0">
-              <TableSkeleton :columns="10" :rows="5" />
+            <TableCell :colspan="9" class="p-0">
+              <TableSkeleton :columns="9" :rows="5" />
             </TableCell>
           </TableRow>
           <TableRow v-else-if="rows.length === 0">
-            <TableCell colspan="10" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.affiliatesWithdraws.empty') }}</TableCell>
+            <TableCell colspan="9" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.affiliatesWithdraws.empty') }}</TableCell>
           </TableRow>
           <TableRow v-for="item in rows" :key="item.id" class="hover:bg-muted/30">
             <TableCell class="px-6 py-4">
@@ -233,25 +198,6 @@ onMounted(() => {
               <div class="mt-0.5">{{ formatDate(item.processed_at) || '-' }}</div>
             </TableCell>
             <TableCell class="min-w-[100px] px-6 py-4 text-xs text-muted-foreground">{{ formatDate(item.created_at) }}</TableCell>
-            <TableCell class="min-w-[100px] px-6 py-4 text-right">
-              <div class="flex flex-wrap items-center justify-end gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  :disabled="operating || item.status !== AFFILIATE_WITHDRAW_STATUS_PENDING_REVIEW"
-                  @click="rejectWithdraw(item)"
-                >
-                  {{ t('admin.affiliatesWithdraws.actions.reject') }}
-                </Button>
-                <Button
-                  size="sm"
-                  :disabled="operating || item.status !== AFFILIATE_WITHDRAW_STATUS_PENDING_REVIEW"
-                  @click="payWithdraw(item)"
-                >
-                  {{ t('admin.affiliatesWithdraws.actions.pay') }}
-                </Button>
-              </div>
-            </TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -268,4 +214,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

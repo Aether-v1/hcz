@@ -58,6 +58,7 @@ func setupOrderRefundWalletTest(t *testing.T) (*Service, *gorm.DB) {
 		&procurementdomain.Order{},
 		&affiliatedomain.Profile{},
 		&affiliatedomain.Commission{},
+		&affiliatedomain.CommissionLedger{},
 		&affiliatedomain.WithdrawRequest{},
 		&walletdomain.Account{},
 		&walletdomain.Transaction{},
@@ -415,6 +416,7 @@ func TestWalletServiceAdminRefundToWallet(t *testing.T) {
 		AffiliateProfileID: profile.ID,
 		OrderID:            order.ID,
 		CommissionType:     constants.AffiliateCommissionTypeOrder,
+		BeneficiaryUserID:  204,
 		BaseAmount:         money.FromDecimal(decimal.NewFromInt(40)),
 		RatePercent:        money.FromDecimal(decimal.NewFromInt(50)),
 		CommissionAmount:   money.FromDecimal(decimal.NewFromInt(20)),
@@ -424,6 +426,22 @@ func TestWalletServiceAdminRefundToWallet(t *testing.T) {
 	}
 	if err := db.Create(&commission).Error; err != nil {
 		t.Fatalf("create affiliate commission failed: %v", err)
+	}
+	// 补充创建对应的 CREDIT ledger（ledger-based 退款逻辑依赖它）
+	creditLedger := affiliatedomain.CommissionLedger{
+		CommissionID:       commission.ID,
+		AffiliateProfileID: profile.ID,
+		BeneficiaryUserID:  204,
+		OrderID:            order.ID,
+		Type:               constants.AffiliateLedgerTypeCredit,
+		Amount:             money.FromDecimal(decimal.NewFromInt(20)),
+		BalanceAfter:       money.FromDecimal(decimal.NewFromInt(20)),
+		Reference:          fmt.Sprintf("affiliate_credit:order:%d:comm:%d", order.ID, commission.ID),
+		Remark:             "Test seed commission",
+		CreatedAt:          time.Now(),
+	}
+	if err := db.Create(&creditLedger).Error; err != nil {
+		t.Fatalf("create credit ledger failed: %v", err)
 	}
 
 	updatedOrder, txn, createdRecord, err := svc.AdminRefundToWallet(AdminRefundToWalletInput{
@@ -462,11 +480,23 @@ func TestWalletServiceAdminRefundToWallet(t *testing.T) {
 	if err := db.First(&refreshedCommission, commission.ID).Error; err != nil {
 		t.Fatalf("reload affiliate commission failed: %v", err)
 	}
-	if !refreshedCommission.CommissionAmount.Decimal.Equal(decimal.RequireFromString("12.50")) {
-		t.Fatalf("unexpected commission amount after refund: %s", refreshedCommission.CommissionAmount.String())
+	// append-only: commission amount 不可变，保持原始值 20
+	if !refreshedCommission.CommissionAmount.Decimal.Equal(decimal.NewFromInt(20)) {
+		t.Fatalf("commission amount must be immutable, expected 20, got %s", refreshedCommission.CommissionAmount.String())
 	}
 	if refreshedCommission.Status != constants.AffiliateCommissionStatusAvailable {
 		t.Fatalf("unexpected commission status after partial refund: %s", refreshedCommission.Status)
+	}
+	// 验证 REVERSAL ledger 已创建（冲正金额 = 20 * 15/40 = 7.5）
+	var ledgers []affiliatedomain.CommissionLedger
+	if err := db.Where("commission_id = ? AND type = ?", commission.ID, constants.AffiliateLedgerTypeReversal).Find(&ledgers).Error; err != nil {
+		t.Fatalf("query reversal ledger failed: %v", err)
+	}
+	if len(ledgers) != 1 {
+		t.Fatalf("expected exactly 1 reversal ledger, got %d", len(ledgers))
+	}
+	if !ledgers[0].Amount.Decimal.Equal(decimal.RequireFromString("-7.50")) {
+		t.Fatalf("expected reversal amount -7.50, got %s", ledgers[0].Amount.String())
 	}
 
 	_, _, _, err = svc.AdminRefundToWallet(AdminRefundToWalletInput{

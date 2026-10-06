@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -176,9 +177,28 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 		return nil
 	}
 
-	// 事务内批量创建，任一层失败整体回滚。
+	// 事务内批量创建佣金 + CREDIT ledger，任一层失败整体回滚。
 	err = s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
-		return tx.BatchCreateCommissions(commissions)
+		if err := tx.BatchCreateCommissions(commissions); err != nil {
+			return err
+		}
+		// 佣金创建成功后，为每条佣金创建 CREDIT ledger（append-only）。
+		for _, c := range commissions {
+			ref := fmt.Sprintf("affiliate_credit:order:%d:comm:%d", c.OrderID, c.ID)
+			if _, err := s.appendLedger(tx, LedgerEntry{
+				CommissionID:       c.ID,
+				AffiliateProfileID: c.AffiliateProfileID,
+				BeneficiaryUserID:  c.BeneficiaryUserID,
+				OrderID:            c.OrderID,
+				Type:               constants.AffiliateLedgerTypeCredit,
+				Amount:             c.CommissionAmount.Decimal,
+				Reference:          ref,
+				Remark:             fmt.Sprintf("Order completed, level %d commission", c.Level),
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		// 并发兜底：幂等检查与插入之间的竞争导致唯一冲突，静默跳过。
@@ -281,7 +301,11 @@ func (s *Service) ConfirmDueCommissions(now time.Time) error {
 	return nil
 }
 
-// HandleOrderCanceled 处理订单取消/退款后的佣金逆向
+// HandleOrderCanceled 处理订单取消/退款后的佣金逆向（ledger 版本）。
+// 核心原则：不再 UPDATE commission amount，改为创建 REVERSAL ledger。
+// 已绑定提现的佣金不再 SKIP（修复 P1-1）：
+//   - 提现未 PAID：创建 REVERSAL 减少净余额，pay 时检查余额是否足够。
+//   - 提现已 PAID：创建 REVERSAL 后净余额为负，同时创建 DEBT 记录债务。
 func (s *Service) HandleOrderCanceled(orderID uint, reason string) error {
 	if orderID == 0 || s.repo == nil {
 		return nil
@@ -289,6 +313,7 @@ func (s *Service) HandleOrderCanceled(orderID uint, reason string) error {
 	rows, err := s.repo.ListCommissionsByOrder(orderID, []string{
 		constants.AffiliateCommissionStatusPendingConfirm,
 		constants.AffiliateCommissionStatusAvailable,
+		constants.AffiliateCommissionStatusWithdrawn, // 已出金佣金取消时必须冲正并产生 DEBT
 	})
 	if err != nil {
 		return err
@@ -302,24 +327,98 @@ func (s *Service) HandleOrderCanceled(orderID uint, reason string) error {
 	if reasonText == "" {
 		reasonText = "order_canceled"
 	}
-	for i := range rows {
-		item := rows[i]
-		if item.WithdrawRequestID != nil {
-			// 已进入提现流程，按业务规则不影响用户提现。
-			continue
+
+	return s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
+		for i := range rows {
+			item := rows[i]
+			// 全额冲正：冲正金额 = 原始佣金金额（因为 commission amount 创建后不可变）
+			reversalAmount := item.CommissionAmount.Decimal.Round(2)
+			if reversalAmount.LessThanOrEqual(decimal.Zero) {
+				continue
+			}
+
+			// 判断是否已出金：withdrawn 状态且关联提现已 PAID。
+			// 已出金只创建 DEBT，未出金只创建 REVERSAL（避免双重扣减）。
+			isSettled := false
+			if item.Status == constants.AffiliateCommissionStatusWithdrawn && item.WithdrawRequestID != nil {
+				withdrawReq, err := tx.GetWithdrawByID(*item.WithdrawRequestID)
+				if err != nil {
+					return err
+				}
+				if withdrawReq != nil && withdrawReq.Status == constants.AffiliateWithdrawStatusPaid {
+					isSettled = true
+				}
+			}
+
+			if isSettled {
+				// 已出金：创建 DEBT
+				debtRef := fmt.Sprintf("affiliate_debt:o%d:c%d:cancel", orderID, item.ID)
+				if _, err := s.appendLedger(tx, LedgerEntry{
+					CommissionID:       item.ID,
+					AffiliateProfileID: item.AffiliateProfileID,
+					BeneficiaryUserID:  item.BeneficiaryUserID,
+					OrderID:            item.OrderID,
+					Type:               constants.AffiliateLedgerTypeDebt,
+					Amount:             reversalAmount.Neg(),
+					Reference:          debtRef,
+					WithdrawRequestID:  item.WithdrawRequestID,
+					Remark:             reasonText + " (canceled after payout, debt owed)",
+				}); err != nil {
+					// METRICS_PENDING: affiliate_reversal_failed
+					logger.Errorw("affiliate_reversal_failed",
+						"order_id", orderID, "commission_id", item.ID,
+						"type", "debt_cancel", "error", err.Error(),
+					)
+					return err
+				}
+				// METRICS_PENDING: affiliate_debt_created
+				logger.Infow("affiliate_debt_created",
+					"order_id", orderID, "commission_id", item.ID,
+					"amount", reversalAmount.Neg().String(), "ref", debtRef,
+				)
+			} else {
+				// 未出金：创建 REVERSAL
+				ref := fmt.Sprintf("affiliate_reversal:o%d:c%d:cancel", orderID, item.ID)
+				if _, err := s.appendLedger(tx, LedgerEntry{
+					CommissionID:       item.ID,
+					AffiliateProfileID: item.AffiliateProfileID,
+					BeneficiaryUserID:  item.BeneficiaryUserID,
+					OrderID:            item.OrderID,
+					Type:               constants.AffiliateLedgerTypeReversal,
+					Amount:             reversalAmount.Neg(),
+					Reference:          ref,
+					WithdrawRequestID:  item.WithdrawRequestID,
+					Remark:             reasonText,
+				}); err != nil {
+					// METRICS_PENDING: affiliate_reversal_failed
+					logger.Errorw("affiliate_reversal_failed",
+						"order_id", orderID, "commission_id", item.ID,
+						"type", "reversal_cancel", "error", err.Error(),
+					)
+					return err
+				}
+			}
+
+			// 佣金净余额清零后，将状态改为 rejected。
+			// withdrawn 状态（已出金）的佣金不改变状态，保持 withdrawn 用于审计追溯。
+			if item.Status != constants.AffiliateCommissionStatusWithdrawn {
+				item.Status = constants.AffiliateCommissionStatusRejected
+				item.InvalidReason = reasonText
+				item.ConfirmAt = nil
+				item.AvailableAt = nil
+			}
+			item.UpdatedAt = now
+			if err := tx.UpdateCommission(&item); err != nil {
+				return err
+			}
 		}
-		item.Status = constants.AffiliateCommissionStatusRejected
-		item.InvalidReason = reasonText
-		item.UpdatedAt = now
-		if err := s.repo.UpdateCommission(&item); err != nil {
-			return err
-		}
-	}
-	return nil
+		return nil
+	})
 }
 
-// HandleOrderRefunded 使用调用方提供的事务 Store 处理退款后的佣金回滚。
+// HandleOrderRefunded 使用调用方提供的事务 Store 处理退款后的佣金回滚（ledger 版本）。
 // 多级别兼容：按 commission 逐条处理，天然覆盖 L1~L10；每级独立按比例扣减。
+// 核心改造：不再 UPDATE commission amount，改为创建 REVERSAL ledger（append-only）。
 func (s *Service) HandleOrderRefunded(
 	repoTx affiliatecontract.Store,
 	order *orderdomain.Order,
@@ -334,8 +433,7 @@ func (s *Service) HandleOrderRefunded(
 	if delta.LessThanOrEqual(decimal.Zero) {
 		return nil
 	}
-	// HCZ P0-Commission: 退款比例分母统一用 USDT 实付额（WalletPaidAmount），
-	// 因为 refund delta 是 USDT。旧无 USDT 快照的订单回退到 TotalAmount（Site Currency）。
+	// 退款比例分母统一用 USDT 实付额。
 	totalAmount := order.TotalAmount.Decimal.Round(2)
 	if order.WalletPaidAmount.Decimal.GreaterThan(decimal.Zero) {
 		totalAmount = order.WalletPaidAmount.Decimal.Round(2)
@@ -352,7 +450,7 @@ func (s *Service) HandleOrderRefunded(
 	}
 	remaining := totalAmount.Sub(before).Round(2)
 	if remaining.LessThanOrEqual(decimal.Zero) {
-		// 全量退款兜底：剩余为 0 时直接把所有 active 佣金清零，避免 rounding residue。
+		// 全量退款兜底。
 		return s.rejectActiveCommissionsOnFullRefund(repoTx, order.ID, reason)
 	}
 	if delta.GreaterThan(remaining) {
@@ -366,6 +464,7 @@ func (s *Service) HandleOrderRefunded(
 	rows, err := repoTx.ListCommissionsByOrderForUpdate(order.ID, []string{
 		constants.AffiliateCommissionStatusPendingConfirm,
 		constants.AffiliateCommissionStatusAvailable,
+		constants.AffiliateCommissionStatusWithdrawn, // 已出金佣金退款时必须冲正并产生 DEBT
 	})
 	if err != nil {
 		return err
@@ -381,49 +480,96 @@ func (s *Service) HandleOrderRefunded(
 	}
 	for i := range rows {
 		item := rows[i]
-		if item.WithdrawRequestID != nil {
-			// 已进入提现流程，按业务规则不影响用户提现。
+
+		// 按"本次退款金额 / 当前剩余未退款金额"比例计算应冲正金额。
+		// 注意：commission.CommissionAmount 是原始创建时的金额（不可变），
+		// 不是当前净余额。当前净余额需要从 ledger SUM 计算。
+		originalCommission := item.CommissionAmount.Decimal.Round(2)
+		if originalCommission.LessThanOrEqual(decimal.Zero) {
 			continue
 		}
 
-		currentCommission := item.CommissionAmount.Decimal.Round(2)
-		if currentCommission.LessThanOrEqual(decimal.Zero) {
-			item.Status = constants.AffiliateCommissionStatusRejected
-			item.InvalidReason = reasonText
-			item.ConfirmAt = nil
-			item.AvailableAt = nil
-			item.UpdatedAt = now
-			if err := repoTx.UpdateCommission(&item); err != nil {
+		// 计算当前该 commission 的净余额（SUM ledger 按 commission_id 过滤）
+		// 简化：直接按比例从原始金额计算冲正额。
+		// 因为是多次退款累积，每次都基于 remaining（剩余未退款金额）计算比例。
+		deduct := originalCommission.Mul(delta).Div(remaining).Round(2)
+		if deduct.LessThanOrEqual(decimal.Zero) {
+			continue
+		}
+
+		// 判断该佣金是否已出金（withdrawn 状态且关联提现已 PAID）。
+		// 已出金佣金退款时只创建 DEBT（资金已离开系统，需追回），不创建 REVERSAL（避免与 SETTLE 双重扣减）。
+		isSettled := false
+		if item.Status == constants.AffiliateCommissionStatusWithdrawn && item.WithdrawRequestID != nil {
+			withdrawReq, err := repoTx.GetWithdrawByID(*item.WithdrawRequestID)
+			if err != nil {
 				return err
 			}
-			continue
-		}
-
-		// 按“本次退款金额 / 当前剩余未退款金额”比例扣减当前佣金，避免多次退款时重复放大扣减。
-		deduct := currentCommission.Mul(delta).Div(remaining).Round(2)
-		nextCommission := currentCommission.Sub(deduct).Round(2)
-		if nextCommission.LessThan(decimal.Zero) {
-			nextCommission = decimal.Zero
-		}
-		currentBase := item.BaseAmount.Decimal.Round(2)
-		nextBase := currentBase
-		if currentBase.GreaterThan(decimal.Zero) {
-			baseDeduct := currentBase.Mul(delta).Div(remaining).Round(2)
-			nextBase = currentBase.Sub(baseDeduct).Round(2)
-			if nextBase.LessThan(decimal.Zero) {
-				nextBase = decimal.Zero
+			if withdrawReq != nil && withdrawReq.Status == constants.AffiliateWithdrawStatusPaid {
+				isSettled = true
 			}
 		}
 
-		item.CommissionAmount = money.FromDecimal(nextCommission)
-		item.BaseAmount = money.FromDecimal(nextBase)
-		item.UpdatedAt = now
-		if nextCommission.LessThanOrEqual(decimal.Zero) {
+		if isSettled {
+			// 已出金：创建 DEBT 记录债务（负金额）
+			debtRef := fmt.Sprintf("affiliate_debt:o%d:c%d:b%s", order.ID, item.ID, before.StringFixed(2))
+			if _, err := s.appendLedger(repoTx, LedgerEntry{
+				CommissionID:       item.ID,
+				AffiliateProfileID: item.AffiliateProfileID,
+				BeneficiaryUserID:  item.BeneficiaryUserID,
+				OrderID:            item.OrderID,
+				Type:               constants.AffiliateLedgerTypeDebt,
+				Amount:             deduct.Neg(),
+				Reference:          debtRef,
+				WithdrawRequestID:  item.WithdrawRequestID,
+				Remark:             fmt.Sprintf("%s (partial refund after payout, debt %.2f)", reasonText, deduct.InexactFloat64()),
+			}); err != nil {
+				// METRICS_PENDING: affiliate_reversal_failed
+				logger.Errorw("affiliate_reversal_failed",
+					"order_id", order.ID, "commission_id", item.ID,
+					"type", "debt_partial_refund", "error", err.Error(),
+				)
+				return err
+			}
+			// METRICS_PENDING: affiliate_debt_created
+			logger.Infow("affiliate_debt_created",
+				"order_id", order.ID, "commission_id", item.ID,
+				"amount", deduct.Neg().String(), "ref", debtRef,
+			)
+		} else {
+			// 未出金：创建 REVERSAL 冲正（负金额）
+			ref := fmt.Sprintf("affiliate_reversal:o%d:c%d:b%s", order.ID, item.ID, before.StringFixed(2))
+			if _, err := s.appendLedger(repoTx, LedgerEntry{
+				CommissionID:       item.ID,
+				AffiliateProfileID: item.AffiliateProfileID,
+				BeneficiaryUserID:  item.BeneficiaryUserID,
+				OrderID:            item.OrderID,
+				Type:               constants.AffiliateLedgerTypeReversal,
+				Amount:             deduct.Neg(),
+				Reference:          ref,
+				WithdrawRequestID:  item.WithdrawRequestID,
+				Remark:             fmt.Sprintf("%s (partial refund %.2f%%)", reasonText, delta.Div(remaining).Mul(decimal.NewFromInt(100)).InexactFloat64()),
+			}); err != nil {
+				// METRICS_PENDING: affiliate_reversal_failed
+				logger.Errorw("affiliate_reversal_failed",
+					"order_id", order.ID, "commission_id", item.ID,
+					"type", "reversal_partial_refund", "error", err.Error(),
+				)
+				return err
+			}
+		}
+
+		// 计算该 commission 的当前净余额，如果为 0 则状态改为 rejected。
+		// 注意：withdrawn 状态（已出金）的佣金不改变状态，保持 withdrawn 用于审计追溯。
+		currentNet := originalCommission.Sub(deduct).Round(2)
+		if currentNet.LessThanOrEqual(decimal.Zero) && item.Status != constants.AffiliateCommissionStatusWithdrawn {
 			item.Status = constants.AffiliateCommissionStatusRejected
 			item.InvalidReason = reasonText
 			item.ConfirmAt = nil
 			item.AvailableAt = nil
 		}
+		// 注意：不再修改 CommissionAmount 和 BaseAmount（保持原始值不变）
+		item.UpdatedAt = now
 		if err := repoTx.UpdateCommission(&item); err != nil {
 			return err
 		}
@@ -431,11 +577,14 @@ func (s *Service) HandleOrderRefunded(
 	return nil
 }
 
-// rejectActiveCommissionsOnFullRefund 全量退款兜底：把订单所有 active 佣金清零并置 rejected。
+// rejectActiveCommissionsOnFullRefund 全量退款兜底：创建全额 REVERSAL ledger。
+// 注意：反转金额 = 当前该 commission 的净余额（SUM ledger），不是原始 commission amount。
+// 因为之前可能已经有部分退款，需要只冲正剩余部分。
 func (s *Service) rejectActiveCommissionsOnFullRefund(repoTx affiliatecontract.Store, orderID uint, reason string) error {
 	rows, err := repoTx.ListCommissionsByOrderForUpdate(orderID, []string{
 		constants.AffiliateCommissionStatusPendingConfirm,
 		constants.AffiliateCommissionStatusAvailable,
+		constants.AffiliateCommissionStatusWithdrawn, // 已出金佣金全额退款时必须冲正并产生 DEBT
 	})
 	if err != nil {
 		return err
@@ -447,16 +596,91 @@ func (s *Service) rejectActiveCommissionsOnFullRefund(repoTx affiliatecontract.S
 	}
 	for i := range rows {
 		item := rows[i]
-		if item.WithdrawRequestID != nil {
-			continue
+
+		// 计算当前该 commission 的净余额（从 ledger SUM）
+		ledgers, err := repoTx.ListLedgersByCommission(item.ID)
+		if err != nil {
+			return err
 		}
-		item.CommissionAmount = money.FromDecimal(decimal.Zero)
-		item.BaseAmount = money.FromDecimal(decimal.Zero)
-		item.Status = constants.AffiliateCommissionStatusRejected
-		item.InvalidReason = reasonText
-		item.ConfirmAt = nil
-		item.AvailableAt = nil
+		currentNet := decimal.Zero
+		for _, l := range ledgers {
+			currentNet = currentNet.Add(l.Amount.Decimal).Round(2)
+		}
+		if currentNet.LessThanOrEqual(decimal.Zero) {
+			continue // 已经净余额为 0，不需要再冲正
+		}
+
+		// 判断是否已出金：withdrawn 状态且关联提现已 PAID。
+		// 已出金佣金只创建 DEBT（资金已离开系统），未出金只创建 REVERSAL。
+		isSettled := false
+		if item.Status == constants.AffiliateCommissionStatusWithdrawn && item.WithdrawRequestID != nil {
+			withdrawReq, err := repoTx.GetWithdrawByID(*item.WithdrawRequestID)
+			if err != nil {
+				return err
+			}
+			if withdrawReq != nil && withdrawReq.Status == constants.AffiliateWithdrawStatusPaid {
+				isSettled = true
+			}
+		}
+
+		if isSettled {
+			// 已出金：创建 DEBT 记录剩余债务
+			debtRef := fmt.Sprintf("affiliate_debt:o%d:c%d:full", orderID, item.ID)
+			if _, err := s.appendLedger(repoTx, LedgerEntry{
+				CommissionID:       item.ID,
+				AffiliateProfileID: item.AffiliateProfileID,
+				BeneficiaryUserID:  item.BeneficiaryUserID,
+				OrderID:            item.OrderID,
+				Type:               constants.AffiliateLedgerTypeDebt,
+				Amount:             currentNet.Neg(),
+				Reference:          debtRef,
+				WithdrawRequestID:  item.WithdrawRequestID,
+				Remark:             reasonText + " (full refund after payout, debt for remaining balance)",
+			}); err != nil {
+				// METRICS_PENDING: affiliate_reversal_failed
+				logger.Errorw("affiliate_reversal_failed",
+					"order_id", orderID, "commission_id", item.ID,
+					"type", "debt_full_refund", "error", err.Error(),
+				)
+				return err
+			}
+			// METRICS_PENDING: affiliate_debt_created
+			logger.Infow("affiliate_debt_created",
+				"order_id", orderID, "commission_id", item.ID,
+				"amount", currentNet.Neg().String(), "ref", debtRef,
+			)
+		} else {
+			// 未出金：创建 REVERSAL 冲正剩余净余额
+			ref := fmt.Sprintf("affiliate_reversal:o%d:c%d:full", orderID, item.ID)
+			if _, err := s.appendLedger(repoTx, LedgerEntry{
+				CommissionID:       item.ID,
+				AffiliateProfileID: item.AffiliateProfileID,
+				BeneficiaryUserID:  item.BeneficiaryUserID,
+				OrderID:            item.OrderID,
+				Type:               constants.AffiliateLedgerTypeReversal,
+				Amount:             currentNet.Neg(),
+				Reference:          ref,
+				WithdrawRequestID:  item.WithdrawRequestID,
+				Remark:             reasonText + " (full refund, remaining balance)",
+			}); err != nil {
+				// METRICS_PENDING: affiliate_reversal_failed
+				logger.Errorw("affiliate_reversal_failed",
+					"order_id", orderID, "commission_id", item.ID,
+					"type", "reversal_full_refund", "error", err.Error(),
+				)
+				return err
+			}
+		}
+
+		// withdrawn 状态（已出金）的佣金不改变状态，保持 withdrawn 用于审计追溯。
+		if item.Status != constants.AffiliateCommissionStatusWithdrawn {
+			item.Status = constants.AffiliateCommissionStatusRejected
+			item.InvalidReason = reasonText
+			item.ConfirmAt = nil
+			item.AvailableAt = nil
+		}
 		item.UpdatedAt = now
+		// 不再修改 CommissionAmount 和 BaseAmount（保持原始值不变）
 		if err := repoTx.UpdateCommission(&item); err != nil {
 			return err
 		}

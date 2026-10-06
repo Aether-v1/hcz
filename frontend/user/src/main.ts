@@ -6,10 +6,6 @@ import App from './App.vue'
 import router, { warmupCommonRoutes } from './router'
 import i18n, { detectLocale, setI18nLocale, warmupLocaleMessages } from './i18n'
 import { useTelegramMiniAppStore } from './stores/telegramMiniApp'
-import { initTemplateOverride } from './templates/registry'
-
-// 预览用：?template=vault 持久化激活模板（站长正式切换走站点配置）
-initTemplateOverride()
 
 const brandLog = (globalThis as any).console?.log?.bind(console)
 brandLog?.(

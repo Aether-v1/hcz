@@ -128,7 +128,6 @@ export interface SeoConfig {
 
 export interface SiteConfig {
   brand: BrandConfig
-  template: 'classic' | 'vault'
   navigation: NavConfig
   footer: FooterConfig
   social_links: SocialLinks

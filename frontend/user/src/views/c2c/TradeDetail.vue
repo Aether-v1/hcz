@@ -60,7 +60,7 @@
             </div>
             <div class="flex justify-between py-2.5">
               <dt class="text-muted-foreground">{{ t('c2c.myTrades.usdtAmount') }}</dt>
-              <dd class="font-mono font-medium">{{ trade.usdt_amount }} USDT</dd>
+              <dd class="font-mono font-medium">{{ formatUsdt(trade.usdt_amount) }}</dd>
             </div>
             <div class="flex justify-between py-2.5">
               <dt class="text-muted-foreground">{{ t('c2c.myTrades.status') }}</dt>
@@ -233,6 +233,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import EmptyState from '@/components/EmptyState.vue'
+import { formatUsdt } from '@/utils/money'
 import { C2C_TRADE_POLLING_STATUSES } from '@/api/c2c'
 
 const route = useRoute()

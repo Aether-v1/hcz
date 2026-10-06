@@ -417,12 +417,6 @@ const navGroups = computed<NavGroup[]>(() => {
           icon: Link,
           permission: 'GET:/admin/settings',
         },
-        {
-          label: '模板设置',
-          to: '/site-builder/template',
-          icon: SlidersHorizontal,
-          permission: 'GET:/admin/site/template',
-        },
       ],
     },
     {
@@ -468,6 +462,12 @@ const navGroups = computed<NavGroup[]>(() => {
           permission: 'GET:/admin/settings/affiliate',
         },
         {
+          label: t('admin.navItems.affiliatesApplications'),
+          to: '/affiliates/applications',
+          icon: ClipboardCheck,
+          permission: 'GET:/admin/affiliates/applications',
+        },
+        {
           label: t('admin.navItems.affiliatesUsers'),
           to: '/affiliates/users',
           icon: Users,
@@ -480,7 +480,7 @@ const navGroups = computed<NavGroup[]>(() => {
           permission: 'GET:/admin/affiliates/commissions',
         },
         {
-          label: t('admin.navItems.affiliatesWithdraws'),
+          label: '提现记录（归档）',
           to: '/affiliates/withdraws',
           icon: WalletCards,
           permission: 'GET:/admin/affiliates/withdraws',
@@ -637,6 +637,12 @@ const navGroups = computed<NavGroup[]>(() => {
           label: t('admin.navItems.siteSettings'),
           to: '/settings',
           icon: SlidersHorizontal,
+          permission: 'GET:/admin/settings',
+        },
+        {
+          label: '定价 / Profit Guard',
+          to: '/pricing',
+          icon: BadgePercent,
           permission: 'GET:/admin/settings',
         },
         {

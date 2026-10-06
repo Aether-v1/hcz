@@ -14,7 +14,8 @@ import (
 
 // setupTradeScenario 准备一个可直接发起交易的场景：
 // seller(1) 有 balance、支付方式、active listing(totalUSDT)；buyer(2) 已注册。
-// 返回 (listing, sellerID, buyerID)。
+// 新模型：CreateListing 会真正 Freeze seller USDT，所以 setBalance 必须 >= listing total。
+// 返回 (listingID, sellerID, buyerID)。
 func setupTradeScenario(t *testing.T, f *fixture, sellerBalance, listingTotal string) (uint, uint, uint) {
 	t.Helper()
 	const sellerID, buyerID = uint(1), uint(2)
@@ -26,23 +27,34 @@ func setupTradeScenario(t *testing.T, f *fixture, sellerBalance, listingTotal st
 	return listing.ID, sellerID, buyerID
 }
 
-// TestFunding_CreateTradeFreezesSeller 验证创建交易真正冻结卖家 USDT。
-func TestFunding_CreateTradeFreezesSeller(t *testing.T) {
+// TestFunding_CreateListingFreezesSeller 验证 CreateListing 冻结卖家 USDT，
+// CreateTrade 不再重复冻结。
+func TestFunding_CreateListingFreezesSeller(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
 
+	// CreateListing 后：available=0, frozen=1000
+	avail := f.getAvailable(t, sellerID)
+	frozen := f.getFrozen(t, sellerID)
+	if !avail.Equal(mustDec("0.00")) {
+		t.Fatalf("after CreateListing seller available want 0.00, got %s", avail)
+	}
+	if !frozen.Equal(mustDec("1000.00")) {
+		t.Fatalf("after CreateListing seller frozen want 1000.00, got %s", frozen)
+	}
+
+	// CreateTrade 后：frozen 不变（仍 1000），available 不变（仍 0）
 	tr := f.createTrade(t, buyerID, listingID, "100.00")
 	if tr.Status != statemachine.StatusPendingPayment {
 		t.Fatalf("expected pending_payment, got %s", tr.Status)
 	}
-
-	avail := f.getAvailable(t, sellerID)
-	frozen := f.getFrozen(t, sellerID)
-	if !avail.Equal(mustDec("900.00")) {
-		t.Fatalf("seller available want 900.00, got %s", avail)
+	avail = f.getAvailable(t, sellerID)
+	frozen = f.getFrozen(t, sellerID)
+	if !avail.Equal(mustDec("0.00")) {
+		t.Fatalf("after CreateTrade seller available want 0.00, got %s", avail)
 	}
-	if !frozen.Equal(mustDec("100.00")) {
-		t.Fatalf("seller frozen want 100.00, got %s", frozen)
+	if !frozen.Equal(mustDec("1000.00")) {
+		t.Fatalf("after CreateTrade seller frozen want 1000.00 (no double freeze), got %s", frozen)
 	}
 }
 
@@ -79,11 +91,12 @@ func TestFunding_MarkPaidDoesNotTouchWallet(t *testing.T) {
 		t.Fatalf("mark paid: %v", err)
 	}
 
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("900.00")) {
-		t.Fatalf("seller available unchanged want 900.00, got %s", got)
+	// 新模型：seller available=0, frozen=1000（listing 级冻结，与 trade 无关）
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available unchanged want 0.00, got %s", got)
 	}
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("100.00")) {
-		t.Fatalf("seller frozen unchanged want 100.00, got %s", got)
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen unchanged want 1000.00, got %s", got)
 	}
 	if got := f.getAvailable(t, buyerID); !got.Equal(mustDec("500.00")) {
 		t.Fatalf("buyer available unchanged want 500.00, got %s", got)
@@ -93,7 +106,8 @@ func TestFunding_MarkPaidDoesNotTouchWallet(t *testing.T) {
 	}
 }
 
-// TestFunding_ConfirmSettlesToBuyer 验证 confirm 把卖家冻结结算给买家。
+// TestFunding_ConfirmSettlesToBuyer 验证 confirm 把卖家 frozen 结算给买家。
+// 新模型：listing total=1000 frozen=1000，settle 100 后 seller frozen=900（listing 剩余仍 frozen）。
 func TestFunding_ConfirmSettlesToBuyer(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
@@ -111,12 +125,13 @@ func TestFunding_ConfirmSettlesToBuyer(t *testing.T) {
 		t.Fatalf("expected completed, got %s", confirmed.Status)
 	}
 
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0.00, got %s", got)
+	// seller frozen = 1000 - 100 = 900（listing 剩余 900 仍 frozen）
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("900.00")) {
+		t.Fatalf("seller frozen want 900.00, got %s", got)
 	}
-	// seller available 仍为 900（冻结→结算，available 不变）
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("900.00")) {
-		t.Fatalf("seller available want 900.00, got %s", got)
+	// seller available 仍为 0（listing 创建时已全 freeze）
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available want 0.00, got %s", got)
 	}
 	// buyer available 50 + 100 = 150
 	if got := f.getAvailable(t, buyerID); !got.Equal(mustDec("150.00")) {
@@ -127,8 +142,8 @@ func TestFunding_ConfirmSettlesToBuyer(t *testing.T) {
 	}
 }
 
-// TestFunding_CancelUnfreezesSeller 验证 cancel 解冻卖家并恢复 available。
-func TestFunding_CancelUnfreezesSeller(t *testing.T) {
+// TestFunding_CancelDoesNotUnfreezeListing 验证 cancel 不动 seller frozen，仅恢复 listing 可售余量。
+func TestFunding_CancelDoesNotUnfreezeListing(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
 	tr := f.createTrade(t, buyerID, listingID, "100.00")
@@ -141,16 +156,22 @@ func TestFunding_CancelUnfreezesSeller(t *testing.T) {
 		t.Fatalf("expected canceled, got %s", canceled.Status)
 	}
 
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("1000.00")) {
-		t.Fatalf("seller available restored want 1000.00, got %s", got)
+	// seller frozen 仍为 1000（listing 级冻结不被 trade cancel 解冻）
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available unchanged want 0.00, got %s", got)
 	}
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0.00, got %s", got)
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen unchanged want 1000.00, got %s", got)
+	}
+	// listing available 恢复到 1000
+	listing := f.getListing(t, listingID)
+	if got := listing.AvailableUSDT.Decimal.Round(2); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("listing available restored want 1000.00, got %s", got)
 	}
 }
 
-// TestFunding_ExpireUnfreezesSeller 验证超时解冻卖家。
-func TestFunding_ExpireUnfreezesSeller(t *testing.T) {
+// TestFunding_ExpireDoesNotUnfreezeListing 验证超时不动 seller frozen。
+func TestFunding_ExpireDoesNotUnfreezeListing(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
 	tr := f.createTrade(t, buyerID, listingID, "100.00")
@@ -162,11 +183,15 @@ func TestFunding_ExpireUnfreezesSeller(t *testing.T) {
 	if reloaded.Status != statemachine.StatusExpired {
 		t.Fatalf("expected expired, got %s", reloaded.Status)
 	}
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("1000.00")) {
-		t.Fatalf("seller available restored want 1000.00, got %s", got)
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available unchanged want 0.00, got %s", got)
 	}
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0.00, got %s", got)
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen unchanged want 1000.00, got %s", got)
+	}
+	listing := f.getListing(t, listingID)
+	if got := listing.AvailableUSDT.Decimal.Round(2); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("listing available restored want 1000.00, got %s", got)
 	}
 }
 
@@ -194,16 +219,17 @@ func TestFunding_ArbitrateReleaseSettlesToBuyer(t *testing.T) {
 		t.Fatalf("expected completed, got %s", outTrade.Status)
 	}
 
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0.00, got %s", got)
+	// seller frozen = 1000 - 100 = 900
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("900.00")) {
+		t.Fatalf("seller frozen want 900.00, got %s", got)
 	}
 	if got := f.getAvailable(t, buyerID); !got.Equal(mustDec("110.00")) {
 		t.Fatalf("buyer available want 110.00, got %s", got)
 	}
 }
 
-// TestFunding_ArbitrateReturnUnfreezesSeller 验证仲裁退回解冻卖家并恢复挂单余量。
-func TestFunding_ArbitrateReturnUnfreezesSeller(t *testing.T) {
+// TestFunding_ArbitrateReturnKeepsListingFrozen 验证仲裁退回不动 seller frozen，仅恢复 listing 余量。
+func TestFunding_ArbitrateReturnKeepsListingFrozen(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
 	tr := f.createTrade(t, buyerID, listingID, "100.00")
@@ -225,11 +251,12 @@ func TestFunding_ArbitrateReturnUnfreezesSeller(t *testing.T) {
 		t.Fatalf("expected canceled, got %s", outTrade.Status)
 	}
 
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("1000.00")) {
-		t.Fatalf("seller available restored want 1000.00, got %s", got)
+	// seller frozen 仍为 1000
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available unchanged want 0.00, got %s", got)
 	}
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("0.00")) {
-		t.Fatalf("seller frozen want 0.00, got %s", got)
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen unchanged want 1000.00, got %s", got)
 	}
 	listing := f.getListing(t, listingID)
 	if got := listing.AvailableUSDT.Decimal.Round(2); !got.Equal(mustDec("1000.00")) {
@@ -237,7 +264,7 @@ func TestFunding_ArbitrateReturnUnfreezesSeller(t *testing.T) {
 	}
 }
 
-// TestFunding_DuplicateCreateNoDoubleFreeze 验证同幂等键创建两次只冻结一次。
+// TestFunding_DuplicateCreateNoDoubleFreeze 验证同幂等键创建两次，seller frozen 仍为 listingTotal。
 func TestFunding_DuplicateCreateNoDoubleFreeze(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
@@ -261,13 +288,14 @@ func TestFunding_DuplicateCreateNoDoubleFreeze(t *testing.T) {
 		t.Fatalf("idempotent create should return same trade, got %d vs %d", tr1.ID, tr2.ID)
 	}
 
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("100.00")) {
-		t.Fatalf("seller frozen want 100.00 (single freeze), got %s", got)
+	// seller frozen 仍为 1000（只在 CreateListing 时冻结一次，CreateTrade 不 freeze）
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen want 1000.00 (listing-level freeze only), got %s", got)
 	}
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("900.00")) {
-		t.Fatalf("seller available want 900.00, got %s", got)
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available want 0.00, got %s", got)
 	}
-	// 只有一条 freeze ledger
+	// 只有一条 listing freeze ledger（CreateListing 时写的）
 	if n := f.countLedger(t, sellerID, constants.WalletTxnTypeC2CFreeze); n != 1 {
 		t.Fatalf("want 1 freeze ledger, got %d", n)
 	}
@@ -303,7 +331,7 @@ func TestFunding_DuplicateConfirmNoDoubleSettle(t *testing.T) {
 	}
 }
 
-// TestFunding_DuplicateCancelNoDoubleUnfreeze 验证重复 cancel 不重复解冻。
+// TestFunding_DuplicateCancelNoDoubleUnfreeze 验证重复 cancel 不重复解冻（新模型 cancel 根本不解冻）。
 func TestFunding_DuplicateCancelNoDoubleUnfreeze(t *testing.T) {
 	f := newFixture(t)
 	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "1000.00")
@@ -318,11 +346,13 @@ func TestFunding_DuplicateCancelNoDoubleUnfreeze(t *testing.T) {
 		t.Fatalf("second cancel want ErrTradeStatusInvalid, got %v", err)
 	}
 
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("1000.00")) {
-		t.Fatalf("seller available want 1000.00 (single unfreeze), got %s", got)
+	// seller frozen 仍为 1000（cancel 不动 wallet）
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen want 1000.00 (cancel does not unfreeze), got %s", got)
 	}
-	if n := f.countLedger(t, sellerID, constants.WalletTxnTypeC2CUnfreeze); n != 1 {
-		t.Fatalf("want 1 unfreeze ledger, got %d", n)
+	// 不应有任何 trade-level unfreeze ledger
+	if n := f.countLedger(t, sellerID, constants.WalletTxnTypeC2CUnfreeze); n != 0 {
+		t.Fatalf("want 0 trade-level unfreeze ledger, got %d", n)
 	}
 }
 
@@ -384,11 +414,11 @@ func TestFunding_ExpireAfterPaidDoesNotTouchMoney(t *testing.T) {
 	if reloaded.Status != statemachine.StatusPaid {
 		t.Fatalf("trade should stay paid, got %s", reloaded.Status)
 	}
-	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("900.00")) {
-		t.Fatalf("seller available unchanged want 900.00, got %s", got)
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("0.00")) {
+		t.Fatalf("seller available unchanged want 0.00, got %s", got)
 	}
-	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("100.00")) {
-		t.Fatalf("seller frozen unchanged want 100.00, got %s", got)
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("1000.00")) {
+		t.Fatalf("seller frozen unchanged want 1000.00, got %s", got)
 	}
 	if n := f.countLedger(t, sellerID, constants.WalletTxnTypeC2CUnfreeze); n != 0 {
 		t.Fatalf("want 0 unfreeze ledger, got %d", n)
@@ -396,14 +426,21 @@ func TestFunding_ExpireAfterPaidDoesNotTouchMoney(t *testing.T) {
 }
 
 // TestFunding_ListingAvailableDecrementAndRestore 验证挂单 available_usdt 扣减与恢复。
+// 新模型：wallet frozen 始终为 listingTotal，不随 trade cancel/expire 变化。
 func TestFunding_ListingAvailableDecrementAndRestore(t *testing.T) {
 	f := newFixture(t)
-	listingID, _, buyerID := setupTradeScenario(t, f, "1000.00", "500.00")
+	listingID, sellerID, buyerID := setupTradeScenario(t, f, "1000.00", "500.00")
+
+	// seller: available=500 (1000-500), frozen=500
+	if got := f.getAvailable(t, sellerID); !got.Equal(mustDec("500.00")) {
+		t.Fatalf("after listing create seller avail want 500.00, got %s", got)
+	}
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("500.00")) {
+		t.Fatalf("after listing create seller frozen want 500.00, got %s", got)
+	}
 
 	// 创建两笔交易：扣减 100 + 200
 	tr1 := f.createTrade(t, buyerID, listingID, "100.00")
-	// 第二笔需要不同幂等键（fixture.createTrade 自动根据 amount 生成，但 buyer+listing 相同会撞键）
-	// 手动构造第二笔
 	tr2, err := f.svc.CreateTrade(c2ccontract.CreateTradeInput{
 		BuyerUserID: buyerID, ListingID: listingID,
 		USDTAmount: money.FromDecimal(mustDec("200.00")), IdempotencyKey: "manual-key-200",
@@ -415,6 +452,10 @@ func TestFunding_ListingAvailableDecrementAndRestore(t *testing.T) {
 	listing := f.getListing(t, listingID)
 	if got := listing.AvailableUSDT.Decimal.Round(2); !got.Equal(mustDec("200.00")) {
 		t.Fatalf("after 100+200 trades, listing available want 200.00, got %s", got)
+	}
+	// wallet frozen 仍为 500（listing 级冻结）
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("500.00")) {
+		t.Fatalf("seller frozen unchanged want 500.00, got %s", got)
 	}
 
 	// cancel 第一笔 → 恢复 100
@@ -433,6 +474,10 @@ func TestFunding_ListingAvailableDecrementAndRestore(t *testing.T) {
 	listing = f.getListing(t, listingID)
 	if got := listing.AvailableUSDT.Decimal.Round(2); !got.Equal(mustDec("500.00")) {
 		t.Fatalf("after expire tr2, listing available restored to 500.00, got %s", got)
+	}
+	// wallet frozen 始终 500
+	if got := f.getFrozen(t, sellerID); !got.Equal(mustDec("500.00")) {
+		t.Fatalf("seller frozen still 500.00, got %s", got)
 	}
 }
 

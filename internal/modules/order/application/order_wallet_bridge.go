@@ -58,10 +58,12 @@ func ApplyWalletBalance(
 	}
 
 	now := time.Now()
-	// P0-2: USDT 结算单 online 恒为 0（wallet-only）；旧单无快照时保留 legacy 差额逻辑。
-	onlineAmount := normalizeOrderAmount(order.TotalAmount.Decimal.Sub(deducted))
-	if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
-		onlineAmount = decimal.Zero
+	// P0-2: USDT 结算单 online 恒为 0（wallet-only）。
+	// 旧单无快照时钱包按 Site 额扣款，online = Total(Site) - deducted(Site)，同币种直减。
+	// 严禁在 USDT 结算单上做 TotalAmount(CNY) - deducted(USDT) 的跨币种减法。
+	onlineAmount := decimal.Zero
+	if order.UsdtTotalAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+		onlineAmount = normalizeOrderAmount(order.TotalAmount.Decimal.Sub(deducted))
 	}
 	if err := tx.Orders().UpdateFields(order.ID, map[string]interface{}{
 		"wallet_paid_amount": money.FromDecimal(deducted),

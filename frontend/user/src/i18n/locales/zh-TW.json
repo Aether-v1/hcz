@@ -53,30 +53,6 @@
     "notice": "公告",
     "about": "關於"
   },
-  "vault": {
-    "hero": {
-      "badge": "即時發貨 · 數位商品",
-      "titleLead": "買卡密、儲值、會員，",
-      "titleHl": "秒到帳。",
-      "lede": "遊戲點卡、串流會員、軟體授權、禮品卡、AI 工具 —— 付款後自動發貨，憑證立即送達。",
-      "searchButton": "搜尋",
-      "hot": "熱門：",
-      "trustFast": "極速自動發貨",
-      "trustSecure": "加密結算 · 憑證僅你可見",
-      "trustRefund": "問題訂單及時處理"
-    },
-    "categoriesTitle": "依分類逛",
-    "allCategories": "全部分類",
-    "footer": {
-      "shop": "商城",
-      "support": "支援",
-      "legal": "條款",
-      "tagline": "數位商品自動發貨平台。卡密、授權、儲值，付款即交付。",
-      "faq": "常見問題",
-      "payAlipay": "支付寶",
-      "payWechat": "微信"
-    }
-  },
   "breadcrumb": {
     "label": "麵包屑導航",
     "back": "返回{name}"
@@ -367,13 +343,34 @@
     "ariaLabel": "主導覽",
     "home": "首頁",
     "orders": "訂單",
+    "c2c": "C2C",
     "discover": "發現",
     "messages": "訊息",
     "me": "我的"
   },
   "discover": {
-    "comingSoon": "即將開放",
-    "description": "更多服務正在準備中，敬請期待"
+    "title": "發現",
+    "subtitle": "平台服務、分類入口與最新公告活動，一站瀏覽。",
+    "hotEyebrow": "熱門服務",
+    "hotTitle": "大家都在買",
+    "hotEmpty": "暫無熱門服務",
+    "hotError": "熱門服務載入失敗",
+    "categoryEyebrow": "服務分類",
+    "categoryTitle": "依分類瀏覽",
+    "categoryEmpty": "暫無服務分類",
+    "categoryError": "服務分類載入失敗",
+    "noticeEyebrow": "公告活動",
+    "noticeTitle": "平台公告與活動",
+    "noticeEmpty": "暫無公告",
+    "noticeError": "公告載入失敗",
+    "benefitEyebrow": "精選推薦",
+    "benefitTitle": "更多數字權益",
+    "benefitEmpty": "暫無更多推薦",
+    "benefitError": "推薦內容載入失敗",
+    "allServices": "全部服務",
+    "viewAll": "查看全部",
+    "retry": "重試",
+    "loading": "載入中…"
   },
   "bottomNav": {
     "home": "首頁",
@@ -642,6 +639,7 @@
       "pendingHint": "支付完成後系統將自動刷新到帳狀態，也可手動點擊「檢查支付狀態」。",
       "detailTitle": "錢包明細",
       "empty": "暫無錢包明細",
+      "retry": "重試",
       "directionIn": "收入",
       "directionOut": "支出",
       "rechargeStatus": {
@@ -665,7 +663,14 @@
         "gift_card_redeem": "禮品卡兌換",
         "admin_adjust": "管理員調帳",
         "admin_refund": "管理員退款",
-        "order_underpaid_credit": "訂單收款不足轉入"
+        "order_underpaid_credit": "訂單收款不足轉入",
+        "withdrawal_debit": "提現扣款",
+        "withdrawal_refund": "提現退回",
+        "c2c_freeze": "C2C資金凍結",
+        "c2c_unfreeze": "C2C資金解凍",
+        "c2c_settle": "C2C結算劃出",
+        "c2c_receive": "C2C結算劃入",
+        "affiliate_transfer_in": "推廣佣金劃入"
       },
       "errors": {
         "loadFailed": "錢包資料載入失敗，請稍後重試",
@@ -1759,6 +1764,7 @@
     "submittedAt": "提交時間",
     "subtitle": "查看儲值進度、金額與付款狀態",
     "continueShopping": "繼續儲值",
+    "goServiceHall": "去服務大廳",
     "empty": "暫無訂單",
     "emptyFiltered": "未找到符合篩選條件的訂單",
     "emptyAction": "選擇服務",

@@ -88,8 +88,19 @@ export const formatMoney = (value: unknown, currency?: string): string => {
 // 站点币金额（商品原价）：formatSiteMoney(total_amount, order.currency)
 export const formatSiteMoney = (value: unknown, currency?: string): string => formatMoney(value, currency)
 
+// USDT 钱包金额格式化：保留 2 位小数，ROUND_HALF_UP（四舍五入，非截断）。
+// 复用 parseDecimalToScaledInt（已实现 roundDigit >= '5' 时 +1），再用 centsToAmount 输出。
+// null/undefined/空串/非法格式 → '--'（不是 '0.00'）；真实 0 → '0.00'。
+// 业务值保持 string decimal，不做 parseFloat/Number 转换后再 toFixed。
+export const formatUsdt = (value: unknown, currency?: string): string => {
+  const cents = parseDecimalToScaledInt(value, 2)
+  if (cents === null) return '--'
+  return currency ? `${centsToAmount(cents)} ${currency}` : centsToAmount(cents)
+}
+
 // 钱包/退款/返利/流水：固定 USDT。优先用 API 返回的 currency，缺省 USDT。
-export const formatWalletMoney = (value: unknown, currency: string = 'USDT'): string => formatMoney(value, currency || 'USDT')
+// 内部走 formatUsdt（ROUND_HALF_UP 2 位小数）。
+export const formatWalletMoney = (value: unknown, currency: string = 'USDT'): string => formatUsdt(value, currency || 'USDT')
 
 // 汇率：1 USDT = R SiteCurrency
 export const formatRate = (rate: unknown, siteCurrency?: string): string => {

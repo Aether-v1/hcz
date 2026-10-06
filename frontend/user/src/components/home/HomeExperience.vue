@@ -1,45 +1,88 @@
 <template>
-  <div class="hcz-home" :class="{ 'hcz-home--vault': isVault }">
+  <div class="hcz-home">
     <div class="hcz-shell-container hcz-home__content">
       <!-- 公告条（config.announcement，无则不渲染） -->
       <AnnouncementBar />
 
-      <section class="home-hero" :aria-labelledby="'home-title'">
-        <div class="home-hero__copy">
-          <span class="home-hero__eyebrow">HCZ · {{ t('homeV2.brand') }}</span>
-          <h1 id="home-title">{{ t('homeV2.title') }}</h1>
-          <p>{{ t('homeV2.subtitle') }}</p>
+      <!-- 轮播 Banner（后端 GET /public/banners，position=home_hero） -->
+      <section
+        v-if="bannerCount > 0"
+        class="home-hero-carousel"
+        :aria-label="t('homeV2.brand')"
+        @touchstart.passive="onBannerTouchStart"
+        @touchend="onBannerTouchEnd"
+      >
+        <component
+          :is="hasHeroLink ? 'a' : 'div'"
+          :href="hasHeroLink ? heroLink : undefined"
+          :target="hasHeroLink && heroOpenInNewTab ? '_blank' : undefined"
+          :rel="hasHeroLink && heroOpenInNewTab ? 'noopener noreferrer' : undefined"
+          class="home-hero-carousel__slide"
+        >
+          <img
+            v-if="heroImage && !bannerImageFailed"
+            :src="heroImage"
+            :alt="heroTitle"
+            class="home-hero-carousel__image"
+            loading="eager"
+            @error="bannerImageFailed = true"
+          />
+          <div class="home-hero-carousel__overlay">
+            <span class="home-hero-carousel__badge">{{ heroBadge }}</span>
+            <h1 class="home-hero-carousel__title">{{ heroTitle }}</h1>
+            <p v-if="heroSubtitle" class="home-hero-carousel__subtitle">{{ heroSubtitle }}</p>
+            <span v-if="hasHeroLink" class="home-hero-carousel__cta">
+              {{ heroPrimaryButtonText }} <ArrowRight :size="15" aria-hidden="true" />
+            </span>
+          </div>
+        </component>
+        <button
+          v-if="bannerCount > 1"
+          type="button"
+          class="home-hero-carousel__arrow home-hero-carousel__arrow--prev"
+          :aria-label="t('common.previous')"
+          @click.prevent="handlePrevHeroBanner"
+        >
+          <ChevronLeft :size="20" aria-hidden="true" />
+        </button>
+        <button
+          v-if="bannerCount > 1"
+          type="button"
+          class="home-hero-carousel__arrow home-hero-carousel__arrow--next"
+          :aria-label="t('common.next')"
+          @click.prevent="handleNextHeroBanner"
+        >
+          <ChevronRight :size="20" aria-hidden="true" />
+        </button>
+        <div v-if="bannerCount > 1" class="home-hero-carousel__dots">
+          <button
+            v-for="(banner, index) in banners"
+            :key="(banner.id as number) || index"
+            type="button"
+            class="home-hero-carousel__dot"
+            :class="{ 'home-hero-carousel__dot--active': index === currentBannerIndex }"
+            :aria-label="`Banner ${index + 1}`"
+            :aria-current="index === currentBannerIndex"
+            @click.prevent="selectHeroBanner(index)"
+          ></button>
         </div>
-        <div class="home-hero__art" aria-hidden="true">
-          <span class="home-hero__orbit home-hero__orbit--outer"></span>
-          <span class="home-hero__orbit home-hero__orbit--inner"></span>
-          <span class="home-hero__mark">HCZ</span>
-        </div>
-        <RouterLink v-if="auth.isAuthenticated" to="/me/wallet" class="home-hero__wallet">
-          <Wallet :size="17" aria-hidden="true" />
-          <span>{{ t('homeV2.wallet') }}</span>
-          <strong v-if="walletBalance">{{ walletBalance }}</strong>
-          <span v-else-if="walletLoading" class="home-hero__wallet-loading">{{ t('common.loading') }}</span>
-          <ArrowUpRight :size="16" aria-hidden="true" />
-        </RouterLink>
       </section>
 
-      <form class="home-search" role="search" @submit.prevent="submitSearch">
-        <Search :size="21" aria-hidden="true" />
-        <input v-model="searchText" type="search" :aria-label="t('homeV2.searchPlaceholder')" :placeholder="t('homeV2.searchPlaceholder')" />
-        <button type="submit" :disabled="!searchText.trim()">{{ t('homeV2.search') }} <ArrowRight :size="17" aria-hidden="true" /></button>
-      </form>
+      <!-- Fallback：无 banner 时的简洁品牌展示 -->
+      <section v-else class="home-hero-fallback" :aria-labelledby="'home-title'">
+        <span class="home-hero-fallback__eyebrow">HCZ · {{ t('homeV2.brand') }}</span>
+        <h1 id="home-title">{{ t('homeV2.title') }}</h1>
+        <p>{{ t('homeV2.subtitle') }}</p>
+      </section>
 
       <div v-if="!online" class="home-alert" role="status">
         <WifiOff :size="18" aria-hidden="true" /> {{ t('homeV2.offline') }}
       </div>
 
-      <!-- 业务入口（config.home_entries，fallback 默认 4 个） -->
-      <HomeEntryGrid :heading="t('homeV2.quickTitle')" />
-
       <!-- 装修 Banner（config.banners，无则不渲染） -->
       <SiteBannerStrip />
 
+      <!-- 常用服务入口（话费/流量/游戏/生活缴费） -->
       <section class="home-section" :aria-labelledby="'home-core-title'">
         <div class="home-section__head">
           <div>
@@ -51,14 +94,13 @@
         <div class="home-core-grid">
           <template v-for="entry in coreEntries" :key="entry.key">
             <RouterLink v-if="entry.category" :to="{ name: 'category-products', params: { slug: entry.category.slug } }" class="home-core-card">
-              <span class="home-core-card__icon"><component :is="entry.icon" :size="25" :stroke-width="1.9" aria-hidden="true" /></span>
+              <span class="home-core-card__icon"><component :is="entry.icon" :size="24" :stroke-width="1.9" aria-hidden="true" /></span>
               <strong>{{ entry.title }}</strong>
-              <span class="home-core-card__description">{{ entry.description }}</span>
             </RouterLink>
             <div v-else class="home-core-card home-core-card--disabled" aria-disabled="true">
-              <span class="home-core-card__icon"><component :is="entry.icon" :size="25" :stroke-width="1.9" aria-hidden="true" /></span>
+              <span class="home-core-card__icon"><component :is="entry.icon" :size="24" :stroke-width="1.9" aria-hidden="true" /></span>
               <strong>{{ entry.title }}</strong>
-              <span class="home-core-card__description">{{ categoriesLoading ? t('common.loading') : t('homeV2.unavailable') }}</span>
+              <span class="home-core-card__desc">{{ categoriesLoading ? t('common.loading') : t('homeV2.unavailable') }}</span>
             </div>
           </template>
         </div>
@@ -68,15 +110,6 @@
           <button type="button" @click="loadCategories">{{ t('homeV2.retry') }}</button>
         </div>
       </section>
-
-      <RouterLink to="/c2c" class="home-usdt" :aria-label="t('homeV2.usdtTitle')">
-        <span class="home-usdt__icon"><CircleDollarSign :size="32" :stroke-width="1.65" aria-hidden="true" /></span>
-        <div class="home-usdt__copy">
-          <h2>{{ t('homeV2.usdtTitle') }}</h2>
-          <p>{{ t('homeV2.usdtDescription') }}</p>
-        </div>
-        <span class="home-usdt__soon">{{ t('c2c.title') }} <ArrowRight :size="16" aria-hidden="true" /></span>
-      </RouterLink>
 
       <section class="home-section" :aria-labelledby="'home-featured-title'">
         <div class="home-section__head">
@@ -116,20 +149,6 @@
         </div>
       </section>
 
-      <section v-if="bannerCount > 0" class="home-section" :aria-labelledby="'home-activity-title'">
-        <div class="home-section__head">
-          <div><span class="home-section__eyebrow">{{ t('homeV2.activityEyebrow') }}</span><h2 id="home-activity-title">{{ t('homeV2.activityTitle') }}</h2></div>
-        </div>
-        <component :is="bannerHref ? 'a' : 'div'" :href="bannerHref || undefined" :target="bannerHref && heroBanner?.open_in_new_tab ? '_blank' : undefined" :rel="bannerHref ? 'noopener noreferrer' : undefined" class="home-banner">
-          <img v-if="heroImage && !bannerImageFailed" :src="heroImage" :alt="heroTitle" loading="lazy" @error="bannerImageFailed = true" />
-          <div class="home-banner__text">
-            <h3>{{ heroTitle }}</h3>
-            <p v-if="heroSubtitle">{{ heroSubtitle }}</p>
-          </div>
-          <ArrowUpRight v-if="bannerHref" :size="20" aria-hidden="true" />
-        </component>
-      </section>
-
       <section v-if="newsPosts.length" class="home-section home-news" :aria-labelledby="'home-news-title'">
         <div class="home-section__head">
           <div><span class="home-section__eyebrow">{{ t('homeV2.newsEyebrow') }}</span><h2 id="home-news-title">{{ t('homeV2.newsTitle') }}</h2></div>
@@ -149,33 +168,26 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, ArrowUpRight, CircleDollarSign, Gamepad2, HousePlug, PackageOpen, Search, Smartphone, Wallet, Wifi, WifiOff } from 'lucide-vue-next'
-import { categoryAPI, postAPI, productAPI, walletAPI } from '../../api'
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HousePlug, PackageOpen, Smartphone, Wifi, WifiOff } from 'lucide-vue-next'
+import { categoryAPI, postAPI, productAPI } from '../../api'
 import { useAppStore } from '../../stores/app'
-import { useUserAuthStore } from '../../stores/userAuth'
 import { useLocalized } from '../../composables/useProduct'
 import { useAnnouncement, type HomeAnnouncement } from '../../composables/useAnnouncement'
 import { useBannerCarousel } from '../../composables/useBannerCarousel'
 import { usePageSeo } from '../../composables/usePageSeo'
-import { getActiveTemplate } from '../../templates/registry'
 import { getServiceIcon } from '../../utils/serviceIcon'
 import type { PublicCategory } from '../../utils/category'
 import AnnouncementModal from '../AnnouncementModal.vue'
 import HomeServiceCard from './HomeServiceCard.vue'
 import AnnouncementBar from './AnnouncementBar.vue'
-import HomeEntryGrid from './HomeEntryGrid.vue'
 import SiteBannerStrip from './SiteBannerStrip.vue'
 import './home.css'
 
-const router = useRouter()
 const { t } = useI18n()
 const appStore = useAppStore()
-const auth = useUserAuthStore()
 const { getLocalizedText } = useLocalized()
 const { shouldShow } = useAnnouncement()
-const isVault = getActiveTemplate() === 'vault'
 usePageSeo({ canonicalPath: () => '/' })
 
 const categories = ref<PublicCategory[]>([])
@@ -184,9 +196,6 @@ const categoriesLoading = ref(true)
 const categoriesError = ref(false)
 const productsLoading = ref(true)
 const productsError = ref(false)
-const walletLoading = ref(false)
-const walletBalance = ref('')
-const searchText = ref('')
 const online = ref(true)
 const newsPosts = ref<any[]>([])
 const activeAnnouncement = ref<HomeAnnouncement | null>(null)
@@ -221,7 +230,6 @@ const coreEntries = computed(() => coreDefinitions.map(definition => ({
   key: definition.key,
   icon: definition.icon,
   title: t(`homeV2.core.${definition.key}.title`),
-  description: t(`homeV2.core.${definition.key}.description`),
   category: categoryCandidates.value.find(category => definition.matches.test(categorySearchText(category))) || null,
 })))
 const moreCategories = computed(() => {
@@ -230,14 +238,26 @@ const moreCategories = computed(() => {
 })
 const featuredProducts = computed(() => products.value.filter(product => product?.slug && localizedText(product.title)).slice(0, 8))
 
-const { bannerCount, heroBanner, heroImage, heroTitle, heroSubtitle, loadBanners, stopHeroAutoPlay } = useBannerCarousel()
-const bannerHref = computed(() => {
-  const raw = String(heroBanner.value?.link_value || '').trim()
-  const type = String(heroBanner.value?.link_type || '').toLowerCase()
-  if (type === 'internal' && raw.startsWith('/') && !raw.startsWith('//')) return raw
-  if ((type === 'external' || type === 'url') && /^https?:\/\//i.test(raw)) return raw
-  return ''
-})
+const {
+  banners,
+  bannerCount,
+  currentBannerIndex,
+  heroImage,
+  heroBadge,
+  heroTitle,
+  heroSubtitle,
+  heroLink,
+  hasHeroLink,
+  heroPrimaryButtonText,
+  heroOpenInNewTab,
+  loadBanners,
+  handleNextHeroBanner,
+  handlePrevHeroBanner,
+  selectHeroBanner,
+  onBannerTouchStart,
+  onBannerTouchEnd,
+  stopHeroAutoPlay,
+} = useBannerCarousel()
 watch(heroImage, () => { bannerImageFailed.value = false })
 
 const newsType = computed<'notice' | 'blog'>(() => appStore.config?.nav_config?.builtin?.notice !== false ? 'notice' : 'blog')
@@ -267,24 +287,9 @@ const loadProducts = async () => {
     productsLoading.value = false
   }
 }
-const loadWallet = async () => {
-  if (!auth.isAuthenticated) return
-  walletLoading.value = true
-  try {
-    const response = await walletAPI.account()
-    const wallet = response.data.data
-    if (wallet?.available_balance !== undefined && wallet?.available_balance !== null) {
-      walletBalance.value = `${wallet.available_balance} ${wallet.currency || 'USDT'}`
-    }
-  } catch {
-    walletBalance.value = ''
-  } finally {
-    walletLoading.value = false
-  }
-}
 const loadHomeBanners = async () => {
+  // loadBanners 内部已调用 startHeroAutoPlay()，此处不再 stop
   await loadBanners()
-  stopHeroAutoPlay()
 }
 const loadNews = async () => {
   if (!newsEnabled.value) return
@@ -295,16 +300,11 @@ const loadNews = async () => {
     newsPosts.value = []
   }
 }
-const submitSearch = () => {
-  const keyword = searchText.value.trim()
-  if (keyword) void router.push({ path: '/products', query: { search: keyword } })
-}
 const updateOnline = () => {
   const wasOffline = !online.value
   online.value = navigator.onLine
-  // 离线→在线跳变后自动重取首页全部数据；loadWallet 内部自带登录态守卫
   if (wasOffline && navigator.onLine) {
-    void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadWallet(), loadNews()])
+    void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadNews()])
   }
 }
 
@@ -317,7 +317,7 @@ onMounted(() => {
     activeAnnouncement.value = announcement
     announcementVisible.value = true
   }
-  void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadWallet(), loadNews()])
+  void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadNews()])
 })
 onUnmounted(() => {
   window.removeEventListener('online', updateOnline)
