@@ -84,3 +84,11 @@ docs/
 
 ### API
 - [Frontend API Contract](api/HCZ_FRONTEND_API_CONTRACT.md)
+- [HCZ Points API（积分体系完整契约）](HCZ_POINTS_API.md)
+
+### 积分体系（P0–P4）
+- [P0 Points Core 实现报告](HCZ_POINTS_P0_IMPLEMENTATION_REPORT.md)
+- [P1 Order Reward 报告](HCZ_POINTS_P1_ORDER_REWARD_REPORT.md)
+- [P2 Check-in 报告](HCZ_POINTS_P2_CHECKIN_REPORT.md)
+- [P3 Points Mall 报告](HCZ_POINTS_P3_MALL_REPORT.md)
+- [P4 Admin / Operations / Finalization 报告](HCZ_POINTS_P4_FINALIZATION_REPORT.md)

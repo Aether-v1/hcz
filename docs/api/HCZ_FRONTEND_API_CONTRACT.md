@@ -260,8 +260,48 @@ Admin 处理售后。需 Admin JWT + RBAC + Payment Compliance（paymentProtecte
 
 ---
 
+## 8. Points 积分体系（P0–P4，独立契约文档）
+
+积分与 USDT 钱包是**两条独立资金链**：积分不可变现、不参与订单计价、不与钱包余额互相折算。
+完整字段表、错误码、幂等规则、Admin 角色矩阵见 **[HCZ Points API](../HCZ_POINTS_API.md)**，本节只做索引与前端必读约束。
+
+### 用户端（前缀 `/api/v1`，JWT）
+
+| 端点 | 用途 |
+| --- | --- |
+| `GET /points/account` | 余额 / 累计获得 / 累计消费；**无账户时返回全 0，不是 404** |
+| `GET /points/ledger` | 积分流水分页（`pagination` 键），只返回当前 JWT 用户的记录 |
+| `GET /checkin/status`、`POST /checkin`、`GET /checkin/history` | 签到状态 / 签到 / 月历史 |
+| `GET /points/products`、`GET /points/products/:id` | 商城商品列表（仅上架）/ 详情（含 `can_redeem` + `reason_code`） |
+| `POST /points/exchange-orders` | 创建兑换（**`Idempotency-Key` 必填**） |
+| `GET /points/exchange-orders`、`GET /points/exchange-orders/:id` | 我的兑换单列表 / 详情（owner scoped） |
+| `POST /points/exchange-orders/:id/cancel` | 取消（仅 `PENDING`） |
+
+### Admin 端（前缀 `/api/v1/admin`，JWT + RBAC）
+
+积分账户与流水查询、负余额排查列表、运营统计、签到配置（GET/PUT）、签到历史（只读）、
+商品维护（创建/更新/上下架）、兑换单生命周期（process/complete/fail/cancel）——
+逐端点角色归属见 HCZ_POINTS_API.md §2.0 角色速查表。
+
+### 前端必读约束
+
+- **响应信封**：业务错误 HTTP 恒 `200`，语义在 body 的 `status_code`（400/401/403/404/409）与 `message_key`；
+  拦截器必须以 `status_code` 判失败，不能只看 HTTP 状态。
+- **分页键**：`data.pagination`（`page`/`page_size`/`total`/`total_page`），不是顶层 `page`。
+- `total_spent` 是**历史累计消费**，兑换返还不回滚它 → 不得展示为「净消费」。
+- 余额可为负（Admin 扣减造成），**前端不得 clamp 为 0**；负余额用户兑换会收到 `INSUFFICIENT_POINTS`。
+- 兑换/签到所有写动作都要带 `Idempotency-Key`（≤64 字符，一次提交内保持不变）；409 表示同 key 不同载荷，需重新生成。
+- 积分枚举（`action_type` / `source_type` / 订单状态 / `reason_code`）以 HCZ_POINTS_API.md §3 为准，禁止前端自造值。
+- **当前 User 前端未接线**：`frontend/user/src/views/personal/PointsPanel.vue` 仍是静态占位（`ref(0)` + 空数组），
+  `src/api/` 下没有 points 客户端；已挂路由 `/me/points`，接入前不得对该页面展示 0 余额当真值。
+
+---
+
 ## 前端禁止项
 - 禁止用 site_config.currency 格式化钱包/退款/返利金额。
 - 禁止前端把 CNY 金额当 USDT 显示。
 - 禁止按当前汇率重算历史订单实付。
 - 禁止前端直连 CoinGecko。
+- 禁止把积分与钱包余额相加、互换或按汇率折算展示。
+- 禁止在前端拼接 `user_id` 请求积分/兑换数据（后端只认 JWT subject）。
+- 禁止把 `total_spent` 标为「净消费」或对负余额做 clamp。
