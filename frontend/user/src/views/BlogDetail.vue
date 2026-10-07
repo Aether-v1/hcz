@@ -108,7 +108,7 @@
           {{ t('blogDetail.notFound') }}
         </p>
         <Button as-child class="rounded-full h-11 px-8">
-          <router-link to="/blog">{{ t('blogDetail.backToBlog') }}</router-link>
+          <router-link to="/news">{{ t('blogDetail.backToBlog') }}</router-link>
         </Button>
       </Card>
     </div>

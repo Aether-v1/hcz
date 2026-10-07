@@ -41,13 +41,13 @@ export function useBlogDetail() {
     title: () => post.value ? getLocalizedText(post.value.title) : '',
     description: () => post.value ? getLocalizedText(post.value.summary) : '',
     image: () => post.value?.thumbnail || '',
-    canonicalPath: () => `/blog/${(route.params.slug as string) || ''}`,
+    canonicalPath: () => `/news/${(route.params.slug as string) || ''}`,
     type: () => 'article',
   })
 
   const backLink = computed(() => {
-    if (!post.value) return '/blog'
-    return post.value.type === 'notice' ? '/notice' : '/blog'
+    if (!post.value) return '/news'
+    return post.value.type === 'notice' ? '/notice' : '/news'
   })
 
   const backText = computed(() => {

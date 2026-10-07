@@ -1,16 +1,8 @@
 <template>
   <div id="app" class="bg-background text-foreground" :class="{ 'hcz-storefront': !isResellerConsole }" style="min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;">
-    <Navbar v-if="showNavbar && !isResellerConsole && !isLoginOrRegister" />
-    <!-- 二级/三级页面返回栏 -->
-    <div v-if="showBackBar && !isResellerConsole && !isLoginOrRegister" class="fixed inset-x-0 top-0 z-50 h-14 border-b border-border bg-card/95 backdrop-blur-sm">
-      <div class="hcz-shell-container flex h-full items-center">
-        <button type="button" class="flex items-center gap-1 rounded-lg p-2 text-foreground transition-colors hover:bg-accent/50" @click="handleBack">
-          <ChevronLeft :size="20" :stroke-width="2" />
-        </button>
-      </div>
-    </div>
-    <main class="flex-1" style="flex: 1 1 0%; display: flex; flex-direction: column;" :class="{ 'hcz-shell-main--with-bottom-nav': !isLoginOrRegister && !isResellerConsole }" @click.capture="guardPreviewFormClick" @submit.capture="guardPreviewFormSubmit">
-      <div class="hcz-page-background" v-if="!isResellerConsole && !isLoginOrRegister" :class="{ 'hcz-page-background--with-top-bar': (showNavbar || showBackBar) && !isResellerConsole && !isLoginOrRegister }">
+    <Navbar v-if="!isResellerConsole && !isLoginOrRegister" :back-only="!isTopLevelPage" />
+    <main class="flex-1" style="flex: 1 1 0%; display: flex; flex-direction: column;" :class="{ 'hcz-shell-main--with-bottom-nav': isTopLevelPage && !isResellerConsole && !isLoginOrRegister }" @click.capture="guardPreviewFormClick" @submit.capture="guardPreviewFormSubmit">
+      <div class="hcz-page-background" v-if="!isResellerConsole && !isLoginOrRegister" :class="{ 'hcz-page-background--with-top-bar': true }">
         <div class="hcz-shell-container">
           <ErrorBoundary>
             <RouterView v-slot="{ Component }">
@@ -25,9 +17,8 @@
         </RouterView>
       </ErrorBoundary>
     </main>
-    <!-- Footer 已退休：桌面端底部导航由 MobileBottomNav 响应式接管（居中浮动药囊） -->
     <BackToTop v-if="!isResellerConsole && !isLoginOrRegister" />
-    <MobileBottomNav v-if="!isResellerConsole && !isLoginOrRegister" />
+    <MobileBottomNav v-if="isTopLevelPage && !isResellerConsole && !isLoginOrRegister" />
     <Loading :loading="appStore.loading" />
     <Toast />
     <ConfirmDialog />
@@ -36,8 +27,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 import { useAppStore } from './stores/app'
 import { useUserAuthStore } from './stores/userAuth'
 import { useI18n } from 'vue-i18n'
@@ -57,19 +47,10 @@ const appStore = useAppStore()
 const userAuthStore = useUserAuthStore()
 const { t } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const isResellerConsole = computed(() => route.meta.resellerConsole === true)
 const isLoginOrRegister = computed(() => route.name === 'user-login' || route.name === 'user-register' || route.name === 'user-forgot')
-const showNavbar = computed(() => ['home', 'personal-center-orders', 'personal-center'].includes(String(route.name)))
-const showBackBar = computed(() => !showNavbar.value && !isResellerConsole.value && !isLoginOrRegister.value)
-
-const handleBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.push('/')
-  }
-}
+// 一级页面：显示完整 Navbar + 底部导航
+const isTopLevelPage = computed(() => ['home', 'personal-center-orders', 'personal-center'].includes(String(route.name)))
 const privatePreviewActive = computed(() => DEV_PREVIEW_MODE && !userAuthStore.isAuthenticated && isPrivatePreviewRoute(route.name))
 
 const guardPreviewFormClick = (event: MouseEvent) => {

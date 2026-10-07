@@ -1,52 +1,187 @@
 <template>
-  <div class="space-y-5">
-    <div class="flex flex-wrap gap-3">
-      <router-link to="/me/wallet/withdrawal" class="rounded-lg border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">{{ t('personalCenter.wallet.withdraw.formTitle') }}</router-link>
-      <router-link to="/me/wallet/withdrawal-history" class="rounded-lg border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">{{ t('personalCenter.wallet.withdraw.historyTitle') }}</router-link>
-    </div>
-    <div class="grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-stretch">
-      <WalletBalanceCard
-        :alert="walletAlert"
-        :total-balance="totalBalance"
-        :available-balance="availableBalance"
-        :frozen-balance="frozenBalance"
-        :currency="walletCurrency"
-        :frozen-note="frozenNote"
-        :total-transactions="previewGuest ? null : pagination.total"
-        :error="walletError"
-        :loading="walletLoading"
-        @retry="loadWallet"
-      />
-
-      <WalletRechargeForm
-        :amount="rechargeForm.amount"
-        :channel-id="rechargeForm.channelId"
-        :remark="rechargeForm.remark"
-        :currency="selectedChannelCurrency"
-        :channels="channels"
-        :has-channels="hasChannels"
-        :recharging="recharging"
-        :channel-loading="channelLoading"
-        :selected-channel="selectedChannel"
-        :fee-rate-display="selectedChannelFeeRateDisplay"
-        :fixed-fee-display="selectedChannelFixedFeeDisplay"
-        :fee-amount-display="selectedChannelFeeAmountDisplay"
-        @update:amount="rechargeForm.amount = $event"
-        @update:channel-id="rechargeForm.channelId = $event"
-        @update:remark="rechargeForm.remark = $event"
-        @submit="handleRecharge"
-      />
+  <div class="space-y-4 pb-8">
+    <!-- 标题 + 账单入口 -->
+    <div class="mb-2 flex items-center justify-between">
+      <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('nav.wallet') }}</h1>
+      <router-link
+        to="/me/wallet/transactions"
+        class="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+      >
+        <ReceiptText :size="14" :stroke-width="1.8" />
+        {{ t('personalCenter.wallet.bills') }}
+      </router-link>
     </div>
 
-    <WalletTransactionList
-      :loading="loading"
-      :error="transactionError"
-      :transactions="transactions"
-      :current-page="pagination.page"
-      :total-pages="pagination.total_page"
-      @refresh="refreshCurrentPage"
-      @change-page="changePage"
+    <!-- 余额卡 -->
+    <WalletBalanceCard
+      :alert="walletAlert"
+      :total-balance="totalBalance"
+      :available-balance="availableBalance"
+      :frozen-balance="frozenBalance"
+      :currency="walletCurrency"
+      :frozen-note="frozenNote"
+      :error="walletError"
+      :loading="walletLoading"
+      @retry="loadWallet"
     />
+
+    <!-- 快捷操作：余额充值 / 申请提现（单行） -->
+    <div class="flex gap-2">
+      <button
+        type="button"
+        class="flex flex-1 items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent/40"
+        @click="onRechargeClick"
+      >
+        <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+          <Plus :size="18" :stroke-width="1.8" />
+        </div>
+        <span class="text-sm font-medium text-foreground">{{ t('personalCenter.wallet.rechargeTitle') }}</span>
+      </button>
+      <button
+        type="button"
+        class="flex flex-1 items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent/40"
+        @click="openWithdrawSheet"
+      >
+        <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+          <ArrowUpRight :size="18" :stroke-width="1.8" />
+        </div>
+        <span class="text-sm font-medium text-foreground">{{ t('personalCenter.wallet.withdraw.formTitle') }}</span>
+      </button>
+    </div>
+
+    <!-- 收款方式入口 -->
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent/40"
+      @click="goPaymentMethods"
+    >
+      <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+        <CreditCard :size="18" :stroke-width="1.8" />
+      </div>
+      <div class="min-w-0 flex-1 text-left">
+        <div class="text-sm font-medium text-foreground">{{ t('paymentMethods.pageTitle') }}</div>
+        <div class="mt-0.5 truncate text-xs text-muted-foreground">{{ t('paymentMethods.pageSubtitle') }}</div>
+      </div>
+      <ChevronRight :size="18" :stroke-width="1.8" class="shrink-0 text-muted-foreground" />
+    </button>
+
+    <!-- 未绑定 TRC20 提示 -->
+    <div
+      v-if="trc20Bound === false"
+      class="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3"
+    >
+      <p class="text-sm text-amber-600">{{ t('paymentMethods.notBoundTip') }}</p>
+      <button
+        type="button"
+        class="shrink-0 text-sm font-medium text-amber-600 hover:underline"
+        @click="goPaymentMethods"
+      >
+        {{ t('paymentMethods.goBind') }}
+      </button>
+    </div>
+
+    <!-- 充值弹窗 -->
+    <Teleport to="body">
+      <Transition name="sheet">
+        <div v-if="showRechargeSheet" class="fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" @click="closeRechargeSheet"></div>
+          <div class="absolute bottom-0 left-0 right-0 flex justify-center">
+            <div
+              class="sheet-panel w-full max-w-3xl max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-3xl bg-background shadow-2xl transform-gpu sm:mb-6 sm:rounded-3xl"
+              :style="sheetDragStyle"
+              @touchstart="onSheetTouchStart"
+              @touchmove="onSheetTouchMove"
+              @touchend="onSheetTouchEnd"
+              @mousedown="onSheetMouseDown"
+            >
+              <div class="sticky top-0 z-10 border-b bg-background">
+                <div class="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/20"></div>
+                <div class="px-5 py-2.5 text-center text-base font-semibold text-foreground">{{ t('personalCenter.wallet.rechargeTitle') }}</div>
+              </div>
+              <div class="p-5 pb-8">
+                <WalletRechargeForm
+                  :amount="rechargeForm.amount"
+                  :channel-id="rechargeForm.channelId"
+                  :remark="rechargeForm.remark"
+                  :currency="selectedChannelCurrency"
+                  :channels="channels"
+                  :has-channels="hasChannels"
+                  :recharging="recharging"
+                  :channel-loading="channelLoading"
+                  :selected-channel="selectedChannel"
+                  :fee-rate-display="selectedChannelFeeRateDisplay"
+                  :fixed-fee-display="selectedChannelFixedFeeDisplay"
+                  :fee-amount-display="selectedChannelFeeAmountDisplay"
+                  @update:amount="rechargeForm.amount = $event"
+                  @update:channel-id="rechargeForm.channelId = $event"
+                  @update:remark="rechargeForm.remark = $event"
+                  @submit="handleRecharge"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 提现弹窗 -->
+    <Teleport to="body">
+      <Transition name="sheet">
+        <div v-if="showWithdrawSheet" class="fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" @click="closeWithdrawSheet"></div>
+          <div class="absolute bottom-0 left-0 right-0 flex justify-center">
+            <div
+              class="sheet-panel w-full max-w-3xl max-h-[85vh] overflow-y-auto overscroll-contain rounded-t-3xl bg-background shadow-2xl transform-gpu sm:mb-6 sm:rounded-3xl"
+              :style="sheetDragStyle"
+              @touchstart="onSheetTouchStart"
+              @touchmove="onSheetTouchMove"
+              @touchend="onSheetTouchEnd"
+              @mousedown="onSheetMouseDown"
+            >
+              <div class="sticky top-0 z-10 border-b bg-background">
+                <div class="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/20"></div>
+                <div class="px-5 py-2.5 text-center text-base font-semibold text-foreground">{{ t('personalCenter.wallet.withdraw.formTitle') }}</div>
+              </div>
+              <div class="p-5 pb-8">
+                <WalletWithdrawal />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 未绑定 TRC20 引导弹窗 -->
+    <Teleport to="body">
+      <Transition name="sheet">
+        <div v-if="showBindTip" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/50" @click="showBindTip = false"></div>
+          <div class="relative z-10 w-full max-w-sm rounded-3xl bg-background p-6 shadow-2xl">
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-muted-foreground">
+              <Coins :size="22" :stroke-width="1.8" />
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-foreground">{{ t('paymentMethods.bindTipTitle') }}</h3>
+            <p class="mt-1.5 text-sm text-muted-foreground">{{ t('paymentMethods.bindTipDesc') }}</p>
+            <div class="mt-5 flex gap-3">
+              <button
+                type="button"
+                class="flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                @click="showBindTip = false"
+              >
+                {{ t('paymentMethods.bindTipCancel') }}
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                @click="goBindFromTip"
+              >
+                {{ t('paymentMethods.goBind') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -54,42 +189,37 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ArrowUpRight, ChevronRight, Coins, CreditCard, Plus, ReceiptText } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
+import { paymentMethodsAPI, parsePaymentMethodList } from '../../api/paymentMethods'
 import { useAppStore } from '../../stores/app'
-import { useUserAuthStore } from '../../stores/userAuth'
-import { isGuestDevPreview } from '../../utils/devPreview'
 import type { PageAlert } from '../../utils/alerts'
 import { amountToCents, basisPointsToPercent, calculateFeeCents, centsToAmount, rateToBasisPoints } from '../../utils/money'
 import WalletBalanceCard from '../../components/wallet/WalletBalanceCard.vue'
 import WalletRechargeForm from '../../components/wallet/WalletRechargeForm.vue'
-import WalletTransactionList from '../../components/wallet/WalletTransactionList.vue'
+import WalletWithdrawal from './WalletWithdrawal.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
-const userAuthStore = useUserAuthStore()
-const previewGuest = computed(() => isGuestDevPreview(userAuthStore.isAuthenticated))
 
-const loading = ref(true)
 const recharging = ref(false)
+const showRechargeSheet = ref(false)
+const showWithdrawSheet = ref(false)
 const wallet = ref<any>(null)
 const walletError = ref(false)
 const walletLoading = ref(false)
-const transactionError = ref(false)
-const transactions = ref<any[]>([])
-const pagination = ref({
-  page: 1,
-  page_size: 20,
-  total: 0,
-  total_page: 1,
-})
 const walletAlert = ref<PageAlert | null>(null)
 const channels = ref<any[]>([])
 const channelFetchTimer = ref<number | null>(null)
 const channelFetchSeq = ref(0)
 const channelLoading = ref(false)
 const channelsResolvedAmount = ref('')
+
+// 收款方式 / TRC20 绑定状态
+const trc20Bound = ref<boolean | null>(null)
+const showBindTip = ref(false)
 
 const rechargeForm = reactive({
   amount: '',
@@ -301,6 +431,108 @@ const frozenNote = computed(() =>
   String(wallet.value?.frozen_note || t('personalCenter.wallet.frozenNote'))
 )
 
+// 弹窗控制
+const sheetCloseFn = ref<(() => void) | null>(null)
+const lockBodyScroll = () => { document.body.style.overflow = 'hidden' }
+const unlockBodyScroll = () => { document.body.style.overflow = '' }
+const openRechargeSheet = () => { showRechargeSheet.value = true; lockBodyScroll(); sheetCloseFn.value = closeRechargeSheet }
+const closeRechargeSheet = () => { showRechargeSheet.value = false; unlockBodyScroll(); sheetCloseFn.value = null }
+const openWithdrawSheet = () => { showWithdrawSheet.value = true; lockBodyScroll(); sheetCloseFn.value = closeWithdrawSheet }
+const closeWithdrawSheet = () => { showWithdrawSheet.value = false; unlockBodyScroll(); sheetCloseFn.value = null }
+
+// 收款方式入口跳转
+const goPaymentMethods = () => {
+  router.push('/wallet/payment-methods')
+}
+
+// 校验是否已绑定 USDT TRC20 地址
+const checkTrc20Binding = async () => {
+  try {
+    const res = await paymentMethodsAPI.list('USDT_TRC20')
+    const items = parsePaymentMethodList(res).filter((m) => m.enabled !== false && m.status !== 'disabled')
+    trc20Bound.value = items.length > 0
+  } catch {
+    // 校验失败不阻断充值，按已绑定处理
+    trc20Bound.value = true
+  }
+}
+
+// 充值点击：未绑定 TRC20 则引导先绑定
+const onRechargeClick = async () => {
+  if (trc20Bound.value === null) {
+    await checkTrc20Binding()
+  }
+  if (trc20Bound.value === false) {
+    showBindTip.value = true
+    return
+  }
+  openRechargeSheet()
+}
+
+const goBindFromTip = () => {
+  showBindTip.value = false
+  router.push('/wallet/payment-methods')
+}
+
+// 下拉关闭手势（touch + mouse）
+const sheetDrag = reactive({ startY: 0, offset: 0, dragging: false })
+const sheetDragStyle = computed(() => {
+  if (!sheetDrag.dragging) return undefined
+  return {
+    transform: `translateY(${sheetDrag.offset}px)`,
+    transition: 'none',
+  }
+})
+const sheetDragStart = (clientY: number, panel: HTMLElement) => {
+  if (panel.scrollTop > 0) return false
+  sheetDrag.startY = clientY
+  sheetDrag.dragging = true
+  sheetDrag.offset = 0
+  return true
+}
+const sheetDragMove = (clientY: number) => {
+  if (!sheetDrag.dragging) return
+  const delta = clientY - sheetDrag.startY
+  if (delta > 0) sheetDrag.offset = delta
+}
+const sheetDragEnd = () => {
+  if (!sheetDrag.dragging) return
+  sheetDrag.dragging = false
+  if (sheetDrag.offset > 120 && sheetCloseFn.value) {
+    sheetCloseFn.value()
+  }
+  sheetDrag.offset = 0
+}
+const onSheetTouchStart = (e: TouchEvent) => {
+  const touch = e.touches[0]
+  if (!touch) return
+  sheetDragStart(touch.clientY, e.currentTarget as HTMLElement)
+}
+const onSheetTouchMove = (e: TouchEvent) => {
+  if (!sheetDrag.dragging) return
+  const touch = e.touches[0]
+  if (!touch) return
+  const delta = touch.clientY - sheetDrag.startY
+  if (delta > 0) {
+    sheetDrag.offset = delta
+    e.preventDefault()
+  }
+}
+const onSheetTouchEnd = () => { sheetDragEnd() }
+
+// PC 鼠标拖拽
+const onSheetMouseDown = (e: MouseEvent) => {
+  if (!sheetDragStart(e.clientY, e.currentTarget as HTMLElement)) return
+  const onMouseMove = (ev: MouseEvent) => sheetDragMove(ev.clientY)
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+    sheetDragEnd()
+  }
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+
 // 钱包余额加载：失败时置 walletError，余额区显示"加载失败+重试"，绝不显示假 0。
 // 只有真实 API 返回 0 才显示 0.00 USDT。
 const loadWallet = async () => {
@@ -313,24 +545,6 @@ const loadWallet = async () => {
     walletError.value = true
   } finally {
     walletLoading.value = false
-  }
-}
-
-const loadTransactions = async (page = 1) => {
-  loading.value = true
-  transactionError.value = false
-  try {
-    const response = await walletAPI.transactions({
-      page,
-      page_size: pagination.value.page_size,
-    })
-    transactions.value = response.data.data || []
-    pagination.value = response.data.pagination || pagination.value
-  } catch {
-    transactions.value = []
-    transactionError.value = true
-  } finally {
-    loading.value = false
   }
 }
 
@@ -389,18 +603,6 @@ const handleRecharge = async () => {
   }
 }
 
-const changePage = (page: number) => {
-  if (page < 1 || page > pagination.value.total_page) return
-  loadTransactions(page)
-}
-
-const refreshCurrentPage = async () => {
-  await Promise.all([
-    loadWallet(),
-    loadTransactions(pagination.value.page),
-  ])
-}
-
 // 支付网关回调可能带 recharge_no 回到 /me/wallet，重定向到充值详情页
 const redirectRechargeReturn = () => {
   const query = route.query as Record<string, unknown>
@@ -418,11 +620,9 @@ const initialize = async () => {
     if (!appStore.config) {
       await appStore.loadConfig()
     }
-    await Promise.all([
-      loadWallet(),
-      loadTransactions(),
-    ])
+    await loadWallet()
     redirectRechargeReturn()
+    void checkTrc20Binding()
   } catch (err: any) {
     walletAlert.value = {
       level: 'error',
@@ -467,4 +667,25 @@ onUnmounted(() => {
   channelLoading.value = false
 })
 </script>
+
+<style>
+.sheet-enter-active,
+.sheet-leave-active {
+  transition: opacity 0.3s ease;
+}
+.sheet-enter-active .sheet-panel {
+  transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sheet-leave-active .sheet-panel {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 1, 1);
+}
+.sheet-enter-from,
+.sheet-leave-to {
+  opacity: 0;
+}
+.sheet-enter-from .sheet-panel,
+.sheet-leave-to .sheet-panel {
+  transform: translateY(100%);
+}
+</style>
 

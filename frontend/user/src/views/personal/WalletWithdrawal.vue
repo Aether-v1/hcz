@@ -1,43 +1,17 @@
 <template>
-  <div class="space-y-6">
-    <!-- Balance Card -->
-    <div class="rounded-2xl border bg-card p-7 shadow-sm">
-      <PanelHeading
-        eyebrow="USDT"
-        :title="t('personalCenter.wallet.withdraw.balanceTitle')"
-        :description="t('personalCenter.wallet.withdraw.balanceSubtitle')"
-        :icon="Wallet"
-      />
-      <div class="mt-2 text-3xl font-black text-foreground">
-        {{ balanceDisplay }}
-      </div>
-    </div>
-
+  <div class="space-y-4">
     <!-- Alert -->
-    <div v-if="alert" class="rounded-xl border p-4 text-sm" :class="alertClass">
+    <div v-if="alert" class="rounded-xl border p-3 text-sm" :class="alertClass">
       {{ alert }}
     </div>
 
     <!-- Withdrawal Form -->
-    <form class="rounded-2xl border bg-card p-7 shadow-sm space-y-5" @submit.prevent="handleSubmit">
-      <PanelHeading
-        :title="t('personalCenter.wallet.withdraw.formTitle')"
-        :description="t('personalCenter.wallet.withdraw.formSubtitle')"
-        :icon="ArrowUpRight"
-      />
-
-      <!-- Network (fixed TRC20) -->
-      <div>
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.withdraw.networkLabel') }}</Label>
-        <Input value="TRC20" disabled class="h-11 bg-muted" />
-        <p class="mt-1 text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.networkFixedHint') }}</p>
-      </div>
-
+    <form class="space-y-4" @submit.prevent="handleSubmit">
       <!-- Saved Addresses Dropdown -->
       <div v-if="savedAddresses.length > 0">
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.withdraw.savedAddressLabel') }}</Label>
+        <Label class="mb-1.5 block text-sm">{{ t('personalCenter.wallet.withdraw.savedAddressLabel') }}</Label>
         <Select v-model="selectedSavedAddressId" @update:model-value="(val: any) => onSelectSavedAddress(String(val ?? ''))">
-          <SelectTrigger class="h-11 w-full">
+          <SelectTrigger class="h-10 w-full">
             <SelectValue :placeholder="t('personalCenter.wallet.withdraw.savedAddressPlaceholder')" />
           </SelectTrigger>
           <SelectContent>
@@ -47,59 +21,16 @@
             </SelectItem>
           </SelectContent>
         </Select>
-
-        <!-- Address Management -->
-        <div class="mt-3 rounded-xl border border-border bg-muted/30 p-3">
-          <div class="mb-2 text-xs font-semibold text-muted-foreground">
-            {{ t('personalCenter.wallet.withdraw.addressManageTitle') }}
-          </div>
-          <div class="space-y-2">
-            <div
-              v-for="addr in savedAddresses"
-              :key="addr.id"
-              class="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2"
-            >
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-foreground">{{ addr.label || t('personalCenter.wallet.withdraw.addressLabel') }}</span>
-                  <span v-if="addr.is_default" class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">★</span>
-                </div>
-                <div class="mt-0.5 font-mono text-xs text-muted-foreground">{{ abbreviateAddress(addr.address) }}</div>
-              </div>
-              <div class="flex shrink-0 items-center gap-1">
-                <Button
-                  v-if="!addr.is_default"
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  class="h-7 text-xs"
-                  @click="handleSetDefaultAddress(addr.id)"
-                >
-                  {{ t('personalCenter.wallet.withdraw.setDefault') }}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  class="h-7 text-xs text-destructive hover:text-destructive"
-                  @click="handleDeleteAddress(addr.id)"
-                >
-                  {{ t('personalCenter.wallet.withdraw.deleteAddress') }}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Address Input -->
       <div>
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.withdraw.addressLabel') }}</Label>
+        <Label class="mb-1.5 block text-sm">{{ t('personalCenter.wallet.withdraw.addressLabel') }}</Label>
         <Input
           v-model="address"
           type="text"
           :placeholder="t('personalCenter.wallet.withdraw.addressPlaceholder')"
-          class="h-11 font-mono"
+          class="h-10 font-mono text-sm"
           autocomplete="off"
         />
       </div>
@@ -107,7 +38,7 @@
       <!-- Save Address -->
       <div class="flex items-center gap-2">
         <Checkbox id="saveAddress" v-model="saveAddress" />
-        <Label for="saveAddress" class="text-sm font-normal cursor-pointer">
+        <Label for="saveAddress" class="cursor-pointer text-sm font-normal">
           {{ t('personalCenter.wallet.withdraw.saveAddressLabel') }}
         </Label>
         <Input
@@ -115,34 +46,34 @@
           v-model="addressLabel"
           type="text"
           :placeholder="t('personalCenter.wallet.withdraw.addressLabelPlaceholder')"
-          class="h-9 w-48"
+          class="h-9 w-40 text-sm"
         />
       </div>
 
       <!-- Amount Input -->
       <div>
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.withdraw.amountLabel') }}</Label>
+        <Label class="mb-1.5 block text-sm">{{ t('personalCenter.wallet.withdraw.amountLabel') }}</Label>
         <div class="relative">
           <Input
             v-model="amount"
             type="text"
             inputmode="decimal"
             :placeholder="t('personalCenter.wallet.withdraw.amountPlaceholder')"
-            class="h-11 pr-16 font-mono"
+            class="h-10 pr-14 font-mono text-sm"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">USDT</span>
         </div>
       </div>
 
       <!-- Fee / Net Preview -->
-      <div v-if="quote" class="grid grid-cols-2 gap-3">
-        <div class="rounded-xl border border-border p-4">
+      <div v-if="quote" class="grid grid-cols-2 gap-2">
+        <div class="rounded-xl border p-3">
           <div class="text-xs text-muted-foreground">{{ t('personalCenter.wallet.withdraw.feeLabel') }}</div>
-          <div class="mt-1 font-semibold font-mono text-foreground">{{ formatUsdt(quote.fee_amount, 'USDT') }}</div>
+          <div class="mt-0.5 font-mono text-sm font-semibold text-foreground">{{ formatUsdt(quote.fee_amount, 'USDT') }}</div>
         </div>
-        <div class="rounded-xl border border-primary/40 bg-primary/5 p-4">
+        <div class="rounded-xl border border-primary/40 bg-primary/5 p-3">
           <div class="text-xs text-primary">{{ t('personalCenter.wallet.withdraw.netLabel') }}</div>
-          <div class="mt-1 font-semibold font-mono text-primary">{{ formatUsdt(quote.net_amount, 'USDT') }}</div>
+          <div class="mt-0.5 font-mono text-sm font-semibold text-primary">{{ formatUsdt(quote.net_amount, 'USDT') }}</div>
         </div>
       </div>
       <p v-else-if="quoteLoading" class="text-xs text-muted-foreground">
@@ -151,14 +82,14 @@
 
       <!-- TOTP Code -->
       <div>
-        <Label class="mb-2 block">{{ t('personalCenter.wallet.withdraw.totpLabel') }}</Label>
+        <Label class="mb-1.5 block text-sm">{{ t('personalCenter.wallet.withdraw.totpLabel') }}</Label>
         <Input
           v-model="totpCode"
           type="text"
           inputmode="numeric"
           maxlength="6"
           :placeholder="t('personalCenter.wallet.withdraw.totpPlaceholder')"
-          class="h-11 font-mono tracking-[0.3em]"
+          class="h-10 font-mono text-sm tracking-[0.3em]"
           autocomplete="one-time-code"
         />
       </div>
@@ -167,7 +98,7 @@
       <Button
         type="submit"
         :disabled="submitting || !canSubmit"
-        class="h-12 w-full font-bold text-base"
+        class="h-11 w-full text-sm font-bold"
       >
         {{ submitting ? t('personalCenter.wallet.withdraw.submitting') : t('personalCenter.wallet.withdraw.submit') }}
       </Button>
@@ -186,10 +117,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Wallet, ArrowUpRight } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
 import type { WithdrawalAddress, WithdrawalQuote } from '../../api/types'
-import PanelHeading from '../../components/shared/PanelHeading.vue'
 import { formatUsdt } from '../../utils/money'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -215,12 +144,6 @@ const quote = ref<WithdrawalQuote | null>(null)
 const quoteLoading = ref(false)
 let quoteTimer: number | null = null
 let quoteSeq = 0
-
-// 可提现余额：走 formatUsdt。钱包未加载（null）时显示 '--'，不显示假 0.00。
-const balanceDisplay = computed(() => {
-  const ccy = String(wallet.value?.currency || 'USDT')
-  return formatUsdt(wallet.value?.available_balance, ccy)
-})
 
 const alertClass = computed(() => {
   if (alertType.value === 'error') return 'border-destructive/50 bg-destructive/10 text-destructive'
@@ -272,37 +195,6 @@ const onSelectSavedAddress = (val: string) => {
   const addr = savedAddresses.value.find(a => String(a.id) === val)
   if (addr) {
     address.value = addr.address
-  }
-}
-
-const abbreviateAddress = (addr: string) => {
-  if (!addr || addr.length <= 12) return addr
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`
-}
-
-const handleSetDefaultAddress = async (id: number) => {
-  try {
-    await walletAPI.setDefaultWithdrawalAddress(id)
-    showAlert(t('personalCenter.wallet.withdraw.setDefaultSuccess'), 'success')
-    await loadAddresses()
-  } catch (err: any) {
-    showAlert(err?.message || t('personalCenter.wallet.withdraw.errors.submitFailed'))
-  }
-}
-
-const handleDeleteAddress = async (id: number) => {
-  if (!window.confirm(t('personalCenter.wallet.withdraw.deleteAddressConfirm'))) return
-  try {
-    await walletAPI.deleteWithdrawalAddress(id)
-    showAlert(t('personalCenter.wallet.withdraw.deleteAddressSuccess'), 'success')
-    // If deleted address was currently selected, clear address input
-    if (selectedSavedAddressId.value === String(id)) {
-      selectedSavedAddressId.value = ''
-      address.value = ''
-    }
-    await loadAddresses()
-  } catch (err: any) {
-    showAlert(err?.message || t('personalCenter.wallet.withdraw.errors.submitFailed'))
   }
 }
 

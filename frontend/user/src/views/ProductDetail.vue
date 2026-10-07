@@ -341,7 +341,7 @@
             <router-link
               v-for="rp in relatedPosts"
               :key="rp.id"
-              :to="`/blog/${rp.slug}`"
+              :to="`/news/${rp.slug}`"
               class="group bg-card backdrop-blur-md border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all flex flex-col"
             >
               <div v-if="rp.thumbnail" class="h-32 overflow-hidden relative">

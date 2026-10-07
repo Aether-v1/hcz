@@ -1,5 +1,43 @@
 export type TranslateFn = (...args: any[]) => string
 
+/** 取 `points.*` 下的枚举文案；无对应 key 时返回空串，由调用方决定回退（如回退服务端 reason）。 */
+const pointsEnumLabel = (t: TranslateFn, path: string, value?: string): string => {
+  if (!value) return ''
+  const key = `points.${path}.${value}`
+  const translated = t(key)
+  return translated === key ? '' : translated
+}
+
+export const pointsExchangeStatusLabel = (t: TranslateFn, status?: string) => {
+  return pointsEnumLabel(t, 'exchangeStatus', status) || status || '-'
+}
+
+export const pointsExchangeStatusVariant = (status?: string): BadgeTone => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'success'
+    case 'PROCESSING':
+      return 'accent'
+    case 'PENDING':
+      return 'warning'
+    case 'FAILED':
+      return 'danger'
+    case 'CANCELLED':
+    default:
+      return 'neutral'
+  }
+}
+
+// 积分流水的行首标题：优先本地化 action_type，缺失则回退服务端 reason。
+export const pointsLedgerLabel = (t: TranslateFn, actionType?: string, reason?: string) => {
+  return pointsEnumLabel(t, 'actions', actionType) || reason || actionType || '-'
+}
+
+// 商品不可兑换原因（后端稳定业务码，非文案）。
+export const pointsReasonCodeLabel = (t: TranslateFn, reasonCode?: string) => {
+  return pointsEnumLabel(t, 'reasonCodes', reasonCode)
+}
+
 export const orderStatusLabel = (t: TranslateFn, status?: string) => {
   if (!status) return '-'
   const map: Record<string, string> = {

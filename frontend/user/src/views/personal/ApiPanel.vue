@@ -1,18 +1,16 @@
 <template>
-  <div class="space-y-6 api-panel-enter">
-    <div class="rounded-2xl border bg-card p-7 shadow-sm">
-      <div>
-        <div>
-          <PanelHeading :title="t('personalCenter.apiPanel.title')" :description="t('personalCenter.apiPanel.subtitle')" :icon="Key">
-            <template #actions>
-              <Badge variant="accent" size="sm">{{ t('personalCenter.tabs.api') }}</Badge>
-            </template>
-          </PanelHeading>
+  <div class="pb-8">
+    <!-- 页面标题 -->
+    <div class="mb-4">
+      <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('personalCenter.apiPanel.title') }}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{{ t('personalCenter.apiPanel.subtitle') }}</p>
+    </div>
 
-          <Alert v-if="panelAlert" class="mb-5" :variant="pageAlertVariant(panelAlert.level)" :class="pageAlertToneClass(panelAlert.level)">
-            <AlertDescription>{{ panelAlert.message }}</AlertDescription>
-          </Alert>
+    <Alert v-if="panelAlert" class="mb-4" :variant="pageAlertVariant(panelAlert.level)" :class="pageAlertToneClass(panelAlert.level)">
+      <AlertDescription>{{ panelAlert.message }}</AlertDescription>
+    </Alert>
 
+    <div class="rounded-2xl border bg-card p-5 shadow-sm">
           <!-- Loading -->
           <div v-if="loading" class="space-y-3">
             <div v-for="idx in 3" :key="idx" class="h-16 animate-pulse rounded-xl border bg-muted"></div>
@@ -200,8 +198,6 @@
               </div>
             </Transition>
           </Teleport>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -211,10 +207,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiCredentialAPI } from '../../api'
 import { pageAlertVariant, pageAlertToneClass, type PageAlert } from '../../utils/alerts'
-import { AlertTriangle, XCircle, Info, Check, Key } from 'lucide-vue-next'
-import PanelHeading from '../../components/shared/PanelHeading.vue'
+import { AlertTriangle, XCircle, Info, Check } from 'lucide-vue-next'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 const { t } = useI18n()

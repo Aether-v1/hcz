@@ -44,7 +44,7 @@
     <template v-else>
       <!-- 概览头 -->
       <Card class="p-5">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3">
           <div class="min-w-0">
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{{ t('resellerConsole.dashboard.storeLabel') }}</p>
             <h2 class="mt-1 break-all font-mono text-lg font-black text-foreground">{{ primaryDomain || t('resellerConsole.dashboard.noDomain') }}</h2>
@@ -57,7 +57,7 @@
       </Card>
 
       <!-- 指标卡 -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-2 gap-3">
         <ResellerMetricCard :label="t('resellerConsole.dashboard.orderTotal')" :value="stats?.total || 0" :icon="ShoppingBag" tone="accent" />
         <ResellerMetricCard :label="t('resellerConsole.orders.paidOrders')" :value="paidCount" :hint="paidRatioText" :icon="CheckCircle2" tone="success" />
         <ResellerMetricCard :label="t('personalCenter.reseller.primaryAvailable')" :value="primaryBalanceText" :hint="primaryBalanceHint" :icon="Banknote" tone="info" />
@@ -88,29 +88,27 @@
             </Button>
           </div>
         </div>
-        <div v-show="!setupCollapsed" class="mt-4 grid gap-3 lg:grid-cols-5">
+        <div v-show="!setupCollapsed" class="mt-4 space-y-1">
           <RouterLink
             v-for="item in setupChecklist"
             :key="item.to"
             :to="item.to"
-            class="group flex min-h-[124px] flex-col justify-between rounded-xl border bg-card p-4 transition-shadow hover:shadow-md"
+            class="flex min-h-[52px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-accent/40"
           >
-            <div class="flex items-start justify-between gap-3">
-              <span class="flex h-9 w-9 items-center justify-center rounded-xl" :class="item.done ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'">
-                <component :is="item.icon" class="h-5 w-5" />
-              </span>
-              <ResellerStatusBadge :label="item.done ? t('resellerConsole.dashboard.setup.ready') : t('resellerConsole.dashboard.setup.pending')" :tone="item.done ? 'success' : 'warning'" />
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" :class="item.done ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'">
+              <component :is="item.icon" class="h-5 w-5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-semibold text-foreground">{{ item.label }}</div>
+              <p class="mt-0.5 truncate text-xs text-muted-foreground">{{ item.description }}</p>
             </div>
-            <div>
-              <div class="mt-4 text-sm font-semibold text-foreground">{{ item.label }}</div>
-              <p class="mt-1 text-xs text-muted-foreground">{{ item.description }}</p>
-            </div>
+            <ResellerStatusBadge :label="item.done ? t('resellerConsole.dashboard.setup.ready') : t('resellerConsole.dashboard.setup.pending')" :tone="item.done ? 'success' : 'warning'" />
           </RouterLink>
         </div>
       </Card>
 
       <!-- 可视化:订单状态分布 + 多币种余额 -->
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div class="space-y-4">
         <Card class="p-5">
           <h3 class="mb-4 text-sm font-bold text-foreground">{{ t('resellerConsole.dashboard.orderDistribution') }}</h3>
           <ResellerDonut
@@ -137,7 +135,7 @@
       <!-- 快捷入口 -->
       <section>
         <h3 class="mb-3 text-sm font-bold text-foreground">{{ t('resellerConsole.dashboard.quickActions') }}</h3>
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="grid grid-cols-2 gap-3">
           <RouterLink
             v-for="action in quickActions"
             :key="action.to"
@@ -165,30 +163,8 @@
         <ResellerPageState v-if="recentOrders.length === 0" :title="t('resellerConsole.orders.empty')" :icon="ShoppingBag" />
 
         <template v-else>
-          <!-- 桌面表 -->
-          <ResellerDataTable class="hidden lg:block">
-            <TableHeader>
-              <TableRow class="bg-muted/50">
-                <TableHead class="px-4">{{ t('resellerConsole.orders.orderNo') }}</TableHead>
-                <TableHead class="px-4">{{ t('resellerConsole.orders.status') }}</TableHead>
-                <TableHead class="px-4 text-right">{{ t('resellerConsole.orders.totalAmount') }}</TableHead>
-                <TableHead class="px-4 text-right">{{ t('resellerConsole.orders.profitAmount') }}</TableHead>
-                <TableHead class="px-4">{{ t('resellerConsole.orders.createdAt') }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="row in recentOrders" :key="row.order_no">
-                <TableCell class="px-4 py-3 font-mono text-xs text-foreground">{{ row.order_no }}</TableCell>
-                <TableCell class="px-4 py-3"><ResellerStatusBadge :label="statusLabel(row.status)" :tone="statusTone(row.status)" /></TableCell>
-                <TableCell class="px-4 py-3 text-right font-mono text-xs">{{ formatResellerConsoleAmount(row.total_amount, row.currency) }}</TableCell>
-                <TableCell class="px-4 py-3 text-right font-mono text-xs">{{ formatResellerConsoleAmount(row.profit_amount, row.currency) }}</TableCell>
-                <TableCell class="px-4 py-3 text-xs text-muted-foreground">{{ formatResellerConsoleDate(row.created_at) }}</TableCell>
-              </TableRow>
-            </TableBody>
-          </ResellerDataTable>
-
-          <!-- 移动卡片 -->
-          <div class="space-y-3 lg:hidden">
+          <!-- 订单卡片列表 -->
+          <div class="space-y-3">
             <RouterLink
               v-for="row in recentOrders"
               :key="row.order_no"
@@ -237,10 +213,8 @@ import {
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { resellerAPI } from '../../api'
 import type { ResellerDomainData, ResellerSiteConfigSnapshotData } from '../../api/types'
-import ResellerDataTable from '../../components/reseller-console/ResellerDataTable.vue'
 import ResellerDonut from '../../components/reseller-console/ResellerDonut.vue'
 import ResellerMetricCard from '../../components/reseller-console/ResellerMetricCard.vue'
 import ResellerPageState from '../../components/reseller-console/ResellerPageState.vue'
@@ -256,7 +230,6 @@ import {
 } from '../../constants/reseller'
 import {
   formatResellerConsoleAmount,
-  formatResellerConsoleDate,
   resellerCurrencyColor,
   resellerOrderStatusColor,
   resellerOrderStatusTone,

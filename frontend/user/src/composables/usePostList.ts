@@ -74,7 +74,7 @@ export function usePostList(
   const debouncedLoadPosts = debounceAsync(loadPosts, 300)
 
   const goToPost = (slug: string) => {
-    router.push(`/blog/${slug}`)
+    router.push(`/news/${slug}`)
   }
 
   const changePage = (page: number) => {

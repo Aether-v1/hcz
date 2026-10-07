@@ -1,12 +1,17 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 pb-8">
+    <!-- 标题 -->
+    <div class="mb-4">
+      <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('settings.title') }}</h1>
+    </div>
+
     <!-- 外观与语言 -->
     <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
       <!-- 主题选择 -->
-      <div class="flex items-center justify-between border-b px-5 py-4">
+      <div class="flex min-h-[52px] items-center justify-between border-b px-5 py-3">
         <div class="flex items-center gap-3">
-          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-            <Palette :size="18" />
+          <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Palette :size="18" :stroke-width="1.8" />
           </div>
           <div>
             <p class="text-sm font-semibold text-foreground">{{ t('settings.appearance') }}</p>
@@ -28,10 +33,10 @@
       </div>
 
       <!-- 语言选择 -->
-      <div class="flex items-center justify-between px-5 py-4">
+      <div class="flex min-h-[52px] items-center justify-between px-5 py-3">
         <div class="flex items-center gap-3">
-          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-            <Languages :size="18" />
+          <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Languages :size="18" :stroke-width="1.8" />
           </div>
           <div>
             <p class="text-sm font-semibold text-foreground">{{ t('settings.language') }}</p>
@@ -53,10 +58,10 @@
 
     <!-- 关于 -->
     <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <div class="flex items-center justify-between px-5 py-4">
+      <div class="flex min-h-[52px] items-center justify-between px-5 py-3">
         <div class="flex items-center gap-3">
-          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-            <Info :size="18" />
+          <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Info :size="18" :stroke-width="1.8" />
           </div>
           <div>
             <p class="text-sm font-semibold text-foreground">{{ t('settings.about') }}</p>
@@ -70,10 +75,10 @@
     <!-- 退出登录 -->
     <button
       type="button"
-      class="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card px-5 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+      class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card px-5 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
       @click="handleLogout"
     >
-      <LogOut :size="17" />
+      <LogOut :size="17" :stroke-width="1.8" />
       {{ t('navbar.logout') }}
     </button>
   </div>

@@ -1,20 +1,15 @@
 <template>
-  <div class="space-y-6">
-    <div class="rounded-2xl border bg-card p-7 shadow-sm">
-      <PanelHeading
-        :title="t('personalCenter.security.title')"
-        :description="requiresOldEmailCode ? t('personalCenter.security.subtitle') : t('personalCenter.security.subtitleBindOnly')"
-        :icon="ShieldCheck"
-      >
-        <template #actions>
-          <Badge variant="accent" size="sm">{{ t('personalCenter.tabs.security') }}</Badge>
-        </template>
-      </PanelHeading>
+  <div class="space-y-4 pb-8">
+    <!-- 页面标题 -->
+    <div class="mb-2">
+      <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('personalCenter.security.title') }}</h1>
+    </div>
 
-      <Alert v-if="securityAlert" class="mb-5" :variant="pageAlertVariant(securityAlert.level)" :class="pageAlertToneClass(securityAlert.level)">
-        <AlertDescription>{{ securityAlert.message }}</AlertDescription>
-      </Alert>
+    <Alert v-if="securityAlert" class="mb-2" :variant="pageAlertVariant(securityAlert.level)" :class="pageAlertToneClass(securityAlert.level)">
+      <AlertDescription>{{ securityAlert.message }}</AlertDescription>
+    </Alert>
 
+    <div class="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
       <TelegramBindingSection
         :telegram-enabled="telegramEnabled"
         :telegram-bound="telegramBound"
@@ -100,11 +95,8 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { ShieldCheck } from 'lucide-vue-next'
 import { pageAlertVariant, pageAlertToneClass, type PageAlert } from '../../utils/alerts'
-import PanelHeading from '../../components/shared/PanelHeading.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { userProfileAPI } from '../../api/user'
 import type { TelegramAuthPayload } from '../../api'
 import { useAppStore } from '../../stores/app'

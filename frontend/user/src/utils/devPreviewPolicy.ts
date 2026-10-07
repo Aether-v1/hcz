@@ -13,8 +13,8 @@ const PUBLIC_PREVIEW_ROUTES = new Set([
 
 const PRIVATE_PREVIEW_ROUTES = new Set([
   'personal-center', 'personal-center-orders', 'personal-center-wallet',
-  'personal-center-invitation', 'personal-center-profile', 'notifications', 'support-home',
-  'support-tickets', 'c2c-home',
+  'personal-center-invitation', 'personal-center-profile', 'profile-edit', 'notifications', 'support-home',
+  'support-tickets', 'c2c-home', 'personal-center-gift-cards', 'personal-center-api',
 ])
 
 export const isAnonymousPreviewRoute = (name: unknown): boolean =>

@@ -5,6 +5,7 @@ import { Package } from 'lucide-vue-next'
 import { adminAPI } from '@/api/admin'
 import type { AdminOrder, AdminOrderItem, AdminFulfillment, AdminProcurementOrder, AdminPayment } from '@/api/types'
 import IdCell from '@/components/IdCell.vue'
+import StepUpConfirmDialog from '@/components/admin/StepUpConfirmDialog.vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogScrollContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -73,6 +74,38 @@ const afterSaleForm = reactive({
   refundAmount: '',
   adminNote: '',
 })
+
+// Step-Up 二次验证：高风险退款动作（退款到余额 / 手动退款 / 售后部分/全额退款）
+// 在弹出对话框验证通过后，才真正发起请求。
+const stepUpOpen = ref(false)
+const stepUpTitle = ref('高风险操作确认')
+const stepUpDescription = ref('')
+const stepUpScope = ref('')
+type StepUpPayload = { reason?: string; idempotencyKey: string; challengeToken: string }
+const pendingStepUpOp = ref<((payload: StepUpPayload) => Promise<void>) | null>(null)
+
+const runAfterStepUp = (
+  title: string,
+  description: string,
+  scope: string,
+  op: (payload: StepUpPayload) => Promise<void>,
+) => {
+  stepUpTitle.value = title
+  stepUpDescription.value = description
+  stepUpScope.value = scope
+  pendingStepUpOp.value = op
+  stepUpOpen.value = true
+}
+
+const onStepUpConfirm = async (payload: StepUpPayload) => {
+  const op = pendingStepUpOp.value
+  if (!op) {
+    stepUpOpen.value = false
+    return
+  }
+  await op(payload)
+  stepUpOpen.value = false
+}
 
 
 const userDetailLink = (userId: number) => adminUrl(`/users/${userId}`)
@@ -548,7 +581,24 @@ const resetAfterSaleForm = () => {
   afterSaleSuccess.value = ''
 }
 
-const submitAfterSaleAction = async (action: 'reject' | 'resolve' | 'partial_refund' | 'full_refund') => {
+const performAfterSaleAction = async (payload: Record<string, unknown>, headers?: Record<string, string>) => {
+  if (!selectedOrder.value) return
+  afterSaleSubmitting.value = true
+  try {
+    await adminAPI.actionOrderAfterSale(Number(selectedOrder.value.id), payload as any, headers)
+    afterSaleSuccess.value = t('admin.orders.afterSaleActionSuccess')
+    resetAfterSaleForm()
+    await fetchAfterSale(Number(selectedOrder.value.id))
+    await fetchOrderDetail(Number(selectedOrder.value.id))
+    emit('refresh')
+  } catch (err: any) {
+    afterSaleError.value = err?.response?.data?.msg || err?.message || t('admin.orders.afterSaleActionFailed')
+  } finally {
+    afterSaleSubmitting.value = false
+  }
+}
+
+const submitAfterSaleAction = (action: 'reject' | 'resolve' | 'partial_refund' | 'full_refund') => {
   if (!selectedOrder.value || afterSaleSubmitting.value) return
   afterSaleError.value = ''
   afterSaleSuccess.value = ''
@@ -562,19 +612,20 @@ const submitAfterSaleAction = async (action: 'reject' | 'resolve' | 'partial_ref
     }
     payload.refund_amount = amt
   }
-  afterSaleSubmitting.value = true
-  try {
-    await adminAPI.actionOrderAfterSale(Number(selectedOrder.value.id), payload as any)
-    afterSaleSuccess.value = t('admin.orders.afterSaleActionSuccess')
-    resetAfterSaleForm()
-    await fetchAfterSale(Number(selectedOrder.value.id))
-    await fetchOrderDetail(Number(selectedOrder.value.id))
-    emit('refresh')
-  } catch (err: any) {
-    afterSaleError.value = err?.response?.data?.msg || err?.message || t('admin.orders.afterSaleActionFailed')
-  } finally {
-    afterSaleSubmitting.value = false
+  // 退款类动作（partial/full）涉及资金，需 Step-Up；reject/resolve 不移动资金，直接执行。
+  if (action === 'partial_refund' || action === 'full_refund') {
+    runAfterStepUp(
+      action === 'partial_refund' ? t('admin.orders.afterSalePartialRefund') : t('admin.orders.afterSaleFullRefund'),
+      '售后退款将把款项退回用户钱包，需二次验证身份',
+      `aftersale.${action}:order:${Number(selectedOrder.value.id)}`,
+      (p) => performAfterSaleAction(payload, {
+        'Idempotency-Key': p.idempotencyKey,
+        'X-Auth-Challenge': p.challengeToken,
+      }),
+    )
+    return
   }
+  void performAfterSaleAction(payload)
 }
 
 const formatFeeRate = (channel: AdminPayment | { fee_rate: number | string; fixed_fee?: number | string }) => {
@@ -630,7 +681,7 @@ const fetchOrderDetail = async (orderId: number) => {
   }
 }
 
-const submitRefundToWallet = async () => {
+const submitRefundToWallet = () => {
   if (!selectedOrder.value) return
   refundError.value = ''
   refundSuccess.value = ''
@@ -648,26 +699,36 @@ const submitRefundToWallet = async () => {
     refundError.value = t('admin.orders.refundExceeded')
     return
   }
-
-  refundSubmitting.value = true
-  try {
-    await adminAPI.refundOrderToWallet(Number(selectedOrder.value.id), {
-      amount,
-      remark: refundForm.remark.trim() || undefined,
-    })
-    refundSuccess.value = t('admin.orders.refundSuccess')
-    refundForm.amount = ''
-    refundForm.remark = ''
-    await fetchOrderDetail(Number(selectedOrder.value.id))
-    emit('refresh')
-  } catch (err: any) {
-    refundError.value = err?.message || t('admin.orders.refundFailed')
-  } finally {
-    refundSubmitting.value = false
-  }
+  const orderId = Number(selectedOrder.value.id)
+  runAfterStepUp(
+    t('admin.orders.refundToWallet') || '退款到余额',
+    '退款将把款项退回用户钱包余额，需二次验证身份',
+    `refund.wallet:order:${orderId}`,
+    async (p) => {
+      refundSubmitting.value = true
+      try {
+        await adminAPI.refundOrderToWallet(orderId, {
+          amount,
+          remark: refundForm.remark.trim() || undefined,
+        }, {
+          'Idempotency-Key': p.idempotencyKey,
+          'X-Auth-Challenge': p.challengeToken,
+        })
+        refundSuccess.value = t('admin.orders.refundSuccess')
+        refundForm.amount = ''
+        refundForm.remark = ''
+        await fetchOrderDetail(orderId)
+        emit('refresh')
+      } catch (err: any) {
+        refundError.value = err?.response?.data?.msg || err?.message || t('admin.orders.refundFailed')
+      } finally {
+        refundSubmitting.value = false
+      }
+    },
+  )
 }
 
-const submitManualRefund = async () => {
+const submitManualRefund = () => {
   if (!selectedOrder.value) return
   manualRefundError.value = ''
   manualRefundSuccess.value = ''
@@ -685,25 +746,35 @@ const submitManualRefund = async () => {
     manualRefundError.value = t('admin.orders.refundExceeded')
     return
   }
-
-  manualRefundSubmitting.value = true
-  try {
-    await adminAPI.manualRefundOrder(Number(selectedOrder.value.id), {
-      amount,
-      remark: manualRefundForm.reason.trim() || undefined,
-      payment_fee_refunded: manualRefundForm.paymentFeeRefunded,
-    })
-    manualRefundSuccess.value = t('admin.orders.manualRefundSuccess')
-    manualRefundForm.amount = ''
-    manualRefundForm.reason = ''
-    manualRefundForm.paymentFeeRefunded = true
-    await fetchOrderDetail(Number(selectedOrder.value.id))
-    emit('refresh')
-  } catch (err: any) {
-    manualRefundError.value = err?.message || t('admin.orders.refundFailed')
-  } finally {
-    manualRefundSubmitting.value = false
-  }
+  const orderId = Number(selectedOrder.value.id)
+  runAfterStepUp(
+    t('admin.orders.manualRefund') || '手动退款',
+    '手动退款记录将直接减少订单可退金额，需二次验证身份',
+    `refund.manual:order:${orderId}`,
+    async (p) => {
+      manualRefundSubmitting.value = true
+      try {
+        await adminAPI.manualRefundOrder(orderId, {
+          amount,
+          remark: manualRefundForm.reason.trim() || undefined,
+          payment_fee_refunded: manualRefundForm.paymentFeeRefunded,
+        }, {
+          'Idempotency-Key': p.idempotencyKey,
+          'X-Auth-Challenge': p.challengeToken,
+        })
+        manualRefundSuccess.value = t('admin.orders.manualRefundSuccess')
+        manualRefundForm.amount = ''
+        manualRefundForm.reason = ''
+        manualRefundForm.paymentFeeRefunded = true
+        await fetchOrderDetail(orderId)
+        emit('refresh')
+      } catch (err: any) {
+        manualRefundError.value = err?.response?.data?.msg || err?.message || t('admin.orders.refundFailed')
+      } finally {
+        manualRefundSubmitting.value = false
+      }
+    },
+  )
 }
 
 const handleClose = () => {
@@ -1414,5 +1485,15 @@ watch(
       </div>
     </DialogScrollContent>
   </Dialog>
+
+  <StepUpConfirmDialog
+    :open="stepUpOpen"
+    :title="stepUpTitle"
+    :description="stepUpDescription"
+    :scope="stepUpScope"
+    danger
+    @update:open="(v: boolean) => (stepUpOpen = v)"
+    @confirm="onStepUpConfirm"
+  />
 </template>
 

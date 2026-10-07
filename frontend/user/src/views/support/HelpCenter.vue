@@ -1,66 +1,32 @@
 <template>
-  <div class="min-h-screen bg-background pb-16 pt-20 text-foreground">
-    <div class="container mx-auto max-w-3xl px-4">
-      <!-- Header -->
-      <div class="mt-8">
-        <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{{ t('support.help_center') }}</h1>
-        <p class="mt-2 text-sm text-muted-foreground">{{ t('support.help_subtitle') }}</p>
-      </div>
+  <div class="pb-8 text-foreground">
+    <!-- 标题 -->
+    <div class="mb-4">
+      <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('support.help_center') }}</h1>
+    </div>
 
-      <!-- Entry cards -->
-      <div class="mt-8 grid gap-4 sm:grid-cols-2">
-        <router-link
-          to="/support/tickets"
-          class="rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/50"
-        >
-          <MessageSquare class="h-8 w-8 text-primary" />
-          <h2 class="mt-3 font-semibold">{{ t('support.my_tickets') }}</h2>
-          <p class="mt-1 text-sm text-muted-foreground">{{ t('support.my_tickets_hint') }}</p>
-        </router-link>
-        <router-link
-          to="/support/tickets/new"
-          class="rounded-2xl border bg-card p-6 shadow-sm transition-colors hover:border-primary/50"
-        >
-          <CirclePlus class="h-8 w-8 text-primary" />
-          <h2 class="mt-3 font-semibold">{{ t('support.create_ticket') }}</h2>
-          <p class="mt-1 text-sm text-muted-foreground">{{ t('support.create_ticket_hint') }}</p>
-        </router-link>
-      </div>
-
-      <!-- 充值/退款引导：优先走订单售后 -->
-      <div class="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-foreground">
-        <AlertTriangle class="h-4 w-4 flex-none text-warning" />
-        <span>{{ t('support.recharge_aftersale_warning') }}</span>
-        <router-link to="/me/orders" class="font-medium text-primary hover:underline">
-          {{ t('support.go_aftersale') }}
-        </router-link>
-      </div>
-
-      <!-- FAQ 占位 -->
-      <div class="mt-8 rounded-2xl border bg-card p-6 shadow-sm">
-        <h2 class="font-semibold">{{ t('support.faq') }}</h2>
-        <div class="mt-3 divide-y divide-border text-sm">
-          <details class="py-3">
-            <summary class="cursor-pointer font-medium">{{ t('support.faq_q1') }}</summary>
-            <p class="mt-2 text-muted-foreground">{{ t('support.faq_a1') }}</p>
-          </details>
-          <details class="py-3">
-            <summary class="cursor-pointer font-medium">{{ t('support.faq_q2') }}</summary>
-            <p class="mt-2 text-muted-foreground">{{ t('support.faq_a2') }}</p>
-          </details>
-          <details class="py-3">
-            <summary class="cursor-pointer font-medium">{{ t('support.faq_q3') }}</summary>
-            <p class="mt-2 text-muted-foreground">{{ t('support.faq_a3') }}</p>
-          </details>
+    <!-- 资讯入口 -->
+    <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <router-link
+        to="/discovery"
+        class="flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40"
+      >
+        <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+          <Newspaper :size="18" :stroke-width="1.8" />
         </div>
-      </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium text-foreground">{{ t('support.news_info') }}</p>
+          <p class="text-xs text-muted-foreground">{{ t('support.news_info_hint') }}</p>
+        </div>
+        <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
+      </router-link>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { AlertTriangle, CirclePlus, MessageSquare } from 'lucide-vue-next'
+import { ChevronRight, Newspaper } from 'lucide-vue-next'
 
 const { t } = useI18n()
 </script>

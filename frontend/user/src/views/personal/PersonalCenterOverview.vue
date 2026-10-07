@@ -56,23 +56,54 @@
         </RouterLink>
 
         <!-- 快捷入口：一行四列 -->
-        <section class="mt-4 grid grid-cols-4 gap-1.5">
-          <RouterLink to="/c2c" class="flex flex-col items-center gap-1.5 rounded-[18px] border border-border/60 bg-card px-2 py-2.5 transition-colors hover:bg-accent/40">
-            <ArrowLeftRight :size="18" :stroke-width="1.8" class="text-primary" />
-            <span class="text-xs font-medium text-foreground">C2C</span>
-          </RouterLink>
-          <RouterLink to="/me/invitation" class="flex flex-col items-center gap-1.5 rounded-[18px] border border-border/60 bg-card px-2 py-2.5 transition-colors hover:bg-accent/40">
-            <Share2 :size="18" :stroke-width="1.8" class="text-primary" />
-            <span class="text-xs font-medium text-foreground">邀请中心</span>
-          </RouterLink>
-          <RouterLink to="/me/affiliate" class="flex flex-col items-center gap-1.5 rounded-[18px] border border-border/60 bg-card px-2 py-2.5 transition-colors hover:bg-accent/40">
-            <BadgeDollarSign :size="18" :stroke-width="1.8" class="text-primary" />
-            <span class="text-xs font-medium text-foreground">分销中心</span>
-          </RouterLink>
-          <RouterLink to="/me/membership" class="flex flex-col items-center gap-1.5 rounded-[18px] border border-border/60 bg-card px-2 py-2.5 transition-colors hover:bg-accent/40">
-            <Crown :size="18" :stroke-width="1.8" class="text-primary" />
-            <span class="text-xs font-medium text-foreground">会员</span>
-          </RouterLink>
+        <section class="mt-4">
+          <div class="grid grid-cols-4 gap-1 rounded-2xl border bg-card p-2.5 shadow-sm">
+            <RouterLink to="/c2c" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <ArrowLeftRight :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="text-xs font-medium text-foreground">C2C</span>
+            </RouterLink>
+            <RouterLink to="/me/invitation" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Share2 :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="text-xs font-medium text-foreground">邀请中心</span>
+            </RouterLink>
+            <RouterLink to="/me/reseller" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <BadgeDollarSign :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="text-xs font-medium text-foreground">分销中心</span>
+            </RouterLink>
+            <RouterLink to="/me/points" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Coins :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="text-xs font-medium text-foreground">积分</span>
+            </RouterLink>
+          </div>
+        </section>
+
+        <!-- 更多功能：礼品卡兑换 / API 对接 -->
+        <section class="mt-4">
+          <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <RouterLink to="/me/gift-cards" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Gift :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="flex-1 text-sm font-medium text-foreground">礼品卡兑换</span>
+              <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
+            </RouterLink>
+            <div class="h-px bg-border/60"></div>
+            <RouterLink to="/me/api" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Code2 :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="flex-1 text-sm font-medium text-foreground">API 对接</span>
+              <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
+            </RouterLink>
+          </div>
         </section>
 
         <!-- 菜单卡：iOS Grouped List -->
@@ -93,18 +124,13 @@
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.my_tickets') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
-            <RouterLink to="/me/profile" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
+            <RouterLink to="/me/settings" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
               <UserRound :size="18" :stroke-width="1.8" class="shrink-0 text-primary" />
-              <span class="min-w-0 flex-1 text-sm font-medium text-foreground">设置</span>
+              <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('personalCenter.tabs.settings') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
           </div>
         </section>
-
-        <!-- 退出登录 -->
-        <button v-if="auth.isAuthenticated" type="button" class="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-destructive/40 hover:text-destructive" @click="handleLogout">
-          <LogOut :size="17" />{{ t('navbar.logout') }}
-        </button>
       </template>
     </div>
   </div>
@@ -113,11 +139,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronRight, CircleHelp, Crown, LockKeyhole, LogOut, Share2, UserRound, ArrowLeftRight, BadgeDollarSign } from 'lucide-vue-next'
+import { ChevronRight, CircleHelp, Coins, Gift, Code2, LockKeyhole, Share2, UserRound, ArrowLeftRight, BadgeDollarSign } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
 import type { WalletAccountData } from '../../api/types'
 import { Button } from '@/components/ui/button'
-import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { useUserAuthStore } from '../../stores/userAuth'
 import { useUserProfileStore } from '../../stores/userProfile'
 import { formatUsdt } from '../../utils/money'

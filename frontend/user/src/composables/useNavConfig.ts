@@ -44,7 +44,7 @@ interface NavConfigRaw {
 }
 
 const builtinNavDefs: Record<string, { path: string; label: string; icon: Component }> = {
-    blog: { path: '/blog', label: 'nav.blog', icon: Newspaper },
+    blog: { path: '/news', label: 'nav.blog', icon: Newspaper },
     notice: { path: '/notice', label: 'nav.notice', icon: Bell },
     about: { path: '/about', label: 'nav.about', icon: Info },
 }

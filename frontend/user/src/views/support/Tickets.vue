@@ -1,21 +1,20 @@
 <template>
-  <div class="min-h-screen bg-background pb-16 pt-20 text-foreground">
-    <div class="container mx-auto max-w-7xl px-4">
-      <!-- Header -->
-      <div class="mt-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight md:text-3xl">{{ t('support.my_tickets') }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">{{ t('support.list_subtitle') }}</p>
-        </div>
-        <Button @click="goCreate">
-          <CirclePlus class="h-4 w-4" />
-          {{ t('support.create_ticket') }}
-        </Button>
+  <div class="pb-8 text-foreground">
+    <!-- Header -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight md:text-2xl">{{ t('support.my_tickets') }}</h1>
+        <p class="mt-1 text-xs text-muted-foreground">{{ t('support.list_subtitle') }}</p>
       </div>
+      <Button @click="goCreate">
+        <CirclePlus class="h-4 w-4" />
+        {{ t('support.create_ticket') }}
+      </Button>
+    </div>
 
-      <div class="mt-6 grid gap-4 lg:grid-cols-[400px,minmax(0,1fr)]">
-        <!-- 左：状态过滤 + 工单列表 -->
-        <div class="overflow-hidden rounded-2xl border bg-card/60 shadow-sm">
+    <div class="mt-4 grid gap-4 lg:grid-cols-[400px,minmax(0,1fr)]">
+      <!-- 左：状态过滤 + 工单列表 -->
+      <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <!-- 状态过滤页签 -->
           <div class="flex flex-wrap gap-1 border-b p-2">
             <button
@@ -101,15 +100,32 @@
           </div>
         </div>
       </div>
-    </div>
+
+    <!-- 相关问题 FAQ -->
+    <section class="mt-4">
+      <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div class="border-b px-5 py-3">
+          <p class="text-sm font-semibold text-foreground">{{ t('support.faq') }}</p>
+        </div>
+        <div class="divide-y divide-border">
+          <details v-for="(q, i) in faqList" :key="i" class="group px-5 py-3">
+            <summary class="flex cursor-pointer items-center justify-between text-sm font-medium text-foreground">
+              {{ q.q }}
+              <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50 transition-transform group-open:rotate-90" />
+            </summary>
+            <p class="mt-2 text-sm text-muted-foreground">{{ q.a }}</p>
+          </details>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { CirclePlus, Loader2 } from 'lucide-vue-next'
+import { ChevronRight, CirclePlus, Loader2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import EmptyState from '../../components/EmptyState.vue'
 import TicketList from '../../components/support/TicketList.vue'
@@ -124,6 +140,12 @@ import { toast } from '../../composables/useToast'
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+
+const faqList = computed(() => [
+  { q: t('support.faq_q1'), a: t('support.faq_a1') },
+  { q: t('support.faq_q2'), a: t('support.faq_a2') },
+  { q: t('support.faq_q3'), a: t('support.faq_a3') },
+])
 
 const {
   items,

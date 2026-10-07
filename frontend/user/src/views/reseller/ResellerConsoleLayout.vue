@@ -1,55 +1,42 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-background">
+  <div class="min-h-screen bg-background">
     <ResellerConsoleTopbar :title="currentTitle" :nav-groups="navGroups" />
 
-    <div class="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-0 lg:px-6 lg:py-6">
-      <aside class="hidden w-60 shrink-0 lg:block">
-        <div class="sticky top-20 rounded-xl border bg-card p-3 shadow-sm">
-          <nav class="space-y-4">
-            <div v-for="group in navGroups" :key="group.key">
-              <p class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {{ group.title }}
-              </p>
-              <div class="space-y-1">
-                <RouterLink
-                  v-for="item in group.items"
-                  :key="item.to"
-                  :to="item.to"
-                  class="group relative flex items-center gap-2.5 rounded-lg py-2.5 pl-4 pr-3 text-sm font-semibold transition-colors"
-                  :class="isActive(item.to)
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
-                >
-                  <span
-                    class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full transition-all"
-                    :class="isActive(item.to) ? 'bg-primary' : 'bg-transparent'"
-                  ></span>
-                  <component :is="item.icon" class="h-5 w-5 shrink-0" />
-                  <span class="truncate">{{ item.label }}</span>
-                </RouterLink>
-              </div>
-            </div>
-          </nav>
-        </div>
-      </aside>
-
-      <main class="min-w-0 flex-1 px-4 py-6 lg:px-0 lg:py-0">
-        <ResellerPageState v-if="!profileReady || profileLoading" loading :title="t('resellerConsole.common.loading')" />
-        <RouterView v-else-if="canRenderCurrentModule" />
-        <Card v-else class="p-6 sm:p-8">
-          <div class="mx-auto max-w-xl text-center">
-            <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <ClipboardCheck class="h-6 w-6" />
-            </span>
-            <h2 class="mt-4 text-lg font-bold text-foreground">{{ t('resellerConsole.dashboard.inactiveTitle') }}</h2>
-            <p class="mt-2 text-sm text-muted-foreground">{{ t('resellerConsole.dashboard.inactiveDescription') }}</p>
-            <Button as-child class="mt-5">
-              <RouterLink to="/reseller/apply">{{ t('resellerConsole.nav.apply') }}</RouterLink>
-            </Button>
-          </div>
-        </Card>
-      </main>
+    <!-- 水平 tab 导航 -->
+    <div class="sticky top-16 z-30 border-b bg-background/90 backdrop-blur">
+      <div class="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2">
+        <RouterLink
+          v-for="item in allNavItems"
+          :key="item.to"
+          :to="item.to"
+          class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors"
+          :class="isActive(item.to)
+            ? 'bg-accent text-foreground'
+            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'"
+        >
+          <component :is="item.icon" class="h-4 w-4 shrink-0" />
+          <span>{{ item.label }}</span>
+        </RouterLink>
+      </div>
     </div>
+
+    <!-- 主内容 -->
+    <main class="mx-auto max-w-5xl px-4 py-6">
+      <ResellerPageState v-if="!profileReady || profileLoading" loading :title="t('resellerConsole.common.loading')" />
+      <RouterView v-else-if="canRenderCurrentModule" />
+      <Card v-else class="p-6 sm:p-8">
+        <div class="mx-auto max-w-xl text-center">
+          <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ClipboardCheck class="h-6 w-6" />
+          </span>
+          <h2 class="mt-4 text-lg font-bold text-foreground">{{ t('resellerConsole.dashboard.inactiveTitle') }}</h2>
+          <p class="mt-2 text-sm text-muted-foreground">{{ t('resellerConsole.dashboard.inactiveDescription') }}</p>
+          <Button as-child class="mt-5">
+            <RouterLink to="/reseller/apply">{{ t('resellerConsole.nav.apply') }}</RouterLink>
+          </Button>
+        </div>
+      </Card>
+    </main>
   </div>
 </template>
 
@@ -117,6 +104,8 @@ const navGroups = computed(() =>
     items: group.items.map((item) => ({ ...item, label: t(item.label) })),
   })),
 )
+
+const allNavItems = computed(() => navGroups.value.flatMap((g) => g.items))
 
 const isActive = (path: string) => {
   if (path === '/reseller') return route.path === path

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { adminAPI, type AdminWithdrawal } from '@/api/admin'
+import StepUpConfirmDialog from '@/components/admin/StepUpConfirmDialog.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,6 +25,9 @@ const alertType = ref<'error' | 'success'>('error')
 const adminNote = ref('')
 const rejectReason = ref('')
 const txid = ref('')
+// Step-Up 二次验证（Approve / Complete 高风险动作）
+const stepUpOpen = ref(false)
+const stepUpMode = ref<'approve' | 'complete'>('approve')
 
 const fetchDetail = async () => {
   loading.value = true
@@ -72,16 +76,41 @@ const canProcess = computed(() => withdrawal.value?.status === 'approved')
 const canComplete = computed(() => withdrawal.value?.status === 'processing')
 const isTerminal = computed(() => ['completed', 'rejected', 'canceled'].includes(withdrawal.value?.status || ''))
 
-const doApprove = async () => {
+const doApprove = () => {
+  alert.value = ''
+  stepUpMode.value = 'approve'
+  stepUpOpen.value = true
+}
+
+const doComplete = () => {
+  alert.value = ''
+  if (!txid.value.trim()) {
+    showAlert(t('admin.walletWithdrawals.txidRequired'))
+    return
+  }
+  stepUpMode.value = 'complete'
+  stepUpOpen.value = true
+}
+
+const onStepUpConfirm = async (payload: { reason?: string; idempotencyKey: string; challengeToken: string }) => {
   actionLoading.value = true
   alert.value = ''
+  const headers = {
+    'Idempotency-Key': payload.idempotencyKey,
+    'X-Auth-Challenge': payload.challengeToken,
+  }
   try {
-    const idemKey = crypto.randomUUID()
-    await adminAPI.approveWalletWithdrawal(id.value, adminNote.value.trim() || undefined, idemKey)
-    showAlert(t('admin.walletWithdrawals.approveSuccess'), 'success')
+    if (stepUpMode.value === 'approve') {
+      await adminAPI.approveWalletWithdrawal(id.value, adminNote.value.trim() || undefined, payload.idempotencyKey, headers)
+      showAlert(t('admin.walletWithdrawals.approveSuccess'), 'success')
+    } else {
+      await adminAPI.completeWalletWithdrawal(id.value, txid.value.trim(), adminNote.value.trim() || undefined, payload.idempotencyKey, headers)
+      showAlert(t('admin.walletWithdrawals.completeSuccess'), 'success')
+    }
+    stepUpOpen.value = false
     await fetchDetail()
   } catch (err: any) {
-    showAlert(err?.message || t('admin.walletWithdrawals.actionFailed'))
+    showAlert(err?.response?.data?.msg || err?.message || t('admin.walletWithdrawals.actionFailed'))
   } finally {
     actionLoading.value = false
   }
@@ -113,25 +142,6 @@ const doProcessing = async () => {
     const idemKey = crypto.randomUUID()
     await adminAPI.processingWalletWithdrawal(id.value, idemKey)
     showAlert(t('admin.walletWithdrawals.processingSuccess'), 'success')
-    await fetchDetail()
-  } catch (err: any) {
-    showAlert(err?.message || t('admin.walletWithdrawals.actionFailed'))
-  } finally {
-    actionLoading.value = false
-  }
-}
-
-const doComplete = async () => {
-  if (!txid.value.trim()) {
-    showAlert(t('admin.walletWithdrawals.txidRequired'))
-    return
-  }
-  actionLoading.value = true
-  alert.value = ''
-  try {
-    const idemKey = crypto.randomUUID()
-    await adminAPI.completeWalletWithdrawal(id.value, txid.value.trim(), adminNote.value.trim() || undefined, idemKey)
-    showAlert(t('admin.walletWithdrawals.completeSuccess'), 'success')
     await fetchDetail()
   } catch (err: any) {
     showAlert(err?.message || t('admin.walletWithdrawals.actionFailed'))
@@ -286,5 +296,16 @@ onMounted(() => {
           </div>
         </div>
       </template>
+
+      <StepUpConfirmDialog
+        :open="stepUpOpen"
+        :title="stepUpMode === 'approve' ? t('admin.walletWithdrawals.approve') : t('admin.walletWithdrawals.complete')"
+        :description="stepUpMode === 'approve' ? '确认审批通过该提现单，需二次验证身份' : '确认已线下打款并填写 TxID，此操作不可撤销，需二次验证身份'"
+        :confirm-text="stepUpMode === 'approve' ? t('admin.walletWithdrawals.approve') : t('admin.walletWithdrawals.confirmComplete')"
+        :scope="stepUpMode === 'approve' ? `withdraw.approve:id:${id}` : `withdraw.complete:id:${id}`"
+        danger
+        @update:open="(v: boolean) => (stepUpOpen = v)"
+        @confirm="onStepUpConfirm"
+      />
     </div>
 </template>
