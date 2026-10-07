@@ -22,6 +22,7 @@ import (
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	ordergormstore "github.com/Aether-v1/hcz/internal/modules/order/infrastructure/gormstore"
 	paymentgormstore "github.com/Aether-v1/hcz/internal/modules/payment/infrastructure/gormstore"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
@@ -65,9 +66,9 @@ func setupAfterSaleHandlerTest(t *testing.T) (*AfterSaleHandler, *gorm.DB, uint,
 	affiliateSvc := affiliateapp.NewService(affiliategormstore.New(db), nil, nil, nil, nil)
 	settingSvc := settingsapp.NewService(settingsstore.New(db))
 	paymentStore := paymentgormstore.New(db, "test-guest-credential-secret-with-32-bytes")
-	refundSvc := refund.New(orderStore, userstore.New(db), affiliateSvc, settingSvc, walletSvc, paymentStore)
+	refundSvc := refund.New(orderStore, userstore.New(db), affiliateSvc, settingSvc, walletSvc, paymentStore, nil)
 	svc := aftersale.NewService(orderStore, aftersale.NewWalletRefunderAdapter(refundSvc))
-	handler := NewAfterSaleHandler(svc, orderStore)
+	handler := NewAfterSaleHandler(svc, orderStore, testStepUpVerifier{})
 
 	user := &userdomain.User{Email: "h@test.com", Status: "active"}
 	if err := db.Create(user).Error; err != nil {
@@ -114,6 +115,16 @@ func setOrderIDParam(c *gin.Context, orderID uint) {
 	value := fmt.Sprintf("%d", orderID)
 	c.Params = gin.Params{{Key: "id", Value: value}, {Key: "order_no", Value: value}}
 }
+
+// testStepUpVerifier 是测试用 Step-Up 校验器，放行 admin_id=1 的挑战；
+// scope 取自 header 本身，与 handler 期望的 scope 对齐；consume 恒成功（无状态）。
+type testStepUpVerifier struct{}
+
+func (testStepUpVerifier) ParseChallengeToken(token string) (stepup.Claims, error) {
+	return stepup.Claims{AdminID: 1, JTI: "stub-jti", Scope: token}, nil
+}
+
+func (testStepUpVerifier) ConsumeChallenge(string) bool { return true }
 
 // respStatusCode 解析统一响应体的业务状态码（HTTP 始终 200，业务码在 body.status_code）。
 func respStatusCode(t *testing.T, w *httptest.ResponseRecorder) int {
@@ -267,6 +278,8 @@ func TestAfterSaleAdminPartialRefund(t *testing.T) {
 		"action": "partial_refund", "refund_amount": "3.00",
 	}, 0)
 	setOrderIDParam(c2, orderID)
+	c2.Set("admin_id", uint(1))
+	c2.Request.Header.Set("X-Auth-Challenge", stepup.Scope("aftersale.partial_refund", "order", orderID))
 	handler.AdminAfterSaleAction(c2)
 	if w2.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d, body=%s", w2.Code, w2.Body.String())
@@ -299,6 +312,8 @@ func TestAfterSaleAdminFullRefund(t *testing.T) {
 		"action": "full_refund",
 	}, 0)
 	setOrderIDParam(c2, orderID)
+	c2.Set("admin_id", uint(1))
+	c2.Request.Header.Set("X-Auth-Challenge", stepup.Scope("aftersale.full_refund", "order", orderID))
 	handler.AdminAfterSaleAction(c2)
 	if w2.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d, body=%s", w2.Code, w2.Body.String())

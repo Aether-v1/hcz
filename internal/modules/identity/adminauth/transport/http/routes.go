@@ -31,6 +31,8 @@ func RegisterAdmin2FARoutes(authorized gin.IRoutes, handler *Admin2FAHandler) {
 	if authorized == nil || handler == nil {
 		panic("admin 2fa routes: required dependency is nil")
 	}
+	// Step-Up：已登录管理员用 TOTP 码重新换取挑战 token，用于高风险动作二次验证。
+	authorized.POST("/auth/step-up", handler.StepUp)
 	authorized.GET("/2fa/status", handler.Get2FAStatus)
 	authorized.POST("/2fa/setup", handler.Setup2FA)
 	authorized.POST("/2fa/enable", handler.Enable2FA)

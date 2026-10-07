@@ -53,6 +53,9 @@ type AdjustBalanceInput struct {
 	Delta           money.Amount
 	Currency        string
 	Remark          string
+	// Reference 幂等键。非空时按该 reference 查重：命中且参数一致则直接返回原流水，
+	// 命中但参数不一致则返回 ErrIdempotencyConflict。为空时由 service 生成唯一 reference。
+	Reference string
 }
 
 type CreditInput struct {

@@ -8,6 +8,7 @@ import (
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	"github.com/shopspring/decimal"
 
 	"github.com/gin-gonic/gin"
@@ -22,15 +23,16 @@ type AfterSaleOrderLookup interface {
 // AfterSaleHandler 处理用户端和管理端售后 HTTP。
 // Handler 只负责 parse / auth / validate / DTO / error mapping，资金逻辑全部在 aftersale.Service。
 type AfterSaleHandler struct {
-	svc    *aftersale.Service
-	orders AfterSaleOrderLookup
+	svc       *aftersale.Service
+	orders    AfterSaleOrderLookup
+	challenge stepup.Verifier
 }
 
-func NewAfterSaleHandler(svc *aftersale.Service, orders AfterSaleOrderLookup) *AfterSaleHandler {
+func NewAfterSaleHandler(svc *aftersale.Service, orders AfterSaleOrderLookup, challenge stepup.Verifier) *AfterSaleHandler {
 	if svc == nil || orders == nil {
 		panic("after-sale handler: required dependency is nil")
 	}
-	return &AfterSaleHandler{svc: svc, orders: orders}
+	return &AfterSaleHandler{svc: svc, orders: orders, challenge: challenge}
 }
 
 // AfterSaleDTO 售后工单统一返回（User / Admin 共用）。
@@ -176,6 +178,15 @@ func (h *AfterSaleHandler) AdminAfterSaleAction(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutil.RespondBindError(c, err)
 		return
+	}
+
+	// 仅退款类动作（partial_refund/full_refund）涉及资金，强制 Step-Up；
+	// reject/resolve 无资金移动，不要求。challenge 绑定到具体动作+订单，单次使用。
+	if req.Action == "partial_refund" || req.Action == "full_refund" {
+		if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("aftersale."+req.Action, "order", orderID)); err != nil {
+			stepup.RespondError(c, err)
+			return
+		}
 	}
 
 	var ticket *orderdomain.AfterSaleTicket

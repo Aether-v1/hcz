@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI, type AdminWalletAccount, type AdminWalletTransaction } from '@/api/admin'
 import type { AdminUser, AdminOrder, AdminPayment, AdminMemberLevel, AdminUserOAuthIdentity } from '@/api/types'
 import IdCell from '@/components/IdCell.vue'
+import StepUpConfirmDialog from '@/components/admin/StepUpConfirmDialog.vue'
 import { BadgeCheck, Copy, BadgeAlert } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -83,6 +84,7 @@ const walletAdjustForm = reactive({
   amount: '',
   remark: '',
 })
+const walletStepUpOpen = ref(false)
 const siteCurrency = ref('CNY')
 
 const fetchUser = async () => {
@@ -329,7 +331,8 @@ const walletAvailableBalanceDisplay = computed(() => formatMoney(walletAccount.v
 const walletFrozenBalanceDisplay = computed(() => formatMoney(walletAccount.value?.frozen_balance, walletAccount.value?.currency || 'USDT'))
 const walletTotalBalanceDisplay = computed(() => formatMoney(walletAccount.value?.total_balance, walletAccount.value?.currency || 'USDT'))
 
-const submitWalletAdjust = async () => {
+// 钱包调整：先校验表单，再弹出 Step-Up 二次验证对话框。
+const submitWalletAdjust = () => {
   if (!Number.isFinite(userId.value) || userId.value <= 0) return
   walletError.value = ''
   walletSuccess.value = ''
@@ -344,23 +347,38 @@ const submitWalletAdjust = async () => {
     walletError.value = t('admin.userDetail.wallet.errors.remarkRequired')
     return
   }
+  walletStepUpOpen.value = true
+}
+
+// Step-Up 验证通过后真正发起调整请求，携带 Idempotency-Key 与挑战令牌。
+const onWalletAdjustStepUp = async (payload: { reason?: string; idempotencyKey: string; challengeToken: string }) => {
+  const amount = walletAdjustForm.amount.trim()
+  const remark = walletAdjustForm.remark.trim()
   walletSubmitting.value = true
   try {
-    const response = await adminAPI.adjustUserWallet(userId.value, {
-      operation: walletAdjustForm.operation as 'add' | 'subtract',
-      amount,
-      remark,
-    })
+    const response = await adminAPI.adjustUserWallet(
+      userId.value,
+      {
+        operation: walletAdjustForm.operation as 'add' | 'subtract',
+        amount,
+        remark,
+      },
+      {
+        'Idempotency-Key': payload.idempotencyKey,
+        'X-Auth-Challenge': payload.challengeToken,
+      },
+    )
     walletAccount.value = response.data.data?.account || walletAccount.value
     walletAdjustForm.amount = ''
     walletAdjustForm.remark = ''
+    walletStepUpOpen.value = false
     await Promise.all([
       fetchUser(),
       fetchWalletTransactions(1),
     ])
     walletSuccess.value = t('admin.userDetail.wallet.adjustSuccess')
   } catch (err: any) {
-    walletError.value = err?.message || t('admin.userDetail.wallet.errors.adjustFailed')
+    walletError.value = err?.response?.data?.msg || err?.message || t('admin.userDetail.wallet.errors.adjustFailed')
   } finally {
     walletSubmitting.value = false
   }
@@ -977,6 +995,17 @@ watch(
           {{ walletSuccess }}
         </div>
       </div>
+
+      <StepUpConfirmDialog
+        :open="walletStepUpOpen"
+        :title="t('admin.userDetail.wallet.adjustTitle')"
+        :description="'高风险操作：调整用户钱包余额，需二次验证身份'"
+        :confirm-text="t('admin.userDetail.wallet.adjustSubmit')"
+        :danger="walletAdjustForm.operation === 'subtract'"
+        :scope="`wallet.adjust:user:${userId}`"
+        @update:open="(v: boolean) => (walletStepUpOpen = v)"
+        @confirm="onWalletAdjustStepUp"
+      />
 
       <div class="rounded-xl border border-border bg-card overflow-x-auto">
         <Table class="min-w-[920px]">

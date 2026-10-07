@@ -9,6 +9,7 @@ import (
 	withdrawalpresenter "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/presenter"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,15 +26,17 @@ type AdminService interface {
 
 // AdminHandler 处理后台提现 HTTP 请求。
 type AdminHandler struct {
-	svc AdminService
+	svc       AdminService
+	challenge stepup.Verifier
 }
 
-// NewAdminHandler 创建后台提现 Handler。
-func NewAdminHandler(svc AdminService) *AdminHandler {
+// NewAdminHandler 创建后台提现 Handler。challenge 为高风险动作（Approve/Complete）
+// Step-Up 校验器，可为 nil（fail-closed）。
+func NewAdminHandler(svc AdminService, challenge stepup.Verifier) *AdminHandler {
 	if svc == nil {
 		panic("withdrawal admin handler: service is nil")
 	}
-	return &AdminHandler{svc: svc}
+	return &AdminHandler{svc: svc, challenge: challenge}
 }
 
 // List 后台提现单列表。
@@ -93,6 +96,10 @@ func (h *AdminHandler) Approve(c *gin.Context) {
 	id, err := ginutil.ParseParamUint(c, "id")
 	if err != nil {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		return
+	}
+	if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("withdraw.approve", "id", id)); err != nil {
+		stepup.RespondError(c, err)
 		return
 	}
 	var req adminNoteRequest
@@ -172,6 +179,7 @@ type completeRequest struct {
 
 // Complete 打款完成。
 func (h *AdminHandler) Complete(c *gin.Context) {
+	// 最高危动作（真实打款）：强制 Step-Up，绑定 scope 且单次使用。
 	adminID, ok := ginutil.GetAdminID(c)
 	if !ok {
 		return
@@ -181,16 +189,23 @@ func (h *AdminHandler) Complete(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
 		return
 	}
+	if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("withdraw.complete", "id", id)); err != nil {
+		stepup.RespondError(c, err)
+		return
+	}
 	var req completeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutil.RespondBindError(c, err)
 		return
 	}
+	// 消费前端传入的 Idempotency-Key，配合状态机防止重复打款。
+	idempotencyKey := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
 	w, err := h.svc.Complete(withdrawalcontract.AdminCompleteInput{
-		ID:        id,
-		AdminID:   adminID,
-		Txid:      strings.TrimSpace(req.Txid),
-		AdminNote: strings.TrimSpace(req.AdminNote),
+		ID:             id,
+		AdminID:        adminID,
+		Txid:           strings.TrimSpace(req.Txid),
+		AdminNote:      strings.TrimSpace(req.AdminNote),
+		IdempotencyKey: idempotencyKey,
 	})
 	if err != nil {
 		respondAdminError(c, err)

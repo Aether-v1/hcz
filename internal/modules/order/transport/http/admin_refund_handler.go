@@ -11,6 +11,7 @@ import (
 	"github.com/Aether-v1/hcz/internal/logger"
 	"github.com/Aether-v1/hcz/internal/platform/http/ginutil"
 	"github.com/Aether-v1/hcz/internal/platform/http/response"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
 	"github.com/gin-gonic/gin"
@@ -99,11 +100,12 @@ type OrderStatusEmailEnqueuer interface {
 
 // AdminRefundHandler 处理后台退款 HTTP（只读 + 写退款）。
 type AdminRefundHandler struct {
-	refunds AdminRefundReader
-	writes  AdminRefundWriter
-	wallet  AdminWalletRefunder
-	orders  OrderByIDLookup
-	emails  OrderStatusEmailEnqueuer
+	refunds   AdminRefundReader
+	writes    AdminRefundWriter
+	wallet    AdminWalletRefunder
+	orders    OrderByIDLookup
+	emails    OrderStatusEmailEnqueuer
+	challenge stepup.Verifier
 }
 
 func NewAdminRefundHandler(
@@ -112,16 +114,18 @@ func NewAdminRefundHandler(
 	wallet AdminWalletRefunder,
 	orders OrderByIDLookup,
 	emails OrderStatusEmailEnqueuer,
+	challenge stepup.Verifier,
 ) *AdminRefundHandler {
 	if refunds == nil {
 		panic("order admin refund handler: refunds is nil")
 	}
 	return &AdminRefundHandler{
-		refunds: refunds,
-		writes:  writes,
-		wallet:  wallet,
-		orders:  orders,
-		emails:  emails,
+		refunds:   refunds,
+		writes:    writes,
+		wallet:    wallet,
+		orders:    orders,
+		emails:    emails,
+		challenge: challenge,
 	}
 }
 
@@ -204,6 +208,11 @@ func (h *AdminRefundHandler) AdminRefundOrderToWallet(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.order_item_invalid", nil)
 		return
 	}
+	// 高风险动作：退款到用户钱包，强制 Step-Up，绑定 scope 且单次使用。
+	if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("refund.wallet", "order", orderID)); err != nil {
+		stepup.RespondError(c, err)
+		return
+	}
 	var req AdminRefundOrderToWalletRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutil.RespondBindError(c, err)
@@ -251,6 +260,11 @@ func (h *AdminRefundHandler) AdminManualRefundOrder(c *gin.Context) {
 	orderID, err := ginutil.ParseParamUint(c, "id")
 	if err != nil {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.order_item_invalid", nil)
+		return
+	}
+	// 高风险动作：手动退款，强制 Step-Up，绑定 scope 且单次使用。
+	if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("refund.manual", "order", orderID)); err != nil {
+		stepup.RespondError(c, err)
 		return
 	}
 	var req AdminManualRefundOrderRequest

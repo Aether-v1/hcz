@@ -12,6 +12,7 @@ import (
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 
 	ginutil "github.com/Aether-v1/hcz/internal/platform/http/ginutil"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
 	"github.com/Aether-v1/hcz/internal/constants"
@@ -21,7 +22,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var ErrInsufficientBalance = errors.New("wallet insufficient balance")
+var (
+	ErrInsufficientBalance   = errors.New("wallet insufficient balance")
+	ErrIdempotencyConflictTx = errors.New("wallet idempotency conflict")
+)
 
 // AdminWalletService 是后台钱包管理所需的最小端口。
 type AdminWalletService interface {
@@ -72,6 +76,8 @@ type AdjustBalanceInput struct {
 	Delta           money.Amount
 	Currency        string
 	Remark          string
+	// Reference 幂等键（由 Idempotency-Key header 派生）。
+	Reference string
 }
 
 // AdminAdjustUserWalletRequest 管理端用户余额调整请求
@@ -102,25 +108,29 @@ type AdminHandler struct {
 	channels PaymentChannelReader
 	payments PaymentReader
 	settings SiteCurrencyReader
+	challenge stepup.Verifier
 }
 
-// NewAdminHandler 创建后台钱包 Handler。
+// NewAdminHandler 创建后台钱包 Handler。challenge 为高风险动作 Step-Up 校验器，
+// 可为 nil（此时 AdjustUserWallet 会以配置错误 fail-closed）。
 func NewAdminHandler(
 	wallets AdminWalletService,
 	users AdminUserReader,
 	channels PaymentChannelReader,
 	payments PaymentReader,
 	settings SiteCurrencyReader,
+	challenge stepup.Verifier,
 ) *AdminHandler {
 	if wallets == nil || users == nil || channels == nil || payments == nil {
 		panic("wallet admin handler: required dependency is nil")
 	}
 	return &AdminHandler{
-		wallets:  wallets,
-		users:    users,
-		channels: channels,
-		payments: payments,
-		settings: settings,
+		wallets:   wallets,
+		users:     users,
+		channels:  channels,
+		payments:  payments,
+		settings:  settings,
+		challenge: challenge,
 	}
 }
 
@@ -321,9 +331,20 @@ func (h *AdminHandler) AdjustUserWallet(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.user_id_invalid", nil)
 		return
 	}
+	// Step-Up 强制：challenge 必须绑定本次动作 scope 且单次使用（后端 fail-closed）。
+	if _, err := stepup.RequireFor(c, h.challenge, stepup.Scope("wallet.adjust", "user", userID)); err != nil {
+		stepup.RespondError(c, err)
+		return
+	}
 	var req AdminAdjustUserWalletRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ginutil.RespondBindError(c, err)
+		return
+	}
+	// 幂等键：前端每次新调整生成 UUID，重试复用同一个。缺失则拒绝。
+	idemKey := strings.TrimSpace(c.GetHeader("Idempotency-Key"))
+	if idemKey == "" {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.idempotency_key_required", nil)
 		return
 	}
 	amount, err := decimal.NewFromString(strings.TrimSpace(req.Amount))
@@ -361,15 +382,21 @@ func (h *AdminHandler) AdjustUserWallet(c *gin.Context) {
 		}
 	}
 
+	// 前缀防与其他类型（recharge/order 等）的 reference 冲突。
+	reference := "admin_adjust:" + idemKey
+
 	account, txn, err := h.wallets.AdminAdjustBalance(AdjustBalanceInput{
 		UserID:          userID,
 		OperatorAdminID: adminID,
 		Delta:           money.FromDecimal(delta),
 		Currency:        currency,
 		Remark:          remark,
+		Reference:       reference,
 	})
 	if err != nil {
 		switch {
+		case errors.Is(err, ErrIdempotencyConflictTx):
+			ginutil.RespondError(c, response.CodeConflict, "error.idempotency_conflict", nil)
 		case errors.Is(err, ErrInvalidAmount):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
 		case errors.Is(err, ErrInsufficientBalance):

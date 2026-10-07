@@ -17,4 +17,6 @@ var (
 	ErrTransactionRequired     = errors.New("wallet transaction required")
 	ErrInsufficientFrozen      = errors.New("wallet insufficient frozen balance")
 	ErrSameAccount             = errors.New("wallet source and target must be different accounts")
+	// ErrIdempotencyConflict 同一 Idempotency-Key 已存在但参数（用户/金额/方向）不一致。
+	ErrIdempotencyConflict = errors.New("idempotency key conflict")
 )

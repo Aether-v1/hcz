@@ -72,6 +72,9 @@ type ChallengeClaims struct {
 	JTI     string `json:"jti"`
 	Purpose string `json:"purpose"`
 	Typ     string `json:"typ"`
+	// Scope 绑定的高风险动作域（如 wallet.adjust:user:123）。
+	// 登录挑战为空；Step-Up 挑战由 /admin/auth/step-up 按本次动作签发。
+	Scope string `json:"scope,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -186,6 +189,33 @@ func (s *Service) IssueChallengeToken(adminID uint) (token, jti string, expiresA
 		JTI:     jti,
 		Purpose: challenge.PurposeTwoFactor,
 		Typ:     jwttoken.TypeTwoFactorChallenge,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ID:        jti,
+		},
+	}
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := t.SignedString([]byte(s.cfg.JWT.SecretKey))
+	if err != nil {
+		return "", "", time.Time{}, err
+	}
+	return signed, jti, expiresAt, nil
+}
+
+// IssueStepUpChallengeToken 为已登录管理员签发绑定了动作 scope 的 Step-Up 挑战。
+// scope 形如 "wallet.adjust:user:123"，后续高风险 handler 会强制校验 token 的
+// scope 与本次动作一致，防止跨动作复用。purpose/typ 与登录挑战一致（不新增 purpose）。
+func (s *Service) IssueStepUpChallengeToken(adminID uint, scope string) (token, jti string, expiresAt time.Time, err error) {
+	jti = uuid.NewString()
+	expiresAt = time.Now().Add(challenge.TTL)
+	claims := ChallengeClaims{
+		AdminID: adminID,
+		JTI:     jti,
+		Purpose: challenge.PurposeTwoFactor,
+		Typ:     jwttoken.TypeTwoFactorChallenge,
+		Scope:   scope,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

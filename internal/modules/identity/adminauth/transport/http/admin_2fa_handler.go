@@ -3,6 +3,8 @@ package adminauthhttp
 import (
 	"context"
 	"errors"
+	"regexp"
+	"strings"
 	"time"
 
 	ginutil "github.com/Aether-v1/hcz/internal/platform/http/ginutil"
@@ -95,6 +97,10 @@ type AuthService interface {
 	ParseChallengeToken(tokenString string) (*ChallengeClaims, error)
 	CompleteLoginAfter2FA(adminID uint) (*AuthLoginResult, error)
 	GetAdminUsername(adminID uint) (string, error)
+	// IssueStepUpChallenge 为已登录管理员重新签发一个绑定了 scope 的 2FA 挑战 token
+	// （Purpose=2fa_challenge，Scope=本次高风险动作域）。
+	// 供高风险动作 Step-Up 使用，不新增 purpose、不改动现有登录流程。
+	IssueStepUpChallenge(adminID uint, scope string) (token string, expiresAt time.Time, err error)
 }
 
 // Admin2FAHandler 处理管理员 2FA 管理与挑战验证 HTTP 请求。
@@ -403,4 +409,61 @@ func (h *Admin2FAHandler) ResetTargetAdmin2FA(c *gin.Context) {
 	op := operatorID
 	h.writeLoginLog(c, targetID, username, constants.AdminLoginEvent2FAResetByAdmin, constants.AdminLoginStatusSuccess, "", &op)
 	response.Success(c, nil)
+}
+
+// StepUpRequest Step-Up 重新验证请求体。
+type StepUpRequest struct {
+	Code string `json:"code" binding:"required"`
+	// Scope 本次高风险动作域，形如 "wallet.adjust:user:123"。
+	// challenge 将绑定该 scope，后续对应 handler 强制校验一致。
+	Scope string `json:"scope" binding:"required"`
+}
+
+// stepUpScopePattern 约束 scope 形如 action[.sub]:resourceKind:resourceID。
+var stepUpScopePattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+){0,2}:[a-z0-9_]+:[1-9][0-9]*$`)
+
+// StepUp 已登录管理员用 TOTP 6 位码重新验证，成功后签发一个绑定 scope 的 2FA 挑战 token，
+// 供后续指定高风险动作（钱包调整、打款、退款等）作为 X-Auth-Challenge 使用。
+//
+// 路由挂在 JWT 中间件下，任何已登录 admin 都可调用；不需要 RBAC。
+// 复用现有 challenge purpose="2fa_challenge"，不新增 purpose、不改动登录流程。
+func (h *Admin2FAHandler) StepUp(c *gin.Context) {
+	adminID, ok := ginutil.GetAdminID(c)
+	if !ok {
+		return
+	}
+
+	var req StepUpRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+	scope := strings.TrimSpace(req.Scope)
+	if !stepUpScopePattern.MatchString(scope) {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.step_up_scope_invalid", nil)
+		return
+	}
+
+	if err := h.totp.VerifyChallengeCode(adminID, strings.TrimSpace(req.Code)); err != nil {
+		switch {
+		case errors.Is(err, ErrTOTPNotEnabled):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.totp_not_enabled", nil)
+		case errors.Is(err, ErrTOTPCodeInvalid):
+			ginutil.RespondError(c, response.CodeUnauthorized, "error.totp_code_invalid", nil)
+		default:
+			ginutil.RespondError(c, response.CodeInternal, "error.internal_error", err)
+		}
+		return
+	}
+
+	token, expiresAt, err := h.auth.IssueStepUpChallenge(adminID, scope)
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.internal_error", err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"challenge_token": token,
+		"expires_at":      expiresAt.Format(time.RFC3339),
+	})
 }

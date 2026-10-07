@@ -396,6 +396,8 @@ export const adminAPI = {
   disable2FA: (data: { code?: string; recovery_code?: string }) => api.post('/admin/2fa/disable', data),
   regenerateRecoveryCodes: (data: { code: string }) => api.post('/admin/2fa/recovery-codes/regenerate', data),
   resetAdmin2FA: (id: number) => api.post(`/admin/authz/admins/${id}/2fa/reset`, {}),
+  // Step-Up：已登录管理员用 TOTP 码换取绑定 scope 的高风险动作挑战 token
+  stepUp: (code: string, scope: string) => api.post('/admin/auth/step-up', { code, scope }),
   getAuthzMe: () => api.get('/admin/authz/me'),
   listAuthzRoles: () => api.get('/admin/authz/roles', { params: { include_metadata: true } }),
   listAuthzAdmins: () => api.get("/admin/authz/admins"),
@@ -525,16 +527,16 @@ export const adminAPI = {
     api.get('/admin/wallet/withdrawals', { params }),
   getWalletWithdrawal: (id: number) =>
     api.get(`/admin/wallet/withdrawals/${id}`),
-  approveWalletWithdrawal: (id: number, adminNote: string | undefined, idempotencyKey: string) =>
-    api.post(`/admin/wallet/withdrawals/${id}/approve`, { admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
+  approveWalletWithdrawal: (id: number, adminNote: string | undefined, idempotencyKey: string, headers?: Record<string, string>) =>
+    api.post(`/admin/wallet/withdrawals/${id}/approve`, { admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey, ...(headers || {}) } }),
   rejectWalletWithdrawal: (id: number, rejectReason: string, adminNote: string | undefined, idempotencyKey: string) =>
     api.post(`/admin/wallet/withdrawals/${id}/reject`, { reject_reason: rejectReason, admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
   processingWalletWithdrawal: (id: number, idempotencyKey: string) =>
     api.post(`/admin/wallet/withdrawals/${id}/processing`, {}, { headers: { 'Idempotency-Key': idempotencyKey } }),
-  completeWalletWithdrawal: (id: number, txid: string, adminNote: string | undefined, idempotencyKey: string) =>
-    api.post(`/admin/wallet/withdrawals/${id}/complete`, { txid, admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey } }),
-  adjustUserWallet: (id: number, data: AdminAdjustWalletPayload) =>
-    api.post(`/admin/users/${id}/wallet/adjust`, data),
+  completeWalletWithdrawal: (id: number, txid: string, adminNote: string | undefined, idempotencyKey: string, headers?: Record<string, string>) =>
+    api.post(`/admin/wallet/withdrawals/${id}/complete`, { txid, admin_note: adminNote }, { headers: { 'Idempotency-Key': idempotencyKey, ...(headers || {}) } }),
+  adjustUserWallet: (id: number, data: AdminAdjustWalletPayload, headers?: Record<string, string>) =>
+    api.post(`/admin/users/${id}/wallet/adjust`, data, { headers: { ...(headers || {}) } }),
   updateUser: (id: number, data: Partial<AdminUser>) => api.put(`/admin/users/${id}`, data),
   createUser: (data: {
     email: string
@@ -627,17 +629,17 @@ export const adminAPI = {
   ) => api.post(`/admin/resellers/product-settings/${resellerId}/${productId}/preview`, data),
   resetResellerProductSetting: (resellerId: number, productId: number, skuId = 0) =>
     api.delete(`/admin/resellers/product-settings/${resellerId}/${productId}`, { params: { sku_id: skuId } }),
-  refundOrderToWallet: (id: number, data: AdminRefundToWalletPayload) =>
-    api.post(`/admin/orders/${id}/refund-to-wallet`, data),
-  manualRefundOrder: (id: number, data: AdminManualRefundPayload) =>
-    api.post(`/admin/orders/${id}/manual-refund`, data),
+  refundOrderToWallet: (id: number, data: AdminRefundToWalletPayload, headers?: Record<string, string>) =>
+    api.post(`/admin/orders/${id}/refund-to-wallet`, data, { headers: { ...(headers || {}) } }),
+  manualRefundOrder: (id: number, data: AdminManualRefundPayload, headers?: Record<string, string>) =>
+    api.post(`/admin/orders/${id}/manual-refund`, data, { headers: { ...(headers || {}) } }),
   getOrderRefunds: (params?: Record<string, unknown>) => api.get('/admin/order-refunds', { params }),
   getOrderRefund: (id: number) => api.get(`/admin/order-refunds/${id}`),
   updateOrderRefundPaymentFee: (id: number, data: AdminUpdateRefundPaymentFeePayload) =>
     api.patch(`/admin/order-refunds/${id}/payment-fee`, data),
   getOrderAfterSale: (orderId: number) => api.get(`/admin/orders/${orderId}/after-sale`),
-  actionOrderAfterSale: (orderId: number, data: { action: string; refund_amount?: string; admin_note?: string }) =>
-    api.post(`/admin/orders/${orderId}/after-sale/action`, data),
+  actionOrderAfterSale: (orderId: number, data: { action: string; refund_amount?: string; admin_note?: string }, headers?: Record<string, string>) =>
+    api.post(`/admin/orders/${orderId}/after-sale/action`, data, { headers: { ...(headers || {}) } }),
   createCoupon: (data: Partial<AdminCoupon>) => api.post('/admin/coupons', data),
   getCoupons: (params?: Record<string, unknown>) => api.get('/admin/coupons', { params }),
   updateCoupon: (id: number, data: Partial<AdminCoupon>) => api.put(`/admin/coupons/${id}`, data),
