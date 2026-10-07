@@ -137,3 +137,33 @@ export const normalizeDiscoveryBlocks = (
       config: (item?.config && typeof item.config === 'object' ? item.config : {}) as Record<string, any>,
     }))
 }
+
+export interface ResolvedFeaturedCategory {
+  id: number
+  slug: string
+  name: string
+  icon: string
+  description: string
+  sort_order: number
+}
+
+/** 归一化首页热门推荐分类：按 sort_order 排序，最多 6 个。空时返回空数组（不 fake）。 */
+export const normalizeFeaturedCategories = (raw: unknown, locale: string): ResolvedFeaturedCategory[] => {
+  return asArray<Record<string, unknown>>(raw)
+    .filter((item) => {
+      const id = Number(item?.id)
+      const slug = String(item?.slug || '')
+      return id > 0 && slug.length > 0
+    })
+    .slice()
+    .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0))
+    .slice(0, 6)
+    .map((item) => ({
+      id: Number(item?.id),
+      slug: String(item?.slug || ''),
+      name: pickText(item?.name, locale) || String(item?.slug || ''),
+      icon: String(item?.icon || ''),
+      description: pickText(item?.description, locale) || '',
+      sort_order: Number(item?.sort_order || 0),
+    }))
+}

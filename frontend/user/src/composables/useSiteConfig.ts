@@ -9,6 +9,7 @@ import {
   isHexColor,
   normalizeDiscoveryBlocks,
   normalizeHomeEntries,
+  normalizeFeaturedCategories,
   pickText,
   toBool,
   withAlpha,
@@ -105,6 +106,11 @@ export function useSiteConfig() {
       .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0))
   })
 
+  /** 首页热门推荐分类：按 sort_order 排序，最多 6 个；空时不展示（不 fake） */
+  const featuredCategories = computed(() =>
+    normalizeFeaturedCategories(config.value?.featured_categories, locale.value),
+  )
+
   /** 公告条：config.announcement（与既有弹窗公告同源） */
   const announcement = computed<AnnouncementConfig | null>(() => {
     const raw = config.value?.announcement as AnnouncementConfig | null | undefined
@@ -135,6 +141,7 @@ export function useSiteConfig() {
     socialLinks,
     homeEntries,
     banners,
+    featuredCategories,
     announcement,
     discoveryBlocks,
   }

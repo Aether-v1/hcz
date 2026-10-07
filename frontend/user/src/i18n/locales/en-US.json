@@ -145,14 +145,15 @@
     "unavailable": "Unavailable",
     "loadingCategories": "Loading available service categories…",
     "categoriesError": "Service categories could not be loaded.",
-    "usdtTitle": "USDT trading",
+    "usdtTitle": "C2C",
     "usdtDescription": "Secure and convenient buying and selling",
     "comingSoon": "Coming soon",
     "featuredEyebrow": "Selected services",
-    "featuredTitle": "Popular picks",
+    "featuredTitle": "More picks",
     "productsError": "Recommended services could not be loaded.",
     "retry": "Retry",
     "noProducts": "No services to recommend yet",
+    "noEntries": "No service entries yet",
     "moreEyebrow": "Explore",
     "moreTitle": "More services",
     "activityEyebrow": "Platform updates",
@@ -162,6 +163,19 @@
     "viewAll": "View all",
     "offer": "Offer",
     "viewDetails": "View details",
+    "userSummary": {
+      "welcome": "Welcome to HCZ",
+      "tagline": "Lifestyle recharge & digital services",
+      "login": "Sign in",
+      "register": "Sign up",
+      "features": "Secure · Fast · Stable",
+      "availableBalance": "Available balance",
+      "orders": "Orders",
+      "invite": "Invite",
+      "profile": "Profile",
+      "member": "Member",
+      "notLoggedIn": "Not signed in"
+    },
     "core": {
       "phone": {
         "title": "Phone top-up",
@@ -336,6 +350,14 @@
     "selectLanguage": "Select Language",
     "more": "More"
   },
+  "settings": {
+    "appearance": "Appearance",
+    "language": "Language",
+    "about": "About",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
   "toast": {
     "addedToCart": "Added to pending services"
   },
@@ -378,7 +400,35 @@
     "cart": "Pending",
     "me": "Me"
   },
+  "devPreview": {
+    "readOnly": "read-only visual preview",
+    "blocked": "This action is unavailable in development preview mode",
+    "user": "Development preview",
+    "accountId": "DEV"
+  },
   "personalCenter": {
+    "myPage": {
+      "title": "My account",
+      "subtitle": "Your account and services in one place",
+      "welcome": "Welcome to HCZ",
+      "guestHint": "Sign in to view orders, wallet and personal services.",
+      "register": "Register",
+      "account": "Account profile",
+      "profileFailed": "Could not load your profile",
+      "available": "Available balance",
+      "viewWallet": "View wallet",
+      "walletFailed": "Wallet unavailable. Please try again later.",
+      "frozen": "Frozen balance:",
+      "shortcuts": "Quick access",
+      "shortcutsHint": "Go to your frequently used services",
+      "orders": "My orders",
+      "wallet": "My wallet",
+      "accountGroup": "Account",
+      "serviceGroup": "More services",
+      "c2c": "C2C",
+      "logoutTitle": "Sign out?",
+      "logoutConfirm": "Are you sure you want to sign out?"
+    },
     "groups": {
       "overview": "Account",
       "wallet": "Funds",
@@ -644,6 +694,8 @@
       "directionOut": "Out",
       "rechargeStatus": {
         "pending": "Pending",
+        "pending_recharge": "Pending Recharge",
+        "processing": "Processing",
         "success": "Credited",
         "failed": "Failed",
         "expired": "Expired"
@@ -1302,7 +1354,7 @@
   "order": {
     "status": {
       "pending_payment": "Pending Payment",
-      "paid": "Awaiting recharge",
+      "paid": "Pending",
       "fulfilling": "Processing",
       "partially_delivered": "Partially completed",
       "partially_refunded": "Partially refunded",

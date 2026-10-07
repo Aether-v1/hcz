@@ -5,6 +5,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title></title>
+  <script>
+    // 首屏主题初始化：在 JS bundle 加载前应用主题，防止刷新时浅色闪烁（FOUC）
+    (function () {
+      try {
+        var saved = localStorage.getItem('hcz_theme');
+        var isDark = saved === 'dark' ||
+          ((saved === 'system' || saved === null) &&
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>

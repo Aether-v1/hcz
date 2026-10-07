@@ -62,6 +62,16 @@
   --color-input: var(--ui-border);
   --color-ring: var(--ui-accent);
 
+  /* HomeExperience 等旧组件使用的裸变量名，映射到主题变量 */
+  --secondary: var(--ui-bg-soft);
+  --card: var(--ui-bg-elevated);
+  --accent: var(--ui-accent-soft);
+  --primary: var(--ui-accent);
+  --background: var(--ui-bg-page);
+  --foreground: var(--ui-text-primary);
+  --muted-foreground: var(--ui-text-muted);
+  --border: var(--ui-border);
+
   /*
    * 站点品牌色（Phase 9 装修动态化）。
    * --brand-primary 由 /public/config 的 brand.primary_color 在运行时注入；
@@ -101,6 +111,9 @@
   --ui-bg-muted: #e8f0fa;
   --ui-bg-overlay: rgba(255, 255, 255, 0.8);
   --ui-bg-overlay-strong: rgba(255, 255, 255, 0.92);
+  --wallet-card-bg: url('/images/wallet-card-light.webp');
+  --wallet-card-fg: #1e293b;
+  --wallet-card-fg-muted: rgba(30, 41, 59, 0.7);
   --ui-text-primary: #10213e;
   --ui-text-secondary: #445675;
   --ui-text-muted: #6e7f9d;
@@ -119,16 +132,16 @@
   --ui-info: #0a84ff;
   --ui-info-soft: rgba(10, 132, 255, 0.14);
   --ui-focus-ring: rgba(9, 105, 238, 0.22);
-  --ui-radius-sm: 0.5rem;
-  --ui-radius-md: 0.75rem;
-  --ui-radius-lg: 1rem;
-  --ui-radius-xl: 1.5rem;
+  --ui-radius-sm: 0.75rem;
+  --ui-radius-md: 1rem;
+  --ui-radius-lg: 1.25rem;
+  --ui-radius-xl: 1.75rem;
   --ui-shadow-1: 0 8px 24px -18px rgba(30, 70, 125, 0.3);
   --ui-shadow-2: 0 18px 40px -24px rgba(30, 70, 125, 0.32);
   --ui-shadow-3: 0 28px 64px -34px rgba(30, 70, 125, 0.36);
   --ui-shadow-soft: var(--ui-shadow-1);
   --ui-shadow-card: var(--ui-shadow-2);
-  --ui-content-max: 80rem;
+  --ui-content-max: 48rem;
   --ui-page-gutter: 1rem;
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
@@ -190,6 +203,9 @@
   --ui-bg-muted: #242426;
   --ui-bg-overlay: rgba(28, 28, 30, 0.78);
   --ui-bg-overlay-strong: rgba(28, 28, 30, 0.9);
+  --wallet-card-bg: url('/images/wallet-card-dark.webp');
+  --wallet-card-fg: #ffffff;
+  --wallet-card-fg-muted: rgba(255, 255, 255, 0.7);
   --ui-text-primary: #f5f5f7;
   --ui-text-secondary: #d2d2d7;
   --ui-text-muted: #8e8e93;
@@ -230,10 +246,33 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* 移动端滚动条为覆盖式（不占布局空间），stable 预留反而会在
+   地址栏收起/展开或横竖屏切换时产生横向跳动，触屏设备回退 auto。 */
+@media (pointer: coarse) {
+  html {
+    scrollbar-gutter: auto;
+  }
+}
+
 html,
 body {
-  background-color: var(--ui-bg-page);
+  background-color: #eef4fb;
   color: var(--ui-text-primary);
+}
+
+/* 主题切换瞬间：全局禁用所有 transition，避免带 transition-colors 的卡片
+   在 bg-card/border 颜色变化时产生渐变"闪一下"。仅持续两帧。 */
+.hcz-theme-switching,
+.hcz-theme-switching * {
+  transition: none !important;
+}
+
+/* .dark 加在 html 元素上，必须用 html.dark 直接匹配；
+   .dark html 是"dark 后代里的 html"，永远不匹配，会导致 dark 下
+   html/body 背景仍为 light 色 #eef4fb，滚动条槽露出白条。 */
+html.dark,
+.dark body {
+  background: var(--ui-bg-page);
 }
 
 html[data-telegram-mini-app="true"],
@@ -296,10 +335,37 @@ html[data-telegram-mini-app="true"] body {
 
 @layer components {
   .hcz-shell-container {
+    /* 只负责内容宽度 / gutter / 居中，不再携带页面背景图。
+       页面背景由 .hcz-page-background 统一持有，避免 Navbar/BackBar/Footer
+       里复用本 class 时各自重画一次 bg-light.webp。 */
     width: 100%;
     max-width: var(--ui-content-max);
     margin-inline: auto;
     padding-inline: var(--ui-page-gutter);
+  }
+
+  /* 页面级背景画布：唯一持有 bg-light.webp 的节点。
+     挂在 main(flex column) 内，flex:1 撑满视口剩余高度，
+     从 y=0 开始覆盖到内容底部，Navbar/BackBar fixed 透明浮在其上。 */
+  .hcz-page-background {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: var(--ui-content-max);
+    margin-inline: auto;
+    /* bg-light.webp 底部实测像素 #D4EAFE（淡蓝），兜底色与图片底部一致，
+       避免图片结束处 蓝→纯白 断层；同时让移动端白色 BottomNav 胶囊能浮在淡蓝底上。 */
+    background: url('/images/bg-light.webp') top center / 100% auto no-repeat;
+    background-color: #d4eafe;
+  }
+
+  .dark .hcz-page-background {
+    background: transparent;
+  }
+
+  /* Navbar/BackBar 占位：由背景画布自己承担 padding-top，
+     让背景图从 y=0 开始覆盖 Navbar 区域，内容从 Navbar 下方开始。 */
+  .hcz-page-background--with-top-bar {
+    padding-top: 57px;
   }
 
   .hcz-surface {
@@ -323,37 +389,44 @@ html[data-telegram-mini-app="true"] body {
 
   .hcz-bottom-nav {
     position: fixed;
-    inset-inline: 0;
-    bottom: 0;
+    left: 14px;
+    right: 14px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     z-index: 50;
-    border-top: 1px solid var(--ui-border);
-    background: var(--ui-bg-overlay-strong);
-    box-shadow: var(--ui-shadow-1);
-    backdrop-filter: blur(20px);
+    border-radius: 22px;
+    background: color-mix(in oklab, var(--ui-bg-overlay-strong) 75%, transparent);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(16px);
+  }
+
+  /* 桌面端：同一组件切换为居中浮动药囊，不铺满浏览器宽度 */
+  @media (min-width: 1024px) {
+    .hcz-bottom-nav {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      bottom: 22px;
+      width: min(340px, calc(100vw - 48px));
+      border-radius: 26px;
+    }
   }
 
   .hcz-bottom-nav__inner {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    max-width: 40rem;
-    min-height: 4rem;
-    margin-inline: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-items: center;
+    min-height: 2.5rem;
+    padding: 4px 8px;
   }
 
   .hcz-bottom-nav__item {
-    display: flex;
-    min-width: 0;
-    min-height: 4rem;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.125rem;
-    padding-inline: 0.125rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 12px;
     color: var(--ui-text-muted);
-    font-size: 0.65rem;
-    font-weight: 600;
-    line-height: 1.2;
-    white-space: nowrap;
+    transition: color 0.2s;
   }
 
   .hcz-bottom-nav__item.is-active {
@@ -363,14 +436,11 @@ html[data-telegram-mini-app="true"] body {
   .hcz-bottom-nav__icon {
     position: relative;
     display: grid;
-    width: 2.5rem;
-    height: 2rem;
     place-items: center;
-    border-radius: 999px;
   }
 
   .hcz-bottom-nav__item.is-active .hcz-bottom-nav__icon {
-    background: var(--ui-accent-soft);
+    background: transparent;
   }
 
   .hcz-bottom-nav__dot {
@@ -826,14 +896,21 @@ html[data-telegram-mini-app="true"] body {
   }
 
   @media (max-width: 1023px) {
-    .hcz-shell-main--with-bottom-nav {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    /* 底部留白挂在页面背景画布上，保证背景图/底色连续覆盖 BottomNav 后方，
+       不在 main padding 区露出 #app 的 #f5f8fd 纯色断层。 */
+    .hcz-shell-main--with-bottom-nav > .hcz-page-background {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
     }
   }
 
   @media (min-width: 1024px) {
-    .hcz-bottom-nav { display: none; }
+    /* 桌面端 BottomNav 改为居中浮动药囊后，同样为内容预留底部空间 */
+    .hcz-shell-main--with-bottom-nav > .hcz-page-background {
+      padding-bottom: 6.5rem;
+    }
   }
+
+  /* 桌面端 BottomNav 不再 display:none，由上方 min-width:1024px 段接管为居中浮动药囊 */
 }
 
 @media (min-width: 768px) {

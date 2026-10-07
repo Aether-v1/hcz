@@ -94,6 +94,15 @@ export interface BannerItem {
   enabled?: boolean
 }
 
+export interface FeaturedCategory {
+  id: number
+  slug: string
+  name?: LocalizedText
+  icon?: string
+  description?: LocalizedText
+  sort_order?: number
+}
+
 export interface AnnouncementConfig {
   type?: string
   title?: LocalizedText
@@ -133,6 +142,7 @@ export interface SiteConfig {
   social_links: SocialLinks
   home_entries: HomeEntry[]
   banners: BannerItem[]
+  featured_categories: FeaturedCategory[]
   announcement: AnnouncementConfig | null
   discovery_blocks: DiscoveryBlock[]
   seo: SeoConfig

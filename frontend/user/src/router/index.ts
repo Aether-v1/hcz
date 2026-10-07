@@ -4,6 +4,8 @@ import { useAppStore } from '../stores/app'
 import { useTelegramMiniAppStore } from '../stores/telegramMiniApp'
 import { captureAffiliateFromRoute } from '../utils/affiliate'
 import { GOOGLE_REDIRECT_FRONTEND_CALLBACK_PATH } from '../utils/googleRedirect'
+import { DEV_PREVIEW_MODE } from '../utils/devPreview'
+import { isAnonymousPreviewRoute } from '../utils/devPreviewPolicy'
 
 type RouteComponentLoader = () => Promise<unknown>
 
@@ -115,7 +117,7 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: homeViewLoader,
-            meta: { requiresUserAuth: true },
+            meta: { requiresUserAuth: false },
         },
         {
             path: '/products',
@@ -440,8 +442,12 @@ router.beforeEach(async (to, _from, next) => {
 
     if (to.meta.requiresUserAuth) {
         if (!userAuthStore.isAuthenticated) {
-            const redirect = encodeURIComponent(to.fullPath)
-            next(`/auth/login?redirect=${redirect}`)
+            if (DEV_PREVIEW_MODE && isAnonymousPreviewRoute(to.name)) {
+                next()
+            } else {
+                const redirect = encodeURIComponent(to.fullPath)
+                next(`/auth/login?redirect=${redirect}`)
+            }
         } else if (to.meta.resellerConsole && !appStore.canAccessResellerConsole) {
             next('/me/orders')
         } else {

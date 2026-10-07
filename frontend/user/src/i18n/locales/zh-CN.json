@@ -145,14 +145,15 @@
     "unavailable": "暂未提供",
     "loadingCategories": "正在读取可用服务分类…",
     "categoriesError": "服务分类暂时无法加载。",
-    "usdtTitle": "USDT 交易",
+    "usdtTitle": "C2C",
     "usdtDescription": "安全便捷 · 快速买卖",
     "comingSoon": "即将开放",
     "featuredEyebrow": "服务精选",
-    "featuredTitle": "热门推荐",
+    "featuredTitle": "更多推荐",
     "productsError": "推荐服务暂时无法加载。",
     "retry": "重试",
     "noProducts": "暂无可推荐的服务",
+    "noEntries": "暂无服务入口",
     "moreEyebrow": "探索更多",
     "moreTitle": "更多服务",
     "activityEyebrow": "平台动态",
@@ -162,6 +163,19 @@
     "viewAll": "查看全部",
     "offer": "优惠",
     "viewDetails": "查看详情",
+    "userSummary": {
+      "welcome": "欢迎使用 HCZ",
+      "tagline": "生活充值与数字服务平台",
+      "login": "登录",
+      "register": "注册",
+      "features": "安全 · 快捷 · 稳定",
+      "availableBalance": "可用余额",
+      "orders": "订单",
+      "invite": "邀请",
+      "profile": "我的",
+      "member": "会员",
+      "notLoggedIn": "未登录"
+    },
     "core": {
       "phone": {
         "title": "话费充值",
@@ -284,6 +298,14 @@
     "selectLanguage": "选择语言",
     "more": "更多"
   },
+  "settings": {
+    "appearance": "外观主题",
+    "language": "语言",
+    "about": "关于",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统"
+  },
   "toast": {
     "addedToCart": "已加入待提交"
   },
@@ -326,7 +348,35 @@
     "cart": "待提交",
     "me": "我的"
   },
+  "devPreview": {
+    "readOnly": "只读视觉预览",
+    "blocked": "开发预览模式下不可执行此操作",
+    "user": "开发预览",
+    "accountId": "DEV"
+  },
   "personalCenter": {
+    "myPage": {
+      "title": "我的",
+      "subtitle": "账户与服务，一处管理",
+      "welcome": "欢迎来到 HCZ",
+      "guestHint": "登录后可查看订单、钱包和个人服务。",
+      "register": "注册",
+      "account": "账户资料",
+      "profileFailed": "账户资料加载失败",
+      "available": "可用余额",
+      "viewWallet": "查看钱包",
+      "walletFailed": "钱包加载失败，可稍后重试",
+      "frozen": "冻结余额：",
+      "shortcuts": "常用服务",
+      "shortcutsHint": "快速前往您常用的服务",
+      "orders": "我的订单",
+      "wallet": "我的钱包",
+      "accountGroup": "账户管理",
+      "serviceGroup": "更多服务",
+      "c2c": "C2C",
+      "logoutTitle": "退出登录？",
+      "logoutConfirm": "确认退出当前账户吗？"
+    },
     "groups": {
       "overview": "账户",
       "wallet": "资金",
@@ -596,6 +646,8 @@
       "directionOut": "支出",
       "rechargeStatus": {
         "pending": "待支付",
+        "pending_recharge": "待充值",
+        "processing": "处理中",
         "success": "已到账",
         "failed": "支付失败",
         "expired": "支付过期"
@@ -1254,7 +1306,7 @@
   "order": {
     "status": {
       "pending_payment": "待支付",
-      "paid": "待充值",
+      "paid": "待处理",
       "fulfilling": "处理中",
       "partially_delivered": "部分完成",
       "partially_refunded": "部分退款",

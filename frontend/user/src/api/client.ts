@@ -1,5 +1,8 @@
 import i18n from '../i18n'
 import { isPublicAuthEndpoint } from '../utils/authEndpoints'
+import { isGuestDevPreview } from '../utils/devPreview'
+import { shouldBlockPreviewWrite, shouldRedirectUnauthorized } from '../utils/devPreviewPolicy'
+import { toast } from '../composables/useToast'
 
 export const t = (key: string, params?: Record<string, any>) =>
     (params ? i18n.global.t(key, params) : i18n.global.t(key)) as string
@@ -62,6 +65,15 @@ function createClient(injectAuth: boolean) {
     const timeout = 10000
 
     async function request(method: string, path: string, bodyOrOptions?: any, options?: RequestOptions): Promise<{ data: any }> {
+        const publicAuthEndpoint = isPublicAuthEndpoint(path)
+        const previewGuest = isGuestDevPreview(Boolean(localStorage.getItem('user_token')))
+        const redirectOnUnauthorized = shouldRedirectUnauthorized(injectAuth, publicAuthEndpoint, previewGuest)
+        if (shouldBlockPreviewWrite(previewGuest, method, publicAuthEndpoint)) {
+            const message = t('devPreview.blocked')
+            toast.info(message)
+            return Promise.reject(new Error(message))
+        }
+
         let body: any = undefined
         let opts: RequestOptions = {}
 
@@ -136,7 +148,7 @@ function createClient(injectAuth: boolean) {
                 const status = response.status
                 const message = getHttpErrorMessage(status)
                 if (status === 401) {
-                    if (injectAuth && !isPublicAuthEndpoint(path)) {
+                    if (redirectOnUnauthorized) {
                         localStorage.removeItem('user_token')
                         localStorage.removeItem('user_profile')
                         window.location.href = '/auth/login'
@@ -153,7 +165,7 @@ function createClient(injectAuth: boolean) {
         if (!response.ok) {
             const status = response.status
             const message = data?.msg || getHttpErrorMessage(status)
-            if (status === 401 && injectAuth && !isPublicAuthEndpoint(path)) {
+            if (status === 401 && redirectOnUnauthorized) {
                 localStorage.removeItem('user_token')
                 localStorage.removeItem('user_profile')
                 window.location.href = '/auth/login'
@@ -164,7 +176,7 @@ function createClient(injectAuth: boolean) {
 
         // Business error check
         if (typeof data.status_code !== 'undefined' && data.status_code !== 0) {
-            if (data.status_code === 401 && injectAuth && !isPublicAuthEndpoint(path)) {
+            if (data.status_code === 401 && redirectOnUnauthorized) {
                 localStorage.removeItem('user_token')
                 localStorage.removeItem('user_profile')
                 window.location.href = '/auth/login'

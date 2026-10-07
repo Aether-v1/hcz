@@ -12,7 +12,7 @@
         :frozen-balance="frozenBalance"
         :currency="walletCurrency"
         :frozen-note="frozenNote"
-        :total-transactions="pagination.total"
+        :total-transactions="previewGuest ? null : pagination.total"
         :error="walletError"
         :loading="walletLoading"
         @retry="loadWallet"
@@ -56,6 +56,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { walletAPI } from '../../api'
 import { useAppStore } from '../../stores/app'
+import { useUserAuthStore } from '../../stores/userAuth'
+import { isGuestDevPreview } from '../../utils/devPreview'
 import type { PageAlert } from '../../utils/alerts'
 import { amountToCents, basisPointsToPercent, calculateFeeCents, centsToAmount, rateToBasisPoints } from '../../utils/money'
 import WalletBalanceCard from '../../components/wallet/WalletBalanceCard.vue'
@@ -66,6 +68,8 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const userAuthStore = useUserAuthStore()
+const previewGuest = computed(() => isGuestDevPreview(userAuthStore.isAuthenticated))
 
 const loading = ref(true)
 const recharging = ref(false)

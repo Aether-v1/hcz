@@ -1,108 +1,124 @@
 <template>
-  <div class="rounded-2xl border bg-card p-7 shadow-sm">
-    <PanelHeading :title="t('personalCenter.profile.title')" :description="t('personalCenter.profile.subtitle')" :icon="UserCircle">
-      <template #actions>
-        <Badge variant="accent" size="sm">{{ t('personalCenter.tabs.profile') }}</Badge>
-      </template>
-    </PanelHeading>
-
-    <Alert v-if="profileAlert" class="mb-5" :variant="pageAlertVariant(profileAlert.level)" :class="pageAlertToneClass(profileAlert.level)">
-      <AlertDescription>{{ profileAlert.message }}</AlertDescription>
-    </Alert>
-
-    <form class="space-y-6" @submit.prevent="handleSaveProfile">
-      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <div class="md:col-span-2">
-          <Label class="mb-2 block">{{ t('personalCenter.profile.emailLabel') }}</Label>
-          <Input :model-value="userProfileStore.profile?.email || ''" disabled class="h-11" />
+  <div class="space-y-4">
+    <!-- 外观与语言 -->
+    <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <!-- 主题选择 -->
+      <div class="flex items-center justify-between border-b px-5 py-4">
+        <div class="flex items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Palette :size="18" />
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-foreground">{{ t('settings.appearance') }}</p>
+            <p class="text-xs text-muted-foreground">{{ themeLabel }}</p>
+          </div>
         </div>
-
-        <div>
-          <Label class="mb-2 block">{{ t('personalCenter.profile.nicknameLabel') }}</Label>
-          <Input
-            v-model="profileForm.nickname"
-            :placeholder="t('personalCenter.profile.nicknamePlaceholder')"
-            class="h-11"
-          />
-        </div>
-
-        <div>
-          <Label class="mb-2 block">{{ t('personalCenter.profile.localeLabel') }}</Label>
-          <Select v-model="profileForm.locale">
-            <SelectTrigger class="h-11 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="zh-CN">简体中文</SelectItem>
-              <SelectItem value="zh-TW">繁體中文</SelectItem>
-              <SelectItem value="en-US">English</SelectItem>
-            </SelectContent>
-          </Select>
+        <div class="flex gap-1.5">
+          <button
+            v-for="opt in themeOptions"
+            :key="opt.value"
+            type="button"
+            class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+            :class="theme === opt.value ? 'bg-primary text-primary-foreground' : 'bg-accent/40 text-muted-foreground hover:bg-accent/60 hover:text-foreground'"
+            @click="setTheme(opt.value)"
+          >
+            {{ opt.label }}
+          </button>
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-xs text-muted-foreground">{{ t('personalCenter.profile.subtitle') }}</p>
-        <Button type="submit" :disabled="userProfileStore.savingProfile" class="h-11 font-bold">
-          {{ userProfileStore.savingProfile ? t('personalCenter.profile.saving') : t('personalCenter.profile.save') }}
-        </Button>
+      <!-- 语言选择 -->
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Languages :size="18" />
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-foreground">{{ t('settings.language') }}</p>
+            <p class="text-xs text-muted-foreground">{{ localeLabel }}</p>
+          </div>
+        </div>
+        <Select :model-value="appStore.locale" @update:model-value="(v: any) => handleLocaleChange(String(v))">
+          <SelectTrigger class="h-9 w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="zh-CN">简体中文</SelectItem>
+            <SelectItem value="zh-TW">繁體中文</SelectItem>
+            <SelectItem value="en-US">English</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-    </form>
+    </div>
+
+    <!-- 关于 -->
+    <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
+      <div class="flex items-center justify-between px-5 py-4">
+        <div class="flex items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
+            <Info :size="18" />
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-foreground">{{ t('settings.about') }}</p>
+            <p class="text-xs text-muted-foreground">{{ appStore.config?.brand?.site_name || 'HCZ' }}</p>
+          </div>
+        </div>
+        <span class="text-xs font-medium text-muted-foreground">v{{ appVersion }}</span>
+      </div>
+    </div>
+
+    <!-- 退出登录 -->
+    <button
+      type="button"
+      class="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card px-5 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+      @click="handleLogout"
+    >
+      <LogOut :size="17" />
+      {{ t('navbar.logout') }}
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { UserCircle } from 'lucide-vue-next'
-import { pageAlertVariant, pageAlertToneClass, type PageAlert } from '../../utils/alerts'
-import { useUserProfileStore } from '../../stores/userProfile'
-import PanelHeading from '../../components/shared/PanelHeading.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Palette, Languages, Info, LogOut } from 'lucide-vue-next'
+import { useAppStore } from '../../stores/app'
+import { useUserAuthStore } from '../../stores/userAuth'
+import { useTheme, type Theme } from '../../utils/theme'
+import { useConfirmDialog } from '../../composables/useConfirmDialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const { t } = useI18n()
-const userProfileStore = useUserProfileStore()
+const appStore = useAppStore()
+const auth = useUserAuthStore()
+const { theme, setTheme } = useTheme()
+const { confirm } = useConfirmDialog()
 
-const profileForm = reactive({
-  nickname: '',
-  locale: 'zh-CN',
-})
+const themeOptions: { value: Theme; label: string }[] = [
+  { value: 'light', label: t('settings.themeLight') },
+  { value: 'dark', label: t('settings.themeDark') },
+  { value: 'system', label: t('settings.themeSystem') },
+]
 
-const profileAlert = ref<PageAlert | null>(null)
+const themeLabel = computed(() => themeOptions.find(o => o.value === theme.value)?.label || '')
 
-const handleSaveProfile = async () => {
-  profileAlert.value = null
-  const payload = {
-    nickname: profileForm.nickname.trim(),
-    locale: profileForm.locale,
-  }
-  const ok = await userProfileStore.saveProfile(payload)
-  if (!ok) {
-    profileAlert.value = {
-      level: 'error',
-      message: userProfileStore.profileError || t('personalCenter.common.saveFailed'),
-    }
-    return
-  }
-  profileAlert.value = {
-    level: 'success',
-    message: t('personalCenter.profile.saveSuccess'),
-  }
+const localeMap: Record<string, string> = { 'zh-CN': '简体中文', 'zh-TW': '繁體中文', 'en-US': 'English' }
+const localeLabel = computed(() => localeMap[appStore.locale] || appStore.locale)
+
+const appVersion = computed(() => String(appStore.config?.app_version || '1.0.0'))
+
+const handleLocaleChange = (locale: string) => {
+  appStore.setLocale(locale)
 }
 
-watch(
-  () => userProfileStore.profile,
-  (profile) => {
-    if (!profile) return
-    profileForm.nickname = profile.nickname || ''
-    profileForm.locale = profile.locale || 'zh-CN'
-  },
-  { immediate: true }
-)
+const handleLogout = async () => {
+  const approved = await confirm({
+    title: t('personalCenter.myPage.logoutTitle'),
+    message: t('personalCenter.myPage.logoutConfirm'),
+    confirmText: t('navbar.logout'),
+    variant: 'danger',
+  })
+  if (approved) auth.logout('/')
+}
 </script>
-

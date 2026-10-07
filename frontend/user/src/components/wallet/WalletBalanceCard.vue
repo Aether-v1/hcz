@@ -50,7 +50,7 @@
 
     <div class="mt-4 flex items-center justify-between border-t border-sky-200/80 pt-4 text-sm dark:border-slate-600">
       <span class="text-muted-foreground">{{ t('personalCenter.wallet.transactionsLabel') }}</span>
-      <span class="font-semibold tabular-nums text-foreground">{{ totalTransactions }}</span>
+      <span class="font-semibold tabular-nums text-foreground">{{ totalTransactions === null ? '--' : totalTransactions }}</span>
     </div>
   </div>
 </template>
@@ -71,7 +71,7 @@ const props = defineProps<{
   frozenBalance: string
   currency: string
   frozenNote: string
-  totalTransactions: number
+  totalTransactions: number | null
   error?: boolean
   loading?: boolean
 }>()

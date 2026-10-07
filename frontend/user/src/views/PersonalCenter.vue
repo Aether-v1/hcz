@@ -1,22 +1,23 @@
 <template>
-  <div class="relative min-h-screen overflow-hidden bg-background text-foreground pt-24 pb-16">
+  <PersonalCenterOverview v-if="props.section === 'overview'" />
+  <div v-else class="relative min-h-screen overflow-hidden bg-background text-foreground pt-24 pb-16">
     <div class="container relative z-10 mx-auto px-4">
       <header class="relative mb-8 overflow-hidden rounded-3xl border bg-card shadow-sm">
         <div class="relative flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between lg:p-8">
           <div class="flex min-w-0 items-center gap-4">
             <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-black text-primary">
-              {{ displayInitial }}
+              {{ previewGuest ? 'D' : displayInitial }}
             </div>
             <div class="min-w-0">
               <p class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
                 {{ t('personalCenter.title') }}
               </p>
-              <h1 class="mt-1.5 truncate text-2xl font-black text-foreground lg:text-[2rem]">{{ userProfileStore.displayName }}</h1>
-              <p class="mt-1 truncate text-sm text-muted-foreground">{{ userProfileStore.profile?.email || t('personalCenter.subtitle') }}</p>
+              <h1 class="mt-1.5 truncate text-2xl font-black text-foreground lg:text-[2rem]">{{ previewGuest ? t('devPreview.user') : userProfileStore.displayName }}</h1>
+              <p class="mt-1 truncate text-sm text-muted-foreground">{{ previewGuest ? `ID · ${t('devPreview.accountId')}` : (userProfileStore.profile?.email || t('personalCenter.subtitle')) }}</p>
             </div>
           </div>
 
-          <div class="relative flex flex-wrap items-center gap-2">
+          <div v-if="!previewGuest" class="relative flex flex-wrap items-center gap-2">
             <Badge :variant="emailVerifiedVariant" size="sm">{{ emailVerifiedLabel }}</Badge>
             <span
               v-if="userProfileStore.currentLevel"
@@ -137,7 +138,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useUserAuthStore } from '../stores/userAuth'
+import { isGuestDevPreview } from '../utils/devPreview'
+import PersonalCenterOverview from './personal/PersonalCenterOverview.vue'
 import PersonalNotificationsEntry from '../components/PersonalNotificationsEntry.vue'
 import PersonalOverviewShortcuts from '../components/PersonalOverviewShortcuts.vue'
 import PersonalUsdtEntry from '../components/PersonalUsdtEntry.vue'
@@ -157,6 +162,8 @@ import ApiPanel from './personal/ApiPanel.vue'
 import { usePersonalCenter, type PersonalSection } from '../composables/usePersonalCenter'
 
 const { t } = useI18n()
+const auth = useUserAuthStore()
+const previewGuest = computed(() => isGuestDevPreview(auth.isAuthenticated))
 
 const props = withDefaults(defineProps<{ section?: PersonalSection }>(), {
   section: 'overview',

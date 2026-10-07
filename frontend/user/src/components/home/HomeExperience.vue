@@ -1,327 +1,659 @@
 <template>
-  <div class="hcz-home">
-    <div class="hcz-shell-container hcz-home__content">
-      <!-- 公告条（config.announcement，无则不渲染） -->
-      <AnnouncementBar />
-
-      <!-- 轮播 Banner（后端 GET /public/banners，position=home_hero） -->
-      <section
-        v-if="bannerCount > 0"
-        class="home-hero-carousel"
-        :aria-label="t('homeV2.brand')"
-        @touchstart.passive="onBannerTouchStart"
-        @touchend="onBannerTouchEnd"
-      >
-        <component
-          :is="hasHeroLink ? 'a' : 'div'"
-          :href="hasHeroLink ? heroLink : undefined"
-          :target="hasHeroLink && heroOpenInNewTab ? '_blank' : undefined"
-          :rel="hasHeroLink && heroOpenInNewTab ? 'noopener noreferrer' : undefined"
-          class="home-hero-carousel__slide"
+  <div class="home-v2">
+    <div class="home-v2__container">
+      <!-- ===== Hero: Banner + User Summary Card (desktop split) ===== -->
+      <div class="home-hero">
+        <div class="home-hero__banner">
+          <!-- ===== Banner Carousel ===== -->
+          <section
+            v-if="bannerCount > 0"
+            class="home-banner"
+            aria-label="Banner"
+            @touchstart.passive="onTouchStart"
+            @touchend="onTouchEnd"
+          >
+        <div
+          class="home-banner__track"
+          :style="{ transform: `translateX(-${currentBannerIndex * 100}%)` }"
         >
-          <img
-            v-if="heroImage && !bannerImageFailed"
-            :src="heroImage"
-            :alt="heroTitle"
-            class="home-hero-carousel__image"
-            loading="eager"
-            @error="bannerImageFailed = true"
-          />
-          <div class="home-hero-carousel__overlay">
-            <span class="home-hero-carousel__badge">{{ heroBadge }}</span>
-            <h1 class="home-hero-carousel__title">{{ heroTitle }}</h1>
-            <p v-if="heroSubtitle" class="home-hero-carousel__subtitle">{{ heroSubtitle }}</p>
-            <span v-if="hasHeroLink" class="home-hero-carousel__cta">
-              {{ heroPrimaryButtonText }} <ArrowRight :size="15" aria-hidden="true" />
-            </span>
-          </div>
-        </component>
-        <button
-          v-if="bannerCount > 1"
-          type="button"
-          class="home-hero-carousel__arrow home-hero-carousel__arrow--prev"
-          :aria-label="t('common.previous')"
-          @click.prevent="handlePrevHeroBanner"
-        >
-          <ChevronLeft :size="20" aria-hidden="true" />
-        </button>
-        <button
-          v-if="bannerCount > 1"
-          type="button"
-          class="home-hero-carousel__arrow home-hero-carousel__arrow--next"
-          :aria-label="t('common.next')"
-          @click.prevent="handleNextHeroBanner"
-        >
-          <ChevronRight :size="20" aria-hidden="true" />
-        </button>
-        <div v-if="bannerCount > 1" class="home-hero-carousel__dots">
+          <component
+            v-for="(banner, idx) in banners"
+            :key="banner.id || idx"
+            :is="bannerLink(banner) ? 'a' : 'div'"
+            :href="bannerLink(banner) || undefined"
+            :target="isExternalLink(banner) ? '_blank' : undefined"
+            :rel="isExternalLink(banner) ? 'noopener noreferrer' : undefined"
+            class="home-banner__slide"
+            @click.prevent="handleBannerClick(banner)"
+          >
+            <img
+              :src="bannerImage(banner)"
+              :alt="bannerText(banner.title)"
+              class="home-banner__image"
+              loading="eager"
+              @error="onBannerImageError(idx)"
+            />
+          </component>
+        </div>
+        <div v-if="bannerCount > 1" class="home-banner__dots">
           <button
-            v-for="(banner, index) in banners"
-            :key="(banner.id as number) || index"
+            v-for="(banner, idx) in banners"
+            :key="`dot-${banner.id || idx}`"
             type="button"
-            class="home-hero-carousel__dot"
-            :class="{ 'home-hero-carousel__dot--active': index === currentBannerIndex }"
-            :aria-label="`Banner ${index + 1}`"
-            :aria-current="index === currentBannerIndex"
-            @click.prevent="selectHeroBanner(index)"
-          ></button>
+            class="home-banner__dot"
+            :class="{ 'is-active': idx === currentBannerIndex }"
+            :aria-label="`Banner ${idx + 1}`"
+            @click.prevent="selectBanner(idx)"
+          />
         </div>
       </section>
 
-      <!-- Fallback：无 banner 时的简洁品牌展示 -->
-      <section v-else class="home-hero-fallback" :aria-labelledby="'home-title'">
-        <span class="home-hero-fallback__eyebrow">HCZ · {{ t('homeV2.brand') }}</span>
-        <h1 id="home-title">{{ t('homeV2.title') }}</h1>
-        <p>{{ t('homeV2.subtitle') }}</p>
-      </section>
-
-      <div v-if="!online" class="home-alert" role="status">
-        <WifiOff :size="18" aria-hidden="true" /> {{ t('homeV2.offline') }}
+      <!-- Banner Skeleton -->
+      <div v-else-if="configLoading" class="home-banner home-banner--skeleton" aria-hidden="true">
+        <div class="home-banner__skeleton-block" />
       </div>
+        </div><!-- /.home-hero__banner -->
 
-      <!-- 装修 Banner（config.banners，无则不渲染） -->
-      <SiteBannerStrip />
+        <!-- User Summary Card (desktop only, hidden <1024px via CSS) -->
+        <UserSummaryCard class="home-hero__card" />
+      </div><!-- /.home-hero -->
 
-      <!-- 常用服务入口（话费/流量/游戏/生活缴费） -->
-      <section class="home-section" :aria-labelledby="'home-core-title'">
-        <div class="home-section__head">
-          <div>
-            <span class="home-section__eyebrow">{{ t('homeV2.quickEyebrow') }}</span>
-            <h2 id="home-core-title">{{ t('homeV2.quickTitle') }}</h2>
+      <!-- ===== Core Entries ===== -->
+      <section class="home-section">
+
+        <!-- Skeleton -->
+        <div v-if="configLoading" class="home-entries" aria-hidden="true">
+          <div v-for="i in 4" :key="`skel-entry-${i}`" class="home-entry home-entry--skeleton">
+            <div class="home-entry__icon-skeleton" />
+            <div class="home-entry__label-skeleton" />
           </div>
-          <RouterLink to="/products" class="home-section__more">{{ t('homeV2.allServices') }} <ArrowRight :size="16" aria-hidden="true" /></RouterLink>
         </div>
-        <div class="home-core-grid">
-          <template v-for="entry in coreEntries" :key="entry.key">
-            <RouterLink v-if="entry.category" :to="{ name: 'category-products', params: { slug: entry.category.slug } }" class="home-core-card">
-              <span class="home-core-card__icon"><component :is="entry.icon" :size="24" :stroke-width="1.9" aria-hidden="true" /></span>
-              <strong>{{ entry.title }}</strong>
-            </RouterLink>
-            <div v-else class="home-core-card home-core-card--disabled" aria-disabled="true">
-              <span class="home-core-card__icon"><component :is="entry.icon" :size="24" :stroke-width="1.9" aria-hidden="true" /></span>
-              <strong>{{ entry.title }}</strong>
-              <span class="home-core-card__desc">{{ categoriesLoading ? t('common.loading') : t('homeV2.unavailable') }}</span>
-            </div>
-          </template>
+
+        <!-- Entries -->
+        <div v-else-if="coreEntries.length" class="home-entries">
+          <component
+            v-for="entry in coreEntries"
+            :key="entry.id"
+            :is="entry.external ? 'a' : RouterLink"
+            :href="entry.external ? entry.href : undefined"
+            :target="entry.external ? '_blank' : undefined"
+            :rel="entry.external ? 'noopener noreferrer' : undefined"
+            :to="entry.external ? undefined : entry.href"
+            class="home-entry"
+          >
+            <span class="home-entry__icon">
+              <component :is="resolveHomeEntryIcon(entry.icon)" :size="26" :stroke-width="1.8" aria-hidden="true" />
+            </span>
+            <span class="home-entry__label">{{ entry.title }}</span>
+          </component>
         </div>
-        <div v-if="categoriesLoading" class="home-inline-state" role="status">{{ t('homeV2.loadingCategories') }}</div>
-        <div v-else-if="categoriesError" class="home-inline-state" role="alert">
-          {{ t('homeV2.categoriesError') }}
-          <button type="button" @click="loadCategories">{{ t('homeV2.retry') }}</button>
+
+        <!-- Empty -->
+        <div v-else class="home-empty">
+          <p>{{ t('homeV2.noEntries') }}</p>
         </div>
       </section>
 
-      <section class="home-section" :aria-labelledby="'home-featured-title'">
+      <!-- ===== Featured Categories ===== -->
+      <section v-if="featuredCategories.length > 0 || configLoading" class="home-section" aria-labelledby="home-featured-title">
         <div class="home-section__head">
-          <div>
-            <span class="home-section__eyebrow">{{ t('homeV2.featuredEyebrow') }}</span>
-            <h2 id="home-featured-title">{{ t('homeV2.featuredTitle') }}</h2>
-          </div>
-          <RouterLink to="/products" class="home-section__more">{{ t('homeV2.allServices') }} <ArrowRight :size="16" aria-hidden="true" /></RouterLink>
-        </div>
-        <div v-if="productsLoading" class="home-recommend-grid" role="status" :aria-label="t('common.loading')">
-          <div v-for="index in 4" :key="index" class="home-recommend-skeleton"></div>
-        </div>
-        <div v-else-if="productsError" class="home-state" role="alert">
-          <PackageOpen :size="30" aria-hidden="true" />
-          <p>{{ t('homeV2.productsError') }}</p>
-          <button type="button" @click="loadProducts">{{ t('homeV2.retry') }}</button>
-        </div>
-        <div v-else-if="featuredProducts.length" class="home-recommend-grid">
-          <HomeServiceCard v-for="product in featuredProducts" :key="product.id" :product="product" />
-        </div>
-        <div v-else class="home-state"><PackageOpen :size="30" aria-hidden="true" /><p>{{ t('homeV2.noProducts') }}</p></div>
-      </section>
-
-      <section v-if="moreCategories.length" class="home-section" :aria-labelledby="'home-more-title'">
-        <div class="home-section__head">
-          <div>
-            <span class="home-section__eyebrow">{{ t('homeV2.moreEyebrow') }}</span>
-            <h2 id="home-more-title">{{ t('homeV2.moreTitle') }}</h2>
-          </div>
-        </div>
-        <div class="home-category-grid">
-          <RouterLink v-for="category in moreCategories" :key="category.id" :to="{ name: 'category-products', params: { slug: category.slug } }" class="home-category-card">
-            <span class="home-category-card__icon"><component :is="getServiceIcon(category)" :size="22" :stroke-width="1.9" aria-hidden="true" /></span>
-            <span>{{ categoryLabel(category) }}</span>
-            <ArrowUpRight :size="15" aria-hidden="true" />
+          <h2 id="home-featured-title" class="home-section__title">{{ t('homeV2.featuredTitle') }}</h2>
+          <RouterLink v-if="featuredCategories.length > 0" to="/products" class="home-section__more">
+            {{ t('homeV2.allServices') }}
           </RouterLink>
         </div>
-      </section>
 
-      <section v-if="newsPosts.length" class="home-section home-news" :aria-labelledby="'home-news-title'">
-        <div class="home-section__head">
-          <div><span class="home-section__eyebrow">{{ t('homeV2.newsEyebrow') }}</span><h2 id="home-news-title">{{ t('homeV2.newsTitle') }}</h2></div>
-          <RouterLink :to="newsType === 'notice' ? '/notice' : '/blog'" class="home-section__more">{{ t('homeV2.viewAll') }} <ArrowRight :size="16" aria-hidden="true" /></RouterLink>
+        <!-- Skeleton -->
+        <div v-if="configLoading" class="home-featured" aria-hidden="true">
+          <div v-for="i in 6" :key="`skel-cat-${i}`" class="home-featured__card home-featured__card--skeleton">
+            <div class="home-featured__icon-skeleton" />
+            <div class="home-featured__label-skeleton" />
+          </div>
         </div>
-        <div class="home-news__list">
-          <RouterLink v-for="post in newsPosts" :key="post.id" :to="{ name: 'blog-detail', params: { slug: post.slug } }" class="home-news__item">
-            <span>{{ localizedText(post.title) }}</span><ArrowUpRight :size="17" aria-hidden="true" />
+
+        <!-- Categories -->
+        <div v-else class="home-featured">
+          <RouterLink
+            v-for="cat in featuredCategories"
+            :key="cat.id"
+            :to="{ name: 'category-products', params: { slug: cat.slug } }"
+            class="home-featured__card"
+          >
+            <span class="home-featured__icon">
+              <img v-if="cat.icon" :src="getImageUrl(cat.icon)" :alt="cat.name" class="home-featured__icon-img" />
+              <component v-else :is="getCategoryFallbackIcon(cat.slug)" :size="28" :stroke-width="1.6" aria-hidden="true" />
+            </span>
+            <span class="home-featured__body">
+              <span class="home-featured__title">{{ cat.name }}</span>
+              <span v-if="cat.description" class="home-featured__desc">{{ cat.description }}</span>
+            </span>
           </RouterLink>
         </div>
       </section>
     </div>
-
-    <AnnouncementModal v-if="activeAnnouncement" :announcement="activeAnnouncement" :visible="announcementVisible" @update:visible="announcementVisible = $event" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HousePlug, PackageOpen, Smartphone, Wifi, WifiOff } from 'lucide-vue-next'
-import { categoryAPI, postAPI, productAPI } from '../../api'
+import { RouterLink, useRouter } from 'vue-router'
+import {
+  Smartphone, Wifi, Gamepad2, HousePlug, PlayCircle,
+  ShoppingBag, Plane, CreditCard, Gift, Globe,
+} from 'lucide-vue-next'
+import { useSiteConfig } from '../../composables/useSiteConfig'
 import { useAppStore } from '../../stores/app'
-import { useLocalized } from '../../composables/useProduct'
-import { useAnnouncement, type HomeAnnouncement } from '../../composables/useAnnouncement'
-import { useBannerCarousel } from '../../composables/useBannerCarousel'
 import { usePageSeo } from '../../composables/usePageSeo'
-import { getServiceIcon } from '../../utils/serviceIcon'
-import type { PublicCategory } from '../../utils/category'
-import AnnouncementModal from '../AnnouncementModal.vue'
-import HomeServiceCard from './HomeServiceCard.vue'
-import AnnouncementBar from './AnnouncementBar.vue'
-import SiteBannerStrip from './SiteBannerStrip.vue'
-import './home.css'
+import { resolveHomeEntryIcon } from './homeEntryIcons'
+import { getImageUrl } from '../../utils/image'
+import type { BannerItem } from '../../types/siteConfig'
+import UserSummaryCard from './UserSummaryCard.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
-const { getLocalizedText } = useLocalized()
-const { shouldShow } = useAnnouncement()
+const router = useRouter()
+const { banners, homeEntries, featuredCategories } = useSiteConfig()
 usePageSeo({ canonicalPath: () => '/' })
 
-const categories = ref<PublicCategory[]>([])
-const products = ref<any[]>([])
-const categoriesLoading = ref(true)
-const categoriesError = ref(false)
-const productsLoading = ref(true)
-const productsError = ref(false)
-const online = ref(true)
-const newsPosts = ref<any[]>([])
-const activeAnnouncement = ref<HomeAnnouncement | null>(null)
-const announcementVisible = ref(false)
-const bannerImageFailed = ref(false)
+const configLoading = computed(() => appStore.loading)
 
-const localizedText = (value: unknown): string => typeof value === 'string' ? value : getLocalizedText(value)
-const categoryLabel = (category: PublicCategory) => localizedText(category.name) || category.slug || ''
-const categoryCandidates = computed(() => {
-  const result = [...categories.value]
-  const seen = new Set(result.map(category => category.id))
-  for (const product of products.value) {
-    const category = product?.category as PublicCategory | undefined
-    if (category?.id && !seen.has(category.id)) {
-      result.push(category)
-      seen.add(category.id)
+// ===== Banner Carousel =====
+const currentBannerIndex = ref(0)
+const bannerImageErrors = ref<Set<number>>(new Set())
+let autoPlayTimer: ReturnType<typeof setInterval> | null = null
+
+const bannerCount = computed(() => banners.value.length)
+
+const bannerText = (value: unknown): string => {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, string>
+    return record[appStore.locale] || record['zh-CN'] || record['en-US'] || Object.values(record)[0] || ''
+  }
+  return ''
+}
+
+const bannerImage = (banner: BannerItem): string => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  if (isMobile && banner.mobile_image) return getImageUrl(banner.mobile_image)
+  return getImageUrl(banner.image || banner.mobile_image || '')
+}
+
+const bannerLink = (banner: BannerItem): string => {
+  if (banner.link_type === 'none') return ''
+  return banner.link_value || ''
+}
+
+const isExternalLink = (banner: BannerItem): boolean => {
+  const link = bannerLink(banner)
+  return /^https?:\/\//i.test(link) || Boolean(banner.open_in_new_tab)
+}
+
+const handleBannerClick = (banner: BannerItem) => {
+  const link = bannerLink(banner)
+  if (!link) return
+  if (isExternalLink(banner)) {
+    window.open(link, banner.open_in_new_tab ? '_blank' : '_self')
+    return
+  }
+  // internal link: use router push
+  if (link.startsWith('/')) {
+    router.push(link)
+  }
+}
+
+const onBannerImageError = (idx: number) => {
+  bannerImageErrors.value.add(idx)
+}
+
+const selectBanner = (idx: number) => {
+  if (bannerCount.value === 0) return
+  currentBannerIndex.value = ((idx % bannerCount.value) + bannerCount.value) % bannerCount.value
+  restartAutoPlay()
+}
+
+const nextBanner = () => {
+  if (bannerCount.value <= 1) return
+  currentBannerIndex.value = (currentBannerIndex.value + 1) % bannerCount.value
+}
+
+const stopAutoPlay = () => {
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer)
+    autoPlayTimer = null
+  }
+}
+
+const startAutoPlay = () => {
+  stopAutoPlay()
+  if (bannerCount.value <= 1) return
+  autoPlayTimer = setInterval(nextBanner, 5000)
+}
+
+const restartAutoPlay = () => {
+  stopAutoPlay()
+  startAutoPlay()
+}
+
+// Touch swipe
+let touchStartX = 0
+const onTouchStart = (e: TouchEvent) => {
+  touchStartX = e.touches[0]?.clientX ?? 0
+}
+const onTouchEnd = (e: TouchEvent) => {
+  const diff = touchStartX - (e.changedTouches[0]?.clientX ?? 0)
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) {
+      currentBannerIndex.value = (currentBannerIndex.value + 1) % bannerCount.value
+    } else {
+      currentBannerIndex.value = (currentBannerIndex.value - 1 + bannerCount.value) % bannerCount.value
     }
+    restartAutoPlay()
   }
-  return result.filter(category => typeof category.slug === 'string' && category.slug.length > 0)
+}
+
+// ===== Core Entries: enabled + sort + top 4 =====
+const coreEntries = computed(() => {
+  return homeEntries.value
+    .filter((e) => e.href && (e.external ? /^https?:\/\//i.test(e.href) : e.href.startsWith('/')))
+    .slice(0, 4)
 })
-const categorySearchText = (category: PublicCategory) => {
-  const names = category.name && typeof category.name === 'object' ? Object.values(category.name) : [category.name]
-  return `${category.slug || ''} ${names.join(' ')}`.toLowerCase()
-}
-const coreDefinitions = [
-  { key: 'phone', icon: Smartphone, matches: /话费|話費|airtime|phone.?recharge|mobile.?top.?up/ },
-  { key: 'data', icon: Wifi, matches: /流量|數據|数据|traffic|data.?plan|mobile.?data/ },
-  { key: 'game', icon: Gamepad2, matches: /游戏|遊戲|game/ },
-  { key: 'bills', icon: HousePlug, matches: /生活缴费|生活繳費|utility|utilities|bill.?pay|生活服务|生活服務/ },
-] as const
-const coreEntries = computed(() => coreDefinitions.map(definition => ({
-  key: definition.key,
-  icon: definition.icon,
-  title: t(`homeV2.core.${definition.key}.title`),
-  category: categoryCandidates.value.find(category => definition.matches.test(categorySearchText(category))) || null,
-})))
-const moreCategories = computed(() => {
-  const usedIds = new Set(coreEntries.value.map(entry => entry.category?.id).filter(Boolean))
-  return categoryCandidates.value.filter(category => !usedIds.has(category.id)).slice(0, 12)
-})
-const featuredProducts = computed(() => products.value.filter(product => product?.slug && localizedText(product.title)).slice(0, 8))
 
-const {
-  banners,
-  bannerCount,
-  currentBannerIndex,
-  heroImage,
-  heroBadge,
-  heroTitle,
-  heroSubtitle,
-  heroLink,
-  hasHeroLink,
-  heroPrimaryButtonText,
-  heroOpenInNewTab,
-  loadBanners,
-  handleNextHeroBanner,
-  handlePrevHeroBanner,
-  selectHeroBanner,
-  onBannerTouchStart,
-  onBannerTouchEnd,
-  stopHeroAutoPlay,
-} = useBannerCarousel()
-watch(heroImage, () => { bannerImageFailed.value = false })
+// ===== Category fallback icon mapping =====
+const categoryIconMap: Record<string, typeof Smartphone> = {
+  phone: Smartphone,
+  data: Wifi,
+  game: Gamepad2,
+  bills: HousePlug,
+  video: PlayCircle,
+  shopping: ShoppingBag,
+  travel: Plane,
+  credit: CreditCard,
+  gift: Gift,
+  global: Globe,
+}
 
-const newsType = computed<'notice' | 'blog'>(() => appStore.config?.nav_config?.builtin?.notice !== false ? 'notice' : 'blog')
-const newsEnabled = computed(() => appStore.config?.nav_config?.builtin?.notice !== false || appStore.config?.nav_config?.builtin?.blog !== false)
-
-const loadCategories = async () => {
-  categoriesLoading.value = true
-  categoriesError.value = false
-  try {
-    const response = await categoryAPI.list()
-    categories.value = Array.isArray(response.data.data) ? response.data.data : []
-  } catch {
-    categoriesError.value = true
-  } finally {
-    categoriesLoading.value = false
+const getCategoryFallbackIcon = (slug: string) => {
+  const lower = slug.toLowerCase()
+  for (const [key, icon] of Object.entries(categoryIconMap)) {
+    if (lower.includes(key)) return icon
   }
-}
-const loadProducts = async () => {
-  productsLoading.value = true
-  productsError.value = false
-  try {
-    const response = await productAPI.list({ page: 1, page_size: 8 })
-    products.value = Array.isArray(response.data.data) ? response.data.data : []
-  } catch {
-    productsError.value = true
-  } finally {
-    productsLoading.value = false
-  }
-}
-const loadHomeBanners = async () => {
-  // loadBanners 内部已调用 startHeroAutoPlay()，此处不再 stop
-  await loadBanners()
-}
-const loadNews = async () => {
-  if (!newsEnabled.value) return
-  try {
-    const response = await postAPI.list({ type: newsType.value, page: 1, page_size: 2 })
-    newsPosts.value = Array.isArray(response.data.data) ? response.data.data.filter((post: any) => post?.slug) : []
-  } catch {
-    newsPosts.value = []
-  }
-}
-const updateOnline = () => {
-  const wasOffline = !online.value
-  online.value = navigator.onLine
-  if (wasOffline && navigator.onLine) {
-    void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadNews()])
-  }
+  return Gift
 }
 
 onMounted(() => {
-  updateOnline()
-  window.addEventListener('online', updateOnline)
-  window.addEventListener('offline', updateOnline)
-  const announcement = appStore.config?.announcement as HomeAnnouncement | undefined
-  if (announcement && shouldShow(announcement)) {
-    activeAnnouncement.value = announcement
-    announcementVisible.value = true
-  }
-  void Promise.allSettled([loadCategories(), loadProducts(), loadHomeBanners(), loadNews()])
+  startAutoPlay()
 })
+
 onUnmounted(() => {
-  window.removeEventListener('online', updateOnline)
-  window.removeEventListener('offline', updateOnline)
-  stopHeroAutoPlay()
+  stopAutoPlay()
 })
 </script>
+
+<style scoped>
+.home-v2 {
+  min-height: 100%;
+}
+
+.home-v2__container {
+  padding-top: 0;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .home-v2__container {
+    padding-top: 0;
+    padding-bottom: 40px;
+  }
+}
+
+/* ===== Hero Split (Banner + User Card) ===== */
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.home-hero__banner {
+  min-width: 0;
+}
+
+.home-hero__card {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 0.8fr);
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: stretch;
+  }
+
+  .home-hero__card {
+    display: block;
+  }
+
+  /* Banner inside hero: remove standalone bottom margin, match card radius */
+  .home-hero .home-banner {
+    margin-bottom: 0;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+}
+
+/* ===== Banner ===== */
+.home-banner {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  aspect-ratio: 16 / 7;
+  background: var(--secondary, #1a1a24);
+}
+
+@media (min-width: 768px) {
+  .home-banner {
+    aspect-ratio: 21 / 8;
+    border-radius: 20px;
+    margin-bottom: 32px;
+  }
+}
+
+.home-banner__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-banner__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: relative;
+}
+
+.home-banner__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.home-banner__dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.home-banner__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.home-banner__dot.is-active {
+  width: 18px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.home-banner--skeleton {
+  background: var(--secondary, #1a1a24);
+}
+
+.home-banner__skeleton-block {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===== Section ===== */
+.home-section {
+  margin-bottom: 28px;
+}
+
+.home-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.home-section__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--foreground, #f5f5f7);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .home-section__title {
+    font-size: 20px;
+  }
+}
+
+.home-section__more {
+  font-size: 13px;
+  color: var(--muted-foreground, #86868b);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.home-section__more:hover {
+  color: var(--primary, #4F46E5);
+}
+
+/* ===== Core Entries (4 columns) ===== */
+.home-entries {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .home-entries {
+    gap: 16px;
+  }
+}
+
+.home-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 4px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.home-entry:hover {
+  background: var(--accent, rgba(255,255,255,0.05));
+  transform: translateY(-2px);
+}
+
+.home-entry:active {
+  transform: translateY(0);
+}
+
+.home-entry__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary, #4F46E5);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+@media (min-width: 768px) {
+  .home-entry__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+  }
+}
+
+.home-entry__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground, #f5f5f7);
+  text-align: center;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .home-entry__label {
+    font-size: 14px;
+  }
+}
+
+/* Entry skeleton */
+.home-entry--skeleton {
+  pointer-events: none;
+}
+
+.home-entry__icon-skeleton {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--secondary, #1a1a24);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.home-entry__label-skeleton {
+  width: 70%;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--secondary, #1a1a24);
+  animation: pulse 1.5s ease-in-out infinite 0.1s;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* ===== Featured Categories: 2-column grid ===== */
+.home-featured {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.home-featured__card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--card, #16161e);
+  border: 1px solid var(--border, rgba(255,255,255,0.06));
+  text-decoration: none;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.home-featured__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--muted, rgba(255,255,255,0.06));
+  color: var(--primary, #4F46E5);
+}
+
+.home-featured__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-featured__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground, #fff);
+  line-height: 1.3;
+}
+
+.home-featured__desc {
+  font-size: 12px;
+  color: var(--muted-foreground, rgba(255,255,255,0.5));
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-featured__card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary, #4F46E5);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+}
+
+.home-featured__icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Category skeleton */
+.home-featured__card--skeleton {
+  pointer-events: none;
+  border-color: transparent;
+}
+
+.home-featured__icon-skeleton {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--secondary, #1a1a24);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.home-featured__label-skeleton {
+  width: 65%;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--secondary, #1a1a24);
+  animation: pulse 1.5s ease-in-out infinite 0.1s;
+}
+
+/* ===== Empty ===== */
+.home-empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted-foreground, #86868b);
+  font-size: 14px;
+}
+</style>

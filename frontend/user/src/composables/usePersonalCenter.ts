@@ -1,10 +1,11 @@
-import { computed, onMounted, ref, type Component } from 'vue'
+import { computed, onMounted, ref, watch, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Banknote, Home, Gift, ShieldCheck, UserCircle, Megaphone, Key, Share2 } from 'lucide-vue-next'
 import type { PageAlert } from '../utils/alerts'
 import { useAppStore } from '../stores/app'
 import { useUserProfileStore } from '../stores/userProfile'
+import { useUserAuthStore } from '../stores/userAuth'
 import type { PublicMemberLevel } from '../api'
 
 export type PersonalSection = 'overview' | 'profile' | 'security' | 'giftCard' | 'affiliate' | 'invitation' | 'reseller' | 'api'
@@ -23,6 +24,7 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
   const { t, locale } = useI18n()
   const appStore = useAppStore()
   const userProfileStore = useUserProfileStore()
+  const userAuthStore = useUserAuthStore()
 
   const sectionItems: PersonalSectionItem[] = [
     { key: 'overview', label: 'personalCenter.tabs.overview', icon: Home },
@@ -97,6 +99,7 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
   }
 
   const initialize = async () => {
+    if (!userAuthStore.isAuthenticated || currentSection.value === 'overview') return
     globalAlert.value = null
     const [profileOk] = await Promise.all([
       userProfileStore.loadProfile(),
@@ -113,6 +116,7 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
   onMounted(() => {
     initialize()
   })
+  watch(currentSection, () => { void initialize() })
 
   return {
     userProfileStore,

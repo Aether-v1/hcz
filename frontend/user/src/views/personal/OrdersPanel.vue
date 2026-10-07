@@ -1,86 +1,61 @@
 <template>
-  <div class="space-y-4">
-    <PanelHeading :title="t('orders.title')" :description="t('orders.subtitle')" :icon="ReceiptText">
-      <template #actions>
-        <Badge variant="neutral" size="sm" class="rounded-full">
-          {{ t('orders.pageInfo', { page: activePagination.page, total: activePagination.total_page }) }}
-        </Badge>
-        <Button as-child variant="ghost" size="sm" class="rounded-full">
-          <router-link to="/products">{{ t('orders.goServiceHall') }}</router-link>
-        </Button>
-      </template>
-    </PanelHeading>
-
-    <!-- Tab 切换 -->
-    <div class="flex rounded-xl border bg-card overflow-hidden">
-      <button
-        type="button"
-        class="flex-1 py-3 text-sm font-semibold text-center transition-colors"
-        :class="activeTab === 'product' ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-muted-foreground hover:text-foreground'"
-        @click="switchTab('product')"
-      >
-        {{ t('orders.tabs.product') }}
-      </button>
-      <button
-        type="button"
-        class="flex-1 py-3 text-sm font-semibold text-center transition-colors"
-        :class="activeTab === 'recharge' ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900' : 'text-muted-foreground hover:text-foreground'"
-        @click="switchTab('recharge')"
-      >
-        {{ t('orders.tabs.recharge') }}
-      </button>
+  <div class="space-y-5">
+    <!-- 标题 + 类型切换 -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-lg font-bold tracking-tight text-foreground sm:text-xl">{{ t('orders.title') }}</h1>
+      <div class="flex shrink-0 rounded-full bg-secondary/60 p-1">
+        <button
+          type="button"
+          class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm"
+          :class="activeTab === 'product' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+          @click="switchTab('product')">
+          {{ t('orders.tabs.product') }}
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm"
+          :class="activeTab === 'recharge' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+          @click="switchTab('recharge')">
+          {{ t('orders.tabs.recharge') }}
+        </button>
+      </div>
     </div>
 
-    <!-- 普通订单 Tab -->
+    <!-- 普通订单 -->
     <template v-if="activeTab === 'product'">
-      <div class="rounded-2xl border bg-card p-4 shadow-sm">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div class="w-full lg:max-w-sm">
-            <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{{ t('orders.filters.keyword') }}</Label>
-            <Input
-              v-model="orderFilters.orderNo"
-              type="text"
-              :placeholder="t('orders.filters.orderNoPlaceholder')"
-              class="h-11"
-              @input="handleOrderNoInput"
-              @keyup.enter="applyOrderFilters"
-            />
-          </div>
-
-          <div class="w-full lg:w-56">
-            <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{{ t('orders.filters.status') }}</Label>
-            <Select v-model="orderStatusProxy">
-              <SelectTrigger class="h-11 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="item in orderStatusOptions" :key="item.value || 'all'" :value="item.value || 'all'">
-                  {{ item.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-            <Button type="button" class="h-11 bg-slate-900 font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" @click="applyOrderFilters">
-              {{ t('orders.filters.search') }}
-            </Button>
-            <Button type="button" variant="outline" class="h-11 font-semibold" @click="resetOrderFilters">
-              {{ t('orders.filters.reset') }}
-            </Button>
-            <Button type="button" variant="outline" class="h-11 font-semibold" @click="refreshOrdersCurrentPage">
-              {{ t('orders.filters.refresh') }}
-            </Button>
-          </div>
-        </div>
-
-        <div v-if="hasOrderActiveFilters" class="mt-3 text-xs text-muted-foreground">
-          {{ t('orders.filters.current', { orderNo: orderFilters.orderNo || t('orders.filters.any'), status: currentOrderStatusLabel }) }}
-        </div>
+      <!-- 状态 Tab 栏 -->
+      <div class="flex flex-wrap gap-3 border-b border-border/60 pb-2">
+        <button
+          v-for="tab in orderStatusTabs"
+          :key="tab.value"
+          type="button"
+          class="relative shrink-0 pb-1.5 text-sm font-medium transition-colors"
+          :class="orderFilters.status === tab.value ? 'text-primary' : 'text-muted-foreground hover:text-foreground'"
+          @click="setOrderStatus(tab.value)">
+          {{ tab.label }}
+          <span v-if="orderFilters.status === tab.value" class="absolute -bottom-[9px] left-0 right-0 h-0.5 rounded-full bg-primary"></span>
+        </button>
       </div>
 
-      <div v-if="orderLoading" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="h-24 animate-pulse rounded-2xl border bg-muted"></div>
+      <!-- 搜索（折叠） -->
+      <div v-if="showOrderSearch" class="flex gap-2">
+        <Input
+          v-model="orderFilters.orderNo"
+          type="text"
+          :placeholder="t('orders.filters.orderNoPlaceholder')"
+          class="h-10 flex-1"
+          @keyup.enter="applyOrderFilters"
+        />
+        <Button type="button" size="sm" class="h-10" @click="applyOrderFilters">{{ t('orders.filters.search') }}</Button>
+        <Button type="button" variant="ghost" size="sm" class="h-10" @click="resetOrderFilters; showOrderSearch = false">{{ t('orders.filters.reset') }}</Button>
       </div>
 
+      <!-- Loading -->
+      <div v-if="orderLoading" class="space-y-3">
+        <div v-for="i in 4" :key="i" class="h-20 animate-pulse rounded-2xl bg-muted/60"></div>
+      </div>
+
+      <!-- Empty -->
       <EmptyState
         v-else-if="orders.length === 0"
         icon="order"
@@ -89,44 +64,39 @@
         action-to="/products"
       />
 
-      <div v-else class="overflow-hidden rounded-2xl border bg-card">
-        <div
+      <!-- 订单列表 -->
+      <div v-else class="space-y-3">
+        <router-link
           v-for="order in orders"
           :key="order.order_no"
-          class="border-b p-4 last:border-b-0 transition-colors hover:bg-accent/40"
-        >
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div class="min-w-0">
-              <div class="truncate text-sm font-semibold text-foreground">{{ getLocalizedText(order.items?.[0]?.title) || t('orders.serviceFallback') }}</div>
-              <div class="mt-1 text-xs text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</div>
-              <div class="mt-2 text-sm font-bold tabular-nums text-foreground">{{ formatMoney(order.total_amount, order.currency) }}</div>
-              <div v-if="order.wallet_paid_amount != null || order.usdt_total_amount != null" class="mt-1 text-xs font-medium text-emerald-600">
-                {{ t('orderDetail.actualPaidLabel', '实际支付') }}：{{ usdtPaidDisplay(order) }}
-              </div>
-              <div v-if="hasDiscount(order)" class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <Badge v-if="hasDiscountAmount(order.discount_amount)" variant="success" size="sm">
-                  {{ t('orderDetail.couponDiscountLabel') }}：{{ formatDiscountMoney(order.discount_amount, order.currency) }}
-                </Badge>
-                <Badge v-if="hasDiscountAmount(order.promotion_discount_amount)" variant="danger" size="sm">
-                  {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatDiscountMoney(order.promotion_discount_amount, order.currency) }}
-                </Badge>
-              </div>
-              <div class="mt-2 text-xs text-muted-foreground">{{ t('orders.submittedAt') }}：{{ formatDate(order.created_at) }}</div>
+          :to="`/orders/${order.order_no}`"
+          class="block rounded-2xl border border-border/60 bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm">
+          <div class="flex items-start gap-3">
+            <!-- 服务图标 -->
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <ReceiptText class="h-5 w-5" />
             </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-              <Badge :variant="statusVariant(order.status) === 'info' ? 'neutral' : statusVariant(order.status)" size="sm">
-                {{ statusLabel(order.status) }}
-              </Badge>
-              <Button as-child variant="outline" size="sm">
-                <router-link :to="`/orders/${order.order_no}`">{{ t('orders.viewDetails') }}</router-link>
-              </Button>
-              <Button v-if="order.status === 'pending_payment'" as-child size="sm">
-                <router-link :to="`/pay?order_no=${order.order_no}`">{{ t('orders.payNow') }}</router-link>
-              </Button>
+            <!-- 订单信息 -->
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <span class="truncate text-sm font-semibold text-foreground">{{ getLocalizedText(order.items?.[0]?.title) || t('orders.serviceFallback') }}</span>
+                <span class="shrink-0 text-sm font-bold tabular-nums text-foreground">{{ formatMoney(order.total_amount, order.currency) }}</span>
+              </div>
+              <p class="mt-0.5 truncate text-xs text-muted-foreground">{{ t('orders.orderNo') }}：{{ order.order_no }}</p>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">{{ formatDate(order.created_at) }}</span>
+                <div class="flex items-center gap-2">
+                  <Badge :variant="statusVariant(order.status) === 'info' ? 'neutral' : statusVariant(order.status)" size="sm">
+                    {{ statusLabel(order.status) }}
+                  </Badge>
+                  <Button v-if="order.status === 'pending_payment'" as-child size="sm" class="h-7 rounded-full px-3 text-xs">
+                    <router-link :to="`/pay?order_no=${order.order_no}`" @click.stop>{{ t('orders.payNow') }}</router-link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </router-link>
       </div>
 
       <PaginationNav
@@ -138,58 +108,41 @@
       />
     </template>
 
-    <!-- 充值订单 Tab -->
-    <template v-if="activeTab === 'recharge'">
-      <div class="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <StatCard :label="t('orders.stats.totalMatched')" :value="rechargePagination.total" :icon="Wallet" tone="info" mono />
-        <StatCard :label="t('orders.stats.currentPage')" :value="rechargeOrders.length" :icon="Layers" tone="neutral" mono />
-        <StatCard :label="t('orders.stats.pendingPayment')" :value="rechargePendingCount" :icon="Clock" tone="warning" mono />
+    <!-- 充值订单 -->
+    <template v-else>
+      <!-- 状态 Tab 栏 -->
+      <div class="flex flex-wrap gap-3 border-b border-border/60 pb-2">
+        <button
+          v-for="tab in rechargeStatusTabs"
+          :key="tab.value"
+          type="button"
+          class="relative shrink-0 pb-1.5 text-sm font-medium transition-colors"
+          :class="rechargeFilters.status === tab.value ? 'text-primary' : 'text-muted-foreground hover:text-foreground'"
+          @click="setRechargeStatus(tab.value)">
+          {{ tab.label }}
+          <span v-if="rechargeFilters.status === tab.value" class="absolute -bottom-[9px] left-0 right-0 h-0.5 rounded-full bg-primary"></span>
+        </button>
       </div>
 
-      <div class="rounded-2xl border bg-card p-4 shadow-sm">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div class="w-full lg:max-w-sm">
-            <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{{ t('orders.rechargeFilters.keyword') }}</Label>
-            <Input
-              v-model="rechargeFilters.rechargeNo"
-              type="text"
-              :placeholder="t('orders.rechargeFilters.rechargeNoPlaceholder')"
-              class="h-11"
-              @input="handleRechargeNoInput"
-              @keyup.enter="applyRechargeFilters"
-            />
-          </div>
-
-          <div class="w-full lg:w-56">
-            <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{{ t('orders.filters.status') }}</Label>
-            <Select v-model="rechargeStatusProxy">
-              <SelectTrigger class="h-11 w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="item in rechargeStatusOptions" :key="item.value || 'all'" :value="item.value || 'all'">
-                  {{ item.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-            <Button type="button" class="h-11 bg-slate-900 font-bold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200" @click="applyRechargeFilters">
-              {{ t('orders.filters.search') }}
-            </Button>
-            <Button type="button" variant="outline" class="h-11 font-semibold" @click="resetRechargeFilters">
-              {{ t('orders.filters.reset') }}
-            </Button>
-            <Button type="button" variant="outline" class="h-11 font-semibold" @click="refreshRechargeCurrentPage">
-              {{ t('orders.filters.refresh') }}
-            </Button>
-          </div>
-        </div>
+      <!-- 搜索（折叠） -->
+      <div v-if="showRechargeSearch" class="flex gap-2">
+        <Input
+          v-model="rechargeFilters.rechargeNo"
+          type="text"
+          :placeholder="t('orders.rechargeFilters.rechargeNoPlaceholder')"
+          class="h-10 flex-1"
+          @keyup.enter="applyRechargeFilters"
+        />
+        <Button type="button" size="sm" class="h-10" @click="applyRechargeFilters">{{ t('orders.filters.search') }}</Button>
+        <Button type="button" variant="ghost" size="sm" class="h-10" @click="resetRechargeFilters; showRechargeSearch = false">{{ t('orders.filters.reset') }}</Button>
       </div>
 
-      <div v-if="rechargeLoading" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="h-24 animate-pulse rounded-2xl border bg-muted"></div>
+      <!-- Loading -->
+      <div v-if="rechargeLoading" class="space-y-3">
+        <div v-for="i in 4" :key="i" class="h-20 animate-pulse rounded-2xl bg-muted/60"></div>
       </div>
 
+      <!-- Empty -->
       <EmptyState
         v-else-if="rechargeOrders.length === 0"
         icon="order"
@@ -198,32 +151,31 @@
         action-to="/me/wallet"
       />
 
-      <div v-else class="space-y-4">
-        <div
+      <!-- 充值订单列表 -->
+      <div v-else class="space-y-3">
+        <router-link
           v-for="ro in rechargeOrders"
           :key="ro.recharge_no"
-          class="rounded-2xl border bg-card p-6 transition-colors hover:bg-accent/40"
-        >
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div class="text-xs uppercase tracking-[0.16em] text-muted-foreground">{{ t('personalCenter.wallet.rechargeNoLabel') }}：{{ ro.recharge_no }}</div>
-              <div class="mt-2 text-lg font-bold text-foreground">{{ formatMoney(ro.amount, ro.currency) }}</div>
-              <div class="mt-2 text-xs text-muted-foreground">{{ formatDate(ro.created_at) }}</div>
+          :to="`/recharge-orders/${ro.recharge_no}`"
+          class="block rounded-2xl border border-border/60 bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+              <Wallet class="h-5 w-5" />
             </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-              <Badge :variant="rechargeStatusVariant(ro.status)" size="sm">
-                {{ rechargeStatusText(ro.status) }}
-              </Badge>
-              <Button as-child variant="outline" size="sm">
-                <router-link :to="`/recharge-orders/${ro.recharge_no}`">{{ t('orders.viewDetails') }}</router-link>
-              </Button>
-              <Button v-if="ro.status === 'pending'" as-child size="sm">
-                <router-link :to="`/recharge-orders/${ro.recharge_no}`">{{ t('orders.payNow') }}</router-link>
-              </Button>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <span class="truncate text-sm font-semibold text-foreground">{{ t('personalCenter.wallet.rechargeNoLabel') }}：{{ ro.recharge_no }}</span>
+                <span class="shrink-0 text-sm font-bold tabular-nums text-foreground">{{ formatMoney(ro.amount, ro.currency) }}</span>
+              </div>
+              <div class="mt-2 flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">{{ formatDate(ro.created_at) }}</span>
+                <Badge :variant="rechargeStatusVariant(ro.status)" size="sm">
+                  {{ rechargeStatusText(ro.status) }}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
+        </router-link>
       </div>
 
       <PaginationNav
@@ -240,26 +192,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Layers, Clock, ReceiptText, Wallet } from 'lucide-vue-next'
+import { ReceiptText, Wallet } from 'lucide-vue-next'
 import { userOrderAPI } from '../../api'
 import { walletAPI } from '../../api/wallet'
 import { orderStatusVariant, orderStatusLabel, type BadgeTone } from '../../utils/status'
 import { debounceAsync } from '../../utils/debounce'
-import { amountToCents } from '../../utils/money'
 import { useLocalized } from '../../composables/useProduct'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import EmptyState from '../../components/EmptyState.vue'
 import PaginationNav from '../../components/PaginationNav.vue'
-import PanelHeading from '../../components/shared/PanelHeading.vue'
-import StatCard from '../../components/shared/StatCard.vue'
 
 const { t } = useI18n()
 const { getLocalizedText } = useLocalized()
-
 
 // ========== Tab 状态 ==========
 const activeTab = ref<'product' | 'recharge'>('product')
@@ -275,9 +221,36 @@ const switchTab = (tab: 'product' | 'recharge') => {
   }
 }
 
-const activePagination = computed(() =>
-  activeTab.value === 'product' ? orderPagination.value : rechargePagination.value,
-)
+// 搜索折叠
+const showOrderSearch = ref(false)
+const showRechargeSearch = ref(false)
+
+// 状态 Tab
+const orderStatusTabs = computed(() => [
+  { value: '', label: t('orders.filters.statusAll') },
+  { value: 'pending_payment', label: t('order.status.pending_payment') },
+  { value: 'paid', label: t('order.status.paid') },
+  { value: 'fulfilling', label: t('order.status.fulfilling') },
+  { value: 'completed', label: t('order.status.completed') },
+  { value: 'canceled', label: t('order.status.canceled') },
+])
+
+const rechargeStatusTabs = computed(() => [
+  { value: '', label: t('orders.filters.statusAll') },
+  { value: 'pending', label: t('personalCenter.wallet.rechargeStatus.pending') },
+  { value: 'success', label: t('personalCenter.wallet.rechargeStatus.success') },
+  { value: 'failed', label: t('personalCenter.wallet.rechargeStatus.failed') },
+])
+
+const setOrderStatus = (status: string) => {
+  orderFilters.status = status
+  loadOrders(1)
+}
+
+const setRechargeStatus = (status: string) => {
+  rechargeFilters.status = status
+  loadRechargeOrders(1)
+}
 
 // ========== 普通订单 ==========
 const orderLoading = ref(true)
@@ -286,25 +259,7 @@ const orders = ref<any[]>([])
 const orderPagination = ref({ page: 1, page_size: 20, total: 0, total_page: 1 })
 const orderFilters = reactive({ orderNo: '', status: '' })
 
-const orderStatusOptions = computed(() => [
-  { value: '', label: t('orders.filters.statusAll') },
-  { value: 'pending_payment', label: t('order.status.pending_payment') },
-  { value: 'paid', label: t('order.status.paid') },
-  { value: 'fulfilling', label: t('order.status.fulfilling') },
-  { value: 'partially_delivered', label: t('order.status.partially_delivered') },
-  { value: 'partially_refunded', label: t('order.status.partially_refunded') },
-  { value: 'delivered', label: t('order.status.delivered') },
-  { value: 'completed', label: t('order.status.completed') },
-  { value: 'expired', label: t('order.status.expired') },
-  { value: 'canceled', label: t('order.status.canceled') },
-  { value: 'refunded', label: t('order.status.refunded') },
-])
-
 const hasOrderActiveFilters = computed(() => Boolean(orderFilters.orderNo || orderFilters.status))
-const currentOrderStatusLabel = computed(() => {
-  const selected = orderStatusOptions.value.find((item) => item.value === orderFilters.status)
-  return selected?.label || t('orders.filters.statusAll')
-})
 
 const loadOrders = async (page = 1) => {
   orderLoading.value = true
@@ -332,21 +287,11 @@ const changeOrderPage = (page: number) => {
   debouncedLoadOrders(page)
 }
 const applyOrderFilters = () => loadOrders(1)
-const handleOrderNoInput = () => debouncedLoadOrders(1)
-const handleOrderStatusChange = () => loadOrders(1)
-const orderStatusProxy = computed({
-  get: () => orderFilters.status || 'all',
-  set: (v: string) => {
-    orderFilters.status = v === 'all' ? '' : v
-    handleOrderStatusChange()
-  },
-})
 const resetOrderFilters = () => {
   orderFilters.orderNo = ''
   orderFilters.status = ''
   loadOrders(1)
 }
-const refreshOrdersCurrentPage = () => loadOrders(orderPagination.value.page)
 
 const statusLabel = (status: string) => orderStatusLabel(t, status)
 const statusVariant = (status: string) => orderStatusVariant(status)
@@ -357,17 +302,6 @@ const rechargeLoaded = ref(false)
 const rechargeOrders = ref<any[]>([])
 const rechargePagination = ref({ page: 1, page_size: 20, total: 0, total_page: 1 })
 const rechargeFilters = reactive({ rechargeNo: '', status: '' })
-const rechargeStats = ref<Record<string, number>>({})
-
-const rechargeStatusOptions = computed(() => [
-  { value: '', label: t('orders.filters.statusAll') },
-  { value: 'pending', label: t('personalCenter.wallet.rechargeStatus.pending') },
-  { value: 'success', label: t('personalCenter.wallet.rechargeStatus.success') },
-  { value: 'failed', label: t('personalCenter.wallet.rechargeStatus.failed') },
-  { value: 'expired', label: t('personalCenter.wallet.rechargeStatus.expired') },
-])
-
-const rechargePendingCount = computed(() => rechargeStats.value['pending'] || 0)
 
 const loadRechargeOrders = async (page = 1) => {
   rechargeLoading.value = true
@@ -386,17 +320,6 @@ const loadRechargeOrders = async (page = 1) => {
   } finally {
     rechargeLoading.value = false
   }
-  loadRechargeStats()
-}
-
-// 按状态聚合的全量统计（不受分页与状态筛选影响，仅复用关键词筛选）
-const loadRechargeStats = async () => {
-  try {
-    const response = await walletAPI.rechargeStats({ recharge_no: rechargeFilters.rechargeNo || undefined })
-    rechargeStats.value = response.data.data?.by_status || {}
-  } catch {
-    rechargeStats.value = {}
-  }
 }
 
 const debouncedLoadRechargeOrders = debounceAsync(loadRechargeOrders, 300)
@@ -406,21 +329,11 @@ const changeRechargePage = (page: number) => {
   debouncedLoadRechargeOrders(page)
 }
 const applyRechargeFilters = () => loadRechargeOrders(1)
-const handleRechargeNoInput = () => debouncedLoadRechargeOrders(1)
-const handleRechargeStatusChange = () => loadRechargeOrders(1)
-const rechargeStatusProxy = computed({
-  get: () => rechargeFilters.status || 'all',
-  set: (v: string) => {
-    rechargeFilters.status = v === 'all' ? '' : v
-    handleRechargeStatusChange()
-  },
-})
 const resetRechargeFilters = () => {
   rechargeFilters.rechargeNo = ''
   rechargeFilters.status = ''
   loadRechargeOrders(1)
 }
-const refreshRechargeCurrentPage = () => loadRechargeOrders(rechargePagination.value.page)
 
 const rechargeStatusText = (status?: string) => {
   const normalized = String(status || '').toLowerCase()
@@ -442,30 +355,6 @@ const formatMoney = (amount?: string, currency?: string) => {
   if (amount === null || amount === undefined || amount === '') return '-'
   if (currency === null || currency === undefined || currency === '') return String(amount)
   return `${amount} ${currency}`
-}
-
-const formatDiscountMoney = (amount?: string, currency?: string) => {
-  return hasDiscountAmount(amount) ? `-${formatMoney(amount, currency)}` : formatMoney(amount, currency)
-}
-
-const hasDiscountAmount = (amount?: string) => {
-  if (amount === null || amount === undefined || amount === '') return false
-  const valueCents = amountToCents(amount)
-  return valueCents !== null && valueCents > 0
-}
-
-const hasDiscount = (order: any) => {
-  if (!order) return false
-  return hasDiscountAmount(order.discount_amount) || hasDiscountAmount(order.promotion_discount_amount)
-}
-
-// P0-2: 订单实付 USDT。优先 wallet_paid_amount，其次 usdt_total_amount；历史单无快照则显示 --，不自行重算。
-const usdtPaidDisplay = (order: any): string => {
-  if (!order) return '--'
-  const ccy = String(order.wallet_currency || 'USDT')
-  const paid = order.wallet_paid_amount ?? order.usdt_total_amount
-  if (paid === null || paid === undefined || paid === '') return '--'
-  return `${paid} ${ccy}`
 }
 
 const formatDate = (raw?: string) => {

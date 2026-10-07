@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftRight, Compass, House, ReceiptText, UserRound } from 'lucide-vue-next'
 
-/** classic、vault 与移动底栏共用的五个主入口。 */
+/** Desktop 顶部主导航与历史引用共用的五个核心入口。 */
 export function useCoreNavigation() {
   const route = useRoute()
   const { t } = useI18n()

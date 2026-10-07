@@ -145,14 +145,15 @@
     "unavailable": "暫未提供",
     "loadingCategories": "正在讀取可用服務分類…",
     "categoriesError": "服務分類暫時無法載入。",
-    "usdtTitle": "USDT 交易",
+    "usdtTitle": "C2C",
     "usdtDescription": "安全便捷 · 快速買賣",
     "comingSoon": "即將開放",
     "featuredEyebrow": "服務精選",
-    "featuredTitle": "熱門推薦",
+    "featuredTitle": "更多推薦",
     "productsError": "推薦服務暫時無法載入。",
     "retry": "重試",
     "noProducts": "暫無可推薦的服務",
+    "noEntries": "暫無服務入口",
     "moreEyebrow": "探索更多",
     "moreTitle": "更多服務",
     "activityEyebrow": "平台動態",
@@ -162,6 +163,19 @@
     "viewAll": "查看全部",
     "offer": "優惠",
     "viewDetails": "查看詳情",
+    "userSummary": {
+      "welcome": "歡迎使用 HCZ",
+      "tagline": "生活儲值與數位服務平台",
+      "login": "登入",
+      "register": "註冊",
+      "features": "安全 · 快捷 · 穩定",
+      "availableBalance": "可用餘額",
+      "orders": "訂單",
+      "invite": "邀請",
+      "profile": "我的",
+      "member": "會員",
+      "notLoggedIn": "未登入"
+    },
     "core": {
       "phone": {
         "title": "話費儲值",
@@ -336,6 +350,14 @@
     "selectLanguage": "選擇語言",
     "more": "更多"
   },
+  "settings": {
+    "appearance": "外觀主題",
+    "language": "語言",
+    "about": "關於",
+    "themeLight": "淺色",
+    "themeDark": "深色",
+    "themeSystem": "跟隨系統"
+  },
   "toast": {
     "addedToCart": "已加入待提交"
   },
@@ -378,7 +400,35 @@
     "cart": "待提交",
     "me": "我的"
   },
+  "devPreview": {
+    "readOnly": "唯讀視覺預覽",
+    "blocked": "開發預覽模式下不可執行此操作",
+    "user": "開發預覽",
+    "accountId": "DEV"
+  },
   "personalCenter": {
+    "myPage": {
+      "title": "我的",
+      "subtitle": "帳戶與服務，一處管理",
+      "welcome": "歡迎來到 HCZ",
+      "guestHint": "登入後可查看訂單、錢包和個人服務。",
+      "register": "註冊",
+      "account": "帳戶資料",
+      "profileFailed": "帳戶資料載入失敗",
+      "available": "可用餘額",
+      "viewWallet": "查看錢包",
+      "walletFailed": "錢包載入失敗，可稍後重試",
+      "frozen": "凍結餘額：",
+      "shortcuts": "常用服務",
+      "shortcutsHint": "快速前往您常用的服務",
+      "orders": "我的訂單",
+      "wallet": "我的錢包",
+      "accountGroup": "帳戶管理",
+      "serviceGroup": "更多服務",
+      "c2c": "C2C",
+      "logoutTitle": "退出登入？",
+      "logoutConfirm": "確認退出目前帳戶嗎？"
+    },
     "groups": {
       "overview": "帳戶",
       "wallet": "資金",
@@ -644,6 +694,8 @@
       "directionOut": "支出",
       "rechargeStatus": {
         "pending": "待支付",
+        "pending_recharge": "待儲值",
+        "processing": "處理中",
         "success": "已到帳",
         "failed": "支付失敗",
         "expired": "支付逾期"
@@ -1302,7 +1354,7 @@
   "order": {
     "status": {
       "pending_payment": "待支付",
-      "paid": "待儲值",
+      "paid": "待處理",
       "fulfilling": "處理中",
       "partially_delivered": "部分完成",
       "partially_refunded": "部分退款",
