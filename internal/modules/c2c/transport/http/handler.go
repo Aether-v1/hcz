@@ -16,9 +16,12 @@ import (
 type Service interface {
 	// 支付方式
 	ListPaymentMethods(userID uint) ([]c2cdomain.PaymentMethod, error)
+	ListPaymentMethodsByType(userID uint, pmType string) ([]c2cdomain.PaymentMethod, error)
+	GetPaymentMethod(userID, id uint) (*c2cdomain.PaymentMethod, error)
 	CreatePaymentMethod(input c2ccontract.CreatePaymentMethodInput) (*c2cdomain.PaymentMethod, error)
 	UpdatePaymentMethod(input c2ccontract.UpdatePaymentMethodInput) (*c2cdomain.PaymentMethod, error)
-	DeletePaymentMethod(userID, id uint) error
+	DeletePaymentMethod(userID, id uint, totpCode, password string) error
+	SetDefaultPaymentMethod(userID, id uint, totpCode, password string) error
 	SetPaymentMethodEnabled(userID, id uint, enabled bool) (*c2cdomain.PaymentMethod, error)
 
 	// 挂单
@@ -30,6 +33,8 @@ type Service interface {
 	GetListingDetail(id uint) (*c2cdomain.Listing, error)
 	ListMarketListings(filter c2ccontract.ListingMarketFilter) ([]c2cdomain.Listing, int64, error)
 	ListMyListings(filter c2ccontract.ListingMyFilter) ([]c2cdomain.Listing, int64, error)
+	// ListEnabledPaymentMethodsByListingID 查看挂单卖家已启用的收款方式（脱敏，供买家选择）。
+	ListEnabledPaymentMethodsByListingID(listingID uint) ([]c2cdomain.PaymentMethod, error)
 
 	// 交易
 	CreateTrade(input c2ccontract.CreateTradeInput) (*c2cdomain.Trade, error)
@@ -85,6 +90,14 @@ func respondError(c *gin.Context, err error) {
 		ginutil.RespondError(c, response.CodeForbidden, "error.c2c_permission_denied", nil)
 	case errors.Is(err, c2ccontract.ErrUserInactive):
 		ginutil.RespondError(c, response.CodeForbidden, "error.c2c_user_inactive", nil)
+	case errors.Is(err, c2ccontract.ErrStepUpFailed):
+		ginutil.RespondError(c, response.CodeForbidden, "error.c2c_step_up_failed", nil)
+	case errors.Is(err, c2ccontract.ErrInvalidUSDTAddress),
+		errors.Is(err, c2ccontract.ErrPaymentMethodLimit),
+		errors.Is(err, c2ccontract.ErrInvalidBankAccount),
+		errors.Is(err, c2ccontract.ErrMissingRequiredField),
+		errors.Is(err, c2ccontract.ErrInvalidPaymentMethodType):
+		ginutil.RespondError(c, response.CodeBadRequest, "error.c2c_invalid_payment_method", nil)
 	default:
 		ginutil.RespondError(c, response.CodeInternal, "error.internal", err)
 	}

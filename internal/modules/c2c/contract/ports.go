@@ -22,6 +22,15 @@ type Repository interface {
 	GetPaymentMethodByID(id uint) (*c2cdomain.PaymentMethod, error)
 	ListPaymentMethodsByUserID(userID uint) ([]c2cdomain.PaymentMethod, error)
 	ListEnabledPaymentMethodsByUserID(userID uint) ([]c2cdomain.PaymentMethod, error)
+	// ListPaymentMethodsByUserIDAndType 按用户 + 类型筛选（未软删）。
+	ListPaymentMethodsByUserIDAndType(userID uint, pmType string) ([]c2cdomain.PaymentMethod, error)
+	// CountPaymentMethodsByUserIDAndType 统计用户某类型数量（每类型上限）。
+	CountPaymentMethodsByUserIDAndType(userID uint, pmType string) (int64, error)
+	// MarkPaymentMethodDefault 同类型内互斥地把 id 设为默认（先清同类型默认，再设目标）。
+	// 仅更新 is_default 列，不触碰敏感列。
+	MarkPaymentMethodDefault(userID uint, id uint) error
+	// GetEnabledPaymentMethodByID 取启用中的收款方式（供交易快照校验归属/启用）。
+	GetEnabledPaymentMethodByID(id uint) (*c2cdomain.PaymentMethod, error)
 
 	// ---- 挂单 ----
 	CreateListing(l *c2cdomain.Listing) error
@@ -117,4 +126,14 @@ type Notifier interface {
 // ArbitrationAuditWriter 记录管理员仲裁审计日志（事务提交后调用）。
 type ArbitrationAuditWriter interface {
 	WriteC2CArbitration(entry ArbitrationAuditEntry) error
+}
+
+// TOTPVerifier 用户端 Step-Up：校验 2FA TOTP 口令。
+type TOTPVerifier interface {
+	VerifyChallengeCode(userID uint, code string) error
+}
+
+// PaymentMethodAuditWriter 记录收款方式变更审计（事务提交后调用，禁止记录敏感数据）。
+type PaymentMethodAuditWriter interface {
+	WritePaymentMethodAudit(entry PaymentMethodAuditEntry) error
 }

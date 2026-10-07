@@ -33,4 +33,12 @@ var (
 	ErrChallengeRequired         = errors.New("c2c step-up challenge token is required")
 	ErrChallengeInvalid          = errors.New("c2c step-up challenge token is invalid")
 	ErrListingNotClosable        = errors.New("c2c listing cannot be closed")
+
+	// 收款方式 / Step-Up
+	ErrStepUpFailed            = errors.New("c2c step-up verification failed")
+	ErrInvalidUSDTAddress      = errors.New("c2c invalid usdt trc20 address")
+	ErrPaymentMethodLimit      = errors.New("c2c payment method per-type limit exceeded")
+	ErrInvalidBankAccount      = errors.New("c2c invalid bank account number")
+	ErrMissingRequiredField    = errors.New("c2c payment method missing required field")
+	ErrInvalidPaymentMethodType = errors.New("c2c payment method type mismatch")
 )

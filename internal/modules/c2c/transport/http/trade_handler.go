@@ -12,8 +12,9 @@ import (
 )
 
 type createTradeRequest struct {
-	ListingID  uint   `json:"listing_id" binding:"required"`
-	USDTAmount string `json:"usdt_amount" binding:"required"`
+	ListingID       uint   `json:"listing_id" binding:"required"`
+	USDTAmount      string `json:"usdt_amount" binding:"required"`
+	PaymentMethodID uint   `json:"payment_method_id"`
 }
 
 // CreateTrade 发起交易（支持 Idempotency-Key header）。
@@ -42,6 +43,7 @@ func (h *Handler) CreateTrade(c *gin.Context) {
 		ListingID:      req.ListingID,
 		USDTAmount:     amount,
 		IdempotencyKey: idempotencyKey,
+		PaymentMethodID: req.PaymentMethodID,
 	})
 	if err != nil {
 		respondError(c, err)

@@ -84,6 +84,11 @@ function createClient(injectAuth: boolean) {
             opts = options || {}
         }
 
+        // DELETE 允许通过 opts.body 携带 JSON 请求体（如收款方式删除时的二次验证字段）。
+        if (method === 'DELETE' && opts.body !== undefined) {
+            body = opts.body
+        }
+
         const url = buildUrl(baseURL, path, opts.params)
         const headers: Record<string, string> = { ...opts.headers }
 

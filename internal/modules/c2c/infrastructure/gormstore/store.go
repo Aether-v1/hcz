@@ -124,6 +124,65 @@ func (s *Store) ListEnabledPaymentMethodsByUserID(userID uint) ([]c2cdomain.Paym
 	return rows, nil
 }
 
+func (s *Store) ListPaymentMethodsByUserIDAndType(userID uint, pmType string) ([]c2cdomain.PaymentMethod, error) {
+	if userID == 0 || strings.TrimSpace(pmType) == "" {
+		return []c2cdomain.PaymentMethod{}, nil
+	}
+	var rows []c2cdomain.PaymentMethod
+	if err := s.db.Where("user_id = ? AND type = ?", userID, pmType).
+		Order("is_default desc, enabled desc, id desc").Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func (s *Store) CountPaymentMethodsByUserIDAndType(userID uint, pmType string) (int64, error) {
+	if userID == 0 || strings.TrimSpace(pmType) == "" {
+		return 0, nil
+	}
+	var count int64
+	err := s.db.Model(&c2cdomain.PaymentMethod{}).
+		Where("user_id = ? AND type = ?", userID, pmType).Count(&count).Error
+	return count, err
+}
+
+// MarkPaymentMethodDefault 同类型互斥地把目标设为默认：先清同类型默认，再设目标。
+// 仅更新 is_default 列，不触碰敏感列。
+func (s *Store) MarkPaymentMethodDefault(userID uint, id uint) error {
+	if userID == 0 || id == 0 {
+		return nil
+	}
+	var target c2cdomain.PaymentMethod
+	if err := s.db.Select("id", "type").Where("id = ? AND user_id = ?", id, userID).First(&target).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+	if err := s.db.Model(&c2cdomain.PaymentMethod{}).
+		Where("user_id = ? AND type = ?", userID, target.Type).
+		UpdateColumn("is_default", false).Error; err != nil {
+		return err
+	}
+	return s.db.Model(&c2cdomain.PaymentMethod{}).
+		Where("id = ? AND user_id = ?", id, userID).
+		UpdateColumn("is_default", true).Error
+}
+
+func (s *Store) GetEnabledPaymentMethodByID(id uint) (*c2cdomain.PaymentMethod, error) {
+	if id == 0 {
+		return nil, nil
+	}
+	var p c2cdomain.PaymentMethod
+	if err := s.db.Where("id = ? AND enabled = ?", id, true).First(&p).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
 // ==================== 挂单 ====================
 
 func (s *Store) CreateListing(l *c2cdomain.Listing) error {

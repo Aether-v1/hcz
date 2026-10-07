@@ -64,6 +64,25 @@ func (h *Handler) GetListingDetail(c *gin.Context) {
 	response.Success(c, c2cpresenter.NewListingResp(l))
 }
 
+// ListListingPaymentMethods 查看挂单卖家的可用收款方式（脱敏，供买家选择）。
+// 数据来自卖家自身，不依赖前端传入 user_id；挂在 user 组，买家已登录。
+func (h *Handler) ListListingPaymentMethods(c *gin.Context) {
+	if _, ok := ginutil.GetUserID(c); !ok {
+		return
+	}
+	id, err := ginutil.ParseParamUint(c, "id")
+	if err != nil {
+		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		return
+	}
+	rows, err := h.svc.ListEnabledPaymentMethodsByListingID(id)
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	response.Success(c, c2cpresenter.NewPaymentMethodListResult(rows))
+}
+
 type createListingRequest struct {
 	FiatCurrency  string `json:"fiat_currency"`
 	Price         string `json:"price" binding:"required"`

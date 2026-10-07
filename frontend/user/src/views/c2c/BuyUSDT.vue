@@ -137,6 +137,29 @@
           <p class="text-xs text-muted-foreground">{{ t('c2c.buyPanel.previewNote') }}</p>
         </div>
 
+        <!-- 选择卖家收款方式 -->
+        <div v-if="sellerPaymentMethods.length" class="mt-4">
+          <Label class="mb-2 block">{{ t('paymentMethods.chooseSellerMethod') }}</Label>
+          <div class="space-y-2">
+            <button
+              v-for="pm in sellerPaymentMethods"
+              :key="pm.id"
+              type="button"
+              class="flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors"
+              :class="selectedPaymentMethodId === pm.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'"
+              @click="selectedPaymentMethodId = pm.id"
+            >
+              <span class="grid h-8 w-8 flex-none place-items-center rounded-lg bg-accent text-muted-foreground">
+                <component :is="sellerMethodIcon(pm.type)" :size="16" :stroke-width="1.8" />
+              </span>
+              <span class="min-w-0 flex-1 text-sm">
+                <span class="block truncate">{{ sellerMethodSummary(pm) }}</span>
+                <span v-if="pm.qr_code_url" class="block text-xs text-muted-foreground">{{ t('paymentMethods.qrBadge') }}</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
         <div class="mt-5 flex gap-3">
           <Button variant="outline" class="flex-1" @click="closeBuyPanel">{{ t('c2c.buyPanel.cancel') }}</Button>
           <Button class="flex-1" :disabled="!canConfirmBuy || submitting" @click="confirmBuy">
@@ -152,6 +175,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { CreditCard, MessageCircle, Wallet } from 'lucide-vue-next'
 import { useC2CStore } from '@/stores/c2c'
 import { useC2CTradeActions } from '@/composables/useC2C'
 import { useUserAuthStore } from '@/stores/userAuth'
@@ -179,6 +203,39 @@ const selectedListing = ref<C2CListing | null>(null)
 const buyFiat = ref('')
 const buyUsdt = ref('')
 const submitting = ref(false)
+
+// 卖家收款方式（买家单选）
+const sellerPaymentMethods = ref<any[]>([])
+const selectedPaymentMethodId = ref<number | null>(null)
+
+const sellerMethodIcon = (type: string) => {
+  if (type === 'BANK_CARD') return CreditCard
+  if (type === 'WECHAT') return MessageCircle
+  return Wallet
+}
+
+const sellerMethodSummary = (pm: any): string => {
+  if (pm.type === 'BANK_CARD') {
+    return [pm.bank_name, pm.bank_account_masked, pm.account_name_masked].filter(Boolean).join(' · ')
+  }
+  if (pm.type === 'ALIPAY' || pm.type === 'WECHAT') {
+    return [pm.account_identifier_masked, pm.account_name_masked].filter(Boolean).join(' · ')
+  }
+  return String(pm.type || '')
+}
+
+const loadSellerPaymentMethods = async (listingId: number) => {
+  try {
+    const res = await c2cAPI.listListingPaymentMethods(listingId)
+    const data = res?.data?.data
+    const items = Array.isArray(data) ? data : (data?.items || [])
+    sellerPaymentMethods.value = items
+    selectedPaymentMethodId.value = items.length ? items[0].id : null
+  } catch {
+    sellerPaymentMethods.value = []
+    selectedPaymentMethodId.value = null
+  }
+}
 
 // ─── Front-end amount filter ───
 const filteredListings = computed(() => {
@@ -236,6 +293,9 @@ const openBuyPanel = (listing: C2CListing) => {
   selectedListing.value = listing
   buyFiat.value = ''
   buyUsdt.value = ''
+  sellerPaymentMethods.value = []
+  selectedPaymentMethodId.value = null
+  void loadSellerPaymentMethods(listing.id)
 }
 
 const closeBuyPanel = () => {
@@ -260,14 +320,20 @@ const onUsdtInput = () => {
 
 const canConfirmBuy = computed(() => {
   const usdt = Number(buyUsdt.value)
-  return !isNaN(usdt) && usdt > 0 && Boolean(selectedListing.value)
+  if (isNaN(usdt) || usdt <= 0 || !selectedListing.value) return false
+  if (sellerPaymentMethods.value.length && !selectedPaymentMethodId.value) return false
+  return true
 })
 
 const confirmBuy = async () => {
   if (!selectedListing.value || !canConfirmBuy.value) return
   submitting.value = true
   try {
-    const trade = await tradeActions.createTrade(selectedListing.value.id, Number(buyUsdt.value).toFixed(6))
+    const trade = await tradeActions.createTrade(
+      selectedListing.value.id,
+      Number(buyUsdt.value).toFixed(6),
+      selectedPaymentMethodId.value ?? undefined,
+    )
     if (trade?.id) {
       closeBuyPanel()
       await router.push(`/c2c/trades/${trade.id}`)

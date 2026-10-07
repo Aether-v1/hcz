@@ -183,7 +183,7 @@ func TestSecurity_PaymentMethodIDOR(t *testing.T) {
 		t.Fatalf("stranger UpdatePM want ErrPaymentMethodNotFound, got %v", err)
 	}
 	// 陌生人删
-	if err := f.svc.DeletePaymentMethod(strangerID, pm.ID); !errors.Is(err, c2ccontract.ErrPaymentMethodNotFound) {
+	if err := f.svc.DeletePaymentMethod(strangerID, pm.ID, "", ""); !errors.Is(err, c2ccontract.ErrPaymentMethodNotFound) {
 		t.Fatalf("stranger DeletePM want ErrPaymentMethodNotFound, got %v", err)
 	}
 

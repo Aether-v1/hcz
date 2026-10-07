@@ -43,7 +43,23 @@ var (
 	ErrPaymentChannelNotAllowedForRecharge = errors.New("payment channel not allowed for wallet recharge")
 	ErrProductFetchFailed                  = errors.New("product fetch failed")
 	ErrQueueUnavailable                    = errors.New("queue unavailable")
+	// ErrUSDTAddressNotBound 加密货币充值前，用户未绑定 USDT TRC20 收款地址。
+	ErrUSDTAddressNotBound = errors.New("usdt trc20 address not bound")
 )
+
+// PaymentMethodChecker 收款方式查询端口（由 c2c 模块实现，避免循环依赖）。
+type PaymentMethodChecker interface {
+	HasUSDTTRC20Address(userID uint) bool
+}
+
+// cryptoRechargeProviders 需要前置绑定 USDT TRC20 地址的加密货币充值渠道。
+var cryptoRechargeProviders = map[string]struct{}{
+	"epusdt":    {},
+	"bepusdt":   {},
+	"dujiaopay": {},
+	"okpay":     {},
+	"tokenpay":  {},
+}
 
 // PaymentService 支付服务
 type PaymentService struct {
@@ -69,6 +85,8 @@ type PaymentService struct {
 	resellerAccounting      resellerAccountingTransactions
 	// userNotifier 写入用户站内通知（尽力而为+幂等，Phase 1）。
 	userNotifier usernotificationcontract.Creator
+	// pmChecker 收款方式查询（充值前置校验）；通过 setter 注入以解耦 c2c 模块。
+	pmChecker PaymentMethodChecker
 }
 
 type MemberLevelProgressor interface {
@@ -112,6 +130,11 @@ func (s *PaymentService) SetMemberLevelService(svc MemberLevelProgressor) {
 // SetUserNotifier 设置用户站内通知写入器（Phase 1，尽力而为+幂等）。
 func (s *PaymentService) SetUserNotifier(svc usernotificationcontract.Creator) {
 	s.userNotifier = svc
+}
+
+// SetPaymentMethodChecker 设置收款方式查询端口（加密货币充值前置校验，避免循环依赖）。
+func (s *PaymentService) SetPaymentMethodChecker(checker PaymentMethodChecker) {
+	s.pmChecker = checker
 }
 
 // PaymentServiceOptions 支付服务构造参数

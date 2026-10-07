@@ -7,17 +7,27 @@ func RegisterUserRoutes(user gin.IRoutes, handler *Handler) {
 	if user == nil || handler == nil {
 		panic("c2c user routes: required dependency is nil")
 	}
-	// 支付方式
+	// 支付方式（旧路由，向后兼容）
 	user.GET("/c2c/payment-methods", handler.ListPaymentMethods)
 	user.POST("/c2c/payment-methods", handler.CreatePaymentMethod)
 	user.PUT("/c2c/payment-methods/:id", handler.UpdatePaymentMethod)
 	user.DELETE("/c2c/payment-methods/:id", handler.DeletePaymentMethod)
 	user.POST("/c2c/payment-methods/:id/enabled", handler.SetPaymentMethodEnabled)
 
+	// 统一「收款方式 / 钱包地址管理」用户端路由（新前端统一使用）
+	user.GET("/wallet/payment-methods", handler.ListPaymentMethods)
+	user.POST("/wallet/payment-methods", handler.CreatePaymentMethod)
+	user.GET("/wallet/payment-methods/:id", handler.GetPaymentMethod)
+	user.PUT("/wallet/payment-methods/:id", handler.UpdatePaymentMethod)
+	user.DELETE("/wallet/payment-methods/:id", handler.DeletePaymentMethod)
+	user.POST("/wallet/payment-methods/:id/set-default", handler.SetDefaultPaymentMethod)
+	user.POST("/wallet/payment-methods/:id/enabled", handler.SetPaymentMethodEnabled)
+
 	// 挂单
 	user.GET("/c2c/listings/market", handler.ListMarketListings)
 	user.GET("/c2c/listings/my", handler.ListMyListings)
 	user.GET("/c2c/listings/:id", handler.GetListingDetail)
+	user.GET("/c2c/listings/:id/payment-methods", handler.ListListingPaymentMethods)
 	user.POST("/c2c/listings", handler.CreateListing)
 	user.PUT("/c2c/listings/:id", handler.UpdateListing)
 	user.POST("/c2c/listings/:id/pause", handler.PauseListing)

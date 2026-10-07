@@ -110,6 +110,8 @@ export interface C2CTrade {
 export interface C2CCreateTradePayload {
     listing_id: number
     usdt_amount: string
+    /** 买家选择的卖家收款方式 ID（后端实现后生效） */
+    payment_method_id?: number
 }
 
 export interface C2CMarkPaidPayload {
@@ -193,6 +195,9 @@ export const c2cAPI = {
     listMarketListings: (params?: C2CListingMarketFilter) =>
         userApi.get('/c2c/listings/market', { params }),
     getListingDetail: (id: number) => userApi.get(`/c2c/listings/${id}`),
+    /** 买家视角：某挂单下卖家已启用的收款方式（后端实现后返回；未实现时静默失败） */
+    listListingPaymentMethods: (listingId: number) =>
+        userApi.get(`/c2c/listings/${listingId}/payment-methods`, { silentBusinessError: true }),
 
     // ── 我的挂单 ──
     listMyListings: (params?: C2CMyListingFilter) =>

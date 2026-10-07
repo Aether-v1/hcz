@@ -86,15 +86,16 @@ func (s *Service) CreateTrade(input c2ccontract.CreateTradeInput) (*c2cdomain.Tr
 			fiatAmount.GreaterThan(listing.MaxFiatAmount.Decimal.Round(2)) {
 			return c2ccontract.ErrAmountOutOfRange
 		}
-		// 5. 卖家启用支付方式快照
-		pms, err := tx.C2C().ListEnabledPaymentMethodsByUserID(listing.SellerUserID)
+		// 5. 卖家收款方式快照：仅快照买家选中（或卖家默认/首个启用）的那一条，且解密后落快照。
+		selected, err := s.resolveTradePaymentMethod(tx, listing.SellerUserID, input.PaymentMethodID)
 		if err != nil {
 			return err
 		}
-		if len(pms) == 0 {
-			return c2ccontract.ErrNoPaymentMethod
+		s.decryptPM(selected)
+		snapshot, err := json.Marshal(buildTradePaymentSnapshot(selected, now))
+		if err != nil {
+			return err
 		}
-		snapshot, _ := json.Marshal(pms)
 
 		tradeNo := genNo("C2CT", now)
 		trade := &c2cdomain.Trade{
@@ -316,4 +317,76 @@ func (s *Service) GetTradeDetail(userID, tradeID uint) (*c2cdomain.Trade, error)
 // ListMyTrades 我的交易（买家或卖家身份）。
 func (s *Service) ListMyTrades(filter c2ccontract.TradeListFilter) ([]c2cdomain.Trade, int64, error) {
 	return s.repo.ListMyTrades(filter)
+}
+
+// resolveTradePaymentMethod 解析交易使用的卖家收款方式：
+//   - 指定 paymentMethodID 时校验其属于卖家且启用；
+//   - 否则回退到卖家默认（或首个启用）收款方式。
+func (s *Service) resolveTradePaymentMethod(tx c2ccontract.Transaction, sellerUserID, paymentMethodID uint) (*c2cdomain.PaymentMethod, error) {
+	if paymentMethodID != 0 {
+		pm, err := tx.C2C().GetEnabledPaymentMethodByID(paymentMethodID)
+		if err != nil {
+			return nil, err
+		}
+		if pm == nil || pm.UserID != sellerUserID {
+			return nil, c2ccontract.ErrNoPaymentMethod
+		}
+		return pm, nil
+	}
+	pms, err := tx.C2C().ListEnabledPaymentMethodsByUserID(sellerUserID)
+	if err != nil {
+		return nil, err
+	}
+	if len(pms) == 0 {
+		return nil, c2ccontract.ErrNoPaymentMethod
+	}
+	selected := pms[0]
+	for i := range pms {
+		if pms[i].IsDefault {
+			selected = pms[i]
+			break
+		}
+	}
+	return &selected, nil
+}
+
+// tradePaymentSnapshot 交易单中固化的收款方式快照（解密后）。
+type tradePaymentSnapshot struct {
+	PaymentMethodID   uint   `json:"payment_method_id"`
+	Type              string `json:"type"`
+	Currency          string `json:"currency,omitempty"`
+	Network           string `json:"network,omitempty"`
+	Address           string `json:"address,omitempty"`
+	AccountName       string `json:"account_name,omitempty"`
+	BankName          string `json:"bank_name,omitempty"`
+	BankAccount       string `json:"bank_account,omitempty"`
+	BranchName        string `json:"branch_name,omitempty"`
+	AccountIdentifier string `json:"account_identifier,omitempty"`
+	QRCodeURL         string `json:"qr_code_url,omitempty"`
+	SnapshotAt        string `json:"snapshot_at"`
+}
+
+// buildTradePaymentSnapshot 从解密后的收款方式构造交易快照。
+func buildTradePaymentSnapshot(pm *c2cdomain.PaymentMethod, now time.Time) tradePaymentSnapshot {
+	if pm == nil {
+		return tradePaymentSnapshot{}
+	}
+	qr := pm.QRCodeURL
+	if qr == "" {
+		qr = pm.QRImage
+	}
+	return tradePaymentSnapshot{
+		PaymentMethodID:   pm.ID,
+		Type:              pm.Type,
+		Currency:          pm.Currency,
+		Network:           pm.Network,
+		Address:           pm.Address,
+		AccountName:       pm.AccountName,
+		BankName:          pm.BankName,
+		BankAccount:       pm.BankAccount,
+		BranchName:        pm.BranchName,
+		AccountIdentifier: pm.AccountIdentifier,
+		QRCodeURL:         qr,
+		SnapshotAt:        now.Format(time.RFC3339),
+	}
 }

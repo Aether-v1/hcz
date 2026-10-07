@@ -26,6 +26,13 @@ type Options struct {
 	Scheduler     c2ccontract.ExpireTaskScheduler
 	Notifier      c2ccontract.Notifier
 	Audit         c2ccontract.ArbitrationAuditWriter
+	// EncKey 收款方式敏感字段 AES-256-GCM 加密密钥（DeriveKey(App.SecretKey)）。
+	// 为空时退化为明文存储（仅测试/旧数据兼容路径），生产必须注入。
+	EncKey []byte
+	// TOTP 用户端 Step-Up 2FA 校验器；为空时不强制 Step-Up（仅测试路径）。
+	TOTP c2ccontract.TOTPVerifier
+	// PaymentMethodAudit 收款方式变更审计写入器。
+	PaymentMethodAudit c2ccontract.PaymentMethodAuditWriter
 }
 
 // Service C2C 用例入口。
@@ -39,6 +46,9 @@ type Service struct {
 	scheduler c2ccontract.ExpireTaskScheduler
 	notifier  c2ccontract.Notifier
 	audit     c2ccontract.ArbitrationAuditWriter
+	encKey    []byte
+	totp      c2ccontract.TOTPVerifier
+	pmAudit   c2ccontract.PaymentMethodAuditWriter
 }
 
 // NewService 创建 C2C Service。
@@ -53,6 +63,9 @@ func NewService(opts Options) *Service {
 		scheduler: opts.Scheduler,
 		notifier:  opts.Notifier,
 		audit:     opts.Audit,
+		encKey:    opts.EncKey,
+		totp:      opts.TOTP,
+		pmAudit:   opts.PaymentMethodAudit,
 	}
 }
 

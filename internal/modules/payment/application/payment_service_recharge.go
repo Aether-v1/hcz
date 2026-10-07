@@ -74,6 +74,12 @@ func (s *PaymentService) CreateWalletRechargePayment(input CreateWalletRechargeP
 		return nil, err
 	}
 
+	// 加密货币渠道前置校验：用户须已绑定 USDT TRC20 收款地址（法币渠道不限制）。
+	if _, isCrypto := cryptoRechargeProviders[strings.ToLower(strings.TrimSpace(channel.ProviderType))]; isCrypto &&
+		s.pmChecker != nil && !s.pmChecker.HasUSDTTRC20Address(input.UserID) {
+		return nil, ErrUSDTAddressNotBound
+	}
+
 	// 校验钱包充值是否允许该支付渠道
 	if err := s.validateWalletRechargeChannel(channel.ID); err != nil {
 		return nil, err

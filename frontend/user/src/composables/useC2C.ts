@@ -271,9 +271,13 @@ export function useC2CTradeActions() {
             return res
         }, '申诉已提交，等待平台仲裁')
 
-    const createTrade = async (listingId: number, usdtAmount: string) =>
+    const createTrade = async (listingId: number, usdtAmount: string, paymentMethodId?: number) =>
         wrapAction(async () => {
-            const res = await c2cAPI.createTrade({ listing_id: listingId, usdt_amount: usdtAmount })
+            const res = await c2cAPI.createTrade({
+                listing_id: listingId,
+                usdt_amount: usdtAmount,
+                payment_method_id: paymentMethodId,
+            })
             return (res.data?.data || null) as C2CTrade | null
         })
 

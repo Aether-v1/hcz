@@ -96,10 +96,26 @@
                   <span class="text-muted-foreground">{{ t('c2c.paymentMethod.accountIdentifier') }}</span>
                   <span class="font-mono font-medium">{{ parsedSnapshot.account_identifier }}</span>
                 </div>
+                <div v-if="parsedSnapshot.bank_name" class="flex justify-between">
+                  <span class="text-muted-foreground">{{ t('paymentMethods.fields.bankName') }}</span>
+                  <span class="font-medium">{{ parsedSnapshot.bank_name }}</span>
+                </div>
+                <div v-if="parsedSnapshot.bank_account" class="flex justify-between">
+                  <span class="text-muted-foreground">{{ t('paymentMethods.fields.bankAccount') }}</span>
+                  <span class="font-mono font-medium">{{ parsedSnapshot.bank_account }}</span>
+                </div>
+                <div v-if="parsedSnapshot.branch_name" class="flex justify-between">
+                  <span class="text-muted-foreground">{{ t('paymentMethods.fields.branchOptional') }}</span>
+                  <span class="font-medium">{{ parsedSnapshot.branch_name }}</span>
+                </div>
+                <div v-if="parsedSnapshot.address" class="flex justify-between">
+                  <span class="text-muted-foreground">{{ t('paymentMethods.fields.address') }}</span>
+                  <span class="font-mono font-medium">{{ parsedSnapshot.address }}</span>
+                </div>
                 <div v-if="parsedSnapshot.instructions" class="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground whitespace-pre-wrap">
                   {{ parsedSnapshot.instructions }}
                 </div>
-                <img v-if="parsedSnapshot.qr_image" :src="parsedSnapshot.qr_image" alt="QR" class="mx-auto max-h-48 rounded-lg border" />
+                <img v-if="qrImageSrc" :src="qrImageSrc" alt="QR" class="mx-auto max-h-48 rounded-lg border" />
                 <div v-if="rawSnapshotText" class="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground whitespace-pre-wrap">{{ rawSnapshotText }}</div>
               </div>
               <p v-else class="text-sm text-muted-foreground">{{ t('c2c.errors.noPaymentMethod') }}</p>
@@ -300,6 +316,15 @@ const rawSnapshotText = computed(() => {
   } catch {
     return raw
   }
+})
+
+// 兼容旧 qr_image 与新版 qr_code_url
+const qrImageSrc = computed(() => {
+  const snap = parsedSnapshot.value
+  const url = String(snap?.qr_code_url || snap?.qr_image || '')
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url
+  return `${import.meta.env.VITE_API_BASE_URL || ''}${url}`
 })
 
 const paymentTypeLabel = (type: string) => PAYMENT_METHOD_TYPE_LABELS[type] || type
