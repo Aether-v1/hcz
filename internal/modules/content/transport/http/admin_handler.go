@@ -19,6 +19,7 @@ type AdminPostUseCases interface {
 	Create(ctx context.Context, input contentapp.CreatePostInput) (*contentdomain.Post, error)
 	Update(ctx context.Context, id string, input contentapp.CreatePostInput) (*contentdomain.Post, error)
 	Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, id string) (*contentdomain.Post, error)
 	ListRelatedProducts(ctx context.Context, postID uint) ([]contentcontract.RelatedProduct, error)
 }
 
@@ -129,6 +130,20 @@ func (h *AdminHandler) UpdatePost(c *gin.Context) {
 		default:
 			ginutil.RespondError(c, response.CodeInternal, "error.post_update_failed", err)
 		}
+		return
+	}
+	response.Success(c, post)
+}
+
+// GetAdminPost 获取后台单篇文章详情。
+func (h *AdminHandler) GetAdminPost(c *gin.Context) {
+	post, err := h.posts.GetByID(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		if errors.Is(err, contentcontract.ErrNotFound) {
+			ginutil.RespondError(c, response.CodeNotFound, "error.post_not_found", nil)
+			return
+		}
+		ginutil.RespondError(c, response.CodeInternal, "error.post_fetch_failed", err)
 		return
 	}
 	response.Success(c, post)

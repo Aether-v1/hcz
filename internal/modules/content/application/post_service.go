@@ -83,6 +83,18 @@ func (s *PostService) GetPublicBySlug(ctx context.Context, slug string) (*domain
 	return post, nil
 }
 
+// GetByID 后台按 ID 取单篇文章（含未发布）。
+func (s *PostService) GetByID(ctx context.Context, id string) (*domain.Post, error) {
+	post, err := s.posts.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if post == nil {
+		return nil, contract.ErrNotFound
+	}
+	return post, nil
+}
+
 // ListAdmin 获取后台文章列表。
 func (s *PostService) ListAdmin(ctx context.Context, query AdminPostQuery) ([]domain.Post, int64, error) {
 	return s.posts.List(ctx, contract.PostQuery{
