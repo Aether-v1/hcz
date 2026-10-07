@@ -199,20 +199,20 @@ func (h *ChannelHandler) GetAffiliateDashboard(c *gin.Context) {
 	}
 
 	channelresponse.Success(c, gin.H{
-		"opened":                   dashboard.Opened,
-		"affiliate_code":           dashboard.AffiliateCode,
-		"promotion_path":           dashboard.PromotionPath,
-		"click_count":               dashboard.ClickCount,
-		"valid_order_count":        dashboard.ValidOrderCount,
-		"conversion_rate":           dashboard.ConversionRate,
-		"pending_commission":       dashboard.PendingCommission,
-		"available_commission":     dashboard.AvailableCommission,
-		"withdrawn_commission":     dashboard.WithdrawnCommission,
+		"opened":                     dashboard.Opened,
+		"affiliate_code":             dashboard.AffiliateCode,
+		"promotion_path":             dashboard.PromotionPath,
+		"click_count":                dashboard.ClickCount,
+		"valid_order_count":          dashboard.ValidOrderCount,
+		"conversion_rate":            dashboard.ConversionRate,
+		"pending_commission":         dashboard.PendingCommission,
+		"available_commission":       dashboard.AvailableCommission,
+		"withdrawn_commission":       dashboard.WithdrawnCommission,
 		"available_transfer_balance": dashboard.AvailableTransferBalance,
-		"debt_amount":              dashboard.DebtAmount,
-		"transferred_amount":       dashboard.TransferredAmount,
-		"min_withdraw_amount":      setting.MinWithdrawAmount,
-		"withdraw_channels":        setting.WithdrawChannels,
+		"debt_amount":                dashboard.DebtAmount,
+		"transferred_amount":         dashboard.TransferredAmount,
+		"min_withdraw_amount":        setting.MinWithdrawAmount,
+		"withdraw_channels":          setting.WithdrawChannels,
 	})
 }
 
@@ -370,11 +370,11 @@ func (h *ChannelHandler) TransferToWallet(c *gin.Context) {
 	}
 
 	channelresponse.Success(c, gin.H{
-		"ledger_id":      ledger.ID,
-		"amount":         ledger.Amount,
-		"wallet_txn_id":  walletTxn.ID,
-		"reference":      ledger.Reference,
-		"created_at":     ledger.CreatedAt,
+		"ledger_id":     ledger.ID,
+		"amount":        ledger.Amount,
+		"wallet_txn_id": walletTxn.ID,
+		"reference":     ledger.Reference,
+		"created_at":    ledger.CreatedAt,
 	})
 }
 

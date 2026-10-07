@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"time"
 
-	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	"github.com/Aether-v1/hcz/internal/constants"
+	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 
 	"github.com/shopspring/decimal"
 )
 
 // AdminAdjustCommissionInput 管理员佣金调整输入。
 type AdminAdjustCommissionInput struct {
-	ProfileID  uint
-	Amount     decimal.Decimal // 正=增加，负=减少
-	Remark     string
-	AdminID    uint
+	ProfileID    uint
+	Amount       decimal.Decimal // 正=增加，负=减少
+	Remark       string
+	AdminID      uint
 	CommissionID uint // 可选，关联特定佣金
-	OrderID    uint // 可选，关联订单
+	OrderID      uint // 可选，关联订单
 }
 
 // AdminAdjustCommission 管理员佣金纠错调整。

@@ -20,8 +20,8 @@ type AdminService interface {
 	ListAdminUsers(filter affiliateapp.AdminProfileListFilter) ([]affiliateapp.AdminUserItem, int64, error)
 	ListAdminCommissions(filter affiliateapp.AdminCommissionListFilter) ([]affiliatedomain.Commission, int64, error)
 	ListAdminWithdraws(filter affiliateapp.AdminWithdrawListFilter) ([]affiliatedomain.WithdrawRequest, int64, error)
-	UpdateAffiliateProfileStatus(profileID uint, status string) (*affiliatedomain.Profile, error)
-	BatchUpdateAffiliateProfileStatus(profileIDs []uint, status string) (int64, error)
+	UpdateAffiliateProfileStatus(profileID uint, adminID uint, status string) (*affiliatedomain.Profile, error)
+	BatchUpdateAffiliateProfileStatus(profileIDs []uint, adminID uint, status string) (int64, error)
 	// 申请审核相关
 	ListAdminApplications(filter affiliateapp.AffiliateApplicationListFilter) ([]affiliatedomain.Application, int64, error)
 	GetApplicationDetail(applicationID uint) (*affiliatedomain.Application, error)
@@ -129,7 +129,12 @@ func (h *AdminHandler) UpdateAffiliateUserStatus(c *gin.Context) {
 		return
 	}
 
-	row, err := h.svc.UpdateAffiliateProfileStatus(id, strings.TrimSpace(req.Status))
+	adminID, ok := ginutil.GetAdminID(c)
+	if !ok {
+		return
+	}
+
+	row, err := h.svc.UpdateAffiliateProfileStatus(id, adminID, strings.TrimSpace(req.Status))
 	if err != nil {
 		switch {
 		case errors.Is(err, affiliateapp.ErrNotFound):
@@ -155,7 +160,11 @@ func (h *AdminHandler) BatchUpdateAffiliateUserStatus(c *gin.Context) {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
 		return
 	}
-	updated, err := h.svc.BatchUpdateAffiliateProfileStatus(req.ProfileIDs, strings.TrimSpace(req.Status))
+	adminID, ok := ginutil.GetAdminID(c)
+	if !ok {
+		return
+	}
+	updated, err := h.svc.BatchUpdateAffiliateProfileStatus(req.ProfileIDs, adminID, strings.TrimSpace(req.Status))
 	if err != nil {
 		switch {
 		case errors.Is(err, affiliateapp.ErrProfileStatusInvalid):
@@ -246,6 +255,8 @@ func (h *AdminHandler) ApproveAffiliateApplication(c *gin.Context) {
 			ginutil.RespondError(c, response.CodeNotFound, "error.not_found", nil)
 		case errors.Is(err, affiliateapp.ErrApplicationAlreadyReviewed):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.affiliate_application_already_reviewed", nil)
+		case errors.Is(err, affiliateapp.ErrProfileDisabledCannotApprove):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.affiliate_profile_disabled", nil)
 		default:
 			ginutil.RespondError(c, response.CodeInternal, "error.save_failed", err)
 		}

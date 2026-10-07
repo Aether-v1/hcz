@@ -22,7 +22,7 @@ type WithdrawRequest struct {
 	ProcessedAt        *time.Time   `gorm:"index" json:"processed_at,omitempty"`                 // 审核时间
 	CreatedAt          time.Time    `gorm:"index" json:"created_at"`                             // 创建时间
 	UpdatedAt          time.Time    `gorm:"index" json:"updated_at"`                             // 更新时间
-	DeletedAt          *time.Time   `gorm:"index" json:"-"`                                       // 软删除时间
+	DeletedAt          *time.Time   `gorm:"index" json:"-"`                                      // 软删除时间
 
 	AffiliateProfile Profile            `gorm:"foreignKey:AffiliateProfileID" json:"affiliate_profile,omitempty"` // 推广用户
 	Processor        *admindomain.Admin `gorm:"foreignKey:ProcessedBy" json:"processor,omitempty"`                // 审核管理员

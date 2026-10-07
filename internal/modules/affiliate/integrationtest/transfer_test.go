@@ -54,6 +54,7 @@ func setupTransferTest(t *testing.T) *transferFixture {
 		&affiliatedomain.Commission{},
 		&affiliatedomain.CommissionLedger{},
 		&affiliatedomain.WithdrawRequest{},
+		&affiliatedomain.Application{},
 		&walletdomain.Account{},
 		&walletdomain.Transaction{},
 	); err != nil {
@@ -63,10 +64,10 @@ func setupTransferTest(t *testing.T) *transferFixture {
 	settingRepo := memorysettings.New()
 	settingSvc := settingsapp.NewService(settingRepo)
 	if _, err := settingSvc.UpdateAffiliateSetting(settingsintegration.AffiliateSetting{
-		Enabled:        true,
-		ConfirmDays:    0,
-		MaxLevel:       2,
-		LevelRates:     levelRates(map[int]float64{1: 10, 2: 5}),
+		Enabled:           true,
+		ConfirmDays:       0,
+		MaxLevel:          2,
+		LevelRates:        levelRates(map[int]float64{1: 10, 2: 5}),
 		MinWithdrawAmount: 1,
 		WithdrawChannels:  []string{"usdt"},
 	}); err != nil {
@@ -172,11 +173,12 @@ func (f *transferFixture) netLedger(t *testing.T, profileID uint) decimal.Decima
 	return row.Total.Round(2)
 }
 
-// newActivePromoter 创建一个 active 推广用户及其 profile。
+// newActivePromoter 创建一个 active 推广用户及其 profile，并插入 approved 申请（划转资格真源）。
 func (f *transferFixture) newActivePromoter(t *testing.T, email string, code string) (userdomain.User, affiliatedomain.Profile) {
 	t.Helper()
 	u := createAffiliateTestUser(t, f.db, email)
 	p := createAffiliateTestProfile(t, f.db, u.ID, code, constants.AffiliateProfileStatusActive)
+	createAffiliateTestApprovedApplication(t, f.db, u.ID)
 	return u, p
 }
 
@@ -617,5 +619,122 @@ func TestTransfer_History(t *testing.T) {
 	}
 	if rows[0].Amount.Decimal.Abs().Equal(tdDec("4.00")) == false {
 		t.Fatalf("history amount abs want 4.00, got %s", rows[0].Amount.Decimal)
+	}
+}
+
+// appStatusOf 读取某用户最新推广申请状态（真源 = affiliate_applications）。
+func (f *transferFixture) appStatusOf(t *testing.T, userID uint) string {
+	t.Helper()
+	app, err := f.affiliateRepo.GetLatestApplicationByUserID(userID)
+	if err != nil {
+		t.Fatalf("GetLatestApplicationByUserID: %v", err)
+	}
+	if app == nil {
+		return constants.AffiliateAppStatusNotApplied
+	}
+	return app.Status
+}
+
+// countApplications 统计某用户的推广申请条数（用于验证划转不会新增申请）。
+func (f *transferFixture) countApplications(t *testing.T, userID uint) int64 {
+	t.Helper()
+	var n int64
+	f.db.Model(&affiliatedomain.Application{}).Where("user_id = ?", userID).Count(&n)
+	return n
+}
+
+// =========================================================================
+// 21. TestTransfer_MultipleAfterOneApproval
+// 一次审批 = 永久划转资格：批准一次后可反复划转，划转绝不新增/修改申请。
+// =========================================================================
+func TestTransfer_MultipleAfterOneApproval(t *testing.T) {
+	f := setupTransferTest(t)
+	user, profile := f.newActivePromoter(t, "multi@test.com", "MULTI0001")
+	f.insertLedger(t, profile, constants.AffiliateLedgerTypeCredit, "20.00", "ref-credit-multi")
+
+	if got := f.appStatusOf(t, user.ID); got != constants.AffiliateAppStatusApproved {
+		t.Fatalf("precondition: application want approved, got %s", got)
+	}
+	if n := f.countApplications(t, user.ID); n != 1 {
+		t.Fatalf("precondition: want exactly 1 application, got %d", n)
+	}
+
+	for _, amt := range []string{"5.00", "5.00", "10.00"} {
+		if _, _, err := f.svc.TransferToWallet(user.ID, affiliateapp.TransferToWalletInput{Amount: tdDec(amt)}); err != nil {
+			t.Fatalf("transfer %s: %v", amt, err)
+		}
+		// 每次划转后申请状态必须仍是 approved（资格未被消耗）。
+		if got := f.appStatusOf(t, user.ID); got != constants.AffiliateAppStatusApproved {
+			t.Fatalf("after transfer %s: application must stay approved, got %s", amt, got)
+		}
+		// 划转绝不新增申请记录。
+		if n := f.countApplications(t, user.ID); n != 1 {
+			t.Fatalf("after transfer %s: application count must stay 1, got %d", amt, n)
+		}
+	}
+
+	// 累计划转 20，affiliate 净额归零，钱包 +20，资金守恒。
+	if net := f.netLedger(t, profile.ID); !net.Equal(tdDec("0.00")) {
+		t.Fatalf("affiliate net want 0.00, got %s", net)
+	}
+	if w := f.walletAvail(t, user.ID); !w.Equal(tdDec("20.00")) {
+		t.Fatalf("wallet want 20.00, got %s", w)
+	}
+	if s := f.sumLedger(t, profile.ID, constants.AffiliateLedgerTypeTransferToWallet); !s.Equal(tdDec("-20.00")) {
+		t.Fatalf("transfer ledger sum want -20.00, got %s", s)
+	}
+	if n := f.countLedger(t, profile.ID, constants.AffiliateLedgerTypeTransferToWallet); n != 3 {
+		t.Fatalf("transfer ledger count want 3, got %d", n)
+	}
+}
+
+// =========================================================================
+// 22. TestTransfer_DisableReenableNoReapplication
+// Profile disabled 暂停划转但保留 approved 历史；重新 active 后自动恢复，无需重新申请。
+// =========================================================================
+func TestTransfer_DisableReenableNoReapplication(t *testing.T) {
+	f := setupTransferTest(t)
+	user, profile := f.newActivePromoter(t, "toggle@test.com", "TOGGL0001")
+	f.insertLedger(t, profile, constants.AffiliateLedgerTypeCredit, "10.00", "ref-credit-toggle")
+
+	// approved + active：首次划转成功。
+	if _, _, err := f.svc.TransferToWallet(user.ID, affiliateapp.TransferToWalletInput{Amount: tdDec("4.00")}); err != nil {
+		t.Fatalf("first transfer (active+approved): %v", err)
+	}
+
+	// 管理员禁用 profile：划转被拒。
+	if _, err := f.svc.UpdateAffiliateProfileStatus(profile.ID, 1, constants.AffiliateProfileStatusDisabled); err != nil {
+		t.Fatalf("disable profile: %v", err)
+	}
+	if _, _, err := f.svc.TransferToWallet(user.ID, affiliateapp.TransferToWalletInput{Amount: tdDec("1.00")}); err == nil {
+		t.Fatalf("transfer must be denied while profile disabled")
+	}
+	// 禁用不影响申请状态：仍为 approved，且未新增申请。
+	if got := f.appStatusOf(t, user.ID); got != constants.AffiliateAppStatusApproved {
+		t.Fatalf("disabled profile: application must stay approved, got %s", got)
+	}
+	if n := f.countApplications(t, user.ID); n != 1 {
+		t.Fatalf("disabled profile: application count must stay 1, got %d", n)
+	}
+
+	// 管理员重新启用 profile：划转自动恢复，无需重新申请。
+	if _, err := f.svc.UpdateAffiliateProfileStatus(profile.ID, 1, constants.AffiliateProfileStatusActive); err != nil {
+		t.Fatalf("re-enable profile: %v", err)
+	}
+	if _, _, err := f.svc.TransferToWallet(user.ID, affiliateapp.TransferToWalletInput{Amount: tdDec("3.00")}); err != nil {
+		t.Fatalf("transfer after re-enable must succeed without reapplication: %v", err)
+	}
+	if got := f.appStatusOf(t, user.ID); got != constants.AffiliateAppStatusApproved {
+		t.Fatalf("after re-enable: application must stay approved, got %s", got)
+	}
+	if n := f.countApplications(t, user.ID); n != 1 {
+		t.Fatalf("after re-enable: application count must stay 1, got %d", n)
+	}
+	// 净额 10 - 4 - 3 = 3，钱包 +7。
+	if net := f.netLedger(t, profile.ID); !net.Equal(tdDec("3.00")) {
+		t.Fatalf("affiliate net want 3.00, got %s", net)
+	}
+	if w := f.walletAvail(t, user.ID); !w.Equal(tdDec("7.00")) {
+		t.Fatalf("wallet want 7.00, got %s", w)
 	}
 }

@@ -10,7 +10,8 @@ import (
 	"github.com/Aether-v1/hcz/internal/constants"
 )
 
-// ApplyAffiliate 用户提交推广申请。
+// ApplyAffiliate 用户提交推广申请（划转资格审批）。
+// 新架构：profile 可能因懒创建已存在（commission anchor），申请状态以 affiliate_applications 为真源。
 // 返回创建的 pending application。并发安全依赖 DB partial unique index。
 func (s *Service) ApplyAffiliate(userID uint, reason string) (*affiliatedomain.Application, error) {
 	if userID == 0 {
@@ -41,22 +42,31 @@ func (s *Service) ApplyAffiliate(userID uint, reason string) (*affiliatedomain.A
 		return nil, ErrUserDisabled
 	}
 
-	// 检查是否已有 active profile
+	// 检查 profile 是否被管理员禁用（风控独立于申请流程）
 	existingProfile, err := s.repo.GetProfileByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
-	if existingProfile != nil {
-		if strings.TrimSpace(existingProfile.Status) == constants.AffiliateProfileStatusActive {
-			return nil, ErrAlreadyActive
-		}
-		// disabled profile 不能自行重新申请
-		if strings.TrimSpace(existingProfile.Status) == constants.AffiliateProfileStatusDisabled {
-			return nil, ErrDisabled
-		}
+	if existingProfile != nil && strings.TrimSpace(existingProfile.Status) == constants.AffiliateProfileStatusDisabled {
+		return nil, ErrDisabled
 	}
 
-	// 检查是否已有 pending application（DB partial unique index 兜底并发）
+	// 申请状态真源：affiliate_applications，不再依赖 profile 是否存在
+	latestApp, err := s.repo.GetLatestApplicationByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if latestApp != nil {
+		switch strings.TrimSpace(latestApp.Status) {
+		case constants.AffiliateAppStatusApproved:
+			return nil, ErrAlreadyActive
+		case constants.AffiliateAppStatusPending:
+			return nil, ErrApplicationPending
+		}
+		// rejected：允许重新申请，继续创建新 pending application
+	}
+
+	// 二次确认无 pending application（DB partial unique index 兜底并发）
 	pendingApp, err := s.repo.GetPendingApplicationByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -65,14 +75,12 @@ func (s *Service) ApplyAffiliate(userID uint, reason string) (*affiliatedomain.A
 		return nil, ErrApplicationPending
 	}
 
-	// rejected 用户允许重新申请（创建新 pending application）
 	app := &affiliatedomain.Application{
 		UserID: userID,
 		Status: constants.AffiliateAppStatusPending,
 		Reason: strings.TrimSpace(reason),
 	}
 	if err := s.repo.CreateApplication(app); err != nil {
-		// 并发兜底：partial unique index 冲突
 		if isUniqueViolation(err) {
 			return nil, ErrApplicationPending
 		}
@@ -94,8 +102,8 @@ func (s *Service) GetUserApplication(userID uint) (*affiliatedomain.Application,
 	return s.repo.GetLatestApplicationByUserID(userID)
 }
 
-// ApproveApplication 管理员通过申请。
-// 在事务中执行：行锁 → 验证 pending → 创建/激活 profile → 更新 application → 写审计。
+// ApproveApplication 管理员通过申请（仅解锁划转资格，不补发历史佣金）。
+// 在事务中执行：行锁 → 验证 pending → GetOrCreate profile → 更新 application → 写审计。
 func (s *Service) ApproveApplication(applicationID uint, adminID uint) (*affiliatedomain.Profile, error) {
 	if applicationID == 0 || s.repo == nil {
 		return nil, ErrApplicationNotFound
@@ -103,7 +111,6 @@ func (s *Service) ApproveApplication(applicationID uint, adminID uint) (*affilia
 
 	var result *affiliatedomain.Profile
 	err := s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
-		// 行锁查询 application（tx 是事务绑定的 store）
 		app, err := tx.GetApplicationByIDForUpdate(applicationID)
 		if err != nil {
 			return err
@@ -115,28 +122,16 @@ func (s *Service) ApproveApplication(applicationID uint, adminID uint) (*affilia
 			return ErrApplicationAlreadyReviewed
 		}
 
-		// 幂等保护：检查用户是否已有 active profile
-		existingProfile, err := tx.GetProfileByUserID(app.UserID)
+		// GetOrCreate：profile 可能因懒创建已存在（commission anchor）
+		profile, err := s.getOrCreateProfileInTx(tx, app.UserID)
 		if err != nil {
 			return err
 		}
-		if existingProfile != nil && strings.TrimSpace(existingProfile.Status) == constants.AffiliateProfileStatusActive {
-			// 已有 active profile，直接更新 application 为 approved 并返回
-			now := time.Now()
-			if err := tx.UpdateApplicationStatus(app.ID, constants.AffiliateAppStatusApproved, "approved", adminID, now); err != nil {
-				return err
-			}
-			result = existingProfile
-			return nil
+		// 管理员不得通过申请静默恢复已禁用的 profile（风控独立）
+		if strings.TrimSpace(profile.Status) == constants.AffiliateProfileStatusDisabled {
+			return ErrProfileDisabledCannotApprove
 		}
 
-		// 创建新 profile（复用 generateAffiliateCode）
-		profile, err := s.createActiveProfileInTx(tx, app.UserID)
-		if err != nil {
-			return err
-		}
-
-		// 更新 application 状态
 		now := time.Now()
 		if err := tx.UpdateApplicationStatus(app.ID, constants.AffiliateAppStatusApproved, "approved", adminID, now); err != nil {
 			return err
@@ -145,7 +140,9 @@ func (s *Service) ApproveApplication(applicationID uint, adminID uint) (*affilia
 		result = profile
 		s.recordAudit("affiliate_approve", adminID, app.UserID, map[string]interface{}{
 			"application_id": app.ID,
-			"profile_id":      profile.ID,
+			"profile_id":     profile.ID,
+			"before_status":  app.Status,
+			"after_status":   constants.AffiliateAppStatusApproved,
 		})
 		return nil
 	})
@@ -182,6 +179,8 @@ func (s *Service) RejectApplication(applicationID uint, adminID uint, reason str
 		s.recordAudit("affiliate_reject", adminID, app.UserID, map[string]interface{}{
 			"application_id": app.ID,
 			"reason":         strings.TrimSpace(reason),
+			"before_status":  app.Status,
+			"after_status":   constants.AffiliateAppStatusRejected,
 		})
 		return nil
 	})
@@ -224,37 +223,4 @@ func (s *Service) GetUserProfileForGateway(userID uint) (*affiliatedomain.Profil
 		return nil, nil
 	}
 	return s.repo.GetProfileByUserID(userID)
-}
-
-// ---- 内部辅助方法 ----
-
-// createActiveProfileInTx 在事务内创建 active profile（复用 generateAffiliateCode）。
-func (s *Service) createActiveProfileInTx(tx affiliatecontract.Store, userID uint) (*affiliatedomain.Profile, error) {
-	const maxRetry = 8
-	for i := 0; i < maxRetry; i++ {
-		code, genErr := generateAffiliateCode()
-		if genErr != nil {
-			return nil, genErr
-		}
-		profile := &affiliatedomain.Profile{
-			UserID:        userID,
-			AffiliateCode: code,
-			Status:        constants.AffiliateProfileStatusActive,
-		}
-		if err := tx.CreateProfile(profile); err != nil {
-			if isUniqueViolation(err) {
-				continue
-			}
-			return nil, err
-		}
-		created, err := tx.GetProfileByID(profile.ID)
-		if err != nil {
-			return nil, err
-		}
-		if created != nil {
-			return created, nil
-		}
-		return profile, nil
-	}
-	return nil, ErrCodeInvalid
 }

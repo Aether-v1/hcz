@@ -13,21 +13,35 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// GetUserDashboard 获取用户返利中心数据
+// GetUserDashboard 获取用户返利中心数据。
+// Opened = profile 存在（含懒创建的 commission anchor）；不再等价于申请已通过。
+// ApplicationStatus / TransferEnabled 由 affiliate_applications 真源决定。
 func (s *Service) GetUserDashboard(userID uint) (Dashboard, error) {
 	zero := money.FromDecimal(decimal.Zero)
 	dashboard := Dashboard{
-		Opened:                  false,
-		PendingCommission:       zero,
+		Opened:                   false,
+		ApplicationStatus:        constants.AffiliateAppStatusNotApplied,
+		TransferEnabled:          false,
+		PendingCommission:        zero,
 		AvailableCommission:      zero,
-		WithdrawnCommission:     zero,
+		WithdrawnCommission:      zero,
 		AvailableTransferBalance: zero,
-		DebtAmount:              zero,
-		TransferredAmount:       zero,
+		DebtAmount:               zero,
+		TransferredAmount:        zero,
 	}
 	if userID == 0 || s.repo == nil {
 		return dashboard, nil
 	}
+
+	// 申请状态真源：affiliate_applications
+	latestApp, err := s.repo.GetLatestApplicationByUserID(userID)
+	if err != nil {
+		return dashboard, err
+	}
+	if latestApp != nil {
+		dashboard.ApplicationStatus = strings.TrimSpace(latestApp.Status)
+	}
+
 	profile, err := s.repo.GetProfileByUserID(userID)
 	if err != nil {
 		return dashboard, err
@@ -36,11 +50,14 @@ func (s *Service) GetUserDashboard(userID uint) (Dashboard, error) {
 		return dashboard, nil
 	}
 
+	dashboard.Opened = true
+	dashboard.TransferEnabled = strings.TrimSpace(profile.Status) == constants.AffiliateProfileStatusActive &&
+		dashboard.ApplicationStatus == constants.AffiliateAppStatusApproved
+
 	stats, err := s.buildProfileStats(profile.ID)
 	if err != nil {
 		return dashboard, err
 	}
-	dashboard.Opened = true
 	dashboard.AffiliateCode = profile.AffiliateCode
 	dashboard.PromotionPath = "/?aff=" + profile.AffiliateCode
 	dashboard.ClickCount = stats.ClickCount
@@ -174,12 +191,12 @@ func (s *Service) ListAdminWithdraws(filter AdminWithdrawListFilter) ([]affiliat
 func (s *Service) buildProfileStats(profileID uint) (Stats, error) {
 	zero := money.FromDecimal(decimal.Zero)
 	stats := Stats{
-		PendingCommission:       zero,
-		AvailableCommission:     zero,
-		WithdrawnCommission:     zero,
+		PendingCommission:        zero,
+		AvailableCommission:      zero,
+		WithdrawnCommission:      zero,
 		AvailableTransferBalance: zero,
-		DebtAmount:              zero,
-		TransferredAmount:       zero,
+		DebtAmount:               zero,
+		TransferredAmount:        zero,
 	}
 	if profileID == 0 || s.repo == nil {
 		return stats, nil

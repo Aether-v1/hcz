@@ -29,9 +29,9 @@ import (
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 
+	admindomain "github.com/Aether-v1/hcz/internal/modules/identity/admin/domain"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	userstore "github.com/Aether-v1/hcz/internal/modules/identity/user/infrastructure/gormstore"
-	admindomain "github.com/Aether-v1/hcz/internal/modules/identity/admin/domain"
 
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
 	settingsintegration "github.com/Aether-v1/hcz/internal/modules/settings/schema/integration"

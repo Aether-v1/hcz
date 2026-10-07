@@ -165,6 +165,8 @@ export interface GiftCardRedeemResult {
 
 export interface AffiliateDashboardData {
     opened: boolean
+    application_status: 'not_applied' | 'pending' | 'approved' | 'rejected'
+    transfer_enabled: boolean
     affiliate_code: string
     promotion_path: string
     click_count: number

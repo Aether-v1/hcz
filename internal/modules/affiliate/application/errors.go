@@ -39,4 +39,8 @@ var (
 	ErrApplicationAlreadyReviewed = errors.New("affiliate application already reviewed")
 	// ErrOpenRetired 旧直接开通入口已退休，请使用 apply。
 	ErrOpenRetired = errors.New("affiliate open retired, use apply instead")
+	// ErrTransferNotApproved 推广申请未通过，禁止划转至钱包。
+	ErrTransferNotApproved = errors.New("affiliate transfer not approved")
+	// ErrProfileDisabledCannotApprove 管理员不得通过申请来静默恢复已禁用的 profile。
+	ErrProfileDisabledCannotApprove = errors.New("affiliate profile disabled, cannot approve")
 )

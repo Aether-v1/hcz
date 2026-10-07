@@ -4,10 +4,10 @@ import (
 	"time"
 
 	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
-	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
-	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
 	usercontract "github.com/Aether-v1/hcz/internal/modules/identity/user/contract"
 	usernotificationcontract "github.com/Aether-v1/hcz/internal/modules/usernotification/contract"
+	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
+	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
 )
 
 const (

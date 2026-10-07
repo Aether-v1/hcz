@@ -8,6 +8,7 @@ import type { CaptchaPayload } from '../api'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
 import { useFormValidation, getPasswordStrength } from './useFormValidation'
+import { getAffiliateVisitorKey } from '../utils/affiliate'
 
 /**
  * 用户注册页共享逻辑（classic + vault 双模板共用）。
@@ -221,6 +222,8 @@ export function useRegister() {
         code: emailVerificationEnabled.value ? code.value : '',
         agreement_accepted: agreed.value,
         invite_code: normalizedInviteCode.value || undefined,
+        // ?aff= 点击归因：显式 invite_code 优先，其次由后端用 visitor_key 回溯点击。
+        visitor_key: getAffiliateVisitorKey() || undefined,
       })
       // 注册成功后清除 URL 中的 invite 参数，避免刷新/回退重复提交绑定。
       // router.push 跳转到 /me/orders 已脱离当前 URL；这里再显式清理一次当前 query。

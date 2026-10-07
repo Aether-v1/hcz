@@ -111,10 +111,13 @@ func TestApplyAffiliate_Success(t *testing.T) {
 }
 
 // A2. TestApplyAffiliate_AlreadyActive
+// 新架构：profile 可能因懒创建已存在，ErrAlreadyActive 仅在 application 已 approved 时返回。
 func TestApplyAffiliate_AlreadyActive(t *testing.T) {
 	svc, db, _ := setupAppServiceTest(t, true)
 	u := createAffiliateTestUser(t, db, "app-active@hcz.test")
 	createAffiliateTestProfile(t, db, u.ID, "APACT0001", constants.AffiliateProfileStatusActive)
+	// 插入 approved 申请：代表用户已通过审核，不得再次申请
+	createAffiliateTestApprovedApplication(t, db, u.ID)
 
 	_, err := svc.ApplyAffiliate(u.ID, "")
 	if !errors.Is(err, affiliateapp.ErrAlreadyActive) {

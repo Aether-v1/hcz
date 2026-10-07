@@ -14,7 +14,7 @@ type Application struct {
 	Status     string     `gorm:"type:varchar(20);not null;index" json:"status"` // pending/approved/rejected
 	Reason     string     `gorm:"type:varchar(500)" json:"reason"`               // 申请原因（可选）
 	ReviewNote string     `gorm:"type:varchar(500)" json:"review_note"`          // 审核备注
-	ReviewedBy uint       `gorm:"index" json:"reviewed_by"`                       // 审核管理员ID（0=未审核/migration）
+	ReviewedBy uint       `gorm:"index" json:"reviewed_by"`                      // 审核管理员ID（0=未审核/migration）
 	ReviewedAt *time.Time `gorm:"index" json:"reviewed_at,omitempty"`            // 审核时间
 	CreatedAt  time.Time  `gorm:"index" json:"created_at"`
 	UpdatedAt  time.Time  `gorm:"index" json:"updated_at"`

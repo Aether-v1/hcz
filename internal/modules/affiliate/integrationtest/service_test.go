@@ -89,7 +89,7 @@ func TestUpdateAffiliateProfileStatus(t *testing.T) {
 	user := createAffiliateTestUser(t, db, "affiliate-status@example.com")
 	profile := createAffiliateTestProfile(t, db, user.ID, "AFFST001", constants.AffiliateProfileStatusActive)
 
-	disabled, err := svc.UpdateAffiliateProfileStatus(profile.ID, constants.AffiliateProfileStatusDisabled)
+	disabled, err := svc.UpdateAffiliateProfileStatus(profile.ID, 1, constants.AffiliateProfileStatusDisabled)
 	if err != nil {
 		t.Fatalf("disable profile failed: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestUpdateAffiliateProfileStatus(t *testing.T) {
 		t.Fatalf("expected disabled status, got %+v", disabled)
 	}
 
-	enabled, err := svc.UpdateAffiliateProfileStatus(profile.ID, constants.AffiliateProfileStatusActive)
+	enabled, err := svc.UpdateAffiliateProfileStatus(profile.ID, 1, constants.AffiliateProfileStatusActive)
 	if err != nil {
 		t.Fatalf("enable profile failed: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestBatchUpdateAffiliateProfileStatus(t *testing.T) {
 	profileA := createAffiliateTestProfile(t, db, userA.ID, "AFFBT001", constants.AffiliateProfileStatusActive)
 	profileB := createAffiliateTestProfile(t, db, userB.ID, "AFFBT002", constants.AffiliateProfileStatusActive)
 
-	updated, err := svc.BatchUpdateAffiliateProfileStatus([]uint{profileA.ID, profileB.ID}, constants.AffiliateProfileStatusDisabled)
+	updated, err := svc.BatchUpdateAffiliateProfileStatus([]uint{profileA.ID, profileB.ID}, 1, constants.AffiliateProfileStatusDisabled)
 	if err != nil {
 		t.Fatalf("batch disable failed: %v", err)
 	}
@@ -189,6 +189,25 @@ func createAffiliateTestProfile(t *testing.T, db *gorm.DB, userID uint, code, st
 	}
 	if err := db.Create(&row).Error; err != nil {
 		t.Fatalf("create affiliate profile failed: %v", err)
+	}
+	return row
+}
+
+// createAffiliateTestApprovedApplication 为测试用户插入一条 approved 申请（划转资格真源）。
+func createAffiliateTestApprovedApplication(t *testing.T, db *gorm.DB, userID uint) affiliatedomain.Application {
+	t.Helper()
+	now := time.Now()
+	row := affiliatedomain.Application{
+		UserID:     userID,
+		Status:     constants.AffiliateAppStatusApproved,
+		ReviewNote: "approved",
+		ReviewedBy: 1,
+		ReviewedAt: &now,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	if err := db.Create(&row).Error; err != nil {
+		t.Fatalf("create approved application failed: %v", err)
 	}
 	return row
 }

@@ -30,9 +30,9 @@ import (
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 
+	admindomain "github.com/Aether-v1/hcz/internal/modules/identity/admin/domain"
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	userstore "github.com/Aether-v1/hcz/internal/modules/identity/user/infrastructure/gormstore"
-	admindomain "github.com/Aether-v1/hcz/internal/modules/identity/admin/domain"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
@@ -95,6 +95,7 @@ func newPGAffFixture(t *testing.T) *pgAffFixture {
 		&affiliatedomain.Commission{},
 		&affiliatedomain.CommissionLedger{},
 		&affiliatedomain.WithdrawRequest{},
+		&affiliatedomain.Application{},
 	}
 	_ = db.Migrator().DropTable(models...)
 	if err := db.AutoMigrate(models...); err != nil {
@@ -192,9 +193,9 @@ func runWithDeadlockRetry(f *pgAffFixture, op func() error, maxRetry int) error 
 // ---- fixture 存取链（为简单起见用包级 map 关联 db 不便，这里直接在 f 上存）----
 // 重新打开 pgAffFixture 字段：上面结构已定义，补 setter/getter。
 
-func (f *pgAffFixture) l1User() userdomain.User    { return f.users[1] }
-func (f *pgAffFixture) l2User() userdomain.User    { return f.users[0] }
-func (f *pgAffFixture) buyerUser() userdomain.User { return f.users[2] }
+func (f *pgAffFixture) l1User() userdomain.User            { return f.users[1] }
+func (f *pgAffFixture) l2User() userdomain.User            { return f.users[0] }
+func (f *pgAffFixture) buyerUser() userdomain.User         { return f.users[2] }
 func (f *pgAffFixture) l1Profile() affiliatedomain.Profile { return f.profiles[1] }
 func (f *pgAffFixture) l2Profile() affiliatedomain.Profile { return f.profiles[0] }
 
@@ -369,8 +370,16 @@ func TestPGConcurrency_Case2_RefundVsPay(t *testing.T) {
 	start := make(chan struct{})
 	var payErr, refundErr error
 	wg.Add(2)
-	go func() { defer wg.Done(); <-start; payErr = runWithDeadlockRetry(f, func() error { _, e := f.svc.PayWithdraw(200, 1); return e }, 3) }()
-	go func() { defer wg.Done(); <-start; refundErr = runWithDeadlockRetry(f, func() error { return f.refundFull(t, 1, "100") }, 3) }()
+	go func() {
+		defer wg.Done()
+		<-start
+		payErr = runWithDeadlockRetry(f, func() error { _, e := f.svc.PayWithdraw(200, 1); return e }, 3)
+	}()
+	go func() {
+		defer wg.Done()
+		<-start
+		refundErr = runWithDeadlockRetry(f, func() error { return f.refundFull(t, 1, "100") }, 3)
+	}()
 	close(start)
 	wg.Wait()
 

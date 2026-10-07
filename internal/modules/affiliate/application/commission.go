@@ -34,18 +34,11 @@ func (s *Service) HandleOrderPaid(orderID uint) error {
 // HandleOrderCompleted 订单进入 completed 时，沿 users.inviter_id 向上递归最多 maxLevel 级生成佣金。
 // 真源 = users.inviter_id；中间用户无 affiliate profile（或未激活）时跳过该层但层级不压缩。
 // 幂等：同一 (order_id, beneficiary_user_id, level, commission_type='order') 仅生成一次。
+// HandleOrderCompleted 订单进入 completed 时生成多级别佣金（独立事务，保留旧调用方兼容）。
 func (s *Service) HandleOrderCompleted(orderID uint) error {
 	if orderID == 0 || s.repo == nil || s.orderRepo == nil || s.userRepo == nil {
 		return nil
 	}
-	setting, err := s.settings.GetAffiliateSetting()
-	if err != nil {
-		return err
-	}
-	if !setting.Enabled {
-		return nil
-	}
-
 	order, err := s.orderRepo.GetByID(orderID)
 	if err != nil {
 		return err
@@ -53,12 +46,69 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 	if order == nil {
 		return nil
 	}
-	// 佣金基数固定为 USDT 钱包实付额，禁止使用 total_amount 或汇率换算。
-	if order.WalletPaidAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+	err = s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
+		_, coreErr := s.handleOrderCompletedCore(tx, order)
+		return coreErr
+	})
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			logger.Warnw("affiliate_handle_order_completed_duplicate",
+				"order_id", order.ID,
+				"error", err,
+			)
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+// HandleOrderCompletedInTx 在调用方提供的事务内生成订单完成佣金（P1 统一完成生命周期用）。
+// repoTx 必须是调用方订单事务的 affiliate 视图；order 必须是已进入 completed 的最新快照。
+// 幂等：同一 (order_id, beneficiary_user_id, level, commission_type='order') 唯一约束兜底。
+func (s *Service) HandleOrderCompletedInTx(repoTx affiliatecontract.Store, order *orderdomain.Order) error {
+	if repoTx == nil || order == nil || order.ID == 0 || s.repo == nil || s.userRepo == nil {
 		return nil
 	}
+	commissions, err := s.handleOrderCompletedCore(repoTx, order)
+	if err != nil {
+		if isDuplicateKeyError(err) {
+			logger.Warnw("affiliate_handle_order_completed_duplicate",
+				"order_id", order.ID,
+				"error", err,
+			)
+			return nil
+		}
+		return err
+	}
+	// ConfirmDays<=0 时佣金直接 available，立即发送到账通知（pending_confirm 阶段不发）。
+	for _, c := range commissions {
+		if c.Status == constants.AffiliateCommissionStatusAvailable {
+			s.notifyCommissionConfirmed(c)
+		}
+	}
+	return nil
+}
+
+// handleOrderCompletedCore 是佣金生成核心，必须在调用方事务内执行（tx = affiliate store 视图）。
+// 返回本次创建的佣金（供包装方法事务后发通知）。幂等检查在事务内完成。
+func (s *Service) handleOrderCompletedCore(tx affiliatecontract.Store, order *orderdomain.Order) ([]*affiliatedomain.Commission, error) {
+	if tx == nil || order == nil || order.ID == 0 || s.repo == nil || s.userRepo == nil {
+		return nil, nil
+	}
+	setting, err := s.settings.GetAffiliateSetting()
+	if err != nil {
+		return nil, err
+	}
+	if !setting.Enabled {
+		return nil, nil
+	}
+	// 佣金基数固定为 USDT 钱包实付额，禁止使用 total_amount 或汇率换算。
+	if order.WalletPaidAmount.Decimal.LessThanOrEqual(decimal.Zero) {
+		return nil, nil
+	}
 	if order.UserID == 0 {
-		return nil
+		return nil, nil
 	}
 
 	maxLevel := setting.MaxLevel
@@ -76,7 +126,7 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 	for level := 1; level <= maxLevel; level++ {
 		current, err := s.userRepo.GetByID(currentUserID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if current == nil {
 			break
@@ -100,13 +150,14 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 		currentUserID = inviterID
 	}
 	if len(chain) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	// 批量资格检查：一次取出链上所有用户的 affiliate profile。
-	profiles, err := s.repo.GetProfilesByUserIDs(chain)
+	// 批量资格检查：一次取出链上所有用户的 affiliate profile（事务视图）。
+	// 缺失 profile 时懒创建（commission anchor），disabled 时跳过该层。
+	profiles, err := tx.GetProfilesByUserIDs(chain)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	profileByUser := make(map[uint]affiliatedomain.Profile, len(profiles))
 	for _, p := range profiles {
@@ -120,10 +171,16 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 		level := idx + 1
 		profile, ok := profileByUser[beneficiaryUserID]
 		if !ok {
-			continue // 无 profile：跳过该层，但 chain 已包含上层，继续下一层
+			// 懒创建 profile：首次获得佣金时自动建立 commission anchor。
+			created, createErr := s.getOrCreateProfileInTx(tx, beneficiaryUserID)
+			if createErr != nil {
+				return nil, createErr
+			}
+			profile = *created
+			profileByUser[beneficiaryUserID] = profile
 		}
 		if strings.TrimSpace(profile.Status) != constants.AffiliateProfileStatusActive {
-			continue
+			continue // disabled profile：风控禁止新佣金
 		}
 		rate := resolveLevelRate(setting, level)
 		if rate.LessThanOrEqual(decimal.Zero) {
@@ -137,10 +194,10 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 			continue // 兜底自购检查（chain 构建已保证）
 		}
 
-		// 幂等检查：已存在则跳过。
-		existing, err := s.repo.GetCommissionByOrderBeneficiaryLevel(order.ID, beneficiaryUserID, level)
+		// 幂等检查：已存在则跳过（事务视图）。
+		existing, err := tx.GetCommissionByOrderBeneficiaryLevel(order.ID, beneficiaryUserID, level)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if existing != nil {
 			continue
@@ -174,51 +231,29 @@ func (s *Service) HandleOrderCompleted(orderID uint) error {
 		})
 	}
 	if len(commissions) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	// 事务内批量创建佣金 + CREDIT ledger，任一层失败整体回滚。
-	err = s.repo.WithinTransaction(func(tx affiliatecontract.Store) error {
-		if err := tx.BatchCreateCommissions(commissions); err != nil {
-			return err
-		}
-		// 佣金创建成功后，为每条佣金创建 CREDIT ledger（append-only）。
-		for _, c := range commissions {
-			ref := fmt.Sprintf("affiliate_credit:order:%d:comm:%d", c.OrderID, c.ID)
-			if _, err := s.appendLedger(tx, LedgerEntry{
-				CommissionID:       c.ID,
-				AffiliateProfileID: c.AffiliateProfileID,
-				BeneficiaryUserID:  c.BeneficiaryUserID,
-				OrderID:            c.OrderID,
-				Type:               constants.AffiliateLedgerTypeCredit,
-				Amount:             c.CommissionAmount.Decimal,
-				Reference:          ref,
-				Remark:             fmt.Sprintf("Order completed, level %d commission", c.Level),
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		// 并发兜底：幂等检查与插入之间的竞争导致唯一冲突，静默跳过。
-		if isDuplicateKeyError(err) {
-			logger.Warnw("affiliate_handle_order_completed_duplicate",
-				"order_id", order.ID,
-				"error", err,
-			)
-			return nil
-		}
-		return err
+	// 在调用方事务视图内批量创建佣金 + CREDIT ledger，任一层失败整体回滚。
+	if err := tx.BatchCreateCommissions(commissions); err != nil {
+		return nil, err
 	}
-
-	// ConfirmDays<=0 时佣金直接 available，立即发送到账通知（pending_confirm 阶段不发）。
 	for _, c := range commissions {
-		if c.Status == constants.AffiliateCommissionStatusAvailable {
-			s.notifyCommissionConfirmed(c)
+		ref := fmt.Sprintf("affiliate_credit:order:%d:comm:%d", c.OrderID, c.ID)
+		if _, err := s.appendLedger(tx, LedgerEntry{
+			CommissionID:       c.ID,
+			AffiliateProfileID: c.AffiliateProfileID,
+			BeneficiaryUserID:  c.BeneficiaryUserID,
+			OrderID:            c.OrderID,
+			Type:               constants.AffiliateLedgerTypeCredit,
+			Amount:             c.CommissionAmount.Decimal,
+			Reference:          ref,
+			Remark:             fmt.Sprintf("Order completed, level %d commission", c.Level),
+		}); err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return commissions, nil
 }
 
 // resolveLevelRate 返回指定层级的费率（百分比）。

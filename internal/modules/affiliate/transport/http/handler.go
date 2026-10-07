@@ -255,6 +255,8 @@ func (h *Handler) TransferToWallet(c *gin.Context) {
 		switch {
 		case errors.Is(err, affiliateapp.ErrNotOpened), errors.Is(err, affiliateapp.ErrNotActive):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
+		case errors.Is(err, affiliateapp.ErrTransferNotApproved):
+			ginutil.RespondError(c, response.CodeBadRequest, "error.affiliate_transfer_not_approved", nil)
 		case errors.Is(err, affiliateapp.ErrTransferAmountInvalid):
 			ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)
 		case errors.Is(err, affiliateapp.ErrTransferInsufficient):
@@ -267,7 +269,7 @@ func (h *Handler) TransferToWallet(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{
-		"ledger":      affiliatepresenter.NewTransferRecord(ledger),
+		"ledger":        affiliatepresenter.NewTransferRecord(ledger),
 		"wallet_txn_id": walletTxn.ID,
 	})
 }

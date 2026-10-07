@@ -58,10 +58,10 @@ func setupAppGateTest(t *testing.T) (*affiliateapp.Service, *gorm.DB) {
 	settingRepo := memorysettings.New()
 	settingSvc := settingsapp.NewService(settingRepo)
 	if _, err := settingSvc.UpdateAffiliateSetting(settingsintegration.AffiliateSetting{
-		Enabled:        true,
-		ConfirmDays:    0,
-		MaxLevel:       1,
-		LevelRates:     levelRates(map[int]float64{1: 5}),
+		Enabled:           true,
+		ConfirmDays:       0,
+		MaxLevel:          1,
+		LevelRates:        levelRates(map[int]float64{1: 5}),
 		MinWithdrawAmount: 1,
 		WithdrawChannels:  []string{"usdt"},
 	}); err != nil {

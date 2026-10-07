@@ -21,6 +21,7 @@ import (
 //   - totalEarned = SUM(credit + reversal + adjustment + debt)
 //   - settled     = ABS(SUM(withdraw_settle))（历史独立提现已出金）
 //   - transferred = ABS(SUM(transfer_to_wallet))
+//
 // 若结果 < 0（DEBT 场景），返回 0。
 func (s *Service) computeAvailableTransferBalance(repoTx affiliatecontract.Store, profileID uint) (decimal.Decimal, error) {
 	if repoTx == nil || profileID == 0 {
@@ -94,6 +95,15 @@ func (s *Service) TransferToWallet(userID uint, input TransferToWalletInput) (*a
 		}
 		if strings.TrimSpace(profile.Status) != constants.AffiliateProfileStatusActive {
 			return ErrNotOpened
+		}
+
+		// 划转资格真源：affiliate_applications.status == approved（事务内读取，防止并发 approve/disable 竞态）
+		latestApp, err := affiliateTx.GetLatestApplicationByUserID(userID)
+		if err != nil {
+			return err
+		}
+		if latestApp == nil || strings.TrimSpace(latestApp.Status) != constants.AffiliateAppStatusApproved {
+			return ErrTransferNotApproved
 		}
 
 		// 行锁序列化同一 profile 的并发划转：先锁定该 profile 的全部 ledger 行，

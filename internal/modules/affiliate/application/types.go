@@ -33,19 +33,23 @@ type TransferToWalletInput struct {
 }
 
 // Dashboard 推广用户中心数据。
+// Opened = commission account exists（profile 存在，含懒创建）；不再等价于"申请已通过"。
+// TransferEnabled = 申请已通过且 profile active，前端据此控制划转按钮。
 type Dashboard struct {
-	Opened              bool         `json:"opened"`
-	AffiliateCode       string       `json:"affiliate_code"`
-	PromotionPath       string       `json:"promotion_path"`
-	ClickCount          int64        `json:"click_count"`
-	ValidOrderCount     int64        `json:"valid_order_count"`
-	ConversionRate      float64      `json:"conversion_rate"`
-	PendingCommission   money.Amount `json:"pending_commission"`
-	AvailableCommission money.Amount `json:"available_commission"`  // 兼容旧前端：=可划转余额
-	WithdrawnCommission money.Amount `json:"withdrawn_commission"`  // 兼容旧前端：=累计已出金（历史提现+划转）
+	Opened                   bool         `json:"opened"`
+	ApplicationStatus        string       `json:"application_status"` // not_applied / pending / approved / rejected
+	TransferEnabled          bool         `json:"transfer_enabled"`   // true 仅当 application approved + profile active
+	AffiliateCode            string       `json:"affiliate_code"`
+	PromotionPath            string       `json:"promotion_path"`
+	ClickCount               int64        `json:"click_count"`
+	ValidOrderCount          int64        `json:"valid_order_count"`
+	ConversionRate           float64      `json:"conversion_rate"`
+	PendingCommission        money.Amount `json:"pending_commission"`
+	AvailableCommission      money.Amount `json:"available_commission"`       // 兼容旧前端：=可划转余额
+	WithdrawnCommission      money.Amount `json:"withdrawn_commission"`       // 兼容旧前端：=累计已出金（历史提现+划转）
 	AvailableTransferBalance money.Amount `json:"available_transfer_balance"` // 可划转余额
-	DebtAmount          money.Amount `json:"debt_amount"`          // 欠款（正数表示欠多少，0=无欠款）
-	TransferredAmount   money.Amount `json:"transferred_amount"`   // 累计已划转至主钱包
+	DebtAmount               money.Amount `json:"debt_amount"`                // 欠款（正数表示欠多少，0=无欠款）
+	TransferredAmount        money.Amount `json:"transferred_amount"`         // 累计已划转至主钱包
 }
 
 // Stats 推广统计数据。
@@ -110,10 +114,10 @@ type AffiliateApplicationListFilter struct {
 
 // TransferRecord 划转历史记录（从 affiliate ledger 的 transfer_to_wallet 类型读取）。
 type TransferRecord struct {
-	ID        uint          `json:"id"`
-	Amount    money.Amount  `json:"amount"` // 划转金额（正数展示）
-	Type      string        `json:"type"`
-	Reference string        `json:"reference"`
-	Remark    string        `json:"remark"`
-	CreatedAt time.Time     `json:"created_at"`
+	ID        uint         `json:"id"`
+	Amount    money.Amount `json:"amount"` // 划转金额（正数展示）
+	Type      string       `json:"type"`
+	Reference string       `json:"reference"`
+	Remark    string       `json:"remark"`
+	CreatedAt time.Time    `json:"created_at"`
 }

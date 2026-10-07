@@ -33,14 +33,14 @@ import (
 
 // financeTestEnv 资金安全测试环境
 type financeTestEnv struct {
-	svc         *affiliateapp.Service
-	db          *gorm.DB
+	svc           *affiliateapp.Service
+	db            *gorm.DB
 	affiliateRepo *affiliategormstore.Store
-	walletRepo  *walletgormstore.Store
-	walletSvc   *walletapp.Service
-	orderReader *fakeOrderReader
-	users       []userdomain.User
-	profiles    []affiliatedomain.Profile
+	walletRepo    *walletgormstore.Store
+	walletSvc     *walletapp.Service
+	orderReader   *fakeOrderReader
+	users         []userdomain.User
+	profiles      []affiliatedomain.Profile
 }
 
 // setupFinanceTest 搭建完整的资金安全测试环境（含真实 wallet）
@@ -59,6 +59,7 @@ func setupFinanceTest(t *testing.T, rates map[int]float64) *financeTestEnv {
 		&affiliatedomain.Commission{},
 		&affiliatedomain.CommissionLedger{},
 		&affiliatedomain.WithdrawRequest{},
+		&affiliatedomain.Application{},
 		&walletdomain.Account{},
 		&walletdomain.Transaction{},
 	); err != nil {
@@ -67,9 +68,9 @@ func setupFinanceTest(t *testing.T, rates map[int]float64) *financeTestEnv {
 
 	setting := settingsintegration.AffiliateSetting{
 		Enabled: true, MaxLevel: 3, LevelRates: levelRates(rates),
-		ConfirmDays: 0, // 佣金直接 available
+		ConfirmDays:       0, // 佣金直接 available
 		MinWithdrawAmount: 1,
-		WithdrawChannels: []string{"alipay", "usdt"},
+		WithdrawChannels:  []string{"alipay", "usdt"},
 	}
 	settingRepo := memorysettings.New()
 	settingSvc := settingsapp.NewService(settingRepo)
@@ -622,7 +623,7 @@ func TestWithdrawDoesNotModifyCommissionAmount(t *testing.T) {
 func TestL10Commission_AllLevelsGenerated(t *testing.T) {
 	setting := settingsintegration.AffiliateSetting{
 		Enabled: true, MaxLevel: 10,
-		LevelRates: levelRates(map[int]float64{1: 10, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1}),
+		LevelRates:  levelRates(map[int]float64{1: 10, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1}),
 		ConfirmDays: 0, MinWithdrawAmount: 1,
 		WithdrawChannels: []string{"usdt"},
 	}
@@ -802,5 +803,98 @@ func TestConcurrentRefundAndPay_NoOverpay(t *testing.T) {
 	// 钱包始终为 0，无超发
 	if walletBalance := env.getWalletBalance(t, env.l1User().ID); !walletBalance.Equal(decimal.Zero) {
 		t.Fatalf("wallet must stay 0, got %s", walletBalance.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 懒创建 profile（§5/§6/§18）+ 未申请用户佣金/仪表盘/划转门禁（§25/§26 核心）
+// A 邀请 B，A 从未申请推广、初始无 profile；B 完成订单后：
+//   - A 的 profile 在佣金事务内被懒创建（active）
+//   - 生成 commission + CREDIT ledger
+//   - 仪表盘展示真实金额，opened=true / application_status=not_applied / transfer_enabled=false
+//   - TransferToWallet 被拒（ErrTransferNotApproved）
+//
+// ---------------------------------------------------------------------------
+func TestLazyProfileCreation_UnappliedInviterEarnsButCannotTransfer(t *testing.T) {
+	env := setupFinanceTest(t, map[int]float64{1: 10})
+
+	// 全新的两人链：inviter A（无 profile / 无 application） ← buyer B
+	inviter := createAffiliateTestUser(t, env.db, "lazy-inviter@hcz.test")
+	buyer := createAffiliateTestUser(t, env.db, "lazy-buyer@hcz.test")
+	if err := env.db.Model(&userdomain.User{}).Where("id = ?", buyer.ID).
+		Update("inviter_id", inviter.ID).Error; err != nil {
+		t.Fatalf("link inviter_id: %v", err)
+	}
+
+	// 前置断言：A 尚无 profile。
+	if pre, err := env.affiliateRepo.GetProfileByUserID(inviter.ID); err != nil {
+		t.Fatalf("pre GetProfileByUserID: %v", err)
+	} else if pre != nil {
+		t.Fatalf("precondition: inviter must have no profile, got %+v", pre)
+	}
+
+	// B 完成一笔 100 USDT 订单 → L1(10%) = 10 归 A。
+	const orderID = uint(9001)
+	env.orderReader.orders[orderID] = newUSDTPaidOrder(orderID, buyer.ID, 100)
+	if err := env.svc.HandleOrderCompleted(orderID); err != nil {
+		t.Fatalf("HandleOrderCompleted: %v", err)
+	}
+
+	// 1) profile 被懒创建，状态 active。
+	profile, err := env.affiliateRepo.GetProfileByUserID(inviter.ID)
+	if err != nil {
+		t.Fatalf("GetProfileByUserID after commission: %v", err)
+	}
+	if profile == nil {
+		t.Fatalf("profile must be lazily created on first commission")
+	}
+	if profile.Status != constants.AffiliateProfileStatusActive {
+		t.Fatalf("lazy profile status want active, got %q", profile.Status)
+	}
+	if profile.UserID != inviter.ID || profile.AffiliateCode == "" {
+		t.Fatalf("lazy profile malformed: %+v", profile)
+	}
+
+	// 2) commission + CREDIT ledger 已生成，金额 10。
+	commissions := commissionsForOrder(t, env.affiliateRepo, orderID)
+	if len(commissions) != 1 {
+		t.Fatalf("want 1 commission, got %d", len(commissions))
+	}
+	expectCommission(t, commissions[0], 1, inviter.ID, 10)
+	var creditSum decimal.Decimal
+	if err := env.db.Model(&affiliatedomain.CommissionLedger{}).
+		Where("affiliate_profile_id = ? AND type = ?", profile.ID, constants.AffiliateLedgerTypeCredit).
+		Select("COALESCE(SUM(amount),0)").Scan(&creditSum).Error; err != nil {
+		t.Fatalf("sum credit ledger: %v", err)
+	}
+	if !creditSum.Equal(decimal.NewFromInt(10)) {
+		t.Fatalf("CREDIT ledger sum want 10, got %s", creditSum)
+	}
+
+	// 3) 仪表盘：真实金额 + opened=true + not_applied + transfer_enabled=false。
+	dash, err := env.svc.GetUserDashboard(inviter.ID)
+	if err != nil {
+		t.Fatalf("GetUserDashboard: %v", err)
+	}
+	if !dash.Opened {
+		t.Fatalf("dashboard.opened must be true once commission account lazily exists")
+	}
+	if dash.ApplicationStatus != constants.AffiliateAppStatusNotApplied {
+		t.Fatalf("application_status want not_applied, got %q", dash.ApplicationStatus)
+	}
+	if dash.TransferEnabled {
+		t.Fatalf("transfer_enabled must be false for unapplied user")
+	}
+	if !dash.AvailableTransferBalance.Decimal.Equal(decimal.NewFromInt(10)) {
+		t.Fatalf("available_transfer_balance want 10, got %s", dash.AvailableTransferBalance.Decimal)
+	}
+
+	// 4) 划转被拒：profile active 但无 approved application。
+	if _, _, err := env.svc.TransferToWallet(inviter.ID, affiliateapp.TransferToWalletInput{All: true}); !errors.Is(err, affiliateapp.ErrTransferNotApproved) {
+		t.Fatalf("unapplied transfer must fail with ErrTransferNotApproved, got %v", err)
+	}
+	// 钱包仍为 0（未违规出金）。
+	if w := env.getWalletBalance(t, inviter.ID); !w.Equal(decimal.Zero) {
+		t.Fatalf("wallet must stay 0 for denied transfer, got %s", w)
 	}
 }
