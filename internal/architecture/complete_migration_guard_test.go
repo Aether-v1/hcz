@@ -580,8 +580,8 @@ func TestAffiliateModuleOwnsDomainAndPersistence(t *testing.T) {
 	assertFileDeclaresTypes(t, filepath.Join(domainRoot, "click.go"), []string{"Click"})
 	assertFileDeclaresTypes(t, filepath.Join(domainRoot, "commission.go"), []string{"Commission"})
 	assertFileDeclaresTypes(t, filepath.Join(domainRoot, "withdraw_request.go"), []string{"WithdrawRequest"})
-	// commission_ledger.go 新增后 affiliate/domain 从 5 增长到 6，预算同步上调。
-	assertDirectoryGoFileBudget(t, domainRoot, 6)
+	// commission_ledger.go / application.go 新增后 affiliate/domain 从 5 增长到 7，预算同步上调。
+	assertDirectoryGoFileBudget(t, domainRoot, 7)
 
 	storeRoot := filepath.Join(repositoryRoot, "internal", "modules", "affiliate", "infrastructure", "gormstore")
 	assertFileDeclaresTypes(t, filepath.Join(storeRoot, "store.go"), []string{"Store"})
@@ -605,7 +605,8 @@ func TestDatabaseBootstrapIsSeparatedFromPlatformConnection(t *testing.T) {
 	assertDirectoryGoFileBudget(t, connectionRoot, 2)
 	// wallet_dual_balance 迁移新增 wallet_dual_balance.go 及其白盒测试，migrations 预算从 8 调整为 10。
 	// user_id_sequence 迁移新增 user_id_sequence_test.go，预算调整为 14。
-	assertDirectoryGoFileBudget(t, migrationRoot, 14)
+	// affiliate_application / invitation / nav_config_dedup 等迁移新增后预算调整为 17。
+	assertDirectoryGoFileBudget(t, migrationRoot, 17)
 }
 
 func TestNoNewCompatibilityOrLegacyProductionFiles(t *testing.T) {

@@ -17,8 +17,8 @@ func TestAffiliateApplicationOwnsUseCasesAndContracts(t *testing.T) {
 	assertFileDeclaresFunctions(t, filepath.Join(applicationRoot, "profile.go"), []string{"UpdateAffiliateProfileStatus", "BatchUpdateAffiliateProfileStatus", "OpenAffiliate"})
 	assertFileDeclaresFunctions(t, filepath.Join(applicationRoot, "query.go"), []string{"GetUserDashboard", "ListUserCommissions", "ListUserWithdraws", "ListAdminUsers", "ListAdminCommissions", "ListAdminWithdraws"})
 	assertFileDeclaresFunctions(t, filepath.Join(applicationRoot, "withdraw.go"), []string{"ApplyWithdraw", "ReviewWithdraw"})
-	// adjustment.go / ledger.go 新增后 application 目录从 8 增长到 10，预算同步上调。
-	assertDirectoryGoFileBudget(t, applicationRoot, 10)
+	// adjustment.go / ledger.go / application.go / types.go 新增后 application 目录从 8 增长到 12，预算同步上调。
+	assertDirectoryGoFileBudget(t, applicationRoot, 12)
 
 	transportRoot := filepath.Join(moduleRoot, "transport", "http")
 	assertFileDeclaresTypes(t, filepath.Join(transportRoot, "handler.go"), []string{"Handler"})

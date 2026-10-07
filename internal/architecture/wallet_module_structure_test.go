@@ -87,7 +87,8 @@ func TestWalletOwnsCompleteVerticalSlice(t *testing.T) {
 	assertDirectoryGoFileBudget(t, contractRoot, 4)
 	assertDirectoryGoFileBudget(t, domainRoot, 4)
 	assertDirectoryGoFileBudget(t, storeRoot, 2)
-	assertDirectoryGoFileBudget(t, transportRoot, 6)
+	// channel_identity_error.go 拆分后 transport/http 从 6 增长到 7，预算同步上调。
+	assertDirectoryGoFileBudget(t, transportRoot, 7)
 	assertDirectoryGoFileBudget(t, presenterRoot, 2)
 	assertDirectoryGoFileBudget(t, bootstrapRoot, 3)
 
