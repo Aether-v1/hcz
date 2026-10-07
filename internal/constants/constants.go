@@ -181,9 +181,10 @@ const (
 
 // 推广申请审核状态常量
 const (
-	AffiliateAppStatusPending  = "pending"
-	AffiliateAppStatusApproved  = "approved"
-	AffiliateAppStatusRejected  = "rejected"
+	AffiliateAppStatusNotApplied = "not_applied"
+	AffiliateAppStatusPending    = "pending"
+	AffiliateAppStatusApproved   = "approved"
+	AffiliateAppStatusRejected   = "rejected"
 )
 
 // 推广返利佣金状态常量
@@ -208,8 +209,8 @@ const (
 
 // 推广返利提现审核动作常量
 const (
-	AffiliateWithdrawActionReject = "reject"
-	AffiliateWithdrawActionPay    = "pay"
+	AffiliateWithdrawActionReject  = "reject"
+	AffiliateWithdrawActionPay     = "pay"
 	AffiliateWithdrawActionApprove = "approve"
 )
 
@@ -220,19 +221,19 @@ const (
 
 // 推广返利佣金账本类型常量（append-only）
 const (
-	AffiliateLedgerTypeCredit          = "credit"           // 佣金入账（订单完成）
-	AffiliateLedgerTypeReversal        = "reversal"         // 退款冲正
-	AffiliateLedgerTypeWithdrawLock    = "withdraw_lock"     // 提现锁定（历史，已退休）
-	AffiliateLedgerTypeWithdrawSettle  = "withdraw_settle"   // 提现结算（出金完成，历史）
-	AffiliateLedgerTypeWithdrawRelease = "withdraw_release"  // 提现拒绝释放（历史）
-	AffiliateLedgerTypeAdjustment      = "adjustment"        // 管理员调整
-	AffiliateLedgerTypeDebt            = "debt"              // 已出金后退款产生的债务
+	AffiliateLedgerTypeCredit           = "credit"             // 佣金入账（订单完成）
+	AffiliateLedgerTypeReversal         = "reversal"           // 退款冲正
+	AffiliateLedgerTypeWithdrawLock     = "withdraw_lock"      // 提现锁定（历史，已退休）
+	AffiliateLedgerTypeWithdrawSettle   = "withdraw_settle"    // 提现结算（出金完成，历史）
+	AffiliateLedgerTypeWithdrawRelease  = "withdraw_release"   // 提现拒绝释放（历史）
+	AffiliateLedgerTypeAdjustment       = "adjustment"         // 管理员调整
+	AffiliateLedgerTypeDebt             = "debt"               // 已出金后退款产生的债务
 	AffiliateLedgerTypeTransferToWallet = "transfer_to_wallet" // 佣金划转至主钱包（负金额）
 )
 
 // 钱包交易类型：推广佣金出金（历史）与划转入账。
 const (
-	WalletTxnTypeAffiliatePayout    = "affiliate_payout"     // 历史：独立提现出金
+	WalletTxnTypeAffiliatePayout     = "affiliate_payout"      // 历史：独立提现出金
 	WalletTxnTypeAffiliateTransferIn = "affiliate_transfer_in" // 佣金划转至主钱包入账
 )
 
@@ -549,7 +550,7 @@ const (
 	SettingKeyTelegramBotRuntimeStatus = "telegram_bot_runtime_status"
 	SettingKeyOrderEmailTemplateConfig = "order_email_template_config"
 	SettingFieldSiteCurrency           = "currency"
-	SettingFieldPaymentExpireMinutes  = "payment_expire_minutes"
+	SettingFieldPaymentExpireMinutes   = "payment_expire_minutes"
 
 	SettingKeyNavConfig = "nav_config"
 
@@ -588,6 +589,9 @@ const (
 	SettingFieldPaypalWebhook    = "paypal_webhook"
 	SettingFieldStripeWebhook    = "stripe_webhook"
 	SettingFieldUpstreamCallback = "upstream_callback"
+
+	// HCZ Points P2：每日签到配置（enabled + 7 天循环奖励数组）。
+	SettingKeyCheckinConfig = "checkin_config"
 
 	// 默认回调路由路径
 	DefaultPaymentCallbackPath  = "/api/v1/payments/callback"

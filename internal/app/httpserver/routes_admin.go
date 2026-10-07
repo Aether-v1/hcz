@@ -16,6 +16,7 @@ import (
 	mappinghttp "github.com/Aether-v1/hcz/internal/modules/catalog/mapping/transport/http"
 	producthttp "github.com/Aether-v1/hcz/internal/modules/catalog/product/transport/http"
 	channelclienthttp "github.com/Aether-v1/hcz/internal/modules/channelclient/transport/http"
+	checkinphttp "github.com/Aether-v1/hcz/internal/modules/checkin/transport/http"
 	compliancetransport "github.com/Aether-v1/hcz/internal/modules/compliance/transport/http"
 	contenttransport "github.com/Aether-v1/hcz/internal/modules/content/transport/http"
 	coupontransport "github.com/Aether-v1/hcz/internal/modules/coupon/transport/http"
@@ -33,6 +34,8 @@ import (
 	procurementtransport "github.com/Aether-v1/hcz/internal/modules/procurement/transport/http"
 	pricinghttp "github.com/Aether-v1/hcz/internal/modules/pricing/transport/http"
 	promotiontransport "github.com/Aether-v1/hcz/internal/modules/promotion/transport/http"
+	pointsphttp "github.com/Aether-v1/hcz/internal/modules/points/transport/http"
+	pointsmallphttp "github.com/Aether-v1/hcz/internal/modules/pointsmall/transport/http"
 	reconciliationtransport "github.com/Aether-v1/hcz/internal/modules/reconciliation/transport/http"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/admin"
 	settingstransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http"
@@ -86,6 +89,9 @@ func registerAdminRoutes(
 	adminResellerFinanceHandler *resellertransport.AdminFinanceHandler,
 	adminSettingsHandler *settingstransport.AdminHandler,
 	adminWalletHandler *wallettransport.AdminHandler,
+	adminPointsHandler *pointsphttp.AdminHandler,
+	adminCheckinHandler *checkinphttp.AdminHandler,
+	adminPointsmallHandler *pointsmallphttp.AdminHandler,
 	adminWithdrawalHandler *withdrawalhttp.AdminHandler,
 	adminPaymentHandler *paymenttransport.AdminHandler,
 	adminPaymentChannelHandler *paymenttransport.AdminChannelHandler,
@@ -131,6 +137,7 @@ func registerAdminRoutes(
 	settingstransport.RegisterAdminAffiliateRoutes(authorized, settingstransport.NewAffiliateHandler(c.SettingService))
 	settingstransport.RegisterAdminProfitGuardRoutes(authorized, settingstransport.NewProfitGuardHandler(c.SettingService))
 	settingstransport.RegisterAdminTelegramBotRoutes(authorized, settingstransport.NewTelegramBotHandler(c.SettingService))
+	settingstransport.RegisterAdminCheckinRoutes(authorized, settingstransport.NewCheckinHandler(c.SettingService))
 
 	// HCZ P0-2: 全局汇率（USDT 结算）管理，挂在 /admin/settings 下复用现有 JWT/RBAC。
 	exchRateHandler := exchangeratetransport.NewAdminHandler(c.ExchangeRateService)
@@ -195,6 +202,9 @@ func registerAdminRoutes(
 	// 用户管理
 	adminusertransport.RegisterAdminRoutes(authorized, adminUserHandler)
 	wallettransport.RegisterAdminRoutes(authorized, adminWalletHandler)
+	pointsphttp.RegisterAdminRoutes(authorized, adminPointsHandler)
+	checkinphttp.RegisterAdminRoutes(authorized, adminCheckinHandler)
+	pointsmallphttp.RegisterAdminRoutes(authorized, adminPointsmallHandler)
 	withdrawalhttp.RegisterAdminRoutes(authorized, adminWithdrawalHandler)
 	adminauthtransport.RegisterAdminUser2FARoutes(authorized, adminUser2FAHandler)
 

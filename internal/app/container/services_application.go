@@ -7,10 +7,13 @@ import (
 	adproxygateway "github.com/Aether-v1/hcz/internal/modules/adproxy/infrastructure/adgateway"
 	categoryapp "github.com/Aether-v1/hcz/internal/modules/catalog/category/application"
 
+	"github.com/Aether-v1/hcz/internal/crypto"
 	"github.com/Aether-v1/hcz/internal/logger"
 	c2capp "github.com/Aether-v1/hcz/internal/modules/c2c/application"
 	cardsecretapp "github.com/Aether-v1/hcz/internal/modules/cardsecret/application"
 	cartapp "github.com/Aether-v1/hcz/internal/modules/cart/application"
+	checkinapp "github.com/Aether-v1/hcz/internal/modules/checkin/application"
+	checkincontract "github.com/Aether-v1/hcz/internal/modules/checkin/contract"
 	contentapp "github.com/Aether-v1/hcz/internal/modules/content/application"
 	"github.com/Aether-v1/hcz/internal/modules/content/infrastructure/gormstore"
 	couponapp "github.com/Aether-v1/hcz/internal/modules/coupon/application"
@@ -25,7 +28,11 @@ import (
 	orderqueue "github.com/Aether-v1/hcz/internal/modules/order/infrastructure/queueadapter"
 	orderriskapp "github.com/Aether-v1/hcz/internal/modules/orderrisk/application"
 	orderrisklimiter "github.com/Aether-v1/hcz/internal/modules/orderrisk/infrastructure/redislimiter"
+	pointsapp "github.com/Aether-v1/hcz/internal/modules/points/application"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
+	pointsmallapp "github.com/Aether-v1/hcz/internal/modules/pointsmall/application"
 	promotionapp "github.com/Aether-v1/hcz/internal/modules/promotion/application"
+	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
 	sitebuilderapp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/application"
 	sitebuilderhttp "github.com/Aether-v1/hcz/internal/modules/sitebuilder/transport/http"
 	sitemapapp "github.com/Aether-v1/hcz/internal/modules/sitemap/application"
@@ -87,6 +94,29 @@ func (c *Container) initApplicationServices() {
 	c.WalletService = walletapp.NewService(walletapp.Options{
 		Repository: c.WalletRepo, Transactions: c.WalletRepo,
 	})
+	c.PointsService = pointsapp.NewService(pointsapp.Options{
+		Repository: c.PointsRepo, Transactions: c.PointsRepo,
+		// 运营统计（P4）直接聚合既有事实表；业务日边界复用签到域唯一时钟实现，
+		// 积分侧不新建第二套时区/累计口径。
+		Stats: pointscontract.StatsPorts{
+			Ledger:           c.PointsRepo,
+			Checkins:         c.CheckinRepo,
+			Exchanges:        c.PointsmallRepo,
+			BusinessDayRange: checkinapp.BusinessDayRange,
+		},
+	})
+	c.CheckinService = checkinapp.NewService(checkinapp.Options{
+		Repository: c.CheckinRepo,
+		UnitOfWork: c.CheckinRepo,
+		Config:     checkinSettingsAdapter{settings: c.SettingService},
+		Clock:      checkinapp.SystemClock{},
+		Points:     c.PointsService,
+	})
+	c.PointsmallService = pointsmallapp.NewService(pointsmallapp.Options{
+		Repository: c.PointsmallRepo,
+		UnitOfWork: c.PointsmallRepo,
+		Points:     c.PointsService,
+	})
 	// Affiliate 提现出金需要调用钱包服务真实入账。
 	c.AffiliateService.SetWalletService(c.WalletService, c.WalletRepo)
 	c.WithdrawalService = withdrawalapp.NewService(withdrawalapp.Options{
@@ -107,6 +137,11 @@ func (c *Container) initApplicationServices() {
 		Scheduler:     c.QueueClient,
 		Notifier:      c.NotificationService,
 		Audit:         c2cArbitrationAuditWriter{audit: c.AuthzAuditService},
+		// 收款方式敏感字段加密密钥（与 TOTP 同一派生密钥）。
+		EncKey: crypto.DeriveKey(c.Config.App.SecretKey),
+		// 用户端 Step-Up：2FA 走 TOTP，未开 2FA 走密码。
+		TOTP:               c.UserTOTPService,
+		PaymentMethodAudit: c2cPaymentMethodAuditWriter{audit: c.AuthzAuditService},
 	})
 	c.OrderRefundService = orderrefund.New(
 		c.OrderStore,
@@ -115,6 +150,7 @@ func (c *Container) initApplicationServices() {
 		c.SettingService,
 		c.WalletService,
 		c.PaymentStore,
+		c.PointsService,
 	)
 	// P1 after-sale：与订单共享 OrderStore 事务，退款走 WalletRefunderAdapter→AdminRefundToWalletInTx。
 	c.AfterSaleService = aftersale.NewService(
@@ -140,6 +176,7 @@ func (c *Container) initApplicationServices() {
 		DefaultEmailConfig:      c.Config.Email,
 		WalletService:           c.WalletService,
 		AffiliateService:        c.AffiliateService,
+		PointsService:           c.PointsService,
 		MemberLevelService:      c.MemberLevelService,
 		ResellerPricingResolver: c.ResellerPricingResolver,
 		ResellerAccounting:      c.ResellerAccountingLedger,
@@ -154,6 +191,7 @@ func (c *Container) initApplicationServices() {
 		SettingService:        c.SettingService,
 		DefaultEmailConfig:    c.Config.Email,
 		ExternalIdentityStore: c.ExternalIdentityStore,
+		OrderCompletion:       c.OrderService,
 	})
 	c.CardSecretService = cardsecretapp.NewService(cardsecretapp.ServiceOptions{
 		Secrets:      c.CardSecretRepo,
@@ -205,16 +243,37 @@ func (c *Container) initApplicationServices() {
 		contentapp.SystemClock{},
 	)
 
-	// 站点装修（sitebuilder）：首页入口 / 发现页区块 / 品牌 / 审计。
+	// 站点装修（sitebuilder）：首页入口 / 热门推荐分类 / 发现页区块 / 品牌 / 审计。
 	c.SiteHomeEntryService = sitebuilderapp.NewHomeEntryService(c.SiteHomeEntryRepo)
 	c.SiteHomeEntryService.SetProductLookup(c.ProductRepo)
+	c.SiteHomeFeaturedCategoryService = sitebuilderapp.NewHomeFeaturedCategoryService(c.SiteHomeFeaturedCategoryRepo)
+	c.SiteHomeFeaturedCategoryService.SetCategoryLookup(c.CategoryRepo)
 	c.SiteDiscoveryBlockService = sitebuilderapp.NewDiscoveryBlockService(c.SiteDiscoveryBlockRepo)
 	c.SiteAuditService = sitebuilderapp.NewAuditService(c.SiteAuditRepo, c.SiteAuditRepo)
 	c.SiteBrandService = sitebuilderapp.NewBrandService(c.SettingService)
 	c.SiteBuilderAdminHandler = sitebuilderhttp.NewAdminHandler(sitebuilderhttp.Services{
-		HomeEntries: c.SiteHomeEntryService,
-		Discovery:   c.SiteDiscoveryBlockService,
-		Brand:       c.SiteBrandService,
-		Audit:       c.SiteAuditService,
+		HomeEntries:        c.SiteHomeEntryService,
+		FeaturedCategories: c.SiteHomeFeaturedCategoryService,
+		Discovery:          c.SiteDiscoveryBlockService,
+		Brand:              c.SiteBrandService,
+		Audit:              c.SiteAuditService,
 	})
+}
+
+// checkinSettingsAdapter 把 settings 系统适配为签到配置读取端口。
+// 签到业务配置（enabled + 7 天奖励）经 settings 持久化，读取路径宽松（损坏回退默认 + warning）。
+type checkinSettingsAdapter struct {
+	settings *settingsapp.Service
+}
+
+// GetCheckinConfig 读取签到配置并转换为 checkin 域配置。
+func (a checkinSettingsAdapter) GetCheckinConfig() (checkincontract.Config, error) {
+	setting, err := a.settings.GetCheckinSetting()
+	if err != nil {
+		return checkincontract.Config{}, err
+	}
+	return checkincontract.Config{
+		Enabled: setting.Enabled,
+		Rewards: setting.Rewards,
+	}, nil
 }

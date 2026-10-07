@@ -1,5 +1,6 @@
 <template>
   <PersonalCenterOverview v-if="props.section === 'overview'" />
+  <ProfilePanel v-else-if="props.section === 'profile'" class="pb-8" />
   <div v-else class="relative min-h-screen overflow-hidden bg-background text-foreground pt-24 pb-16">
     <div class="container relative z-10 mx-auto px-4">
       <header class="relative mb-8 overflow-hidden rounded-3xl border bg-card shadow-sm">
@@ -37,7 +38,7 @@
           <div class="rounded-2xl border bg-card p-4 shadow-sm lg:sticky lg:top-24">
             <div class="hidden flex-col gap-0.5 lg:flex">
               <template v-for="item in visibleSectionItems" :key="item.key">
-              <p v-if="item.key === 'overview' || item.key === 'giftCard' || item.key === 'affiliate'"
+              <p v-if="item.key === 'overview' || item.key === 'giftCard'"
                 class="px-4 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {{ t(`personalCenter.groups.${item.key === 'giftCard' ? 'orders' : item.key}`) }}
               </p>
@@ -119,7 +120,6 @@
 
           <ProfilePanel v-else-if="currentSection === 'profile'" />
           <SecurityPanel v-else-if="currentSection === 'security'" />
-          <AffiliatePanel v-else-if="currentSection === 'affiliate'" />
           <InvitationPanel v-else-if="currentSection === 'invitation'" />
           <div v-else-if="currentSection === 'reseller' && canAccessResellerConsole" class="rounded-2xl border bg-card p-6 shadow-sm">
             <h2 class="text-xl font-bold text-foreground">{{ t('resellerConsole.title') }}</h2>
@@ -130,6 +130,9 @@
           </div>
           <GiftCardPanel v-else-if="currentSection === 'giftCard'" />
           <ApiPanel v-else-if="currentSection === 'api'" />
+          <PointsPanel v-else-if="currentSection === 'points'" />
+          <PointsMallPanel v-else-if="currentSection === 'pointsMall'" />
+          <PointsExchangeOrdersPanel v-else-if="currentSection === 'pointsOrders'" />
           <ProfilePanel v-else />
         </section>
       </div>
@@ -156,9 +159,11 @@ import { Button } from '@/components/ui/button'
 import ProfilePanel from './personal/ProfilePanel.vue'
 import SecurityPanel from './personal/SecurityPanel.vue'
 import GiftCardPanel from './personal/GiftCardPanel.vue'
-import AffiliatePanel from './personal/AffiliatePanel.vue'
 import InvitationPanel from './personal/InvitationPanel.vue'
 import ApiPanel from './personal/ApiPanel.vue'
+import PointsPanel from './personal/PointsPanel.vue'
+import PointsMallPanel from './personal/PointsMallPanel.vue'
+import PointsExchangeOrdersPanel from './personal/PointsExchangeOrdersPanel.vue'
 import { usePersonalCenter, type PersonalSection } from '../composables/usePersonalCenter'
 
 const { t } = useI18n()

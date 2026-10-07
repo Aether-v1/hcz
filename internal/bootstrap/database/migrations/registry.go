@@ -16,6 +16,7 @@ import (
 	mappingdomain "github.com/Aether-v1/hcz/internal/modules/catalog/mapping/domain"
 	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
 	channelclientdomain "github.com/Aether-v1/hcz/internal/modules/channelclient/domain"
+	checkindomain "github.com/Aether-v1/hcz/internal/modules/checkin/domain"
 	contentdomain "github.com/Aether-v1/hcz/internal/modules/content/domain"
 	coupondomain "github.com/Aether-v1/hcz/internal/modules/coupon/domain"
 	downstreamcallbackdomain "github.com/Aether-v1/hcz/internal/modules/downstreamcallback/domain"
@@ -31,6 +32,8 @@ import (
 	orderriskcontract "github.com/Aether-v1/hcz/internal/modules/orderrisk/contract"
 	orderriskdomain "github.com/Aether-v1/hcz/internal/modules/orderrisk/domain"
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
+	pointsdomain "github.com/Aether-v1/hcz/internal/modules/points/domain"
+	pointsmalldomain "github.com/Aether-v1/hcz/internal/modules/pointsmall/domain"
 	procurementdomain "github.com/Aether-v1/hcz/internal/modules/procurement/domain"
 	promotiondomain "github.com/Aether-v1/hcz/internal/modules/promotion/domain"
 	reconciliationdomain "github.com/Aether-v1/hcz/internal/modules/reconciliation/domain"
@@ -78,6 +81,11 @@ func AutoMigrate() error {
 		&orderriskdomain.LockKey{},
 		&cartdomain.Item{},
 		&paymentdomain.PaymentChannel{},
+		&pointsdomain.Account{},
+		&pointsdomain.LedgerEntry{},
+		&checkindomain.UserCheckin{},
+		&pointsmalldomain.PointsProduct{},
+		&pointsmalldomain.ExchangeOrder{},
 		&paymentdomain.Payment{},
 		&cardsecretdomain.Secret{},
 		&cardsecretdomain.Batch{},
@@ -120,6 +128,7 @@ func AutoMigrate() error {
 		&supportdomain.Attachment{},
 		&supportdomain.Audit{},
 		&sitebuilderdomain.HomeEntry{},
+		&sitebuilderdomain.HomeFeaturedCategory{},
 		&sitebuilderdomain.DiscoveryBlock{},
 		&sitebuilderdomain.SiteAuditLog{},
 	); err != nil {
@@ -199,6 +208,37 @@ func AutoMigrate() error {
 	}
 	if err := migrateGrandfatheredAffiliateApplications(db); err != nil {
 		return err
+	}
+	if err := MigrateNavConfigDedup(db); err != nil {
+		return err
+	}
+	if err := migrateC2CPaymentMethodTypeCase(db); err != nil {
+		return err
+	}
+	return nil
+}
+
+// migrateC2CPaymentMethodTypeCase 把 c2c_payment_methods 历史小写 type
+// （bank_card/alipay/wechat）归一化为大写（BANK_CARD/ALIPAY/WECHAT）。
+// 幂等：已为大写的行不受影响。
+func migrateC2CPaymentMethodTypeCase(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	if !db.Migrator().HasTable(&c2cdomain.PaymentMethod{}) {
+		return nil
+	}
+	updates := []struct{ from, to string }{
+		{"bank_card", "BANK_CARD"},
+		{"alipay", "ALIPAY"},
+		{"wechat", "WECHAT"},
+	}
+	for _, u := range updates {
+		if err := db.Model(&c2cdomain.PaymentMethod{}).
+			Where("type = ?", u.from).
+			UpdateColumn("type", u.to).Error; err != nil {
+			return err
+		}
 	}
 	return nil
 }

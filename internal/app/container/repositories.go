@@ -13,6 +13,7 @@ import (
 	mappinggormstore "github.com/Aether-v1/hcz/internal/modules/catalog/mapping/infrastructure/gormstore"
 	productgormstore "github.com/Aether-v1/hcz/internal/modules/catalog/product/store/gormstore"
 	channelclientstore "github.com/Aether-v1/hcz/internal/modules/channelclient/infrastructure/gormstore"
+	checkingormstore "github.com/Aether-v1/hcz/internal/modules/checkin/infrastructure/gormstore"
 	coupongormstore "github.com/Aether-v1/hcz/internal/modules/coupon/infrastructure/gormstore"
 	dashboardgormstore "github.com/Aether-v1/hcz/internal/modules/dashboard/infrastructure/gormstore"
 	downstreamcallbackgormstore "github.com/Aether-v1/hcz/internal/modules/downstreamcallback/infrastructure/gormstore"
@@ -26,6 +27,8 @@ import (
 	notificationgormstore "github.com/Aether-v1/hcz/internal/modules/notification/infrastructure/gormstore"
 	ordergormstore "github.com/Aether-v1/hcz/internal/modules/order/infrastructure/gormstore"
 	paymentgormstore "github.com/Aether-v1/hcz/internal/modules/payment/infrastructure/gormstore"
+	pointsgormstore "github.com/Aether-v1/hcz/internal/modules/points/infrastructure/gormstore"
+	pointsmallgormstore "github.com/Aether-v1/hcz/internal/modules/pointsmall/infrastructure/gormstore"
 	procurementgormstore "github.com/Aether-v1/hcz/internal/modules/procurement/infrastructure/gormstore"
 	promotiongormstore "github.com/Aether-v1/hcz/internal/modules/promotion/infrastructure/gormstore"
 	reconciliationgormstore "github.com/Aether-v1/hcz/internal/modules/reconciliation/infrastructure/gormstore"
@@ -65,6 +68,7 @@ func (c *Container) initRepositories() error {
 	c.CouponUsageRepo = coupongormstore.NewUsageStore(db)
 	c.PromotionRepo = promotiongormstore.New(db)
 	c.WalletRepo = walletgormstore.New(db)
+	c.PointsRepo = pointsgormstore.New(db)
 	c.WithdrawalRepo = withdrawalgormstore.New(db, c.WalletRepo)
 	c.C2CRepo = c2cgormstore.New(db, c.WalletRepo)
 	c.CategoryRepo = categorygormstore.NewCategoryStore(db)
@@ -92,7 +96,10 @@ func (c *Container) initRepositories() error {
 	c.UserNotificationRepo = usernotificationgormstore.New(db)
 	c.SupportTicketRepo = supportgormstore.New(db)
 	c.SiteHomeEntryRepo = sitebuildergormstore.NewHomeEntryStore(db)
+	c.SiteHomeFeaturedCategoryRepo = sitebuildergormstore.NewHomeFeaturedCategoryStore(db)
 	c.SiteDiscoveryBlockRepo = sitebuildergormstore.NewDiscoveryBlockStore(db)
 	c.SiteAuditRepo = sitebuildergormstore.NewSiteAuditStore(db)
+	c.CheckinRepo = checkingormstore.New(db)
+	c.PointsmallRepo = pointsmallgormstore.New(db)
 	return nil
 }

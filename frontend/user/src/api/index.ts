@@ -57,6 +57,25 @@ export { userAuthAPI, captchaAPI, configAPI } from './auth'
 export { userProfileAPI } from './user'
 export { userOrderAPI, paymentAPI } from './order'
 export { walletAPI, giftCardAPI } from './wallet'
+export {
+    pointsAPI,
+    checkinAPI,
+    pointsMallAPI,
+    genPointsIdempotencyKey,
+    POINTS_EXCHANGE_STATUS,
+    POINTS_PRODUCT_REASON_CODES,
+} from './points'
+export type {
+    PointsAccountData,
+    PointsLedgerEntry,
+    PointsProduct,
+    PointsProductDetail,
+    PointsExchangeOrder,
+    PointsExchangeResult,
+    CheckinStatusData,
+    CheckinResultData,
+    CheckinHistoryData,
+} from './points'
 export { notificationAPI } from './notification'
 export { supportAPI } from './support'
 export type {

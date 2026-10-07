@@ -105,8 +105,9 @@ var adminRouteReceivers = map[string]struct{}{
 }
 
 var publicAdminRoutes = map[string]struct{}{
-	"POST /admin/login":            {},
-	"POST /admin/login/verify-2fa": {},
+	"POST /admin/login":              {},
+	"POST /admin/login/verify-2fa":  {},
+	"POST /admin/auth/step-up":      {},
 }
 
 // extractAdminRoutesFromSource 从应用 admin 路由、模块路由和平台 HTTP 路由文件中读取调用。
@@ -207,46 +208,63 @@ func extractAdminRoutesFromFile(path string) ([]adminRoute, error) {
 
 	var routes []adminRoute
 	var routeErr error
-	ast.Inspect(file, func(node ast.Node) bool {
-		if routeErr != nil {
-			return false
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Body == nil {
+			continue
 		}
-		call, ok := node.(*ast.CallExpr)
-		if !ok || len(call.Args) == 0 {
+		// 注册函数名含 Admin 即视为后台路由登记（不再依赖形参命名，
+		// 否则形参改名会让路由静默脱离守卫）。
+		adminRegistrar := strings.Contains(fn.Name.Name, "Admin")
+		ast.Inspect(fn.Body, func(node ast.Node) bool {
+			if routeErr != nil {
+				return false
+			}
+			call, ok := node.(*ast.CallExpr)
+			if !ok || len(call.Args) == 0 {
+				return true
+			}
+			selector, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			receiver, ok := selector.X.(*ast.Ident)
+			if !ok {
+				return true
+			}
+			_, byReceiver := adminRouteReceivers[receiver.Name]
+			if !adminRegistrar && !byReceiver {
+				return true
+			}
+			if _, ok := adminRouteMethods[selector.Sel.Name]; !ok {
+				return true
+			}
+			pathLiteral, ok := call.Args[0].(*ast.BasicLit)
+			if !ok || pathLiteral.Kind != token.STRING {
+				routeErr = fmt.Errorf("%s:%d: admin route path must be a string literal", path, fileSet.Position(call.Args[0].Pos()).Line)
+				return false
+			}
+			routePath, err := strconv.Unquote(pathLiteral.Value)
+			if err != nil {
+				routeErr = fmt.Errorf("%s:%d: decode admin route path: %w", path, fileSet.Position(pathLiteral.Pos()).Line, err)
+				return false
+			}
+			// 后台路由一律挂在已带 /api/v1/admin 前缀的组上，路径必须是相对形式；
+			// 写绝对 /admin/... 会让运行时真实路径变成 /admin/admin/...，
+			// Casbin object 匹配不到任何角色策略。
+			if routePath == "/admin" || strings.HasPrefix(routePath, "/admin/") {
+				routeErr = fmt.Errorf("%s:%d: admin route path %q must be relative to the /admin group (it would mount as /admin/admin/... and match no RBAC seed)", path, fileSet.Position(pathLiteral.Pos()).Line, routePath)
+				return false
+			}
+			routes = append(routes, adminRoute{
+				method: selector.Sel.Name,
+				object: authz.NormalizeObject("/admin" + routePath),
+			})
 			return true
-		}
-		selector, ok := call.Fun.(*ast.SelectorExpr)
-		if !ok {
-			return true
-		}
-		receiver, ok := selector.X.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		if _, ok := adminRouteReceivers[receiver.Name]; !ok {
-			return true
-		}
-		if _, ok := adminRouteMethods[selector.Sel.Name]; !ok {
-			return true
-		}
-		pathLiteral, ok := call.Args[0].(*ast.BasicLit)
-		if !ok || pathLiteral.Kind != token.STRING {
-			routeErr = fmt.Errorf("%s:%d: admin route path must be a string literal", path, fileSet.Position(call.Args[0].Pos()).Line)
-			return false
-		}
-		routePath, err := strconv.Unquote(pathLiteral.Value)
-		if err != nil {
-			routeErr = fmt.Errorf("%s:%d: decode admin route path: %w", path, fileSet.Position(pathLiteral.Pos()).Line, err)
-			return false
-		}
-		routes = append(routes, adminRoute{
-			method: selector.Sel.Name,
-			object: authz.NormalizeObject("/admin" + routePath),
 		})
-		return true
-	})
-	if routeErr != nil {
-		return nil, routeErr
+		if routeErr != nil {
+			return nil, routeErr
+		}
 	}
 	return routes, nil
 }

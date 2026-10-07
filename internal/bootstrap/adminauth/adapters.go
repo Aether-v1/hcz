@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	totpapplication "github.com/Aether-v1/hcz/internal/modules/identity/totp/application"
 	"github.com/Aether-v1/hcz/internal/shared/passwordpolicy"
@@ -161,6 +162,14 @@ func (a admin2FAAuthTransportAdapter) GetAdminUsername(adminID uint) (string, er
 		return "", nil
 	}
 	return admin.Username, nil
+}
+
+func (a admin2FAAuthTransportAdapter) IssueStepUpChallenge(adminID uint, scope string) (string, time.Time, error) {
+	token, _, expiresAt, err := a.auth.IssueStepUpChallengeToken(adminID, scope)
+	if err != nil {
+		return "", time.Time{}, mapAdminAuthTransportError(err)
+	}
+	return token, expiresAt, nil
 }
 
 type admin2FAChallengeStoreAdapter struct{}

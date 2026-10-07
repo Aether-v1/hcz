@@ -2,6 +2,7 @@ package orderwiring
 
 import (
 	"github.com/Aether-v1/hcz/internal/app/container"
+	stepupwiring "github.com/Aether-v1/hcz/internal/bootstrap/stepup"
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
 )
 
@@ -31,6 +32,7 @@ func New(c *container.Container) Handlers {
 		AfterSale: ordertransport.NewAfterSaleHandler(
 			c.AfterSaleService,
 			orderAdminOrderLookupAdapter{orders: c.OrderStore},
+			stepupwiring.NewVerifier(c.AuthService),
 		),
 		User: ordertransport.NewUserHandler(
 			orderUserQueryAdapter{orders: c.OrderService},
@@ -59,11 +61,16 @@ func New(c *container.Container) Handlers {
 // tests and command surfaces that do not need the complete order handler set.
 func NewAdminRefundHandler(c *container.Container) *ordertransport.AdminRefundHandler {
 	refunds := orderAdminRefundAdapter{refunds: c.OrderRefundService}
+	verifier := c.StepUpVerifier
+	if verifier == nil {
+		verifier = stepupwiring.NewVerifier(c.AuthService)
+	}
 	return ordertransport.NewAdminRefundHandler(
 		refunds,
 		refunds,
 		orderAdminWalletRefundAdapter{refunds: c.OrderRefundService},
 		orderAdminOrderLookupAdapter{orders: c.OrderStore},
 		orderAdminStatusEmailAdapter{queue: c.QueueClient},
+		verifier,
 	)
 }

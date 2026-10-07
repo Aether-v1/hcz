@@ -31,6 +31,7 @@ import (
 	"github.com/Aether-v1/hcz/internal/constants"
 	externalidentitydomain "github.com/Aether-v1/hcz/internal/modules/identity/externalidentity/domain"
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
@@ -47,6 +48,16 @@ type adminOrderRefundFixture struct {
 	ManualRefundID uint
 	WalletRefundID uint
 }
+
+// testRefundStepUpVerifier 放行 admin_id=1 的挑战；scope 取自 header 本身，
+// 与 handler 期望的 scope 对齐；consume 恒成功（无状态）。
+type testRefundStepUpVerifier struct{}
+
+func (testRefundStepUpVerifier) ParseChallengeToken(token string) (stepup.Claims, error) {
+	return stepup.Claims{AdminID: 1, JTI: "stub-jti", Scope: token}, nil
+}
+
+func (testRefundStepUpVerifier) ConsumeChallenge(string) bool { return true }
 
 func setupAdminOrderRefundHandlerTest(t *testing.T) (*ordertransport.AdminRefundHandler, *gorm.DB) {
 	t.Helper()
@@ -78,12 +89,13 @@ func setupAdminOrderRefundHandlerTest(t *testing.T) (*ordertransport.AdminRefund
 	userRepo := userstore.New(db)
 	affiliateSvc := affiliateapp.NewService(affiliategormstore.New(db), nil, nil, nil, nil)
 	paymentRepo := paymentgormstore.New(db, "test-guest-credential-secret-with-32-bytes")
-	orderRefundService := orderrefund.New(orderRepo, userRepo, affiliateSvc, nil, nil, paymentRepo)
+	orderRefundService := orderrefund.New(orderRepo, userRepo, affiliateSvc, nil, nil, paymentRepo, nil)
 
 	return orderwiring.NewAdminRefundHandler(&container.Container{
 		OrderStore:         orderRepo,
 		PaymentStore:       paymentRepo,
 		OrderRefundService: orderRefundService,
+		StepUpVerifier:     testRefundStepUpVerifier{},
 	}), db
 }
 

@@ -351,6 +351,7 @@
     "more": "More"
   },
   "settings": {
+    "title": "Settings",
     "appearance": "Appearance",
     "language": "Language",
     "about": "About",
@@ -447,7 +448,8 @@
       "reseller": "Reseller Center",
       "giftCard": "Gift Card",
       "api": "API Integration",
-      "invitation": "Invitation"
+      "invitation": "Invitation",
+      "points": "My Points"
     },
     "common": {
       "loadFailed": "Failed to load personal center data, please try again later",
@@ -477,10 +479,13 @@
     "profile": {
       "title": "Profile",
       "subtitle": "Update your nickname and locale preference",
+      "avatarHint": "Avatar customization is not available, showing nickname initial",
       "emailLabel": "Email",
       "nicknameLabel": "Nickname",
       "nicknamePlaceholder": "Enter nickname",
       "localeLabel": "Locale",
+      "verified": "Verified",
+      "userId": "User ID",
       "save": "Save profile",
       "saving": "Saving...",
       "saveSuccess": "Profile updated"
@@ -688,6 +693,7 @@
       "checkingPayStatus": "Checking...",
       "pendingHint": "The system will refresh the recharge status automatically after payment, or you can check it manually.",
       "detailTitle": "Wallet Transactions",
+      "bills": "Bills",
       "empty": "No wallet transactions yet",
       "retry": "Retry",
       "directionIn": "In",
@@ -1173,6 +1179,56 @@
         "redeemFailed": "Failed to redeem gift card, please try again later"
       }
     },
+    "points": {
+      "balance": "My Points",
+      "history": "Points History",
+      "noRecords": "No points records yet",
+      "totalEarned": "Total Earned",
+      "totalSpent": "Total Spent",
+      "checkin": "Daily Check-in",
+      "checkinButton": "Check in",
+      "checkingIn": "Checking in…",
+      "checkedIn": "Checked in today",
+      "consecutiveDays": "{n} day streak",
+      "rewardPreview": "Earn {points} points today",
+      "monthTotal": "{n} days this month",
+      "checkinSuccess": "Checked in, +{points} points",
+      "checkinFailed": "Check-in failed, please try again later",
+      "mallEntry": "Points Mall",
+      "ordersEntry": "Redemptions",
+      "mallTitle": "Points Mall",
+      "mallSubtitle": "Redeem digital services and lifestyle benefits with points",
+      "mallEmpty": "No products available in the points mall",
+      "price": "Points Price",
+      "stock": "Stock",
+      "unlimitedStock": "Unlimited",
+      "myRedeemed": "My redemptions",
+      "instructionsTitle": "Redemption Notes",
+      "pointsUnit": "{points} points",
+      "exchangeButton": "Redeem now",
+      "exchanging": "Redeeming…",
+      "exchangeConfirmTitle": "Confirm redemption",
+      "exchangeConfirm": "This will spend {points} points to redeem \"{name}\". Points are non-refundable once redeemed (except cancelled orders). Continue?",
+      "exchangeSuccess": "Redeemed, {points} points deducted",
+      "exchangeFailed": "Redemption failed, please try again later",
+      "ordersTitle": "Redemption Records",
+      "ordersEmpty": "No redemption records yet",
+      "statusAll": "All",
+      "orderNo": "Order No.",
+      "unitPoints": "Unit Points",
+      "quantity": "Quantity",
+      "completedAt": "Completed At",
+      "reason": "Note",
+      "viewDetail": "View details",
+      "collapseDetail": "Hide details",
+      "cancelExchange": "Cancel",
+      "cancelConfirmTitle": "Cancel redemption",
+      "cancelConfirm": "Points will be refunded after cancelling. Cancel the redemption of \"{name}\"?",
+      "cancelSuccess": "Redemption cancelled, points refunded",
+      "cancelFailed": "Cancellation failed, please try again later",
+      "pendingHint": "Processing. If it stays pending for long, you can cancel to get your points back",
+      "manualHint": "Digital benefits are delivered manually per the redemption notes; watch for the result"
+    },
     "apiPanel": {
       "title": "API Integration",
       "subtitle": "Manage your API credentials",
@@ -1349,6 +1405,30 @@
         "sendCodeFailed": "Failed to send code",
         "resetFailed": "Reset failed, please check input"
       }
+    }
+  },
+  "points": {
+    "actions": {
+      "ADMIN_ADD": "Admin adjustment",
+      "ADMIN_DEDUCT": "Admin deduction",
+      "ADMIN_COMPENSATION": "Manual compensation",
+      "ORDER_REWARD": "Order reward",
+      "ORDER_REWARD_REVERSAL": "Order reward reversal",
+      "CHECKIN_REWARD": "Check-in reward",
+      "REDEEM": "Points redemption",
+      "REDEEM_REFUND": "Redemption refund"
+    },
+    "exchangeStatus": {
+      "PENDING": "Pending",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "reasonCodes": {
+      "INSUFFICIENT_POINTS": "Insufficient points",
+      "OUT_OF_STOCK": "Out of stock",
+      "LIMIT_REACHED": "Redemption limit reached"
     }
   },
   "order": {
@@ -1830,6 +1910,7 @@
       "product": "Service recharge orders",
       "recharge": "USDT wallet top-ups"
     },
+    "rechargeRecords": "Top-up Records",
     "rechargeEmpty": "No top-up orders yet",
     "rechargeEmptyAction": "Top up now",
     "rechargePayable": "Payable amount",
@@ -2293,6 +2374,107 @@
       "notFound": "Trade not found",
       "noPaymentMethod": "No payment method configured",
       "insufficientBalance": "Insufficient balance"
+    }
+  },
+  "paymentMethods": {
+    "pageTitle": "Payment Methods",
+    "pageSubtitle": "Manage your USDT address, bank card, Alipay and WeChat receiving info",
+    "digitalAssets": "Digital Assets",
+    "c2cMethods": "C2C Payment Methods",
+    "default": "Default",
+    "setDefault": "Set as default",
+    "setDefaultSuccess": "Set as default",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete Payment Method",
+    "deleteConfirm": "Delete this payment method? This cannot be undone.",
+    "deleted": "Deleted",
+    "usdtEmpty": "No USDT TRC20 address linked yet",
+    "bindAddress": "Link address",
+    "fiatEmpty": "No bank card, Alipay or WeChat payment method added yet",
+    "addMethod": "Add Payment Method",
+    "qrBadge": "QR code",
+    "notBoundTip": "No USDT TRC20 address linked yet",
+    "goBind": "Link now",
+    "bindTipTitle": "Please link your wallet address first",
+    "bindTipDesc": "Before recharging, you need to link your USDT TRC20 receiving address.",
+    "bindTipCancel": "Cancel",
+    "chooseSellerMethod": "Choose a payment method",
+    "types": {
+      "USDT_TRC20": "USDT TRC20",
+      "BANK_CARD": "Bank Card",
+      "ALIPAY": "Alipay",
+      "WECHAT": "WeChat"
+    },
+    "typesDesc": {
+      "USDT_TRC20": "Receive USDT on TRON network",
+      "BANK_CARD": "Receive via bank transfer",
+      "ALIPAY": "Alipay account / QR",
+      "WECHAT": "WeChat account / QR"
+    },
+    "fields": {
+      "address": "USDT Address",
+      "addressPlaceholder": "TRON address starting with T",
+      "addressValid": "Address format looks correct",
+      "addressInvalid": "Invalid address format",
+      "labelOptional": "Label (optional)",
+      "labelPlaceholder": "e.g. My wallet",
+      "accountName": "Account holder",
+      "accountNamePlaceholder": "Enter your real name",
+      "bankName": "Bank name",
+      "bankNamePlaceholder": "e.g. Industrial and Commercial Bank of China",
+      "bankAccount": "Bank card number",
+      "bankAccountPlaceholder": "Enter your debit card number",
+      "branchOptional": "Branch (optional)",
+      "branchPlaceholder": "e.g. XX Branch",
+      "alipayAccount": "Alipay account",
+      "wechatAccount": "WeChat ID",
+      "accountIdentifierPlaceholder": "Phone / email / WeChat ID",
+      "qrCodeOptional": "Payment QR code (optional)"
+    },
+    "form": {
+      "addTitle": "Add Payment Method",
+      "editTitle": "Edit Payment Method",
+      "stepChooseType": "Choose a payment method to add",
+      "changeType": "Change type",
+      "cancel": "Cancel",
+      "submit": "Next",
+      "submitting": "Submitting...",
+      "saved": "Saved successfully",
+      "saveFailed": "Save failed, please try again",
+      "loadFailed": "Failed to load details"
+    },
+    "qr": {
+      "upload": "Click or drag to upload QR code",
+      "limit": "JPG / PNG / WEBP only, max 5MB",
+      "reupload": "Re-upload",
+      "remove": "Remove",
+      "uploading": "Uploading...",
+      "typeRejected": "Image format not supported",
+      "sizeRejected": "Image must be under 5MB",
+      "uploadFailed": "Upload failed"
+    },
+    "verify": {
+      "title": "Security Verification",
+      "subtitle": "For your security, please complete step-up verification to continue.",
+      "totpLabel": "Authenticator code",
+      "totpPlaceholder": "6-digit code",
+      "passwordLabel": "Login password",
+      "passwordPlaceholder": "Enter your login password",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "submitting": "Verifying...",
+      "totpInvalid": "Enter the 6-digit code",
+      "passwordRequired": "Enter your login password"
+    },
+    "errors": {
+      "loadFailed": "Failed to load payment methods",
+      "operationFailed": "Operation failed, please try again",
+      "addressInvalid": "Enter a valid USDT TRC20 address",
+      "accountNameRequired": "Enter the account holder name",
+      "bankNameRequired": "Enter the bank name",
+      "bankAccountInvalid": "Enter a valid bank card number",
+      "accountIdentifierRequired": "Enter the receiving account"
     }
   }
 }

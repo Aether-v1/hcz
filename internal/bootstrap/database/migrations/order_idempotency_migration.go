@@ -14,7 +14,7 @@ const (
 )
 
 // ensureOrderIdempotencyUniqueIndex 为正式用户订单创建幂等部分唯一索引。
-// 仅对 idempotency_key 非空的行生效，避免游客订单（user_id=0, key=''）和子订单（key=''）冲突。
+// 仅对 idempotency_key 非空的行生效，避免游客订单（user_id=0, key=”）和子订单（key=”）冲突。
 // 这是 Order Create 幂等的数据库级安全边界：并发相同 (user_id, idempotency_key) 最多插入一行。
 func ensureOrderIdempotencyUniqueIndex() error {
 	if gormdb.DB == nil {
@@ -28,9 +28,9 @@ func ensureOrderIdempotencyUniqueIndex() error {
 	// 预检：是否存在重复的 (user_id, idempotency_key) 组合（仅非空 key）。
 	// 历史数据理论上不会有（此前无幂等功能），但为安全起见先检查。
 	type dupGroup struct {
-		UserID          uint
-		IdempotencyKey  string
-		Count           int64
+		UserID         uint
+		IdempotencyKey string
+		Count          int64
 	}
 	var groups []dupGroup
 	if err := gormdb.DB.Model(&orderdomain.Order{}).

@@ -3,6 +3,7 @@ package walletbootstrap
 import (
 	"github.com/Aether-v1/hcz/internal/app/container"
 	channeluserwiring "github.com/Aether-v1/hcz/internal/bootstrap/channeluser"
+	stepupwiring "github.com/Aether-v1/hcz/internal/bootstrap/stepup"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 )
 
@@ -20,6 +21,7 @@ func New(c *container.Container) Handlers {
 		),
 		Admin: wallettransport.NewAdminHandler(
 			wallets, c.UserStore, c.PaymentChannelStore, c.PaymentStore, c.SettingService,
+			stepupwiring.NewVerifier(c.AuthService),
 		),
 		Channel: wallettransport.NewChannelHandler(
 			wallets,

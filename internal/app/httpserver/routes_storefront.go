@@ -22,10 +22,14 @@ import (
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
 	paymenttransport "github.com/Aether-v1/hcz/internal/modules/payment/transport/http"
 	paymentcallbacktransport "github.com/Aether-v1/hcz/internal/modules/payment/transport/http/callback"
+	pointsphttp "github.com/Aether-v1/hcz/internal/modules/points/transport/http"
+	checkinphttp "github.com/Aether-v1/hcz/internal/modules/checkin/transport/http"
+	pointsmallphttp "github.com/Aether-v1/hcz/internal/modules/pointsmall/transport/http"
 	resellertransport "github.com/Aether-v1/hcz/internal/modules/reseller/transport/http/user"
 	publicconfigtransport "github.com/Aether-v1/hcz/internal/modules/settings/transport/http/public"
 	supporttickethttp "github.com/Aether-v1/hcz/internal/modules/supportticket/transport/http"
 	usernotificationhttp "github.com/Aether-v1/hcz/internal/modules/usernotification/transport/http"
+	uploadtransport "github.com/Aether-v1/hcz/internal/modules/upload/transport/http"
 	wallettransport "github.com/Aether-v1/hcz/internal/modules/wallet/transport/http"
 	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 
@@ -67,6 +71,9 @@ func registerStorefrontRoutes(
 	paymentLatestHandler *paymenttransport.LatestHandler,
 	paymentWriteHandler *paymenttransport.WriteHandler,
 	userWalletHandler *wallettransport.UserHandler,
+	userPointsHandler *pointsphttp.UserHandler,
+	userCheckinHandler *checkinphttp.UserHandler,
+	userPointsmallHandler *pointsmallphttp.UserHandler,
 	userWithdrawalHandler *withdrawalhttp.UserHandler,
 	userNotificationHandler *usernotificationhttp.UserHandler,
 	c2cHandler *c2ctransport.Handler,
@@ -147,6 +154,9 @@ func registerStorefrontRoutes(
 		paymenttransport.RegisterUserWriteRoutes(user, paymentWriteHandler)
 		paymenttransport.RegisterUserLatestRoute(user, paymentLatestHandler)
 		wallettransport.RegisterUserRoutes(user, userWalletHandler)
+		pointsphttp.RegisterUserRoutes(user, userPointsHandler)
+		checkinphttp.RegisterUserRoutes(user, userCheckinHandler)
+		pointsmallphttp.RegisterUserRoutes(user, userPointsmallHandler)
 		withdrawalhttp.RegisterUserRoutes(user, userWithdrawalHandler)
 		c2ctransport.RegisterUserRoutes(user, c2cHandler)
 		usernotificationhttp.RegisterUserRoutes(user, userNotificationHandler)
@@ -170,6 +180,9 @@ func registerStorefrontRoutes(
 
 		// API 对接权限（用户中心）
 		apicredentialtransport.RegisterUserRoutes(user, userApiCredentialHandler)
+
+		// 用户侧文件上传（复用通用 upload handler）
+		uploadtransport.RegisterUserRoutes(user, uploadtransport.NewAdminHandler(c.UploadService, c.ContentMediaService))
 	}
 }
 

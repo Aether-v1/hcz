@@ -2,6 +2,7 @@ package walletwithdrawalbootstrap
 
 import (
 	"github.com/Aether-v1/hcz/internal/app/container"
+	stepupwiring "github.com/Aether-v1/hcz/internal/bootstrap/stepup"
 	withdrawalhttp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/transport/http"
 )
 
@@ -15,6 +16,6 @@ type Handlers struct {
 func New(c *container.Container) Handlers {
 	return Handlers{
 		User:  withdrawalhttp.NewUserHandler(c.WithdrawalService),
-		Admin: withdrawalhttp.NewAdminHandler(c.WithdrawalService),
+		Admin: withdrawalhttp.NewAdminHandler(c.WithdrawalService, stepupwiring.NewVerifier(c.AuthService)),
 	}
 }

@@ -14,6 +14,7 @@ import (
 	complianceapp "github.com/Aether-v1/hcz/internal/modules/compliance/application"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
 	ordertransport "github.com/Aether-v1/hcz/internal/modules/order/transport/http"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	settingsstore "github.com/Aether-v1/hcz/internal/modules/settings/infrastructure/gormstore"
 	"github.com/Aether-v1/hcz/internal/shared/money"
 
@@ -114,12 +115,14 @@ func TestDuplicateManualRefundDoesNotDoubleCredit(t *testing.T) {
 	doRefund := func(amount string) int {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
+		c.Set("admin_id", uint(1))
 		c.Params = gin.Params{{Key: "id", Value: fmt.Sprintf("%d", order.ID)}}
 		c.Request = httptest.NewRequest(http.MethodPost,
 			fmt.Sprintf("/admin/orders/%d/manual-refund", order.ID),
 			bytes.NewBufferString(fmt.Sprintf(`{"amount":%q,"remark":"dup"}`, amount)),
 		)
 		c.Request.Header.Set("Content-Type", "application/json")
+		c.Request.Header.Set("X-Auth-Challenge", stepup.Scope("refund.manual", "order", uint(order.ID)))
 		handler.AdminManualRefundOrder(c)
 		var resp struct {
 			StatusCode int `json:"status_code"`

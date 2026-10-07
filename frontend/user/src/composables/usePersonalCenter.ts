@@ -1,14 +1,14 @@
 import { computed, onMounted, ref, watch, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Banknote, Home, Gift, ShieldCheck, UserCircle, Megaphone, Key, Share2 } from 'lucide-vue-next'
+import { Banknote, Home, Gift, ShieldCheck, UserCircle, Key, Share2, Coins } from 'lucide-vue-next'
 import type { PageAlert } from '../utils/alerts'
 import { useAppStore } from '../stores/app'
 import { useUserProfileStore } from '../stores/userProfile'
 import { useUserAuthStore } from '../stores/userAuth'
 import type { PublicMemberLevel } from '../api'
 
-export type PersonalSection = 'overview' | 'profile' | 'security' | 'giftCard' | 'affiliate' | 'invitation' | 'reseller' | 'api'
+export type PersonalSection = 'overview' | 'profile' | 'security' | 'giftCard' | 'invitation' | 'reseller' | 'api' | 'points' | 'pointsMall' | 'pointsOrders'
 
 export interface PersonalSectionItem {
   key: PersonalSection
@@ -31,7 +31,7 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
     { key: 'profile', label: 'personalCenter.tabs.profile', icon: UserCircle },
     { key: 'security', label: 'personalCenter.tabs.security', icon: ShieldCheck },
     { key: 'giftCard', label: 'personalCenter.tabs.giftCard', icon: Gift },
-    { key: 'affiliate', label: 'personalCenter.tabs.affiliate', icon: Megaphone },
+    { key: 'points', label: 'personalCenter.tabs.points', icon: Coins },
     { key: 'invitation', label: 'personalCenter.tabs.invitation', icon: Share2 },
     { key: 'reseller', label: 'personalCenter.tabs.reseller', icon: Banknote },
     { key: 'api', label: 'personalCenter.tabs.api', icon: Key },
@@ -39,13 +39,15 @@ export function usePersonalCenter(sectionGetter: () => PersonalSection) {
 
   const sectionRouteMap: Record<PersonalSection, string> = {
     overview: '/me',
-    profile: '/me/profile',
+    profile: '/me/settings',
     security: '/me/security',
-    affiliate: '/me/affiliate',
     invitation: '/me/invitation',
     reseller: '/me/reseller',
     giftCard: '/me/gift-cards',
     api: '/me/api',
+    points: '/me/points',
+    pointsMall: '/me/points/mall',
+    pointsOrders: '/me/points/orders',
   }
 
   const canAccessResellerConsole = computed(() => appStore.canAccessResellerConsole)

@@ -27,6 +27,8 @@ import (
 	productgormstore "github.com/Aether-v1/hcz/internal/modules/catalog/product/store/gormstore"
 	channelclientapp "github.com/Aether-v1/hcz/internal/modules/channelclient/application"
 	channelclientcontract "github.com/Aether-v1/hcz/internal/modules/channelclient/contract"
+	checkinapp "github.com/Aether-v1/hcz/internal/modules/checkin/application"
+	checkingormstore "github.com/Aether-v1/hcz/internal/modules/checkin/infrastructure/gormstore"
 	complianceapp "github.com/Aether-v1/hcz/internal/modules/compliance/application"
 	contentapp "github.com/Aether-v1/hcz/internal/modules/content/application"
 	couponapp "github.com/Aether-v1/hcz/internal/modules/coupon/application"
@@ -64,6 +66,10 @@ import (
 	paymentapp "github.com/Aether-v1/hcz/internal/modules/payment/application"
 	paymentcontract "github.com/Aether-v1/hcz/internal/modules/payment/contract"
 	paymentprovider "github.com/Aether-v1/hcz/internal/modules/payment/infrastructure/gateway/provider"
+	pointsapp "github.com/Aether-v1/hcz/internal/modules/points/application"
+	pointsgormstore "github.com/Aether-v1/hcz/internal/modules/points/infrastructure/gormstore"
+	pointsmallapp "github.com/Aether-v1/hcz/internal/modules/pointsmall/application"
+	pointsmallgormstore "github.com/Aether-v1/hcz/internal/modules/pointsmall/infrastructure/gormstore"
 	procurementapp "github.com/Aether-v1/hcz/internal/modules/procurement/application"
 	procurementgormstore "github.com/Aether-v1/hcz/internal/modules/procurement/infrastructure/gormstore"
 	promotionapp "github.com/Aether-v1/hcz/internal/modules/promotion/application"
@@ -91,6 +97,7 @@ import (
 	walletgormstore "github.com/Aether-v1/hcz/internal/modules/wallet/infrastructure/gormstore"
 	withdrawalapp "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/application"
 	withdrawalgormstore "github.com/Aether-v1/hcz/internal/modules/walletwithdrawal/infrastructure/gormstore"
+	"github.com/Aether-v1/hcz/internal/platform/http/stepup"
 	"github.com/Aether-v1/hcz/internal/queue"
 	"github.com/Aether-v1/hcz/internal/shared/mailbrand"
 )
@@ -101,126 +108,135 @@ type Container struct {
 	QueueClient *queue.Client
 
 	// Repositories
-	AdminStore             admincontract.Store
-	UserStore              usercontract.Store
-	ExternalIdentityStore  externalidentitycontract.Store
-	EmailVerificationStore emailverificationcontract.Store
-	OrderStore             ordercontract.Store
-	PaymentStore           paymentcontract.Store
-	PaymentChannelStore    paymentcontract.ChannelStore
-	CardSecretRepo         *cardsecretgormstore.Store
-	CardSecretBatchRepo    *cardsecretgormstore.BatchStore
-	GiftCardRepo           *giftcardgormstore.Store
-	FulfillmentStore       fulfillmentcontract.Store
-	ProductRepo            *productgormstore.ProductStore
-	ProductSKURepo         *productgormstore.SKUStore
-	CartRepo               *cartgormstore.Store
-	CouponRepo             *coupongormstore.Store
-	CouponUsageRepo        *coupongormstore.UsageStore
-	PromotionRepo          *promotiongormstore.Store
-	WalletRepo             *walletgormstore.Store
-	WithdrawalRepo         *withdrawalgormstore.Store
-	C2CRepo                *c2cgormstore.Store
-	CategoryRepo           categorycontract.Repository
-	SettingRepo            settingscontract.Store
-	UserLoginLogRepo       auditlogcontract.UserLoginRepository
-	AuthzAuditLogRepo      auditlogcontract.AuthzRepository
-	NotificationLogRepo    *notificationgormstore.LogStore
-	AdminLoginLogRepo      auditlogcontract.AdminLoginRepository
-	DashboardRepo          dashboardcontract.Repository
-	AffiliateRepo          affiliatecontract.Store
-	ResellerStore          *resellergormstore.Store
-	ApiCredentialRepo      apicredentialcontract.Repository
-	SiteConnectionRepo     siteconnectioncontract.Repository
-	ProductMappingRepo     *mappinggormstore.MappingStore
-	SKUMappingRepo         *mappinggormstore.SKUMappingStore
-	ProcurementOrderRepo   *procurementgormstore.Store
-	DownstreamOrderRefRepo downstreamcallbackcontract.Repository
-	ReconciliationJobRepo  reconciliationcontract.JobRepository
-	ReconciliationItemRepo reconciliationcontract.ItemRepository
-	ChannelClientStore     channelclientcontract.Store
-	TelegramBroadcastRepo  broadcastcontract.Store
-	MemberLevelRepo        memberlevelcontract.LevelRepository
-	MemberLevelPriceRepo   *memberlevelgormstore.PriceStore
-	MemberLevelUserRepo    memberlevelcontract.UserRepository
-	UserNotificationRepo   *usernotificationgormstore.Store
-	SupportTicketRepo      *supportgormstore.Store
-	SiteHomeEntryRepo      *sitebuildergormstore.HomeEntryStore
-	SiteDiscoveryBlockRepo *sitebuildergormstore.DiscoveryBlockStore
-	SiteAuditRepo          *sitebuildergormstore.SiteAuditStore
+	AdminStore                   admincontract.Store
+	UserStore                    usercontract.Store
+	ExternalIdentityStore        externalidentitycontract.Store
+	EmailVerificationStore       emailverificationcontract.Store
+	OrderStore                   ordercontract.Store
+	PaymentStore                 paymentcontract.Store
+	PaymentChannelStore          paymentcontract.ChannelStore
+	CardSecretRepo               *cardsecretgormstore.Store
+	CardSecretBatchRepo          *cardsecretgormstore.BatchStore
+	GiftCardRepo                 *giftcardgormstore.Store
+	FulfillmentStore             fulfillmentcontract.Store
+	ProductRepo                  *productgormstore.ProductStore
+	ProductSKURepo               *productgormstore.SKUStore
+	CartRepo                     *cartgormstore.Store
+	CouponRepo                   *coupongormstore.Store
+	CouponUsageRepo              *coupongormstore.UsageStore
+	PromotionRepo                *promotiongormstore.Store
+	WalletRepo                   *walletgormstore.Store
+	PointsRepo                   *pointsgormstore.Store
+	WithdrawalRepo               *withdrawalgormstore.Store
+	C2CRepo                      *c2cgormstore.Store
+	CategoryRepo                 categorycontract.Repository
+	SettingRepo                  settingscontract.Store
+	UserLoginLogRepo             auditlogcontract.UserLoginRepository
+	AuthzAuditLogRepo            auditlogcontract.AuthzRepository
+	NotificationLogRepo          *notificationgormstore.LogStore
+	AdminLoginLogRepo            auditlogcontract.AdminLoginRepository
+	DashboardRepo                dashboardcontract.Repository
+	AffiliateRepo                affiliatecontract.Store
+	ResellerStore                *resellergormstore.Store
+	ApiCredentialRepo            apicredentialcontract.Repository
+	SiteConnectionRepo           siteconnectioncontract.Repository
+	ProductMappingRepo           *mappinggormstore.MappingStore
+	SKUMappingRepo               *mappinggormstore.SKUMappingStore
+	ProcurementOrderRepo         *procurementgormstore.Store
+	DownstreamOrderRefRepo       downstreamcallbackcontract.Repository
+	ReconciliationJobRepo        reconciliationcontract.JobRepository
+	ReconciliationItemRepo       reconciliationcontract.ItemRepository
+	ChannelClientStore           channelclientcontract.Store
+	TelegramBroadcastRepo        broadcastcontract.Store
+	MemberLevelRepo              memberlevelcontract.LevelRepository
+	MemberLevelPriceRepo         *memberlevelgormstore.PriceStore
+	MemberLevelUserRepo          memberlevelcontract.UserRepository
+	UserNotificationRepo         *usernotificationgormstore.Store
+	SupportTicketRepo            *supportgormstore.Store
+	SiteHomeEntryRepo            *sitebuildergormstore.HomeEntryStore
+	SiteHomeFeaturedCategoryRepo *sitebuildergormstore.HomeFeaturedCategoryStore
+	SiteDiscoveryBlockRepo       *sitebuildergormstore.DiscoveryBlockStore
+	SiteAuditRepo                *sitebuildergormstore.SiteAuditStore
+	CheckinRepo                  *checkingormstore.Store
+	PointsmallRepo               *pointsmallgormstore.Store
 
 	// Services
-	AuthzService                  *authz.Service
-	AuthService                   *adminauthapp.Service
-	TOTPService                   *admintotpapp.Service
-	UserTOTPService               *usertotpapp.Service
-	UserAuthService               *userauthapp.Service
-	TelegramAuthService           *telegramauthapp.Service
-	GoogleAuthService             *googleauthapp.Service
-	EmailSender                   *notificationsmtp.Service
-	EmailBrandResolver            mailbrand.Resolver
-	CaptchaService                *captchaapp.Service
-	UploadService                 *uploadapp.Service
-	ProductReadService            *productapplication.Service
-	ProductAdminService           *productadmin.AdminService
-	ProductWriteService           *productwrite.WriteService
-	ContentPostService            *contentapp.PostService
-	ContentPostCategoryService    *contentapp.PostCategoryService
-	ContentBannerService          *contentapp.BannerService
-	ContentMediaService           *contentapp.MediaService
-	CategoryService               *categoryapp.Service
-	SettingService                *settingsapp.Service
-	SitemapService                *sitemapapp.Service
-	ExchangeRateService           *exchangerateapp.Service
-	CartService                   *cartapp.Service
-	WalletService                 *walletapp.Service
-	WithdrawalService             *withdrawalapp.Service
-	C2CService                    *c2capp.Service
-	OrderRefundService            *orderrefund.Service
-	AfterSaleService              *aftersale.Service
-	OrderService                  *orderapp.OrderService
-	FulfillmentService            *fulfillmentapp.Service
-	CouponAdminService            *couponapp.AdminService
-	PromotionAdminService         *promotionapp.AdminService
-	PaymentService                *paymentapp.PaymentService
-	CardSecretService             *cardsecretapp.Service
-	GiftCardService               *giftcardapp.Service
-	UserLoginLogService           *auditlogapp.UserLoginService
-	AuthzAuditService             *auditlogapp.AuthzService
-	AdminLoginLogService          *auditlogapp.AdminLoginService
-	NotificationLogService        *notificationapp.LogService
-	DashboardService              *dashboardapp.Service
-	NotificationService           *notificationapp.Service
-	AffiliateService              *affiliateapp.Service
-	ResellerDomainResolver        *reseller.DomainResolver
-	ResellerPricingResolver       *orderapp.ResellerPricingResolver
-	ResellerManagementService     *reseller.ManagementService
-	ResellerSiteConfigService     *reseller.SiteConfigService
-	ResellerProductSettingService *reseller.ProductSettingService
-	ResellerAccountingQuery       *reseller.AccountingQueryService
-	ResellerAccountingWithdraw    *reseller.AccountingWithdrawService
-	ResellerAccountingLedger      *reseller.AccountingLedgerService
-	ResellerOrderService          *reseller.OrderQueryService
-	ResellerOperationsService     *reseller.OperationsService
-	ApiCredentialService          *apicredentialapp.Service
-	SiteConnectionService         *siteconnectionapp.Service
-	ProductMappingService         *mappingapp.Service
-	ProcurementOrderService       *procurementapp.Service
-	DownstreamCallbackService     *downstreamcallbackapp.Service
-	ReconciliationService         *reconciliationapp.Service
-	ChannelClientService          *channelclientapp.Service
-	TelegramBroadcastService      *broadcastapp.Service
-	MemberLevelService            *memberlevelapp.Service
-	AdProxyService                *adproxyapp.Service
-	OrderRiskControlService       *orderriskapp.Service
-	ComplianceService             *complianceapp.Service
-	UserNotificationService       *usernotificationapp.Service
-	SupportTicketService          *supportapp.Service
-	SiteHomeEntryService          *sitebuilderapp.HomeEntryService
-	SiteDiscoveryBlockService     *sitebuilderapp.DiscoveryBlockService
-	SiteBrandService              *sitebuilderapp.BrandService
-	SiteAuditService              *sitebuilderapp.AuditService
-	SiteBuilderAdminHandler       *sitebuilderhttp.AdminHandler
+	AuthzService                    *authz.Service
+	AuthService                     *adminauthapp.Service
+	StepUpVerifier                  stepup.Verifier // 测试注入用；生产为 nil 时由 wiring 从 AuthService 派生
+	TOTPService                     *admintotpapp.Service
+	UserTOTPService                 *usertotpapp.Service
+	UserAuthService                 *userauthapp.Service
+	TelegramAuthService             *telegramauthapp.Service
+	GoogleAuthService               *googleauthapp.Service
+	EmailSender                     *notificationsmtp.Service
+	EmailBrandResolver              mailbrand.Resolver
+	CaptchaService                  *captchaapp.Service
+	UploadService                   *uploadapp.Service
+	ProductReadService              *productapplication.Service
+	ProductAdminService             *productadmin.AdminService
+	ProductWriteService             *productwrite.WriteService
+	ContentPostService              *contentapp.PostService
+	ContentPostCategoryService      *contentapp.PostCategoryService
+	ContentBannerService            *contentapp.BannerService
+	ContentMediaService             *contentapp.MediaService
+	CategoryService                 *categoryapp.Service
+	SettingService                  *settingsapp.Service
+	SitemapService                  *sitemapapp.Service
+	ExchangeRateService             *exchangerateapp.Service
+	CartService                     *cartapp.Service
+	WalletService                   *walletapp.Service
+	PointsService                   *pointsapp.Service
+	CheckinService                  *checkinapp.Service
+	PointsmallService               *pointsmallapp.Service
+	WithdrawalService               *withdrawalapp.Service
+	C2CService                      *c2capp.Service
+	OrderRefundService              *orderrefund.Service
+	AfterSaleService                *aftersale.Service
+	OrderService                    *orderapp.OrderService
+	FulfillmentService              *fulfillmentapp.Service
+	CouponAdminService              *couponapp.AdminService
+	PromotionAdminService           *promotionapp.AdminService
+	PaymentService                  *paymentapp.PaymentService
+	CardSecretService               *cardsecretapp.Service
+	GiftCardService                 *giftcardapp.Service
+	UserLoginLogService             *auditlogapp.UserLoginService
+	AuthzAuditService               *auditlogapp.AuthzService
+	AdminLoginLogService            *auditlogapp.AdminLoginService
+	NotificationLogService          *notificationapp.LogService
+	DashboardService                *dashboardapp.Service
+	NotificationService             *notificationapp.Service
+	AffiliateService                *affiliateapp.Service
+	ResellerDomainResolver          *reseller.DomainResolver
+	ResellerPricingResolver         *orderapp.ResellerPricingResolver
+	ResellerManagementService       *reseller.ManagementService
+	ResellerSiteConfigService       *reseller.SiteConfigService
+	ResellerProductSettingService   *reseller.ProductSettingService
+	ResellerAccountingQuery         *reseller.AccountingQueryService
+	ResellerAccountingWithdraw      *reseller.AccountingWithdrawService
+	ResellerAccountingLedger        *reseller.AccountingLedgerService
+	ResellerOrderService            *reseller.OrderQueryService
+	ResellerOperationsService       *reseller.OperationsService
+	ApiCredentialService            *apicredentialapp.Service
+	SiteConnectionService           *siteconnectionapp.Service
+	ProductMappingService           *mappingapp.Service
+	ProcurementOrderService         *procurementapp.Service
+	DownstreamCallbackService       *downstreamcallbackapp.Service
+	ReconciliationService           *reconciliationapp.Service
+	ChannelClientService            *channelclientapp.Service
+	TelegramBroadcastService        *broadcastapp.Service
+	MemberLevelService              *memberlevelapp.Service
+	AdProxyService                  *adproxyapp.Service
+	OrderRiskControlService         *orderriskapp.Service
+	ComplianceService               *complianceapp.Service
+	UserNotificationService         *usernotificationapp.Service
+	SupportTicketService            *supportapp.Service
+	SiteHomeEntryService            *sitebuilderapp.HomeEntryService
+	SiteHomeFeaturedCategoryService *sitebuilderapp.HomeFeaturedCategoryService
+	SiteDiscoveryBlockService       *sitebuilderapp.DiscoveryBlockService
+	SiteBrandService                *sitebuilderapp.BrandService
+	SiteAuditService                *sitebuilderapp.AuditService
+	SiteBuilderAdminHandler         *sitebuilderhttp.AdminHandler
 
 	PaymentProviderRegistry *paymentprovider.Registry
 }

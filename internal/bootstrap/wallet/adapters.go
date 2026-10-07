@@ -71,6 +71,7 @@ func (a walletTransportAdapter) AdminAdjustBalance(input wallettransport.AdjustB
 		Delta:           input.Delta,
 		Currency:        input.Currency,
 		Remark:          input.Remark,
+		Reference:       input.Reference,
 	})
 	return account, txn, mapWalletTransportError(err)
 }
@@ -133,6 +134,7 @@ func mapWalletTransportError(err error) error {
 	}{
 		{walletcontract.ErrInvalidAmount, wallettransport.ErrInvalidAmount},
 		{walletcontract.ErrInsufficientBalance, wallettransport.ErrInsufficientBalance},
+		{walletcontract.ErrIdempotencyConflict, wallettransport.ErrIdempotencyConflictTx},
 		{walletcontract.ErrNotSupportedForGuest, wallettransport.ErrNotSupportedForGuest},
 		{walletcontract.ErrRechargeNotFound, wallettransport.ErrRechargeNotFound},
 		{paymentapp.ErrPaymentInvalid, wallettransport.ErrPaymentInvalid},

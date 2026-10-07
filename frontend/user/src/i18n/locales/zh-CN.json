@@ -299,6 +299,7 @@
     "more": "更多"
   },
   "settings": {
+    "title": "设置",
     "appearance": "外观主题",
     "language": "语言",
     "about": "关于",
@@ -395,7 +396,8 @@
       "reseller": "分销中心",
       "giftCard": "礼品卡兑换",
       "api": "API 对接",
-      "invitation": "邀请中心"
+      "invitation": "邀请中心",
+      "points": "我的积分"
     },
     "common": {
       "loadFailed": "个人中心数据加载失败，请稍后重试",
@@ -425,10 +427,13 @@
     "profile": {
       "title": "资料设置",
       "subtitle": "更新昵称与语言偏好",
+      "avatarHint": "头像暂不支持自定义，显示昵称首字母",
       "emailLabel": "邮箱",
       "nicknameLabel": "昵称",
       "nicknamePlaceholder": "请输入昵称",
       "localeLabel": "语言偏好",
+      "verified": "已验证",
+      "userId": "用户ID",
       "save": "保存资料",
       "saving": "保存中...",
       "saveSuccess": "资料已更新"
@@ -640,6 +645,7 @@
       "checkingPayStatus": "检查中...",
       "pendingHint": "支付完成后系统将自动刷新到账状态，也可手动点击“检查支付状态”。",
       "detailTitle": "钱包明细",
+      "bills": "账单",
       "empty": "暂无钱包明细",
       "retry": "重试",
       "directionIn": "收入",
@@ -1125,6 +1131,56 @@
         "redeemFailed": "礼品卡兑换失败，请稍后重试"
       }
     },
+    "points": {
+      "balance": "我的积分",
+      "history": "积分记录",
+      "noRecords": "暂无积分记录",
+      "totalEarned": "累计获得",
+      "totalSpent": "累计使用",
+      "checkin": "每日签到",
+      "checkinButton": "签到",
+      "checkingIn": "签到中…",
+      "checkedIn": "今日已签到",
+      "consecutiveDays": "已连续签到 {n} 天",
+      "rewardPreview": "今日可得 {points} 积分",
+      "monthTotal": "本月共 {n} 天",
+      "checkinSuccess": "签到成功，+{points} 积分",
+      "checkinFailed": "签到失败，请稍后重试",
+      "mallEntry": "积分商城",
+      "ordersEntry": "兑换记录",
+      "mallTitle": "积分商城",
+      "mallSubtitle": "用积分兑换数字服务与生活权益",
+      "mallEmpty": "积分商城暂无商品",
+      "price": "积分价格",
+      "stock": "库存",
+      "unlimitedStock": "不限",
+      "myRedeemed": "我已兑换",
+      "instructionsTitle": "兑换须知",
+      "pointsUnit": "{points} 积分",
+      "exchangeButton": "立即兑换",
+      "exchanging": "兑换中…",
+      "exchangeConfirmTitle": "确认兑换",
+      "exchangeConfirm": "将消耗 {points} 积分兑换「{name}」，兑换后积分不可退回（订单取消除外）。确定继续吗？",
+      "exchangeSuccess": "兑换成功，已扣减 {points} 积分",
+      "exchangeFailed": "兑换失败，请稍后重试",
+      "ordersTitle": "兑换记录",
+      "ordersEmpty": "暂无兑换记录",
+      "statusAll": "全部",
+      "orderNo": "订单号",
+      "unitPoints": "单价积分",
+      "quantity": "数量",
+      "completedAt": "完成时间",
+      "reason": "备注",
+      "viewDetail": "查看详情",
+      "collapseDetail": "收起详情",
+      "cancelExchange": "取消兑换",
+      "cancelConfirmTitle": "确认取消兑换",
+      "cancelConfirm": "取消后积分将退回账户。确定取消「{name}」的兑换吗？",
+      "cancelSuccess": "已取消兑换，积分已退回",
+      "cancelFailed": "取消失败，请稍后重试",
+      "pendingHint": "兑换处理中，如长时间未完成可取消并退回积分",
+      "manualHint": "数字权益将按「兑换须知」由人工发放，请留意处理结果"
+    },
     "apiPanel": {
       "title": "API 对接",
       "subtitle": "管理您的 API 凭证",
@@ -1301,6 +1357,30 @@
         "sendCodeFailed": "验证码发送失败",
         "resetFailed": "重置失败，请检查输入"
       }
+    }
+  },
+  "points": {
+    "actions": {
+      "ADMIN_ADD": "管理员调整",
+      "ADMIN_DEDUCT": "管理员扣减",
+      "ADMIN_COMPENSATION": "人工补偿",
+      "ORDER_REWARD": "订单奖励",
+      "ORDER_REWARD_REVERSAL": "订单奖励冲正",
+      "CHECKIN_REWARD": "签到奖励",
+      "REDEEM": "积分兑换",
+      "REDEEM_REFUND": "兑换返还"
+    },
+    "exchangeStatus": {
+      "PENDING": "待处理",
+      "PROCESSING": "处理中",
+      "COMPLETED": "已完成",
+      "FAILED": "已失败",
+      "CANCELLED": "已取消"
+    },
+    "reasonCodes": {
+      "INSUFFICIENT_POINTS": "积分不足",
+      "OUT_OF_STOCK": "商品库存不足",
+      "LIMIT_REACHED": "已达兑换上限"
     }
   },
   "order": {
@@ -1782,6 +1862,7 @@
       "product": "服务充值订单",
       "recharge": "USDT 钱包充值"
     },
+    "rechargeRecords": "充值记录",
     "rechargeEmpty": "暂无充值订单",
     "rechargeEmptyAction": "去充值",
     "rechargePayable": "应付金额",
@@ -2011,13 +2092,15 @@
   },
   "support": {
     "title": "工单支持",
-    "help_center": "帮助与支持",
+    "help_center": "帮助支持",
     "help_subtitle": "遇到问题？提交工单，客服会尽快回复您",
     "my_tickets": "我的工单",
     "my_tickets_hint": "查看和跟进您提交的所有工单",
     "list_subtitle": "跟踪您的工单处理进度与客服回复",
     "create_ticket": "创建工单",
     "create_ticket_hint": "提交新的问题，客服将为您处理",
+    "news_info": "资讯",
+    "news_info_hint": "平台公告与最新动态",
     "create_subtitle": "请尽可能详细地描述您遇到的问题",
     "ticket_detail": "工单详情",
     "category": "问题分类",
@@ -2297,6 +2380,107 @@
       "notFound": "交易不存在",
       "noPaymentMethod": "未配置收款方式",
       "insufficientBalance": "余额不足"
+    }
+  },
+  "paymentMethods": {
+    "pageTitle": "收款方式",
+    "pageSubtitle": "管理 USDT 地址、银行卡、支付宝、微信等收款信息",
+    "digitalAssets": "数字资产",
+    "c2cMethods": "C2C 收款方式",
+    "default": "默认",
+    "setDefault": "设为默认",
+    "setDefaultSuccess": "已设为默认",
+    "edit": "修改",
+    "delete": "删除",
+    "deleteTitle": "删除收款方式",
+    "deleteConfirm": "确认删除该收款方式？删除后不可恢复。",
+    "deleted": "已删除",
+    "usdtEmpty": "尚未绑定 USDT TRC20 地址",
+    "bindAddress": "绑定地址",
+    "fiatEmpty": "尚未添加银行卡、支付宝或微信收款方式",
+    "addMethod": "添加收款方式",
+    "qrBadge": "收款码",
+    "notBoundTip": "尚未绑定 USDT TRC20 地址",
+    "goBind": "去绑定",
+    "bindTipTitle": "请先绑定钱包地址",
+    "bindTipDesc": "充值前需要先绑定您的 USDT TRC20 收款钱包地址。",
+    "bindTipCancel": "取消",
+    "chooseSellerMethod": "选择收款方式",
+    "types": {
+      "USDT_TRC20": "USDT TRC20",
+      "BANK_CARD": "银行卡",
+      "ALIPAY": "支付宝",
+      "WECHAT": "微信"
+    },
+    "typesDesc": {
+      "USDT_TRC20": "TRON 网络 USDT 收款地址",
+      "BANK_CARD": "银行储蓄卡转账收款",
+      "ALIPAY": "支付宝账号 / 收款码",
+      "WECHAT": "微信账号 / 收款码"
+    },
+    "fields": {
+      "address": "USDT 地址",
+      "addressPlaceholder": "以 T 开头的 TRON 地址",
+      "addressValid": "地址格式正确",
+      "addressInvalid": "地址格式不正确",
+      "labelOptional": "备注标签（可选）",
+      "labelPlaceholder": "例如：我的钱包",
+      "accountName": "收款人姓名",
+      "accountNamePlaceholder": "请输入真实姓名",
+      "bankName": "银行名称",
+      "bankNamePlaceholder": "例如：中国工商银行",
+      "bankAccount": "银行卡号",
+      "bankAccountPlaceholder": "请输入储蓄卡卡号",
+      "branchOptional": "开户行（可选）",
+      "branchPlaceholder": "例如：XX 支行",
+      "alipayAccount": "支付宝账号",
+      "wechatAccount": "微信号",
+      "accountIdentifierPlaceholder": "手机号 / 邮箱 / 微信号",
+      "qrCodeOptional": "收款二维码（可选）"
+    },
+    "form": {
+      "addTitle": "添加收款方式",
+      "editTitle": "修改收款方式",
+      "stepChooseType": "选择要添加的收款方式",
+      "changeType": "更换类型",
+      "cancel": "取消",
+      "submit": "下一步",
+      "submitting": "提交中...",
+      "saved": "保存成功",
+      "saveFailed": "保存失败，请重试",
+      "loadFailed": "加载详情失败"
+    },
+    "qr": {
+      "upload": "点击或拖拽上传收款码",
+      "limit": "仅支持 JPG / PNG / WEBP，最大 5MB",
+      "reupload": "重新上传",
+      "remove": "删除",
+      "uploading": "上传中...",
+      "typeRejected": "仅支持图片格式",
+      "sizeRejected": "图片不能超过 5MB",
+      "uploadFailed": "上传失败"
+    },
+    "verify": {
+      "title": "安全验证",
+      "subtitle": "为保障资金安全，请完成二次验证后继续。",
+      "totpLabel": "谷歌验证码",
+      "totpPlaceholder": "6 位动态验证码",
+      "passwordLabel": "登录密码",
+      "passwordPlaceholder": "请输入登录密码",
+      "cancel": "取消",
+      "confirm": "确认",
+      "submitting": "验证中...",
+      "totpInvalid": "请输入 6 位数字验证码",
+      "passwordRequired": "请输入登录密码"
+    },
+    "errors": {
+      "loadFailed": "加载收款方式失败",
+      "operationFailed": "操作失败，请重试",
+      "addressInvalid": "请输入正确的 USDT TRC20 地址",
+      "accountNameRequired": "请输入收款人姓名",
+      "bankNameRequired": "请输入银行名称",
+      "bankAccountInvalid": "请输入正确的银行卡号",
+      "accountIdentifierRequired": "请输入收款账号"
     }
   }
 }

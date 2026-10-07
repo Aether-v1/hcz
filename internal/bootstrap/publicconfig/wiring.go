@@ -58,8 +58,10 @@ func initSiteBuilderPublic(c *container.Container) publicconfigtransport.SiteBui
 		return nil
 	}
 	return publicConfigSiteBuilderAdapter{
-		homeEntries: c.SiteHomeEntryService,
-		discovery:   c.SiteDiscoveryBlockService,
-		banners:     c.ContentBannerService,
+		homeEntries:        c.SiteHomeEntryService,
+		discovery:          c.SiteDiscoveryBlockService,
+		banners:            c.ContentBannerService,
+		featuredCategories: c.SiteHomeFeaturedCategoryService,
+		categories:         c.CategoryRepo,
 	}
 }

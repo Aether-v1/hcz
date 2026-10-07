@@ -33,6 +33,17 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/2fa/enable", Action: "POST"},                    // 自助启用 2FA
 				{Object: "/admin/2fa/disable", Action: "POST"},                   // 自助关闭 2FA
 				{Object: "/admin/2fa/recovery-codes/regenerate", Action: "POST"}, // 重新生成恢复码
+				// 积分只读审计（不授予调整补偿权限）
+				{Object: "/admin/users/:id/points", Action: "GET"},
+				{Object: "/admin/users/:id/points/ledger", Action: "GET"},
+				// 积分运营统计（聚合事实表指标，不含用户明细）
+				{Object: "/admin/points/stats", Action: "GET"},
+				// 签到历史只读审计（后台无补签/改签能力，见 P4 报告）
+				{Object: "/admin/users/:id/checkins", Action: "GET"},
+				// 积分商城只读审计（不授予商品管理 / 订单处理权限）
+				{Object: "/admin/points/products", Action: "GET"},
+				{Object: "/admin/points/exchange-orders", Action: "GET"},
+				{Object: "/admin/points/exchange-orders/:id", Action: "GET"},
 			},
 			Immutable: true,
 		},
@@ -79,6 +90,11 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/affiliates/users", Action: "GET"},
 				{Object: "/admin/affiliates/users/:id/status", Action: "PATCH"},
 				{Object: "/admin/affiliates/users/batch-status", Action: "PATCH"},
+				// 分销入驻申请审核（业务运营决策，不直接动资金）
+				{Object: "/admin/affiliates/applications", Action: "GET"},
+				{Object: "/admin/affiliates/applications/:id", Action: "GET"},
+				{Object: "/admin/affiliates/applications/:id/approve", Action: "POST"},
+				{Object: "/admin/affiliates/applications/:id/reject", Action: "POST"},
 				// 会员等级管理
 				{Object: "/admin/member-levels", Action: "*"},
 				{Object: "/admin/member-levels/:id", Action: "*"},
@@ -91,17 +107,28 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/post-categories/:id", Action: "PUT"},
 				{Object: "/admin/post-categories/:id", Action: "DELETE"},
 				{Object: "/admin/post-categories/:id/status", Action: "PATCH"},
-				// 站点装修（首页入口 / 发现页区块 / 品牌）
+				// 站点装修（首页入口 / 热门推荐分类 / 发现页区块 / 品牌）
 				{Object: "/admin/site/home-entries", Action: "*"},
 				{Object: "/admin/site/home-entries/:id", Action: "*"},
 				{Object: "/admin/site/home-entries/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/home-entries/reorder", Action: "POST"},
+				{Object: "/admin/site/featured-categories", Action: "*"},
+				{Object: "/admin/site/featured-categories/:id", Action: "*"},
+				{Object: "/admin/site/featured-categories/:id/toggle", Action: "PATCH"},
+				{Object: "/admin/site/featured-categories/reorder", Action: "POST"},
 				{Object: "/admin/site/discovery-blocks", Action: "*"},
 				{Object: "/admin/site/discovery-blocks/:id", Action: "*"},
 				{Object: "/admin/site/discovery-blocks/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/discovery-blocks/reorder", Action: "POST"},
 				{Object: "/admin/site/brand", Action: "*"},
 				{Object: "/admin/site/audit-logs", Action: "GET"},
+				// 积分商城商品管理（商品上下架与价格/库存维护；兑换订单处理见 finance）
+				{Object: "/admin/points/products", Action: "POST"},
+				{Object: "/admin/points/products/:id", Action: "PUT"},
+				{Object: "/admin/points/products/:id/status", Action: "PATCH"},
+				// 兑换订单履约（开始处理 / 完成——纯运营动作，不涉及积分返还）
+				{Object: "/admin/points/exchange-orders/:id/process", Action: "POST"},
+				{Object: "/admin/points/exchange-orders/:id/complete", Action: "POST"},
 			},
 			Immutable: true,
 		},
@@ -248,6 +275,20 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/wallet/withdrawals/:id/reject", Action: "POST"},
 				{Object: "/admin/wallet/withdrawals/:id/processing", Action: "POST"},
 				{Object: "/admin/wallet/withdrawals/:id/complete", Action: "POST"},
+				// 积分账户 / 流水 / 调整（与钱包调整同域：仅财务可动）
+				{Object: "/admin/users/:id/points", Action: "GET"},
+				{Object: "/admin/users/:id/points/ledger", Action: "GET"},
+				{Object: "/admin/users/:id/points/adjust", Action: "POST"},
+				// 人工补偿与积分调整同资金域：一次性、显式、可审计，仅财务执行
+				{Object: "/admin/users/:id/points/compensate", Action: "POST"},
+				// 积分账户列表（负余额排查属于资金对账范畴）
+				{Object: "/admin/points/accounts", Action: "GET"},
+				// 积分商城兑换订单处理（fail/cancel 涉及积分返还与库存恢复，与积分调整同资金域；
+				// process/complete 为履约终态，财务拥有完整处理权）
+				{Object: "/admin/points/exchange-orders/:id/process", Action: "POST"},
+				{Object: "/admin/points/exchange-orders/:id/complete", Action: "POST"},
+				{Object: "/admin/points/exchange-orders/:id/fail", Action: "POST"},
+				{Object: "/admin/points/exchange-orders/:id/cancel", Action: "POST"},
 			},
 			Immutable: true,
 		},
@@ -272,6 +313,7 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/settings/order-email-template", Action: "*"},
 				{Object: "/admin/settings/order-email-template/reset", Action: "POST"},
 				{Object: "/admin/settings/affiliate", Action: "*"},
+				{Object: "/admin/settings/checkin", Action: "*"},
 				{Object: "/admin/settings/exchange-rate", Action: "*"},
 				{Object: "/admin/settings/exchange-rate/refresh", Action: "POST"},
 				{Object: "/admin/settings/profit-guard", Action: "*"},
@@ -325,17 +367,31 @@ func BuiltinRoleSeeds() []RoleSeed {
 				{Object: "/admin/support/tickets/:id/audits", Action: "GET"},
 				{Object: "/admin/support/categories", Action: "*"},
 				{Object: "/admin/support/categories/:id", Action: "*"},
-				// 站点装修（首页入口 / 发现页区块 / 品牌 / 审计）
+				// 站点装修（首页入口 / 热门推荐分类 / 发现页区块 / 品牌 / 审计）
 				{Object: "/admin/site/home-entries", Action: "*"},
 				{Object: "/admin/site/home-entries/:id", Action: "*"},
 				{Object: "/admin/site/home-entries/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/home-entries/reorder", Action: "POST"},
+				{Object: "/admin/site/featured-categories", Action: "*"},
+				{Object: "/admin/site/featured-categories/:id", Action: "*"},
+				{Object: "/admin/site/featured-categories/:id/toggle", Action: "PATCH"},
+				{Object: "/admin/site/featured-categories/reorder", Action: "POST"},
 				{Object: "/admin/site/discovery-blocks", Action: "*"},
 				{Object: "/admin/site/discovery-blocks/:id", Action: "*"},
 				{Object: "/admin/site/discovery-blocks/:id/toggle", Action: "PATCH"},
 				{Object: "/admin/site/discovery-blocks/reorder", Action: "POST"},
 				{Object: "/admin/site/brand", Action: "*"},
 				{Object: "/admin/site/audit-logs", Action: "GET"},
+				// 积分商城（system_admin 拥有商品与兑换订单全量权限）
+				{Object: "/admin/points/products", Action: "*"},
+				{Object: "/admin/points/products/:id", Action: "*"},
+				{Object: "/admin/points/products/:id/status", Action: "*"},
+				{Object: "/admin/points/exchange-orders", Action: "*"},
+				{Object: "/admin/points/exchange-orders/:id", Action: "*"},
+				{Object: "/admin/points/exchange-orders/:id/process", Action: "*"},
+				{Object: "/admin/points/exchange-orders/:id/complete", Action: "*"},
+				{Object: "/admin/points/exchange-orders/:id/fail", Action: "*"},
+				{Object: "/admin/points/exchange-orders/:id/cancel", Action: "*"},
 			},
 			Immutable: true,
 		},

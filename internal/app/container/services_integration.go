@@ -24,9 +24,11 @@ import (
 	notificationapp "github.com/Aether-v1/hcz/internal/modules/notification/application"
 	notificationasyncqueue "github.com/Aether-v1/hcz/internal/modules/notification/infrastructure/asyncqueue"
 	notificationfeishu "github.com/Aether-v1/hcz/internal/modules/notification/infrastructure/feishu"
+	orderapp "github.com/Aether-v1/hcz/internal/modules/order/application"
 	paymentapp "github.com/Aether-v1/hcz/internal/modules/payment/application"
 	paymentqueue "github.com/Aether-v1/hcz/internal/modules/payment/infrastructure/queueadapter"
 	procurementapp "github.com/Aether-v1/hcz/internal/modules/procurement/application"
+	procurementcontract "github.com/Aether-v1/hcz/internal/modules/procurement/contract"
 	procurementmapping "github.com/Aether-v1/hcz/internal/modules/procurement/infrastructure/mappingreader"
 	procurementnotification "github.com/Aether-v1/hcz/internal/modules/procurement/infrastructure/notificationadapter"
 	procurementorder "github.com/Aether-v1/hcz/internal/modules/procurement/infrastructure/orderreader"
@@ -44,10 +46,35 @@ import (
 	"github.com/Aether-v1/hcz/internal/platform/database/gormdb"
 )
 
+var _ procurementcontract.OrderCompletion = (*orderCompletionAdapter)(nil)
+
+// orderCompletionAdapter 把订单域 OrderService 适配为采购侧统一完成生命周期端口（P1）。
+// 依赖方向：procurement/container → order application；order 不反向依赖 procurement。
+type orderCompletionAdapter struct {
+	svc *orderapp.OrderService
+}
+
+// CompleteOrder 本地订单进入 completed 的统一入口（自开事务，幂等）。
+func (a orderCompletionAdapter) CompleteOrder(orderID uint) error {
+	if a.svc == nil {
+		return nil
+	}
+	return a.svc.CompleteOrderByProcurement(orderID)
+}
+
+// CompleteParentSideEffects 父订单 completed 的统一副作用入口（自开事务，幂等）。
+func (a orderCompletionAdapter) CompleteParentSideEffects(parentID uint) error {
+	if a.svc == nil {
+		return nil
+	}
+	return a.svc.CompleteParentSideEffects(parentID)
+}
+
 // initIntegrationServices 装配通知、站点对接、支付、采购、渠道与 Telegram 集成。
 func (c *Container) initIntegrationServices() {
 	c.UserLoginLogService = auditlogapp.NewUserLoginService(c.UserLoginLogRepo)
 	c.AuthzAuditService = auditlogapp.NewAuthzService(c.AuthzAuditLogRepo)
+	c.AffiliateService.SetAuditRecorder(affiliateAuditRecorder{audit: c.AuthzAuditService})
 	c.AdminLoginLogService = auditlogapp.NewAdminLoginService(c.AdminLoginLogRepo)
 	c.NotificationLogService = notificationapp.NewLogService(c.NotificationLogRepo)
 	c.DashboardService = dashboardapp.NewService(c.DashboardRepo, c.SettingService)
@@ -133,6 +160,11 @@ func (c *Container) initIntegrationServices() {
 		PaymentProviderRegistry: c.PaymentProviderRegistry,
 		ResellerAccounting:      c.ResellerAccountingLedger,
 	})
+	// 充值（加密货币渠道）前置校验：用户须已绑定 USDT TRC20 地址。
+	c.PaymentService.SetPaymentMethodChecker(c.C2CService)
+	// P1：采购回调完成本地订单走统一完成生命周期（Affiliate + Points 副作用收口）。
+	// 先持有 Lifecycle 实例（container 层适配），构造后注入 OrderCompletion。
+	procurementLifecycle := c.ProcurementOrderRepo.NewLifecycle(c.QueueClient, c.SettingService, c.Config.Email)
 	c.ProcurementOrderService = procurementapp.NewService(procurementapp.Options{
 		Repository:         c.ProcurementOrderRepo,
 		Orders:             procurementorder.New(c.OrderStore),
@@ -140,11 +172,13 @@ func (c *Container) initIntegrationServices() {
 		SKUMappings:        procurementmapping.NewSKUs(c.SKUMappingRepo),
 		Connections:        procurementupstream.New(c.SiteConnectionService),
 		Queue:              procurementqueue.New(c.QueueClient),
-		OrderLifecycle:     c.ProcurementOrderRepo.NewLifecycle(c.QueueClient, c.SettingService, c.Config.Email),
+		OrderLifecycle:     procurementLifecycle,
 		DownstreamCallback: c.DownstreamCallbackService,
 		BotNotifier:        c.FulfillmentService,
 		Notifications:      procurementnotification.New(c.NotificationService),
 	})
+	// P1：采购回调完成本地订单走统一完成生命周期（Affiliate + Points 副作用收口）。
+	procurementLifecycle.SetOrderCompletion(orderCompletionAdapter{svc: c.OrderService})
 	c.ReconciliationService = reconciliationapp.NewService(reconciliationapp.Options{
 		Jobs: c.ReconciliationJobRepo, Items: c.ReconciliationItemRepo,
 		Procurements:  reconciliationprocurement.New(c.ProcurementOrderRepo),

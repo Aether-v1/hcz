@@ -19,9 +19,12 @@ import (
 	catalogproductbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/catalogproduct"
 	channelwiring "github.com/Aether-v1/hcz/internal/bootstrap/channelapi"
 	channeluserwiring "github.com/Aether-v1/hcz/internal/bootstrap/channeluser"
+	checkinbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/checkin"
+	pointsmallbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/pointsmall"
 	fulfillmentwiring "github.com/Aether-v1/hcz/internal/bootstrap/fulfillment"
 	orderwiring "github.com/Aether-v1/hcz/internal/bootstrap/order"
 	paymentwiring "github.com/Aether-v1/hcz/internal/bootstrap/payment"
+	pointsbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/points"
 	publicconfigwiring "github.com/Aether-v1/hcz/internal/bootstrap/publicconfig"
 	resellerbootstrap "github.com/Aether-v1/hcz/internal/bootstrap/reseller"
 	upstreamwiring "github.com/Aether-v1/hcz/internal/bootstrap/upstreamapi"
@@ -138,6 +141,15 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	userWalletHandler := walletHandlers.User
 	adminWalletHandler := walletHandlers.Admin
 	channelWalletHandler := walletHandlers.Channel
+	pointsHandlers := pointsbootstrap.New(c)
+	userPointsHandler := pointsHandlers.User
+	adminPointsHandler := pointsHandlers.Admin
+	checkinHandlers := checkinbootstrap.New(c)
+	userCheckinHandler := checkinHandlers.User
+	adminCheckinHandler := checkinHandlers.Admin
+	pointsmallHandlers := pointsmallbootstrap.New(c)
+	userPointsmallHandler := pointsmallHandlers.User
+	adminPointsmallHandler := pointsmallHandlers.Admin
 	withdrawalHandlers := walletwithdrawalbootstrap.New(c)
 	userWithdrawalHandler := withdrawalHandlers.User
 	adminWithdrawalHandler := withdrawalHandlers.Admin
@@ -326,11 +338,11 @@ func SetupRouter(cfg *config.Config, c *container.Container) *gin.Engine {
 	sitemaptransport.RegisterRoutes(r, sitemaptransport.NewHandler(c.SitemapService, sitemapbrand.New(c.SettingService)))
 
 	apiV1 := r.Group("/api/v1")
-	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userWithdrawalHandler, userNotificationHandler, c2cHandler, supportUserHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule, supportCreateRule, supportReplyRule, supportAttachmentRule)
+	registerStorefrontRoutes(apiV1, cfg, c, publicContentHandler, publicCatalogHandler, publicCategoryHandler, userResellerHandler, userResellerProductSettingHandler, userResellerFinanceHandler, userResellerOrderHandler, userApiCredentialHandler, userAuditLogHandler, userGiftCardHandler, publicMemberLevelHandler, userProfileHandler, userEmailHandler, userPasswordHandler, userVerifyHandler, userTelegramOIDCHandler, userTelegramHandler, userGoogleHandler, userLoginHandler, user2FAHandler, publicConfigHandler, userCartHandler, userOrderHandler, afterSaleHandler, guestOrderHandler, orderPreviewHandler, orderCreateHandler, paymentLatestHandler, paymentWriteHandler, userWalletHandler, userPointsHandler, userCheckinHandler, userPointsmallHandler, userWithdrawalHandler, userNotificationHandler, c2cHandler, supportUserHandler, redisClient, loginRule, guestReadRule, guestWriteRule, giftCardRedeemRule, registerRule, verifyRule, forgotRule, supportCreateRule, supportReplyRule, supportAttachmentRule)
 	registerUpstreamRoutes(apiV1, c, upstreamHandler, redisClient, upstreamAPIRule, callbackRule)
 	registerChannelRoutes(apiV1, c, channelHandler, channelMemberLevelHandler, channelGiftCardHandler, channelAffiliateHandler, channelTelegramBotHandler, channelWalletHandler, redisClient, channelAPIRule)
 	registerPaymentCallbackRoutes(apiV1, paymentCallbackHandler, paymentWebhookHandler, redisClient, callbackRule)
-	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, adminC2CHandler, supportAdminHandler, c.SiteBuilderAdminHandler, redisClient, adminLoginRule)
+	registerAdminRoutes(r, apiV1, cfg, c, adminLoginHandler, admin2FAHandler, adminUser2FAHandler, adminUserHandler, adminAuthzHandler, adminFulfillmentHandler, adminOrderHandler, adminOrderRefundHandler, afterSaleHandler, adminContentHandler, adminDashboardHandler, adminMemberLevelHandler, adminApiCredentialHandler, adminAuditLogHandler, adminCardSecretHandler, adminCatalogCategoryHandler, adminCatalogProductHandler, adminCatalogProductMappingHandler, adminCouponHandler, adminGiftCardHandler, adminPromotionHandler, adminNotificationHandler, adminProcurementHandler, adminResellerManagementHandler, adminResellerProfileDetailHandler, adminResellerSiteConfigHandler, adminResellerProductSettingHandler, adminResellerOperationsHandler, adminResellerFinanceHandler, adminSettingsHandler, adminWalletHandler, adminPointsHandler, adminCheckinHandler, adminPointsmallHandler, adminWithdrawalHandler, adminPaymentHandler, adminPaymentChannelHandler, adminC2CHandler, supportAdminHandler, c.SiteBuilderAdminHandler, redisClient, adminLoginRule)
 
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {

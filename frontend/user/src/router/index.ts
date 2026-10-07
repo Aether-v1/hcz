@@ -168,6 +168,12 @@ const router = createRouter({
         },
         {
             path: '/me/profile',
+            name: 'profile-edit',
+            component: () => import('../views/personal/ProfileEdit.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/settings',
             name: 'personal-center-profile',
             component: () => import('../views/PersonalCenter.vue'),
             props: { section: 'profile' },
@@ -176,8 +182,7 @@ const router = createRouter({
         {
             path: '/me/security',
             name: 'personal-center-security',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'security' },
+            component: () => import('../views/personal/SecurityPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -205,10 +210,27 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
+            path: '/me/wallet/transactions',
+            name: 'wallet-transactions',
+            component: () => import('../views/personal/WalletTransactions.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/wallet/payment-methods',
+            name: 'wallet-payment-methods',
+            component: () => import('../views/wallet/PaymentMethods.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/recharge-orders',
+            name: 'recharge-orders',
+            component: () => import('../views/personal/RechargeOrders.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
             path: '/me/invitation',
             name: 'personal-center-invitation',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'invitation' },
+            component: () => import('../views/personal/InvitationPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -292,22 +314,39 @@ const router = createRouter({
         {
             path: '/me/gift-cards',
             name: 'personal-center-gift-cards',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'giftCard' },
+            component: () => import('../views/personal/GiftCardPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/api',
             name: 'personal-center-api',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'api' },
+            component: () => import('../views/personal/ApiPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
-            path: '/me/affiliate',
-            name: 'personal-center-affiliate',
+            path: '/me/points',
+            name: 'personal-center-points',
+            component: () => import('../views/personal/PointsPanel.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/points/mall',
+            name: 'personal-center-points-mall',
             component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'affiliate' },
+            props: { section: 'pointsMall' },
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/points/orders',
+            name: 'personal-center-points-orders',
+            component: () => import('../views/PersonalCenter.vue'),
+            props: { section: 'pointsOrders' },
+            meta: { requiresUserAuth: true }
+        },
+        {
+            // 推广返利已并入统一「邀请中心」；保留历史链接兼容，重定向到 /me/invitation。
+            path: '/me/affiliate',
+            redirect: '/me/invitation',
             meta: { requiresUserAuth: true }
         },
         {
@@ -346,13 +385,13 @@ const router = createRouter({
             meta: { requiresUserAuth: true }
         },
         {
-            path: '/blog',
+            path: '/news',
             name: 'blog',
             component: blogViewLoader,
             meta: { requiresUserAuth: true },
         },
         {
-            path: '/blog/:slug',
+            path: '/news/:slug',
             name: 'blog-detail',
             component: () => import('../views/BlogDetail.vue'),
             meta: { requiresUserAuth: true },

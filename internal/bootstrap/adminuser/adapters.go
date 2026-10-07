@@ -14,8 +14,8 @@ import (
 
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 
-	auditlogapp "github.com/Aether-v1/hcz/internal/modules/auditlog/application"
 	"github.com/Aether-v1/hcz/internal/cache"
+	auditlogapp "github.com/Aether-v1/hcz/internal/modules/auditlog/application"
 	couponcontract "github.com/Aether-v1/hcz/internal/modules/coupon/contract"
 	externalidentitycontract "github.com/Aether-v1/hcz/internal/modules/identity/externalidentity/contract"
 	externalidentitydomain "github.com/Aether-v1/hcz/internal/modules/identity/externalidentity/domain"

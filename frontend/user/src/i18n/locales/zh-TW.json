@@ -351,6 +351,7 @@
     "more": "更多"
   },
   "settings": {
+    "title": "設定",
     "appearance": "外觀主題",
     "language": "語言",
     "about": "關於",
@@ -447,7 +448,8 @@
       "reseller": "分銷中心",
       "giftCard": "禮品卡兌換",
       "api": "API 對接",
-      "invitation": "邀請中心"
+      "invitation": "邀請中心",
+      "points": "我的積分"
     },
     "common": {
       "loadFailed": "個人中心資料載入失敗，請稍後重試",
@@ -477,10 +479,13 @@
     "profile": {
       "title": "資料設定",
       "subtitle": "更新暱稱與語言偏好",
+      "avatarHint": "頭像暫不支持自定義，顯示暱稱首字母",
       "emailLabel": "信箱",
       "nicknameLabel": "暱稱",
       "nicknamePlaceholder": "請輸入暱稱",
       "localeLabel": "語言偏好",
+      "verified": "已驗證",
+      "userId": "用戶ID",
       "save": "保存資料",
       "saving": "保存中...",
       "saveSuccess": "資料已更新"
@@ -688,6 +693,7 @@
       "checkingPayStatus": "檢查中...",
       "pendingHint": "支付完成後系統將自動刷新到帳狀態，也可手動點擊「檢查支付狀態」。",
       "detailTitle": "錢包明細",
+      "bills": "賬單",
       "empty": "暫無錢包明細",
       "retry": "重試",
       "directionIn": "收入",
@@ -1173,6 +1179,56 @@
         "redeemFailed": "禮品卡兌換失敗，請稍後重試"
       }
     },
+    "points": {
+      "balance": "我的積分",
+      "history": "積分記錄",
+      "noRecords": "暫無積分記錄",
+      "totalEarned": "累計獲得",
+      "totalSpent": "累計使用",
+      "checkin": "每日簽到",
+      "checkinButton": "簽到",
+      "checkingIn": "簽到中…",
+      "checkedIn": "今日已簽到",
+      "consecutiveDays": "已連續簽到 {n} 天",
+      "rewardPreview": "今日可得 {points} 積分",
+      "monthTotal": "本月共 {n} 天",
+      "checkinSuccess": "簽到成功，+{points} 積分",
+      "checkinFailed": "簽到失敗，請稍後重試",
+      "mallEntry": "積分商城",
+      "ordersEntry": "兌換記錄",
+      "mallTitle": "積分商城",
+      "mallSubtitle": "用積分兌換數字服務與生活權益",
+      "mallEmpty": "積分商城暫無商品",
+      "price": "積分價格",
+      "stock": "庫存",
+      "unlimitedStock": "不限",
+      "myRedeemed": "我已兌換",
+      "instructionsTitle": "兌換須知",
+      "pointsUnit": "{points} 積分",
+      "exchangeButton": "立即兌換",
+      "exchanging": "兌換中…",
+      "exchangeConfirmTitle": "確認兌換",
+      "exchangeConfirm": "將消耗 {points} 積分兌換「{name}」，兌換後積分不可退回（訂單取消除外）。確定繼續嗎？",
+      "exchangeSuccess": "兌換成功，已扣減 {points} 積分",
+      "exchangeFailed": "兌換失敗，請稍後重試",
+      "ordersTitle": "兌換記錄",
+      "ordersEmpty": "暫無兌換記錄",
+      "statusAll": "全部",
+      "orderNo": "訂單號",
+      "unitPoints": "單價積分",
+      "quantity": "數量",
+      "completedAt": "完成時間",
+      "reason": "備註",
+      "viewDetail": "查看詳情",
+      "collapseDetail": "收起詳情",
+      "cancelExchange": "取消兌換",
+      "cancelConfirmTitle": "確認取消兌換",
+      "cancelConfirm": "取消後積分將退回帳戶。確定取消「{name}」的兌換嗎？",
+      "cancelSuccess": "已取消兌換，積分已退回",
+      "cancelFailed": "取消失敗，請稍後重試",
+      "pendingHint": "兌換處理中，如長時間未完成可取消並退回積分",
+      "manualHint": "數字權益將按「兌換須知」由人工發放，請留意處理結果"
+    },
     "apiPanel": {
       "title": "API 對接",
       "subtitle": "管理您的 API 憑證",
@@ -1349,6 +1405,30 @@
         "sendCodeFailed": "驗證碼發送失敗",
         "resetFailed": "重設失敗，請檢查輸入"
       }
+    }
+  },
+  "points": {
+    "actions": {
+      "ADMIN_ADD": "管理員調整",
+      "ADMIN_DEDUCT": "管理員扣減",
+      "ADMIN_COMPENSATION": "人工補償",
+      "ORDER_REWARD": "訂單獎勵",
+      "ORDER_REWARD_REVERSAL": "訂單獎勵冲正",
+      "CHECKIN_REWARD": "簽到獎勵",
+      "REDEEM": "積分兌換",
+      "REDEEM_REFUND": "兌換返還"
+    },
+    "exchangeStatus": {
+      "PENDING": "待處理",
+      "PROCESSING": "處理中",
+      "COMPLETED": "已完成",
+      "FAILED": "已失敗",
+      "CANCELLED": "已取消"
+    },
+    "reasonCodes": {
+      "INSUFFICIENT_POINTS": "積分不足",
+      "OUT_OF_STOCK": "商品庫存不足",
+      "LIMIT_REACHED": "已達兌換上限"
     }
   },
   "order": {
@@ -1830,6 +1910,7 @@
       "product": "服務儲值訂單",
       "recharge": "USDT 錢包儲值"
     },
+    "rechargeRecords": "儲值記錄",
     "rechargeEmpty": "暫無儲值訂單",
     "rechargeEmptyAction": "去儲值",
     "rechargePayable": "應付金額",
@@ -2007,7 +2088,7 @@
   },
   "support": {
     "title": "工單支持",
-    "help_center": "幫助與支持",
+    "help_center": "幫助支持",
     "help_subtitle": "遇到問題？提交工單，客服會盡快回覆您",
     "my_tickets": "我的工單",
     "my_tickets_hint": "查看和跟進您提交的所有工單",
@@ -2293,6 +2374,107 @@
       "notFound": "交易不存在",
       "noPaymentMethod": "未配置收款方式",
       "insufficientBalance": "餘額不足"
+    }
+  },
+  "paymentMethods": {
+    "pageTitle": "收款方式",
+    "pageSubtitle": "管理 USDT 位址、銀行卡、支付寶、微信等收款資訊",
+    "digitalAssets": "數位資產",
+    "c2cMethods": "C2C 收款方式",
+    "default": "預設",
+    "setDefault": "設為預設",
+    "setDefaultSuccess": "已設為預設",
+    "edit": "修改",
+    "delete": "刪除",
+    "deleteTitle": "刪除收款方式",
+    "deleteConfirm": "確認刪除該收款方式？刪除後無法復原。",
+    "deleted": "已刪除",
+    "usdtEmpty": "尚未綁定 USDT TRC20 位址",
+    "bindAddress": "綁定位址",
+    "fiatEmpty": "尚未新增銀行卡、支付寶或微信收款方式",
+    "addMethod": "新增收款方式",
+    "qrBadge": "收款碼",
+    "notBoundTip": "尚未綁定 USDT TRC20 位址",
+    "goBind": "去綁定",
+    "bindTipTitle": "請先綁定錢包位址",
+    "bindTipDesc": "儲值前需要先綁定您的 USDT TRC20 收款錢包位址。",
+    "bindTipCancel": "取消",
+    "chooseSellerMethod": "選擇收款方式",
+    "types": {
+      "USDT_TRC20": "USDT TRC20",
+      "BANK_CARD": "銀行卡",
+      "ALIPAY": "支付寶",
+      "WECHAT": "微信"
+    },
+    "typesDesc": {
+      "USDT_TRC20": "TRON 網路 USDT 收款位址",
+      "BANK_CARD": "銀行簽帳卡轉帳收款",
+      "ALIPAY": "支付寶帳號 / 收款碼",
+      "WECHAT": "微信帳號 / 收款碼"
+    },
+    "fields": {
+      "address": "USDT 位址",
+      "addressPlaceholder": "以 T 開頭的 TRON 位址",
+      "addressValid": "位址格式正確",
+      "addressInvalid": "位址格式不正確",
+      "labelOptional": "備註標籤（選填）",
+      "labelPlaceholder": "例如：我的錢包",
+      "accountName": "收款人姓名",
+      "accountNamePlaceholder": "請輸入真實姓名",
+      "bankName": "銀行名稱",
+      "bankNamePlaceholder": "例如：中國工商銀行",
+      "bankAccount": "銀行卡號",
+      "bankAccountPlaceholder": "請輸入簽帳卡卡號",
+      "branchOptional": "開戶行（選填）",
+      "branchPlaceholder": "例如：XX 分行",
+      "alipayAccount": "支付寶帳號",
+      "wechatAccount": "微信帳號",
+      "accountIdentifierPlaceholder": "手機號 / 電子郵箱 / 微信帳號",
+      "qrCodeOptional": "收款二維碼（選填）"
+    },
+    "form": {
+      "addTitle": "新增收款方式",
+      "editTitle": "修改收款方式",
+      "stepChooseType": "選擇要新增的收款方式",
+      "changeType": "更換類型",
+      "cancel": "取消",
+      "submit": "下一步",
+      "submitting": "提交中...",
+      "saved": "儲存成功",
+      "saveFailed": "儲存失敗，請重試",
+      "loadFailed": "載入詳情失敗"
+    },
+    "qr": {
+      "upload": "點擊或拖曳上傳收款碼",
+      "limit": "僅支援 JPG / PNG / WEBP，最大 5MB",
+      "reupload": "重新上傳",
+      "remove": "刪除",
+      "uploading": "上傳中...",
+      "typeRejected": "僅支援圖片格式",
+      "sizeRejected": "圖片不能超過 5MB",
+      "uploadFailed": "上傳失敗"
+    },
+    "verify": {
+      "title": "安全驗證",
+      "subtitle": "為保障資金安全，請完成二次驗證後繼續。",
+      "totpLabel": "Google 驗證碼",
+      "totpPlaceholder": "6 位動態驗證碼",
+      "passwordLabel": "登入密碼",
+      "passwordPlaceholder": "請輸入登入密碼",
+      "cancel": "取消",
+      "confirm": "確認",
+      "submitting": "驗證中...",
+      "totpInvalid": "請輸入 6 位數字驗證碼",
+      "passwordRequired": "請輸入登入密碼"
+    },
+    "errors": {
+      "loadFailed": "載入收款方式失敗",
+      "operationFailed": "操作失敗，請重試",
+      "addressInvalid": "請輸入正確的 USDT TRC20 位址",
+      "accountNameRequired": "請輸入收款人姓名",
+      "bankNameRequired": "請輸入銀行名稱",
+      "bankAccountInvalid": "請輸入正確的銀行卡號",
+      "accountIdentifierRequired": "請輸入收款帳號"
     }
   }
 }
