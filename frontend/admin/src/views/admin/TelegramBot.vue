@@ -7,9 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/utils/format'
-import { Bot, ExternalLink, Wifi, WifiOff, RefreshCw, Send, KeyRound, ShieldAlert } from 'lucide-vue-next'
-
-const LICENSE_PURCHASE_URL = ''
+import { Bot, ExternalLink, Wifi, WifiOff, RefreshCw, Send } from 'lucide-vue-next'
 
 const { t } = useI18n()
 
@@ -50,31 +48,9 @@ const formatWebhookStatus = (value?: string) => {
   return value
 }
 
-const formatLicenseStatus = (value?: string) => {
-  if (!value) return t('telegramBot.status.licenseStatusUnknown')
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'active') return t('telegramBot.status.licenseStatusActive')
-  if (normalized === 'expired') return t('telegramBot.status.licenseStatusExpired')
-  if (normalized === 'revoked') return t('telegramBot.status.licenseStatusRevoked')
-  if (normalized === 'suspended') return t('telegramBot.status.licenseStatusSuspended')
-  if (normalized === 'inactive') return t('telegramBot.status.licenseStatusInactive')
-  return value
-}
-
 const formatWarnings = (warnings?: string[]) => {
-  if (!warnings?.length) return t('telegramBot.status.licenseWarningsEmpty')
-  return warnings
-    .map((warning) => {
-      const normalized = warning.trim().toLowerCase()
-      if (normalized === 'license_lease_expiring_soon') {
-        return t('telegramBot.status.warningLeaseExpiringSoon')
-      }
-      if (normalized === 'license_lease_expired') {
-        return t('telegramBot.status.warningLeaseExpired')
-      }
-      return warning
-    })
-    .join(' / ')
+  if (!warnings?.length) return t('telegramBot.status.warningsEmpty')
+  return warnings.join(' / ')
 }
 
 onMounted(() => {
@@ -88,31 +64,6 @@ onMounted(() => {
       <h2 class="text-2xl font-bold tracking-tight">{{ t('telegramBot.overview.title') }}</h2>
       <p class="text-muted-foreground">{{ t('telegramBot.overview.subtitle') }}</p>
     </div>
-
-    <!-- License Purchase Notice -->
-    <Card class="border-amber-200 bg-amber-50/60 dark:border-amber-900/40 dark:bg-amber-950/20">
-      <CardContent class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div class="flex items-start gap-3">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-            <KeyRound class="h-5 w-5" />
-          </div>
-          <div class="space-y-1.5">
-            <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">{{ t('telegramBot.licensePurchase.title') }}</p>
-            <p class="text-sm text-amber-800/80 dark:text-amber-200/80">{{ t('telegramBot.licensePurchase.desc') }}</p>
-            <p class="flex items-start gap-1.5 text-xs text-red-700 dark:text-red-300">
-              <ShieldAlert class="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{{ t('telegramBot.licensePurchase.securityNote') }}</span>
-            </p>
-          </div>
-        </div>
-        <Button as-child size="sm" class="w-full bg-amber-600 hover:bg-amber-700 sm:w-auto">
-          <a :href="LICENSE_PURCHASE_URL" target="_blank" rel="noopener noreferrer">
-            {{ t('telegramBot.licensePurchase.action') }}
-            <ExternalLink class="ml-1.5 h-3.5 w-3.5" />
-          </a>
-        </Button>
-      </CardContent>
-    </Card>
 
     <!-- Connection Status Card -->
     <Card>
@@ -149,20 +100,8 @@ onMounted(() => {
             <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.configVersion') }}</p>
             <p class="text-sm font-medium">{{ runtimeStatus.config_version ?? '-' }}</p>
           </div>
-          <div>
-            <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.machineCode') }}</p>
-            <p class="text-sm font-medium break-all font-mono">{{ runtimeStatus.machine_code || '-' }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.licenseStatusLabel') }}</p>
-            <p class="text-sm font-medium">{{ formatLicenseStatus(runtimeStatus.license_status) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.licenseExpiresAt') }}</p>
-            <p class="text-sm font-medium">{{ formatRuntimeDate(runtimeStatus.license_expires_at) }}</p>
-          </div>
           <div class="md:col-span-2 xl:col-span-3">
-            <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.licenseWarnings') }}</p>
+            <p class="text-sm text-muted-foreground">{{ t('telegramBot.status.warnings') }}</p>
             <p class="text-sm font-medium">{{ formatWarnings(runtimeStatus.warnings) }}</p>
           </div>
         </div>

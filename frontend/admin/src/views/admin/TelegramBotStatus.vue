@@ -48,34 +48,7 @@ const formatWebhookStatus = (value?: string) => {
   return value
 }
 
-const formatLicenseStatus = (value?: string) => {
-  if (!value) return t('telegramBot.status.licenseStatusUnknown')
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'active') return t('telegramBot.status.licenseStatusActive')
-  if (normalized === 'expired') return t('telegramBot.status.licenseStatusExpired')
-  if (normalized === 'revoked') return t('telegramBot.status.licenseStatusRevoked')
-  if (normalized === 'suspended') return t('telegramBot.status.licenseStatusSuspended')
-  if (normalized === 'inactive') return t('telegramBot.status.licenseStatusInactive')
-  return value
-}
-
-const getLicenseBadgeVariant = (value?: string) => {
-  const normalized = value?.trim().toLowerCase()
-  if (normalized === 'active') return 'default'
-  if (normalized === 'expired' || normalized === 'revoked' || normalized === 'suspended') return 'destructive'
-  return 'secondary'
-}
-
-const formatWarning = (value: string) => {
-  const normalized = value.trim().toLowerCase()
-  if (normalized === 'license_lease_expiring_soon') {
-    return t('telegramBot.status.warningLeaseExpiringSoon')
-  }
-  if (normalized === 'license_lease_expired') {
-    return t('telegramBot.status.warningLeaseExpired')
-  }
-  return value
-}
+const formatWarning = (value: string) => value
 
 onMounted(() => {
   fetchRuntimeStatus()
@@ -140,21 +113,7 @@ onMounted(() => {
               <p class="text-lg font-semibold">{{ formatRuntimeDate(runtimeStatus.last_config_sync_at) }}</p>
             </div>
             <div class="rounded-lg border p-4 md:col-span-2">
-              <p class="text-sm text-muted-foreground mb-1">{{ t('telegramBot.status.machineCode') }}</p>
-              <p class="text-sm font-semibold break-all font-mono">{{ runtimeStatus.machine_code || '-' }}</p>
-            </div>
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground mb-1">{{ t('telegramBot.status.licenseStatusLabel') }}</p>
-              <Badge :variant="getLicenseBadgeVariant(runtimeStatus.license_status)">
-                {{ formatLicenseStatus(runtimeStatus.license_status) }}
-              </Badge>
-            </div>
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground mb-1">{{ t('telegramBot.status.licenseExpiresAt') }}</p>
-              <p class="text-lg font-semibold">{{ formatRuntimeDate(runtimeStatus.license_expires_at) }}</p>
-            </div>
-            <div class="rounded-lg border p-4 md:col-span-2">
-              <p class="text-sm text-muted-foreground mb-2">{{ t('telegramBot.status.licenseWarnings') }}</p>
+              <p class="text-sm text-muted-foreground mb-2">{{ t('telegramBot.status.warnings') }}</p>
               <div v-if="runtimeStatus.warnings?.length" class="flex flex-wrap gap-2">
                 <Badge
                   v-for="warning in runtimeStatus.warnings"
@@ -164,7 +123,7 @@ onMounted(() => {
                   {{ formatWarning(warning) }}
                 </Badge>
               </div>
-              <p v-else class="text-sm font-semibold">{{ t('telegramBot.status.licenseWarningsEmpty') }}</p>
+              <p v-else class="text-sm font-semibold">{{ t('telegramBot.status.warningsEmpty') }}</p>
             </div>
           </div>
         </div>

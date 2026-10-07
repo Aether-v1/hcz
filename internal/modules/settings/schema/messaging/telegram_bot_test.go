@@ -1,6 +1,10 @@
 package settingsmessaging
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
+)
 
 func TestNormalizeMenuItemsBackfillsBuiltinKeys(t *testing.T) {
 	t.Parallel()
@@ -123,5 +127,63 @@ func TestNormalizeTelegramBotConfigNormalizesHelpTexts(t *testing.T) {
 	summary := first["summary"].(map[string]interface{})
 	if summary["zh-CN"] != "简介" {
 		t.Fatalf("expected trimmed help summary, got=%q", summary["zh-CN"])
+	}
+}
+
+// 旧商业 License 遥测已退休：encode 只输出真实运行状态字段。
+func TestEncodeRuntimeStatusOmitsRetiredLicenseFields(t *testing.T) {
+	t.Parallel()
+
+	encoded := EncodeTelegramBotRuntimeStatus(TelegramBotRuntimeStatusSetting{
+		Connected:     true,
+		BotVersion:    "1.0.0",
+		WebhookStatus: "disabled",
+		Warnings:      []string{"disk_low"},
+	})
+
+	for _, retired := range []string{"machine_code", "license_status", "license_expires_at"} {
+		if _, ok := encoded[retired]; ok {
+			t.Fatalf("retired license field %q must not be persisted", retired)
+		}
+	}
+	for _, kept := range []string{"connected", "bot_version", "webhook_status", "warnings"} {
+		if _, ok := encoded[kept]; !ok {
+			t.Fatalf("runtime field %q must still be persisted", kept)
+		}
+	}
+}
+
+// 旧库 JSON 里残留的 License 字段必须被忽略、不报错，其余运行状态正常读取，
+// 且再次 encode 时不再写回旧字段（accept old JSON / ignore retired fields / do not re-persist）。
+func TestDecodeRuntimeStatusIgnoresLegacyLicenseJSON(t *testing.T) {
+	t.Parallel()
+
+	legacy := jsonmap.JSON{
+		"connected":          true,
+		"machine_code":       "ABC",
+		"license_status":     "valid",
+		"license_expires_at": "2099-01-01",
+		"bot_version":        "1.2.3",
+		"webhook_status":     "enabled",
+		"config_version":     9,
+	}
+
+	decoded := DecodeTelegramBotRuntimeStatus(legacy, DefaultTelegramBotRuntimeStatus())
+
+	if !decoded.Connected {
+		t.Fatal("connected should survive legacy decode")
+	}
+	if decoded.BotVersion != "1.2.3" || decoded.WebhookStatus != "enabled" {
+		t.Fatalf("real runtime fields not read: %+v", decoded)
+	}
+	if decoded.ConfigVersion != 9 {
+		t.Fatalf("config_version should be read, got=%d", decoded.ConfigVersion)
+	}
+
+	// Re-encode: the retired fields must not reappear.
+	for _, retired := range []string{"machine_code", "license_status", "license_expires_at"} {
+		if _, ok := EncodeTelegramBotRuntimeStatus(decoded)[retired]; ok {
+			t.Fatalf("legacy field %q must not be re-persisted after decode", retired)
+		}
 	}
 }
