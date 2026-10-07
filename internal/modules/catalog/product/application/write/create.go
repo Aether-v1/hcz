@@ -40,6 +40,12 @@ func (s *WriteService) Create(input CreateProductInput) (*productdomain.Product,
 	if input.IsCostExempt != nil {
 		isCostExempt = *input.IsCostExempt
 	}
+	// P1：固定积分奖励配置。reward_enabled=true 时 reward_points 必须 > 0 且不超积分硬上限；
+	// 未开启奖励时一律归零，避免"关闭状态却带着巨额奖励值"在下一次开启时静默生效。
+	rewardEnabled, rewardPoints, err := normalizeRewardConfig(input.RewardEnabled, input.RewardPoints)
+	if err != nil {
+		return nil, err
+	}
 	purchaseType := productdomain.NormalizePurchaseType(input.PurchaseType)
 	if purchaseType == "" {
 		return nil, productcontract.ErrProductPurchaseInvalid
@@ -126,6 +132,8 @@ func (s *WriteService) Create(input CreateProductInput) (*productdomain.Product,
 		IsAffiliateEnabled:   isAffiliateEnabled,
 		IsActive:             isActive,
 		IsCostExempt:         isCostExempt,
+		RewardEnabled:        rewardEnabled,
+		RewardPoints:         rewardPoints,
 		SortOrder:            input.SortOrder,
 	}
 	if fulfillmentType == constants.FulfillmentTypeManual {

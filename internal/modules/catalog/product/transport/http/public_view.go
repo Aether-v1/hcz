@@ -108,6 +108,8 @@ func (v *publicProductView) toProductResp() productpresenter.Product {
 		PromotionPriceAmount: v.PromotionPriceAmount,
 		PromotionRules:       v.PromotionRules,
 		MemberPrices:         v.MemberPrices,
+		RewardEnabled:        v.Product.RewardEnabled,
+		RewardPoints:         v.Product.RewardPoints,
 	}
 	return resp
 }

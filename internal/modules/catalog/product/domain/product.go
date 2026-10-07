@@ -35,6 +35,10 @@ type Product struct {
 	ManualStockSold      int                 `gorm:"not null;default:0" json:"manual_stock_sold"`                         // 手动库存已售量（支付成功后累加）
 	PaymentChannelIDs    string              `gorm:"type:text" json:"payment_channel_ids"`                                // 允许的支付渠道ID（jsonmap.JSON数组字符串，空表示不限制）
 	IsAffiliateEnabled   bool                `gorm:"not null;default:false;index" json:"is_affiliate_enabled"`            // 是否参与推广返利
+	// P1 Points：商品级固定积分奖励配置。RewardEnabled=false 或 RewardPoints<=0 表示不赠积分。
+	// 订单创建时以快照形式固化（orders.reward_enabled / orders.reward_points），此后修改不影响已下订单。
+	RewardEnabled bool  `gorm:"not null;default:false" json:"reward_enabled"`
+	RewardPoints  int64 `gorm:"not null;default:0" json:"reward_points"` // BIGINT 积分，禁止 float
 	AutoStockAvailable   int64               `gorm:"-" json:"auto_stock_available"`                                       // 自动发货库存可用量（仅结构，不写入数据库）
 	AutoStockTotal       int64               `gorm:"-" json:"auto_stock_total"`                                           // 自动发货库存总量（仅结构，不写入数据库）
 	AutoStockLocked      int64               `gorm:"-" json:"auto_stock_locked"`                                          // 自动发货库存占用量（仅结构，不写入数据库）

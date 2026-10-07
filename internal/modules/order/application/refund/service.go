@@ -10,6 +10,7 @@ import (
 	userdomain "github.com/Aether-v1/hcz/internal/modules/identity/user/domain"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	settingsapp "github.com/Aether-v1/hcz/internal/modules/settings/application"
 	walletapp "github.com/Aether-v1/hcz/internal/modules/wallet/application"
@@ -63,6 +64,16 @@ type Service struct {
 	resellerAccounting resellerAccountingTransactions
 	wallets            *walletapp.Service
 	payments           paymentFeeReader
+	pointsSvc          PointsOrderLifecycle
+}
+
+// PointsOrderLifecycle 是退款域调用积分冲正的最小端口（P1）。
+// 依赖方向：refund → points contract；Points 不反向依赖 Order。
+type PointsOrderLifecycle interface {
+	// OrderRewardSummary 返回订单奖励与已冲正累计（部分退款 floor 累计算法用）。
+	OrderRewardSummary(tx pointscontract.Transaction, orderID uint) (reward, reversed int64, err error)
+	// ReverseOrderReward 在调用方事务内按比例冲正积分。
+	ReverseOrderReward(tx pointscontract.Transaction, input pointscontract.OrderReversalInput) error
 }
 
 type affiliateRefundProcessor interface {
@@ -122,6 +133,7 @@ func New(
 	settingService *settingsapp.Service,
 	wallets *walletapp.Service,
 	payments paymentFeeReader,
+	pointsSvc PointsOrderLifecycle,
 ) *Service {
 	return &Service{
 		orderStore:      orderStore,
@@ -130,6 +142,7 @@ func New(
 		settingService:  settingService,
 		wallets:         wallets,
 		payments:        payments,
+		pointsSvc:       pointsSvc,
 	}
 }
 
@@ -440,12 +453,88 @@ func (s *Service) adminManualRefundInTx(
 			return nil, err
 		}
 	}
+	// P1：退款积分冲正（floor 累计算法；仅父单；append-only ORDER_REWARD_REVERSAL）。
+	if err := s.reverseOrderRewardInTx(tx, &order, amount, refundedBefore, record.ID); err != nil {
+		return nil, err
+	}
 	if s.resellerAccounting != nil {
 		if err := s.resellerAccounting.HandleRefundDeduct(tx.ResellerAccounting(), &order, record, refundedBefore); err != nil {
 			return nil, err
 		}
 	}
 	return record, nil
+}
+
+// reverseOrderRewardInTx 在退款事务内按 floor 累计算法冲正订单积分（P1）。
+//
+// 规则：
+//   - 仅对父订单（ParentID == nil）执行冲正：ORDER_REWARD 只发在父单，
+//     子单退款不单独联动积分（P1 报告 Known Issues 说明，后续 P 处理）。
+//   - 无奖励快照（reward_enabled=false / reward_points=0 / legacy 历史订单）→ 不冲正；
+//   - 从未发放 ORDER_REWARD → 不冲正（禁止凭商品当前配置推测）；
+//   - target = floor(original_reward × cumulative_refunded / original_paid)，
+//     上限 = reward - reversed（累计冲正不超过原奖励）；
+//   - delta = target - reversed；delta <= 0 → 不冲正（幂等，含重复退款调用）；
+//   - reference = points:order_refund:{refund_record_id}，同退款记录唯一。
+//
+// 金额 Decimal / 积分 BIGINT；禁止 float。append-only：不修改原始 ORDER_REWARD 流水。
+func (s *Service) reverseOrderRewardInTx(
+	tx ordercontract.Transaction,
+	order *orderdomain.Order,
+	amount decimal.Decimal,
+	refundedBefore decimal.Decimal,
+	refundRecordID uint,
+) error {
+	if s.pointsSvc == nil || tx == nil || order == nil || refundRecordID == 0 {
+		return nil
+	}
+	if order.ParentID != nil || order.UserID == 0 {
+		return nil
+	}
+	if !order.RewardEnabled || order.RewardPoints <= 0 {
+		return nil // 无奖励快照：不冲正
+	}
+	reward, reversed, err := s.pointsSvc.OrderRewardSummary(tx.Points(), order.ID)
+	if err != nil {
+		return err
+	}
+	if reward <= 0 {
+		return nil // 从未发放 ORDER_REWARD
+	}
+	paidBase := order.TotalAmount.Decimal
+	if order.UsdtTotalAmount.Decimal.GreaterThan(decimal.Zero) {
+		paidBase = order.WalletPaidAmount.Decimal
+	}
+	if paidBase.LessThanOrEqual(decimal.Zero) {
+		return nil
+	}
+	cumulativeRefunded := refundedBefore.Add(amount).Round(2)
+	// target = floor(original_reward × cumulative_refunded / original_paid)，确定性向下取整。
+	target := decimal.NewFromInt(order.RewardPoints).
+		Mul(cumulativeRefunded).
+		Div(paidBase).
+		Floor().
+		IntPart()
+	if target <= reversed {
+		return nil // 幂等：本订单已冲正达到目标
+	}
+	// delta = 本次需冲正 = 目标累计 - 已冲正。
+	delta := target - reversed
+	// 安全阀：并发/异常下 delta 不得超过"原奖励 - 已冲正"（剩余可冲量），防超额。
+	if remaining := reward - reversed; delta > remaining {
+		delta = remaining
+	}
+	if delta <= 0 {
+		return nil
+	}
+	return s.pointsSvc.ReverseOrderReward(tx.Points(), pointscontract.OrderReversalInput{
+		UserID:         order.UserID,
+		OrderID:        order.ID,
+		RefundRecordID: refundRecordID,
+		Amount:         delta,
+		Reason:         "order_refund_reversal",
+		Reference:      pointscontract.OrderRefundReversalReference(refundRecordID),
+	})
 }
 
 // ListAdminRefundRecords 管理端退款记录列表

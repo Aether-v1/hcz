@@ -4,6 +4,7 @@ import (
 	"github.com/Aether-v1/hcz/internal/constants"
 	settingsintegration "github.com/Aether-v1/hcz/internal/modules/settings/schema/integration"
 	settingsmessaging "github.com/Aether-v1/hcz/internal/modules/settings/schema/messaging"
+	settingspoints "github.com/Aether-v1/hcz/internal/modules/settings/schema/points"
 	settingssecurity "github.com/Aether-v1/hcz/internal/modules/settings/schema/security"
 	settingsstorefront "github.com/Aether-v1/hcz/internal/modules/settings/schema/storefront"
 	"github.com/Aether-v1/hcz/internal/shared/jsonmap"
@@ -99,5 +100,9 @@ var defaultSettingRegistry = MustNewRegistry(
 	Definition{
 		Key:       constants.SettingKeyPaymentConfig,
 		Normalize: NormalizePaymentFeeConfig,
+	},
+	Definition{
+		Key:       constants.SettingKeyCheckinConfig,
+		Normalize: settingspoints.NormalizeCheckinConfigJSON,
 	},
 )

@@ -9,6 +9,7 @@ import (
 	couponcontract "github.com/Aether-v1/hcz/internal/modules/coupon/contract"
 	fulfillmentcontract "github.com/Aether-v1/hcz/internal/modules/fulfillment/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	resellerdomain "github.com/Aether-v1/hcz/internal/modules/reseller/domain"
 	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
@@ -91,6 +92,8 @@ type Transaction interface {
 	Fulfillments() fulfillmentcontract.Store
 	Wallets() walletcontract.Transaction
 	Affiliates() affiliatecontract.Store
+	// Points 返回绑定到同一事务的积分域视图（P1 订单完成奖励 / 退款冲正）。
+	Points() pointscontract.Transaction
 	ResellerOrders() ResellerOrderStore
 	ResellerAccounting() resellercontract.AccountingLedgerStore
 	ExpirePendingPaymentsByOrderIDs(orderIDs []uint, expiredAt time.Time) (int64, error)

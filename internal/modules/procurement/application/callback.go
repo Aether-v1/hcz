@@ -58,10 +58,21 @@ func (s *Service) HandleUpstreamCallback(procurementOrderID uint, upstreamStatus
 			return fmt.Errorf("update procurement status: %w", err)
 		}
 
-		// HCZ P0: 五态机下采购完成直接写 completed（终态），不再写 delivered
-		_ = s.orderRepo.UpdateStatus(procOrder.LocalOrderID, constants.OrderStatusCompleted, map[string]interface{}{
-			"updated_at": now,
-		})
+		// P1：采购完成走统一完成生命周期（行锁 + 状态校验 + Affiliate/Points 副作用，幂等）。
+		// 替代旧直接 UpdateStatus(completed) 绕过生命周期的问题。
+		if s.orderLifecycle != nil {
+			if err := s.orderLifecycle.CompleteOrder(procOrder.LocalOrderID); err != nil {
+				logger.Warnw("procurement_complete_order_failed",
+					"procurement_order_id", procOrder.ID,
+					"local_order_id", procOrder.LocalOrderID,
+					"error", err,
+				)
+			}
+		} else {
+			_ = s.orderRepo.UpdateStatus(procOrder.LocalOrderID, constants.OrderStatusCompleted, map[string]interface{}{
+				"updated_at": now,
+			})
+		}
 
 		// 如果有父订单，同步父订单状态
 		localOrder, _ := s.orderRepo.GetByID(procOrder.LocalOrderID)
@@ -73,6 +84,16 @@ func (s *Service) HandleUpstreamCallback(procurementOrderID uint, upstreamStatus
 					"error", syncErr,
 				)
 			} else {
+				// P1：父单因此进入 completed 时统一触发父单副作用（佣金 + 积分，DB 幂等）。
+				if status == constants.OrderStatusCompleted {
+					if err := s.orderLifecycle.CompleteParentSideEffects(*localOrder.ParentID); err != nil {
+						logger.Warnw("procurement_complete_parent_side_effects_failed",
+							"procurement_order_id", procOrder.ID,
+							"parent_order_id", *localOrder.ParentID,
+							"error", err,
+						)
+					}
+				}
 				if status == "" {
 					status = constants.OrderStatusCompleted
 				}

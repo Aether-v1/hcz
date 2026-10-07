@@ -71,7 +71,7 @@ func setupOrderRefundServiceTest(t *testing.T) (*Service, *gorm.DB) {
 	userRepo := userstore.New(db)
 	settingSvc := settingsapp.NewService(settingsstore.New(db))
 	paymentStore := paymentgormstore.New(db, "test-guest-credential-secret-with-32-bytes")
-	return New(orderStore, userRepo, affiliateSvc, settingSvc, nil, paymentStore), db
+	return New(orderStore, userRepo, affiliateSvc, settingSvc, nil, paymentStore, nil), db
 }
 
 func createOrderRefundTestSiteConnection(t *testing.T, db *gorm.DB, id uint) *siteconnectiondomain.Connection {

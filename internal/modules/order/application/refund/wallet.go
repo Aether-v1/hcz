@@ -200,6 +200,10 @@ func (s *Service) AdminRefundToWalletInTx(
 	if err := orderRepository.CreateRefundRecord(record); err != nil {
 		return nil, nil, ErrRefundRecordCreateFailed
 	}
+	// P1：退款积分冲正（floor 累计算法；仅父单；append-only ORDER_REWARD_REVERSAL）。
+	if err := s.reverseOrderRewardInTx(tx, &order, amount, refundedBefore, record.ID); err != nil {
+		return nil, nil, err
+	}
 	if s.resellerAccounting != nil {
 		if err := s.resellerAccounting.HandleRefundDeduct(tx.ResellerAccounting(), &order, record, refundedBefore); err != nil {
 			return nil, nil, err

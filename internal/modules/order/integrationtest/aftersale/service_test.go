@@ -58,7 +58,7 @@ func setupAfterSaleTest(t *testing.T) (*aftersale.Service, *refund.Service, *gor
 	affiliateSvc := application.NewService(affiliategormstore.New(db), nil, nil, nil, nil)
 	settingSvc := settingsapp.NewService(settingsstore.New(db))
 	paymentStore := paymentgormstore.New(db, "test-guest-credential-secret-with-32-bytes")
-	refundSvc := refund.New(orderStore, userstore.New(db), affiliateSvc, settingSvc, walletSvc, paymentStore)
+	refundSvc := refund.New(orderStore, userstore.New(db), affiliateSvc, settingSvc, walletSvc, paymentStore, nil)
 	svc := aftersale.NewService(orderStore, aftersale.NewWalletRefunderAdapter(refundSvc))
 
 	// user + wallet account

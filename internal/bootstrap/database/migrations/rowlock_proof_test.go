@@ -168,12 +168,18 @@ func TestRowLockWithdrawalVsOrder(t *testing.T) {
 		err := db.Transaction(func(tx *gorm.DB) error {
 			var avail, frozen float64
 			row := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Table(tbl).
-				Select("available","frozen").Where("id=1").Row()
-			if err := row.Scan(&avail, &frozen); err != nil { return err }
-			if avail < 300 { return fmt.Errorf("余额不足冻结") }
+				Select("available", "frozen").Where("id=1").Row()
+			if err := row.Scan(&avail, &frozen); err != nil {
+				return err
+			}
+			if avail < 300 {
+				return fmt.Errorf("余额不足冻结")
+			}
 			return tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-300, frozen=frozen+300 WHERE id=1", tbl)).Error
 		})
-		if err != nil { t.Errorf("提现冻结事务失败: %v", err) }
+		if err != nil {
+			t.Errorf("提现冻结事务失败: %v", err)
+		}
 	}()
 	// O: 订单扣款 500（直接出钱包）
 	wg.Add(1)
@@ -183,16 +189,22 @@ func TestRowLockWithdrawalVsOrder(t *testing.T) {
 			var avail float64
 			row := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Table(tbl).
 				Select("available").Where("id=1").Row()
-			if err := row.Scan(&avail); err != nil { return err }
-			if avail < 500 { return fmt.Errorf("余额不足下单") }
+			if err := row.Scan(&avail); err != nil {
+				return err
+			}
+			if avail < 500 {
+				return fmt.Errorf("余额不足下单")
+			}
 			return tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-500 WHERE id=1", tbl)).Error
 		})
-		if err != nil { t.Errorf("订单扣款事务失败: %v", err) }
+		if err != nil {
+			t.Errorf("订单扣款事务失败: %v", err)
+		}
 	}()
 	wg.Wait()
 
 	var avail, frozen float64
-	db.Table(tbl).Select("available","frozen").Where("id=1").Row().Scan(&avail, &frozen)
+	db.Table(tbl).Select("available", "frozen").Where("id=1").Row().Scan(&avail, &frozen)
 	t.Logf("[withdrawal_vs_order] 最终 available=%.2f frozen=%.2f（期望 avail=200 frozen=300）", avail, frozen)
 	if avail != 200 || frozen != 300 {
 		t.Fatalf("FAIL: 并发冻结+扣款结果不一致 avail=%.2f frozen=%.2f", avail, frozen)
@@ -232,8 +244,10 @@ func TestRowLockC2CDoubleFreeze(t *testing.T) {
 				var avail float64
 				var status string
 				row := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Table(tbl).
-					Select("available_usdt","status").Where("id=1").Row()
-				if err := row.Scan(&avail,&status); err != nil { return err }
+					Select("available_usdt", "status").Where("id=1").Row()
+				if err := row.Scan(&avail, &status); err != nil {
+					return err
+				}
 				if avail >= 1 && status == "active" {
 					if err := tx.Exec(fmt.Sprintf("UPDATE %s SET available_usdt = available_usdt - 1 WHERE id=1", tbl)).Error; err != nil {
 						return err
@@ -242,9 +256,16 @@ func TestRowLockC2CDoubleFreeze(t *testing.T) {
 				}
 				return nil
 			})
-			if err != nil { t.Errorf("买家事务失败: %v", err); return }
+			if err != nil {
+				t.Errorf("买家事务失败: %v", err)
+				return
+			}
 			successMu.Lock()
-			if won { successCnt++ } else { failCnt++ }
+			if won {
+				successCnt++
+			} else {
+				failCnt++
+			}
 			successMu.Unlock()
 		}()
 	}
@@ -290,8 +311,10 @@ func TestRowLockC2CCancelVsSettle(t *testing.T) {
 			var status string
 			var sf float64
 			row := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Table(tbl).
-				Select("status","seller_frozen").Where("id=1").Row()
-			if err := row.Scan(&status,&sf); err != nil { return err }
+				Select("status", "seller_frozen").Where("id=1").Row()
+			if err := row.Scan(&status, &sf); err != nil {
+				return err
+			}
 			if status == "frozen" {
 				if err := tx.Exec(fmt.Sprintf("UPDATE %s SET status='cancelled', seller_frozen=0 WHERE id=1", tbl)).Error; err != nil {
 					return err
@@ -300,7 +323,9 @@ func TestRowLockC2CCancelVsSettle(t *testing.T) {
 			}
 			return nil
 		})
-		if err != nil { t.Errorf("cancel 事务失败: %v", err) }
+		if err != nil {
+			t.Errorf("cancel 事务失败: %v", err)
+		}
 	}()
 	// settle: 成交，状态->settled，买家收到 10
 	wg.Add(1)
@@ -310,8 +335,10 @@ func TestRowLockC2CCancelVsSettle(t *testing.T) {
 			var status string
 			var sf float64
 			row := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Table(tbl).
-				Select("status","seller_frozen").Where("id=1").Row()
-			if err := row.Scan(&status,&sf); err != nil { return err }
+				Select("status", "seller_frozen").Where("id=1").Row()
+			if err := row.Scan(&status, &sf); err != nil {
+				return err
+			}
 			if status == "frozen" {
 				if err := tx.Exec(fmt.Sprintf("UPDATE %s SET status='settled', seller_frozen=0, buyer_received=10 WHERE id=1", tbl)).Error; err != nil {
 					return err
@@ -320,13 +347,15 @@ func TestRowLockC2CCancelVsSettle(t *testing.T) {
 			}
 			return nil
 		})
-		if err != nil { t.Errorf("settle 事务失败: %v", err) }
+		if err != nil {
+			t.Errorf("settle 事务失败: %v", err)
+		}
 	}()
 	wg.Wait()
 
 	var status string
 	var sf, br float64
-	db.Table(tbl).Select("status","seller_frozen","buyer_received").Where("id=1").Row().Scan(&status,&sf,&br)
+	db.Table(tbl).Select("status", "seller_frozen", "buyer_received").Where("id=1").Row().Scan(&status, &sf, &br)
 	t.Logf("[c2c_cancel_vs_settle] cancelWon=%v settleWon=%v, 最终 status=%q seller_frozen=%.2f buyer_received=%.2f",
 		cancelWon, settleWon, status, sf, br)
 	if cancelWon && settleWon {
@@ -372,11 +401,19 @@ func TestRowLockBidirectionalSettleNoDeadlock(t *testing.T) {
 		errs <- db.Transaction(func(tx *gorm.DB) error {
 			// 统一按 id 升序加锁，避免与反向事务交叉死锁
 			rows, err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-				Table(tbl).Select("id","available").Where("id IN (1,2) ORDER BY id").Rows()
-			if err != nil { return err }
+				Table(tbl).Select("id", "available").Where("id IN (1,2) ORDER BY id").Rows()
+			if err != nil {
+				return err
+			}
 			defer rows.Close()
-			for rows.Next() { var id int; var avail float64; rows.Scan(&id,&avail) }
-			if err := tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-10 WHERE id=1", tbl)).Error; err != nil { return err }
+			for rows.Next() {
+				var id int
+				var avail float64
+				rows.Scan(&id, &avail)
+			}
+			if err := tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-10 WHERE id=1", tbl)).Error; err != nil {
+				return err
+			}
 			return tx.Exec(fmt.Sprintf("UPDATE %s SET available=available+10 WHERE id=2", tbl)).Error
 		})
 	}()
@@ -386,18 +423,28 @@ func TestRowLockBidirectionalSettleNoDeadlock(t *testing.T) {
 		defer wg.Done()
 		errs <- db.Transaction(func(tx *gorm.DB) error {
 			rows, err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-				Table(tbl).Select("id","available").Where("id IN (1,2) ORDER BY id").Rows()
-			if err != nil { return err }
+				Table(tbl).Select("id", "available").Where("id IN (1,2) ORDER BY id").Rows()
+			if err != nil {
+				return err
+			}
 			defer rows.Close()
-			for rows.Next() { var id int; var avail float64; rows.Scan(&id,&avail) }
-			if err := tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-10 WHERE id=2", tbl)).Error; err != nil { return err }
+			for rows.Next() {
+				var id int
+				var avail float64
+				rows.Scan(&id, &avail)
+			}
+			if err := tx.Exec(fmt.Sprintf("UPDATE %s SET available=available-10 WHERE id=2", tbl)).Error; err != nil {
+				return err
+			}
 			return tx.Exec(fmt.Sprintf("UPDATE %s SET available=available+10 WHERE id=1", tbl)).Error
 		})
 	}()
 	wg.Wait()
 	close(errs)
 	for e := range errs {
-		if e != nil { t.Fatalf("双向结算事务出错（疑似死锁）: %v", e) }
+		if e != nil {
+			t.Fatalf("双向结算事务出错（疑似死锁）: %v", e)
+		}
 	}
 
 	var a, b float64

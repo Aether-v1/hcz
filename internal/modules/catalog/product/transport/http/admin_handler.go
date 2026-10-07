@@ -237,6 +237,9 @@ type CreateProductRequest struct {
 	IsActive            *bool                    `json:"is_active"`
 	IsCostExempt        *bool                    `json:"is_cost_exempt"`
 	SortOrder           int                      `json:"sort_order"`
+	// P1：固定积分奖励配置。reward_enabled=true 时 reward_points 必须 > 0。
+	RewardEnabled *bool `json:"reward_enabled"`
+	RewardPoints  int64 `json:"reward_points"`
 }
 
 // toWholesalePriceInputs 透传「是否提供」语义：请求未携带 wholesale_prices 时返回 nil
@@ -311,8 +314,14 @@ func (h *AdminProductHandler) CreateProduct(c *gin.Context) {
 		IsActive:             req.IsActive,
 		IsCostExempt:         req.IsCostExempt,
 		SortOrder:            req.SortOrder,
+		RewardEnabled:        req.RewardEnabled,
+		RewardPoints:         req.RewardPoints,
 	})
 	if err != nil {
+		if errors.Is(err, productcontract.ErrRewardPointsInvalid) {
+			ginutil.RespondError(c, response.CodeBadRequest, "error.reward_points_invalid", nil)
+			return
+		}
 		if errors.Is(err, productcontract.ErrSlugExists) {
 			ginutil.RespondError(c, response.CodeBadRequest, "error.slug_exists", nil)
 			return
@@ -404,10 +413,16 @@ func (h *AdminProductHandler) UpdateProduct(c *gin.Context) {
 		IsActive:             req.IsActive,
 		IsCostExempt:         req.IsCostExempt,
 		SortOrder:            req.SortOrder,
+		RewardEnabled:        req.RewardEnabled,
+		RewardPoints:         req.RewardPoints,
 	})
 	if err != nil {
 		if errors.Is(err, productcontract.ErrNotFound) {
 			ginutil.RespondError(c, response.CodeNotFound, "error.product_not_found", nil)
+			return
+		}
+		if errors.Is(err, productcontract.ErrRewardPointsInvalid) {
+			ginutil.RespondError(c, response.CodeBadRequest, "error.reward_points_invalid", nil)
 			return
 		}
 		if errors.Is(err, productcontract.ErrSlugExists) {
@@ -470,6 +485,9 @@ type QuickUpdateProductRequest struct {
 	IsActive   *bool `json:"is_active"`
 	SortOrder  *int  `json:"sort_order"`
 	CategoryID *uint `json:"category_id"`
+	// P1：固定积分奖励快速更新。reward_enabled=true 时必须同时提供 reward_points > 0。
+	RewardEnabled *bool  `json:"reward_enabled"`
+	RewardPoints  *int64 `json:"reward_points"`
 }
 
 type UpdateWholesalePricesRequest struct {
@@ -527,6 +545,20 @@ func (h *AdminProductHandler) QuickUpdateProduct(c *gin.Context) {
 	}
 	if req.CategoryID != nil {
 		fields["category_id"] = *req.CategoryID
+	}
+	// P1：固定积分奖励快速更新。reward_enabled=true 时必须提供 reward_points > 0。
+	if req.RewardEnabled != nil {
+		if *req.RewardEnabled && (req.RewardPoints == nil || *req.RewardPoints <= 0) {
+			ginutil.RespondError(c, response.CodeBadRequest, "error.reward_points_invalid", nil)
+			return
+		}
+		fields["reward_enabled"] = *req.RewardEnabled
+		if *req.RewardEnabled && req.RewardPoints != nil {
+			fields["reward_points"] = *req.RewardPoints
+		}
+		if !*req.RewardEnabled {
+			fields["reward_points"] = int64(0)
+		}
 	}
 	if len(fields) == 0 {
 		ginutil.RespondError(c, response.CodeBadRequest, "error.bad_request", nil)

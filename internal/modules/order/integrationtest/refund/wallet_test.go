@@ -81,6 +81,7 @@ func setupOrderRefundWalletTest(t *testing.T) (*Service, *gorm.DB) {
 		settingSvc,
 		walletService,
 		paymentgormstore.New(db, "test-guest-credential-secret-with-32-bytes"),
+		nil,
 	), db
 }
 

@@ -44,6 +44,19 @@ type OrderLifecycle interface {
 	CreateUpstreamFulfillment(orderID uint, fulfillment *Fulfillment, now time.Time) error
 	SyncParentStatus(parentID uint, now time.Time) (string, error)
 	EnqueueStatusEmail(orderID uint, status string) (skipped bool, err error)
+	// CompleteOrder 本地订单进入 completed 的统一入口（自开事务，行锁 + 状态校验 + Affiliate/Points 副作用，幂等）。
+	// 替代"直接 UpdateStatus(completed) 绕过完成生命周期"的旧做法。
+	CompleteOrder(orderID uint) error
+	// CompleteParentSideEffects 父订单 completed 的统一副作用入口（自开事务，幂等）。
+	CompleteParentSideEffects(parentID uint) error
+}
+
+// OrderCompletion 是采购侧委托订单域统一完成生命周期的端口（P1）。
+// 由 container 注入 order application 的 OrderService 适配器；实现侧负责
+// Affiliate Commission + Points Reward 与订单状态更新的同事务原子性。
+type OrderCompletion interface {
+	CompleteOrder(orderID uint) error
+	CompleteParentSideEffects(parentID uint) error
 }
 
 type DownstreamCallbackEnqueuer interface {

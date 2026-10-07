@@ -17,6 +17,8 @@ import (
 	fulfillmentcontract "github.com/Aether-v1/hcz/internal/modules/fulfillment/contract"
 	fulfillmentgormstore "github.com/Aether-v1/hcz/internal/modules/fulfillment/infrastructure/gormstore"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
+	pointsgormstore "github.com/Aether-v1/hcz/internal/modules/points/infrastructure/gormstore"
 	resellercontract "github.com/Aether-v1/hcz/internal/modules/reseller/contract"
 	resellergormstore "github.com/Aether-v1/hcz/internal/modules/reseller/infrastructure/gormstore"
 	walletcontract "github.com/Aether-v1/hcz/internal/modules/wallet/contract"
@@ -88,6 +90,10 @@ func (tx transaction) Wallets() walletcontract.Transaction {
 
 func (tx transaction) Affiliates() affiliatecontract.Store {
 	return affiliategormstore.New(tx.db)
+}
+
+func (tx transaction) Points() pointscontract.Transaction {
+	return pointsgormstore.UseTransaction(tx.db)
 }
 
 func (tx transaction) ResellerOrders() ordercontract.ResellerOrderStore {

@@ -8,6 +8,7 @@ import (
 	ordermachine "github.com/Aether-v1/hcz/internal/modules/order/application/ordermachine"
 	ordercontract "github.com/Aether-v1/hcz/internal/modules/order/contract"
 	orderdomain "github.com/Aether-v1/hcz/internal/modules/order/domain"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	"github.com/Aether-v1/hcz/internal/logger"
@@ -240,15 +241,7 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 			}
 			// 事务成功后写用户站内通知（尽力而为，失败不回滚订单）。
 			s.notifyUserOrderCompleted(order)
-			// 事务成功后生成多级别返利佣金（佣金自管事务，失败只 warn 不回滚订单）。
-			if s.affiliateSvc != nil {
-				if err := s.affiliateSvc.HandleOrderCompleted(order.ID); err != nil {
-					logger.Warnw("affiliate_handle_order_completed_failed",
-						"order_id", order.ID,
-						"error", err,
-					)
-				}
-			}
+			// P1：Affiliate Commission + Points Reward 已在 completeParentOrderInTx 同事务内完成。
 			return order, nil
 		default:
 			return nil, ErrOrderStatusInvalid
@@ -268,6 +261,11 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 	if target == constants.OrderStatusCanceled || target == constants.OrderStatusFailed {
 		err = s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
 			return s.cancelSingleOrderInTx(tx, order, target, updates)
+		})
+	} else if target == constants.OrderStatusCompleted {
+		// P1：单订单进入 completed 走统一完成生命周期（行锁 + 状态校验 + Affiliate/Points 同事务）。
+		err = s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
+			return s.CompleteOrderInTx(tx, order.ID, now)
 		})
 	} else {
 		err = s.orderStore.UpdateStatus(order.ID, target, updates)
@@ -299,19 +297,30 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 				"target_status", target,
 				"error", syncErr,
 			)
-		} else if s.queueClient != nil {
-			status := parentStatus
-			if status == "" {
-				status = target
-			}
-			if status != constants.OrderStatusCanceled {
-				if _, err := EnqueueStatusEmailTaskIfEligible(s.orderStore, s.queueClient, s.settingService, s.defaultEmailConfig, *order.ParentID, status); err != nil {
-					logger.Warnw("order_enqueue_status_email_failed",
-						"order_id", order.ID,
-						"target_order_id", *order.ParentID,
-						"status", status,
+		} else {
+			// P1：子单完成使父单进入 completed 时，统一触发父单副作用（佣金 + 积分，DB 幂等）。
+			if parentStatus == constants.OrderStatusCompleted {
+				if err := s.CompleteParentSideEffects(*order.ParentID); err != nil {
+					logger.Warnw("order_complete_parent_side_effects_failed",
+						"parent_order_id", *order.ParentID,
 						"error", err,
 					)
+				}
+			}
+			if s.queueClient != nil {
+				status := parentStatus
+				if status == "" {
+					status = target
+				}
+				if status != constants.OrderStatusCanceled {
+					if _, err := EnqueueStatusEmailTaskIfEligible(s.orderStore, s.queueClient, s.settingService, s.defaultEmailConfig, *order.ParentID, status); err != nil {
+						logger.Warnw("order_enqueue_status_email_failed",
+							"order_id", order.ID,
+							"target_order_id", *order.ParentID,
+							"status", status,
+							"error", err,
+						)
+					}
 				}
 			}
 		}
@@ -326,16 +335,9 @@ func (s *OrderService) UpdateOrderStatus(orderID uint, targetStatus string) (*or
 		}
 	}
 	// 单订单转入 completed 后写用户站内通知（尽力而为，失败不回滚订单）。
+	// P1：Affiliate Commission + Points Reward 已在 CompleteOrderInTx 同事务内完成。
 	if target == constants.OrderStatusCompleted {
 		s.notifyUserOrderCompleted(order)
-		if s.affiliateSvc != nil {
-			if err := s.affiliateSvc.HandleOrderCompleted(order.ID); err != nil {
-				logger.Warnw("affiliate_handle_order_completed_failed",
-					"order_id", order.ID,
-					"error", err,
-				)
-			}
-		}
 	}
 	FillOrderItemsFromChildren(order)
 	return order, nil
@@ -362,7 +364,21 @@ func (s *OrderService) completeParentOrderInTx(tx ordercontract.Transaction, ord
 			return ErrOrderUpdateFailed
 		}
 	}
-	return nil
+	// P1：父单进入 completed 的同事务副作用（Affiliate Commission + Points Reward）。
+	// 子单不单独触发奖励（奖励绑定 parent_order_id）；DB 幂等保证只发一次。
+	return s.completeParentSideEffectsInTx(tx, order.ID)
+}
+
+// completeParentSideEffectsInTx 在调用方事务内触发父单完成副作用（幂等）。
+func (s *OrderService) completeParentSideEffectsInTx(tx ordercontract.Transaction, parentID uint) error {
+	parent, err := tx.Orders().GetByIDForUpdate(parentID)
+	if err != nil {
+		return err
+	}
+	if parent == nil || parent.Status != constants.OrderStatusCompleted || parent.UserID == 0 {
+		return nil
+	}
+	return s.completeOrderSideEffectsInTx(tx, parent)
 }
 
 func (s *OrderService) cancelSingleOrderInTx(tx ordercontract.Transaction, order *orderdomain.Order, target string, updates map[string]interface{}) error {
@@ -468,4 +484,121 @@ func IsTransitionAllowed(current, target string) bool {
 		return false
 	}
 	return nexts[target]
+}
+
+// PointsOrderLifecycle 是订单域调用积分用例的最小端口（P1）。
+// 依赖方向：Order Application → Points Contract；Points 不反向查询 Order Domain。
+type PointsOrderLifecycle interface {
+	// RewardOrderCompleted 在调用方事务内发放订单奖励积分。
+	RewardOrderCompleted(tx pointscontract.Transaction, input pointscontract.OrderRewardInput) error
+	// ReverseOrderReward 在调用方事务内按比例冲正积分。
+	ReverseOrderReward(tx pointscontract.Transaction, input pointscontract.OrderReversalInput) error
+	// OrderRewardSummary 返回订单奖励与已冲正累计（部分退款累计算法用）。
+	OrderRewardSummary(tx pointscontract.Transaction, orderID uint) (reward, reversed int64, err error)
+}
+
+// completedTransitionAllowed 校验订单是否允许进入 COMPLETED（统一生命周期守卫）。
+// 五态机下：processing / paid / fulfilling（legacy 中间态）→ completed 合法；completed → completed 幂等。
+func completedTransitionAllowed(status string) bool {
+	switch status {
+	case constants.OrderStatusProcessing,
+		constants.OrderStatusPaid,
+		constants.OrderStatusFulfilling:
+		return true
+	}
+	return false
+}
+
+// CompleteOrderInTx 是"单订单进入 COMPLETED"的统一事务内完成入口（P1）。
+// 覆盖四条完成路径：Admin 状态更新、Manual Fulfillment、Auto Fulfillment、Procurement 回调。
+//
+// 语义：
+//   - 行锁订单 → 校验状态转换 → 更新为 completed；
+//   - 子订单（有父）不触发子单奖励/佣金（父单完成后由 CompleteParentSideEffects 统一触发）；
+//   - 单订单（无父）在**同一事务**内依次执行 Affiliate Commission 与 Points Reward。
+//
+// 幂等：已 completed → 直接返回 nil；Affiliate 唯一约束 + Points reference 唯一索引兜底。
+func (s *OrderService) CompleteOrderInTx(tx ordercontract.Transaction, orderID uint, now time.Time) error {
+	if tx == nil || orderID == 0 {
+		return ErrOrderNotFound
+	}
+	orders := tx.Orders()
+	locked, err := orders.GetByIDForUpdate(orderID)
+	if err != nil {
+		return err
+	}
+	if locked == nil {
+		return ErrOrderNotFound
+	}
+	if locked.Status == constants.OrderStatusCompleted {
+		return nil // 重复 completed：不重复发积分/佣金
+	}
+	if !completedTransitionAllowed(locked.Status) {
+		return ErrOrderStatusInvalid
+	}
+	if err := orders.UpdateFields(orderID, map[string]interface{}{
+		"status":     constants.OrderStatusCompleted,
+		"updated_at": now,
+	}); err != nil {
+		return ErrOrderUpdateFailed
+	}
+	if locked.ParentID != nil {
+		return nil // 子订单：副作用归父单
+	}
+	return s.completeOrderSideEffectsInTx(tx, locked)
+}
+
+// CompleteParentSideEffects 父订单进入 COMPLETED 后的统一副作用入口（自开事务，幂等）。
+// 由子单完成 → SyncParentStatus 检测到父单 completed 后调用；Admin 父单完成路径在事务内直接调用
+// completeParentSideEffectsInTx。任何路径都只会触发一次（Affiliate 幂等 + Points reference 唯一）。
+func (s *OrderService) CompleteParentSideEffects(parentID uint) error {
+	if parentID == 0 {
+		return nil
+	}
+	return s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
+		parent, err := tx.Orders().GetByIDForUpdate(parentID)
+		if err != nil {
+			return err
+		}
+		if parent == nil {
+			return nil
+		}
+		if parent.Status != constants.OrderStatusCompleted || parent.UserID == 0 {
+			return nil
+		}
+		return s.completeOrderSideEffectsInTx(tx, parent)
+	})
+}
+
+// CompleteOrderByProcurement 采购回调完成本地订单的统一入口（自开事务）。
+// 替代旧直接 UpdateStatus(completed) 绕过生命周期的问题。
+func (s *OrderService) CompleteOrderByProcurement(orderID uint) error {
+	return s.orderStore.WithinTransaction(func(tx ordercontract.Transaction) error {
+		return s.CompleteOrderInTx(tx, orderID, time.Now())
+	})
+}
+
+// completeOrderSideEffectsInTx 在调用方事务内统一触发完成副作用：Affiliate → Points。
+// 任一失败 → 整个 completed 事务回滚（不允许 Order=completed 而 Reward=missing）。
+func (s *OrderService) completeOrderSideEffectsInTx(tx ordercontract.Transaction, order *orderdomain.Order) error {
+	if order == nil || order.UserID == 0 {
+		return nil
+	}
+	if s.affiliateSvc != nil {
+		if err := s.affiliateSvc.HandleOrderCompletedInTx(tx.Affiliates(), order); err != nil {
+			return err
+		}
+	}
+	if s.pointsSvc != nil && order.RewardEnabled && order.RewardPoints > 0 {
+		if err := s.pointsSvc.RewardOrderCompleted(tx.Points(), pointscontract.OrderRewardInput{
+			UserID:    order.UserID,
+			OrderID:   order.ID,
+			Amount:    order.RewardPoints,
+			Reason:    "order_reward_completed",
+			Reference: pointscontract.OrderRewardReference(order.ID),
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

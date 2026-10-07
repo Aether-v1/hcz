@@ -42,6 +42,10 @@ type Order struct {
 	PromotionID             *uint               `gorm:"index" json:"promotion_id,omitempty"`                                              // 活动价ID（单品订单）
 	AffiliateProfileID      *uint               `gorm:"index" json:"affiliate_profile_id,omitempty"`                                      // 推广返利关联用户ID快照
 	AffiliateCode           string              `gorm:"type:varchar(32);index" json:"affiliate_code,omitempty"`                           // 推广返利联盟ID快照
+	// P1 Points：下单时商品积分奖励配置快照。订单完成按此快照发放积分，禁止完成时回读商品当前配置。
+	// 历史订单（迁移前）无快照 → reward_enabled=false / reward_points=0 → 不补发。
+	RewardEnabled           bool                `gorm:"not null;default:false" json:"reward_enabled"`                                     // 父单=任一子商品启用奖励
+	RewardPoints            int64               `gorm:"not null;default:0" json:"reward_points"`                                          // BIGINT 积分快照（父单=Σ子商品固定积分）
 	ResellerID              *uint               `gorm:"index" json:"reseller_id,omitempty"`                                               // 分销商ID，主站订单为 NULL
 	ResellerDomain          string              `gorm:"type:varchar(255);index" json:"reseller_domain,omitempty"`                         // 下单分销域名快照
 	ResellerProfitAmount    money.Amount        `gorm:"type:decimal(20,2);not null;default:0" json:"reseller_profit_amount"`              // 分销差价快照

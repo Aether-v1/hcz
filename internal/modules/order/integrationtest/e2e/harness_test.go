@@ -20,6 +20,7 @@ import (
 
 	"github.com/Aether-v1/hcz/internal/constants"
 	affiliateapp "github.com/Aether-v1/hcz/internal/modules/affiliate/application"
+	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	affiliategormstore "github.com/Aether-v1/hcz/internal/modules/affiliate/infrastructure/gormstore"
 	categorydomain "github.com/Aether-v1/hcz/internal/modules/catalog/category/domain"
@@ -97,6 +98,9 @@ func (m *mockAffiliateLifecycle) ResolveOrderAffiliateSnapshot(userID uint, rawC
 func (m *mockAffiliateLifecycle) HandleOrderPaid(orderID uint) error     { return nil }
 func (m *mockAffiliateLifecycle) HandleOrderCanceled(orderID uint, reason string) error { return nil }
 func (m *mockAffiliateLifecycle) HandleOrderCompleted(orderID uint) error { return nil }
+func (m *mockAffiliateLifecycle) HandleOrderCompletedInTx(repoTx affiliatecontract.Store, order *orderdomain.Order) error {
+	return nil
+}
 
 // ---- fixture ----
 
@@ -217,7 +221,7 @@ func newE2EFixture(t *testing.T) *e2eFixture {
 	})
 
 	// refund service（钱包退款 + affiliate 冲正）
-	refundSvc := refundapp.New(orderStore, userRepo, affiliateapp.NewService(affiliateStore, nil, nil, nil, nil), settingSvc, walletSvc, paymentRepo)
+	refundSvc := refundapp.New(orderStore, userRepo, affiliateapp.NewService(affiliateStore, nil, nil, nil, nil), settingSvc, walletSvc, paymentRepo, nil)
 
 	user := &userdomain.User{
 		Email:       fmt.Sprintf("e2e_user_%d@test.com", fixtureCounter),

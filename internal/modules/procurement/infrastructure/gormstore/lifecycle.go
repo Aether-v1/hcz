@@ -26,6 +26,9 @@ type Lifecycle struct {
 	queue              StatusEmailQueue
 	settings           *settingsapp.Service
 	defaultEmailConfig config.EmailConfig
+	// orderCompletion 委托订单域统一完成生命周期（P1：Affiliate + Points 副作用收口）。
+	// 由 container 注入；nil 时 CompleteOrder 退化为旧直接写 completed 行为（测试环境兼容）。
+	orderCompletion procurementcontract.OrderCompletion
 }
 
 var _ procurementcontract.OrderLifecycle = (*Lifecycle)(nil)
@@ -78,6 +81,30 @@ func NewLifecycle(
 	return &Lifecycle{
 		db: db, queue: queueClient, settings: settings, defaultEmailConfig: defaultEmailConfig,
 	}
+}
+
+// SetOrderCompletion 注入订单域统一完成生命周期（P1；由 container 调用）。
+func (l *Lifecycle) SetOrderCompletion(c procurementcontract.OrderCompletion) {
+	l.orderCompletion = c
+}
+
+// CompleteOrder 本地订单进入 completed 的统一入口（P1）。
+// 优先委托订单域生命周期（行锁 + 状态校验 + Affiliate/Points 同事务）；未注入时退化为旧直接写 completed。
+func (l *Lifecycle) CompleteOrder(orderID uint) error {
+	if l.orderCompletion != nil {
+		return l.orderCompletion.CompleteOrder(orderID)
+	}
+	return l.db.Table("orders").Where("id = ? AND deleted_at IS NULL", orderID).Updates(map[string]interface{}{
+		"status": constants.OrderStatusCompleted, "updated_at": time.Now(),
+	}).Error
+}
+
+// CompleteParentSideEffects 父订单 completed 的统一副作用入口（P1，幂等）。
+func (l *Lifecycle) CompleteParentSideEffects(parentID uint) error {
+	if l.orderCompletion == nil {
+		return nil
+	}
+	return l.orderCompletion.CompleteParentSideEffects(parentID)
 }
 
 func (s *Store) NewLifecycle(

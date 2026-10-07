@@ -52,6 +52,11 @@ type Product struct {
 	PromotionRules       []PromotionRule    `json:"promotion_rules,omitempty"`
 	MemberPrices         []MemberLevelPrice `json:"member_prices,omitempty"`
 
+	// P1：商品固定积分奖励（只读展示"完成订单可得 X 积分"）。
+	// reward_enabled=false 时 reward_points 输出 0。
+	RewardEnabled bool  `json:"reward_enabled"`
+	RewardPoints  int64 `json:"reward_points"`
+
 	RelatedPosts []RelatedPost `json:"related_posts,omitempty"`
 }
 

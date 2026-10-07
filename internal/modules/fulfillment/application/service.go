@@ -36,6 +36,17 @@ type Service struct {
 	downstreamCallbackSvc DownstreamCallbackEnqueuer
 	userOAuthIdentityRepo externalidentitycontract.Store
 	userNotifier          usernotificationcontract.Creator
+	// orderCompletionSvc 统一订单完成生命周期（P1：Affiliate + Points 副作用收口）。
+	orderCompletionSvc OrderCompletionService
+}
+
+// OrderCompletionService 是履约域调用统一订单完成生命周期的端口（P1）。
+// 由 order application 的 OrderService 实现；避免 fulfillment → order application 直接依赖。
+type OrderCompletionService interface {
+	// CompleteOrderInTx 在调用方事务内把订单置为 completed 并执行完成副作用。
+	CompleteOrderInTx(tx ordercontract.Transaction, orderID uint, now time.Time) error
+	// CompleteParentSideEffects 父订单进入 completed 后的统一副作用入口（自开事务，幂等）。
+	CompleteParentSideEffects(parentID uint) error
 }
 
 type BotNotifier interface {
@@ -92,6 +103,8 @@ type Options struct {
 	SettingService        *settingsapp.Service
 	DefaultEmailConfig    config.EmailConfig
 	ExternalIdentityStore externalidentitycontract.Store
+	// OrderCompletion 统一订单完成生命周期（P1，必填；nil 时退化为旧直接写 completed）。
+	OrderCompletion OrderCompletionService
 }
 
 // New 创建交付服务。
@@ -106,6 +119,7 @@ func New(
 		settingService:        opts.SettingService,
 		defaultEmailConfig:    opts.DefaultEmailConfig,
 		userOAuthIdentityRepo: opts.ExternalIdentityStore,
+		orderCompletionSvc:    opts.OrderCompletion,
 	}
 }
 
@@ -177,12 +191,19 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 		if err := tx.Fulfillments().Create(fulfillment); err != nil {
 			return ErrFulfillmentCreateFailed
 		}
-		// HCZ P0-3: 人工履约完成后直接写 completed（五态终态），不再写 delivered
-		if err := tx.Orders().UpdateFields(order.ID, map[string]interface{}{
-			"status":     constants.OrderStatusCompleted,
-			"updated_at": now,
-		}); err != nil {
-			return ErrOrderUpdateFailed
+		// P1：人工履约完成走统一完成生命周期（行锁 + 状态校验 + Affiliate/Points 同事务）。
+		// 有父订单时此处只收口子单状态；父单副作用由下方 SyncParentStatus 检测父单 completed 后触发。
+		if s.orderCompletionSvc != nil {
+			if err := s.orderCompletionSvc.CompleteOrderInTx(tx, order.ID, now); err != nil {
+				return err
+			}
+		} else {
+			if err := tx.Orders().UpdateFields(order.ID, map[string]interface{}{
+				"status":     constants.OrderStatusCompleted,
+				"updated_at": now,
+			}); err != nil {
+				return ErrOrderUpdateFailed
+			}
 		}
 		created = fulfillment
 		return nil
@@ -207,6 +228,16 @@ func (s *Service) CreateManual(input CreateManualInput) (*fulfillmentdomain.Fulf
 					"error", syncErr,
 				)
 			} else {
+				// P1：父单因此进入 completed 时统一触发父单副作用（佣金 + 积分，DB 幂等）。
+				if status == constants.OrderStatusCompleted && s.orderCompletionSvc != nil {
+					if err := s.orderCompletionSvc.CompleteParentSideEffects(*order.ParentID); err != nil {
+						logger.Warnw("fulfillment_complete_parent_side_effects_failed",
+							"order_id", order.ID,
+							"parent_order_id", *order.ParentID,
+							"error", err,
+						)
+					}
+				}
 				if status == "" {
 					status = constants.OrderStatusCompleted
 				}
@@ -358,11 +389,18 @@ func (s *Service) CreateAuto(orderID uint) (*fulfillmentdomain.Fulfillment, erro
 		if err := tx.Fulfillments().Create(fulfillment); err != nil {
 			return ErrFulfillmentCreateFailed
 		}
-		if err := tx.Orders().UpdateFields(orderID, map[string]interface{}{
-			"status":     constants.OrderStatusCompleted,
-			"updated_at": now,
-		}); err != nil {
-			return ErrOrderUpdateFailed
+		// P1：自动履约完成走统一完成生命周期（行锁 + 状态校验 + Affiliate/Points 同事务）。
+		if s.orderCompletionSvc != nil {
+			if err := s.orderCompletionSvc.CompleteOrderInTx(tx, orderID, now); err != nil {
+				return err
+			}
+		} else {
+			if err := tx.Orders().UpdateFields(orderID, map[string]interface{}{
+				"status":     constants.OrderStatusCompleted,
+				"updated_at": now,
+			}); err != nil {
+				return ErrOrderUpdateFailed
+			}
 		}
 		return nil
 	})
@@ -391,6 +429,16 @@ func (s *Service) CreateAuto(orderID uint) (*fulfillmentdomain.Fulfillment, erro
 					"error", syncErr,
 				)
 			} else {
+				// P1：父单因此进入 completed 时统一触发父单副作用（佣金 + 积分，DB 幂等）。
+				if status == constants.OrderStatusCompleted && s.orderCompletionSvc != nil {
+					if err := s.orderCompletionSvc.CompleteParentSideEffects(*order.ParentID); err != nil {
+						logger.Warnw("fulfillment_complete_parent_side_effects_failed",
+							"order_id", order.ID,
+							"parent_order_id", *order.ParentID,
+							"error", err,
+						)
+					}
+				}
 				if status == "" {
 					status = constants.OrderStatusCompleted
 				}

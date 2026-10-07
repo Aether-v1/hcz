@@ -3,10 +3,30 @@ package productwrite
 import (
 	paymentdomain "github.com/Aether-v1/hcz/internal/modules/payment/domain"
 
+	productcontract "github.com/Aether-v1/hcz/internal/modules/catalog/product/contract"
 	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
+	pointscontract "github.com/Aether-v1/hcz/internal/modules/points/contract"
 
 	"github.com/shopspring/decimal"
 )
+
+// normalizeRewardConfig 归一化商品固定积分奖励配置（P1 创建/更新共用唯一口径）。
+//
+// 规则（P4 §10/§31）：
+//   - 未显式开启（nil 或 false）：enabled=false 且 points=0，
+//     禁止"关闭状态仍携带巨额奖励值"，否则下一次开启会静默生效；
+//   - 开启时：points 必须 > 0，且不超过积分系统单笔硬上限 MaxPointsAmount，
+//     挡住后台误输入（例如 100000000000000）造成资产风险；
+//   - 上限常量取自 points/contract，禁止在商品侧另立一套数值。
+func normalizeRewardConfig(enabled *bool, points int64) (bool, int64, error) {
+	if enabled == nil || !*enabled {
+		return false, 0, nil
+	}
+	if points <= 0 || points > pointscontract.MaxPointsAmount {
+		return false, 0, productcontract.ErrRewardPointsInvalid
+	}
+	return true, points, nil
+}
 
 // ProductRepository 是商品创建和更新所需的最小持久化端口。
 type ProductRepository interface {
@@ -111,6 +131,10 @@ type CreateProductInput struct {
 	SortOrder           int
 	// IsCostExempt 真零成本商品豁免（数字权益/赠品/内测），nil 表示保留默认 false。
 	IsCostExempt *bool
+	// RewardEnabled 是否发放固定积分奖励（P1）；nil 表示保留默认 false。
+	RewardEnabled *bool
+	// RewardPoints 固定积分奖励值（P1，BIGINT；reward_enabled=true 时必须 > 0）。
+	RewardPoints int64
 }
 
 // ProductSKUInput 描述商品 SKU 的完整写入值。

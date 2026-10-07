@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	affiliatecontract "github.com/Aether-v1/hcz/internal/modules/affiliate/contract"
 	affiliatedomain "github.com/Aether-v1/hcz/internal/modules/affiliate/domain"
 	productcontract "github.com/Aether-v1/hcz/internal/modules/catalog/product/contract"
 	productdomain "github.com/Aether-v1/hcz/internal/modules/catalog/product/domain"
@@ -51,6 +52,8 @@ type OrderService struct {
 	defaultEmailConfig      config.EmailConfig
 	walletService           *walletapp.Service
 	affiliateSvc            AffiliateOrderLifecycle
+	// P1 Points：订单完成奖励 / 退款冲正端口（由 Points Service 实现，Points 不反向依赖 Order）。
+	pointsSvc               PointsOrderLifecycle
 	memberLevelService      OrderMemberLevelService
 	resellerPricingResolver *ResellerPricingResolver
 	resellerAccounting      resellerAccountingTransactions
@@ -82,8 +85,11 @@ type AffiliateOrderLifecycle interface {
 	HandleOrderPaid(orderID uint) error
 	HandleOrderCanceled(orderID uint, reason string) error
 	// HandleOrderCompleted 在订单进入 completed 后由订单域调用，生成多级别佣金。
-	// 实现须自行管理事务，失败只 warn 不回滚订单。
+	// 独立事务（兼容旧调用方）；P1 统一完成生命周期优先使用 HandleOrderCompletedInTx。
 	HandleOrderCompleted(orderID uint) error
+	// HandleOrderCompletedInTx 在调用方（订单完成）事务内生成佣金（P1）。
+	// repoTx 为订单事务的 affiliate 视图；order 为已进入 completed 的最新快照。
+	HandleOrderCompletedInTx(repoTx affiliatecontract.Store, order *orderdomain.Order) error
 }
 
 // resellerAccountingTransactions 是订单事务内调用分销账务用例的最小端口。
@@ -116,6 +122,7 @@ type OrderServiceOptions struct {
 	DefaultEmailConfig      config.EmailConfig
 	WalletService           *walletapp.Service
 	AffiliateService        AffiliateOrderLifecycle
+	PointsService           PointsOrderLifecycle
 	MemberLevelService      OrderMemberLevelService
 	ResellerPricingResolver *ResellerPricingResolver
 	ResellerAccounting      resellerAccountingTransactions
@@ -248,6 +255,14 @@ func (s *OrderService) runProfitGuard(result *orderBuildResult, usdtTotal decima
 	return res, nil
 }
 
+// orderRewardPoints 返回商品固定积分快照值（P1：reward_enabled=false 或负值均按 0 处理）。
+func orderRewardPoints(p *productdomain.Product) int64 {
+	if p == nil || !p.RewardEnabled || p.RewardPoints <= 0 {
+		return 0
+	}
+	return p.RewardPoints
+}
+
 // NewOrderService 创建订单服务
 func NewOrderService(opts OrderServiceOptions) *OrderService {
 	return &OrderService{
@@ -263,6 +278,7 @@ func NewOrderService(opts OrderServiceOptions) *OrderService {
 		defaultEmailConfig:      opts.DefaultEmailConfig,
 		walletService:           opts.WalletService,
 		affiliateSvc:            opts.AffiliateService,
+		pointsSvc:               opts.PointsService,
 		memberLevelService:      opts.MemberLevelService,
 		resellerPricingResolver: opts.ResellerPricingResolver,
 		resellerAccounting:      opts.ResellerAccounting,
@@ -719,6 +735,19 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 	}
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(expireMinutes) * time.Minute)
+
+	// P1：订单积分快照（固定积分模式）。
+	// 父单 = Σ 子商品固定积分；子单 = 单商品固定积分。
+	// 快照在创建时固化，订单完成/退款时禁止回读商品当前配置。
+	parentRewardEnabled := false
+	var parentRewardPoints int64
+	for _, p := range result.Plans {
+		if p.Product != nil && p.Product.RewardEnabled && p.Product.RewardPoints > 0 {
+			parentRewardEnabled = true
+			parentRewardPoints += p.Product.RewardPoints
+		}
+	}
+
 	order := &orderdomain.Order{
 		OrderNo:                 generateOrderNo(),
 		UserID:                  input.UserID,
@@ -753,6 +782,8 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 		RiskIP:                  input.RiskIP,
 		IdempotencyKey:          strings.TrimSpace(input.IdempotencyKey),
 		IdempotencyFingerprint:  input.IdempotencyFingerprint,
+		RewardEnabled:           parentRewardEnabled,
+		RewardPoints:            parentRewardPoints,
 		CreatedAt:               now,
 		UpdatedAt:               now,
 	}
@@ -811,6 +842,8 @@ func (s *OrderService) createOrder(input orderCreateParams) (*orderdomain.Order,
 				ExpiresAt:          &expiresAt,
 				ClientIP:           order.ClientIP,
 				RiskIP:             order.RiskIP,
+				RewardEnabled:      plan.Product != nil && plan.Product.RewardEnabled && plan.Product.RewardPoints > 0,
+				RewardPoints:       orderRewardPoints(plan.Product),
 				CreatedAt:          now,
 				UpdatedAt:          now,
 			}

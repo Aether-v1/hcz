@@ -68,6 +68,16 @@ func (s *WriteService) Update(id string, input CreateProductInput) (*productdoma
 	if input.IsCostExempt != nil {
 		product.IsCostExempt = *input.IsCostExempt
 	}
+	// P1：固定积分奖励配置。nil 表示本次更新不涉及奖励字段，保留现有配置；
+	// 显式携带时走与创建一致的唯一口径（开启必须 > 0 且不超积分硬上限）。
+	if input.RewardEnabled != nil {
+		rewardEnabled, rewardPoints, err := normalizeRewardConfig(input.RewardEnabled, input.RewardPoints)
+		if err != nil {
+			return nil, err
+		}
+		product.RewardEnabled = rewardEnabled
+		product.RewardPoints = rewardPoints
+	}
 	rawPurchaseType := strings.TrimSpace(input.PurchaseType)
 	if rawPurchaseType == "" {
 		rawPurchaseType = product.PurchaseType

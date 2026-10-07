@@ -18,4 +18,6 @@ var (
 	ErrProductHasStock              = errors.New("product has stock")
 	ErrProductHasOrderRecord        = errors.New("product has order record")
 	ErrResellerProductNotListed     = errors.New("reseller product not listed")
+	// P1：商品固定积分奖励配置校验失败（reward_enabled=true 时 reward_points 必须 > 0）。
+	ErrRewardPointsInvalid = errors.New("reward points invalid")
 )
