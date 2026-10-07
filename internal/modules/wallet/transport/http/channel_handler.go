@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	paymentpresenter "github.com/Aether-v1/hcz/internal/modules/payment/transport/presenter"
+	walletpresenter "github.com/Aether-v1/hcz/internal/modules/wallet/transport/presenter"
 
 	"github.com/Aether-v1/hcz/internal/platform/http/channelresponse"
 	ginutil "github.com/Aether-v1/hcz/internal/platform/http/ginutil"
@@ -47,7 +48,12 @@ func NewChannelHandler(
 	}
 }
 
-// GetWallet GET /api/v1/channel/wallet?telegram_user_id=xxx
+// GetWallet GET /api/v1/channel/wallet?channel_user_id=xxx
+//
+// Channel wallet reuses the authoritative user wallet presenter so the response
+// shape, precision and currency are identical to GET /api/v1/user/wallet
+// (available_balance / frozen_balance / total_balance / currency=USDT). This is
+// the same wallet domain, a different entry point — a single source of truth.
 func (h *ChannelHandler) GetWallet(c *gin.Context) {
 	channelUserID := channelresponse.UserIDValue(c.Query("channel_user_id"), c.Query("telegram_user_id"))
 	if channelUserID == "" {
@@ -69,10 +75,7 @@ func (h *ChannelHandler) GetWallet(c *gin.Context) {
 		return
 	}
 
-	channelresponse.Success(c, gin.H{
-		"balance":  account.AvailableBalance.StringFixed(2),
-		"currency": "CNY",
-	})
+	channelresponse.Success(c, walletpresenter.NewWalletAccountResp(account))
 }
 
 // GetWalletTransactions GET /api/v1/channel/wallet/transactions?telegram_user_id=xxx&page=1&page_size=5

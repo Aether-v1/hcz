@@ -48,6 +48,22 @@ func TestWalletAccountRespOmitsSensitiveFields(t *testing.T) {
 	}
 }
 
+func TestWalletAccountRespCurrencyIsUSDTAndTotalSum(t *testing.T) {
+	account := &walletdomain.Account{
+		AvailableBalance: newMoney("80.00"),
+		FrozenBalance:    newMoney("20.00"),
+	}
+	resp := NewWalletAccountResp(account)
+	if resp.Currency != "USDT" {
+		t.Fatalf("wallet currency must be USDT, got %q", resp.Currency)
+	}
+	if got := resp.TotalBalance.String(); got != "100.00" {
+		t.Fatalf("total_balance must equal available+frozen, got %q", got)
+	}
+	// This same presenter backs both GET /user/wallet and GET /channel/wallet,
+	// so a single assertion here locks their parity (one wallet, two entry points).
+}
+
 func TestWalletTransactionRespOmitsSensitiveFields(t *testing.T) {
 	txn := &walletdomain.Transaction{
 		ID:              1,
