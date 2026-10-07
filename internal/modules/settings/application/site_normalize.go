@@ -52,6 +52,12 @@ func normalizeSiteSetting(value map[string]interface{}) jsonmap.JSON {
 		normalized["languages"] = normalizeSiteLanguages(raw)
 	}
 
+	// P1-5: nav_config 是独立 settings key（key='nav_config'），不允许嵌套在 site_config 中。
+	// 历史上 Site Builder → NavFooter 会把导航配置嵌套写入 site_config（Storage C），
+	// 但 public/handler.go 只读独立 nav_config 行（Storage A），嵌套字段是死存储。
+	// 这里显式剔除，即使前端误传嵌套 nav_config 也不会落库。
+	delete(normalized, "nav_config")
+
 	return normalized
 }
 
