@@ -151,7 +151,6 @@ import { isGuestDevPreview } from '../../utils/devPreview'
 const { t } = useI18n()
 const auth = useUserAuthStore()
 const profile = useUserProfileStore()
-const { confirm } = useConfirmDialog()
 const wallet = ref<WalletAccountData | null>(null)
 const profileReady = ref(false)
 const walletLoading = ref(false)
@@ -209,16 +208,6 @@ watch(() => auth.isAuthenticated, (loggedIn) => {
     walletError.value = false
   }
 })
-
-const handleLogout = async () => {
-  const approved = await confirm({
-    title: t('personalCenter.myPage.logoutTitle'),
-    message: t('personalCenter.myPage.logoutConfirm'),
-    confirmText: t('navbar.logout'),
-    variant: 'danger',
-  })
-  if (approved) auth.logout('/')
-}
 </script>
 
 <style scoped>
