@@ -14,10 +14,11 @@ import (
 
 // Services sitebuilder admin handler 依赖的业务服务集合。
 type Services struct {
-	HomeEntries *sitebuilderapp.HomeEntryService
-	Discovery   *sitebuilderapp.DiscoveryBlockService
-	Brand       *sitebuilderapp.BrandService
-	Audit       *sitebuilderapp.AuditService
+	HomeEntries        *sitebuilderapp.HomeEntryService
+	FeaturedCategories *sitebuilderapp.HomeFeaturedCategoryService
+	Discovery          *sitebuilderapp.DiscoveryBlockService
+	Brand              *sitebuilderapp.BrandService
+	Audit              *sitebuilderapp.AuditService
 }
 
 // AdminHandler 处理站点装修后台管理请求。
@@ -325,6 +326,162 @@ func (h *AdminHandler) ReorderDiscoveryBlocks(c *gin.Context) {
 	}
 	adminID, _ := ginutil.GetAdminID(c)
 	h.svc.Audit.Record(adminID, "discovery", "reorder", nil, items)
+	h.invalidate(c)
+	response.Success(c, gin.H{"reordered": len(items)})
+}
+
+// ==================== Home Featured Categories ====================
+
+func (h *AdminHandler) ListFeaturedCategories(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		response.Success(c, []interface{}{})
+		return
+	}
+	items, err := h.svc.FeaturedCategories.ListAdmin()
+	if err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.sitebuilder_fetch_failed", err)
+		return
+	}
+	response.Success(c, items)
+}
+
+type featuredCategoryRequest struct {
+	CategoryID   uint   `json:"category_id" binding:"required"`
+	Alias        string `json:"alias"`
+	IconOverride string `json:"icon_override"`
+	Enabled      *bool  `json:"enabled"`
+	SortOrder    int    `json:"sort_order"`
+}
+
+func (h *AdminHandler) CreateFeaturedCategory(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeNotFound, "featured categories service unavailable", nil)
+		return
+	}
+	var req featuredCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+	item, err := h.svc.FeaturedCategories.Create(sitebuilderapp.FeaturedCategoryInput{
+		CategoryID:   req.CategoryID,
+		Alias:        req.Alias,
+		IconOverride: req.IconOverride,
+		Enabled:      req.Enabled,
+		SortOrder:    req.SortOrder,
+	})
+	if err != nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeBadRequest, err.Error(), err)
+		return
+	}
+	adminID, _ := ginutil.GetAdminID(c)
+	h.svc.Audit.Record(adminID, "featured_category", "create", nil, item)
+	h.invalidate(c)
+	response.Success(c, item)
+}
+
+func (h *AdminHandler) UpdateFeaturedCategory(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeNotFound, "featured categories service unavailable", nil)
+		return
+	}
+	id, ok := pathUint(c)
+	if !ok {
+		return
+	}
+	var req featuredCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+	before, _ := h.svc.FeaturedCategories.Get(id)
+	item, err := h.svc.FeaturedCategories.Update(id, sitebuilderapp.FeaturedCategoryInput{
+		CategoryID:   req.CategoryID,
+		Alias:        req.Alias,
+		IconOverride: req.IconOverride,
+		Enabled:      req.Enabled,
+		SortOrder:    req.SortOrder,
+	})
+	if err != nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeBadRequest, err.Error(), err)
+		return
+	}
+	adminID, _ := ginutil.GetAdminID(c)
+	h.svc.Audit.Record(adminID, "featured_category", "update", before, item)
+	h.invalidate(c)
+	response.Success(c, item)
+}
+
+func (h *AdminHandler) DeleteFeaturedCategory(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeNotFound, "featured categories service unavailable", nil)
+		return
+	}
+	id, ok := pathUint(c)
+	if !ok {
+		return
+	}
+	before, _ := h.svc.FeaturedCategories.Get(id)
+	if err := h.svc.FeaturedCategories.Delete(id); err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.sitebuilder_save_failed", err)
+		return
+	}
+	adminID, _ := ginutil.GetAdminID(c)
+	h.svc.Audit.Record(adminID, "featured_category", "delete", before, nil)
+	h.invalidate(c)
+	response.Success(c, gin.H{"deleted": id})
+}
+
+type toggleFeaturedCategoryRequest struct {
+	Enabled bool `json:"enabled"`
+}
+
+func (h *AdminHandler) ToggleFeaturedCategory(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeNotFound, "featured categories service unavailable", nil)
+		return
+	}
+	id, ok := pathUint(c)
+	if !ok {
+		return
+	}
+	var req toggleFeaturedCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+	before, _ := h.svc.FeaturedCategories.Get(id)
+	item, err := h.svc.FeaturedCategories.SetEnabled(id, req.Enabled)
+	if err != nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeBadRequest, err.Error(), err)
+		return
+	}
+	adminID, _ := ginutil.GetAdminID(c)
+	h.svc.Audit.Record(adminID, "featured_category", "toggle", before, item)
+	h.invalidate(c)
+	response.Success(c, item)
+}
+
+func (h *AdminHandler) ReorderFeaturedCategories(c *gin.Context) {
+	if h.svc.FeaturedCategories == nil {
+		ginutil.RespondErrorWithMsg(c, response.CodeNotFound, "featured categories service unavailable", nil)
+		return
+	}
+	var req reorderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ginutil.RespondBindError(c, err)
+		return
+	}
+	items := make([]sitebuilderapp.ReorderItem, 0, len(req.Items))
+	for i := range req.Items {
+		items = append(items, sitebuilderapp.ReorderItem{ID: req.Items[i].ID, SortOrder: req.Items[i].SortOrder})
+	}
+	if err := h.svc.FeaturedCategories.Reorder(items); err != nil {
+		ginutil.RespondError(c, response.CodeInternal, "error.sitebuilder_save_failed", err)
+		return
+	}
+	adminID, _ := ginutil.GetAdminID(c)
+	h.svc.Audit.Record(adminID, "featured_category", "reorder", nil, items)
 	h.invalidate(c)
 	response.Success(c, gin.H{"reordered": len(items)})
 }

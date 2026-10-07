@@ -102,6 +102,15 @@ export interface DiscoveryBlock {
   config: Record<string, any>
 }
 
+export interface FeaturedCategory {
+  id?: number
+  category_id: number
+  alias?: string
+  icon_override?: string
+  enabled: boolean
+  sort_order: number
+}
+
 // ─────────────────────────── 品牌设置 ───────────────────────────
 
 export const getBrand = () => api.get('/admin/site/brand')
@@ -126,7 +135,25 @@ export const updateDiscoveryBlock = (id: number, data: DiscoveryBlock) =>
 export const deleteDiscoveryBlock = (id: number) => api.delete(`/admin/site/discovery-blocks/${id}`)
 export const toggleDiscoveryBlock = (id: number) => api.patch(`/admin/site/discovery-blocks/${id}/toggle`)
 export const reorderDiscoveryBlocks = (ids: number[]) =>
-  api.post('/admin/site/discovery-blocks/reorder', { ids })
+  api.post('/admin/site/discovery-blocks/reorder', {
+    items: ids.map((id, i) => ({ id, sort_order: i })),
+  })
+
+// ─────────────────────────── 首页热门推荐分类 ───────────────────────────
+
+export const getFeaturedCategories = () => api.get('/admin/site/featured-categories')
+export const createFeaturedCategory = (data: FeaturedCategory) =>
+  api.post('/admin/site/featured-categories', data)
+export const updateFeaturedCategory = (id: number, data: FeaturedCategory) =>
+  api.put(`/admin/site/featured-categories/${id}`, data)
+export const deleteFeaturedCategory = (id: number) =>
+  api.delete(`/admin/site/featured-categories/${id}`)
+export const toggleFeaturedCategory = (id: number, enabled: boolean) =>
+  api.patch(`/admin/site/featured-categories/${id}/toggle`, { enabled })
+export const reorderFeaturedCategories = (ids: number[]) =>
+  api.post('/admin/site/featured-categories/reorder', {
+    items: ids.map((id, i) => ({ id, sort_order: i })),
+  })
 
 // ─────────────────────────── 校验工具 ───────────────────────────
 

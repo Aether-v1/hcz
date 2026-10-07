@@ -178,6 +178,12 @@ const routes = [
             meta: { permission: 'GET:/admin/site/home-entries' },
           },
           {
+            path: 'featured',
+            name: 'site-builder-featured',
+            component: () => import('@/views/site-builder/FeaturedCategories.vue'),
+            meta: { permission: 'GET:/admin/site/featured-categories' },
+          },
+          {
             path: 'banner',
             name: 'site-builder-banner',
             component: () => import('@/views/site-builder/BannerAnnouncement.vue'),

@@ -10,6 +10,7 @@ const route = useRoute()
 const tabs = [
   { key: 'brand', label: '品牌设置', to: '/site-builder/brand' },
   { key: 'home', label: '首页装修', to: '/site-builder/home' },
+  { key: 'featured', label: '热门推荐', to: '/site-builder/featured' },
   { key: 'banner', label: 'Banner / 公告', to: '/site-builder/banner' },
   { key: 'discovery', label: '发现页装修', to: '/site-builder/discovery' },
   { key: 'nav-footer', label: '导航 / Footer', to: '/site-builder/nav-footer' },

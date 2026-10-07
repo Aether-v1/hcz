@@ -191,6 +191,7 @@ func (s *fakeHomeEntryStore) List(enabledOnly bool) ([]sitebuilderdomain.HomeEnt
 	return result, nil
 }
 func (s *fakeHomeEntryStore) Reorder(items []ReorderItem) error { return nil }
+func (s *fakeHomeEntryStore) Count() (int64, error)             { return int64(len(s.entries)), nil }
 
 func TestHomeEntryServiceCreateInternalWhitelist(t *testing.T) {
 	svc := NewHomeEntryService(newFakeHomeEntryStore())

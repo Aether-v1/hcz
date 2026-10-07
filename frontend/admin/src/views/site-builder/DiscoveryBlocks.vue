@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import MediaPicker from '@/components/admin/MediaPicker.vue'
 import TableSkeleton from '@/components/TableSkeleton.vue'
+import { adminAPI } from '@/api/admin'
+import type { AdminProduct, AdminCategory } from '@/api/types'
+import { getLocalizedText } from '@/utils/format'
 import {
   getDiscoveryBlocks,
   createDiscoveryBlock,
@@ -35,27 +38,62 @@ const BLOCK_TYPE_LABELS: Record<DiscoveryBlockType, string> = {
   category_entry: '分类入口',
 }
 
-interface ActionLink {
+// ── 各类型 config 的初始值，严格对齐后端 discovery_schema.go ──
+// banner: { image, link_type(none/internal/external), link_value, open_in_new_tab }
+const emptyBannerConfig = () => ({
+  image: '',
+  link_type: 'none' as 'none' | 'internal' | 'external',
+  link_value: '',
+  open_in_new_tab: false,
+})
+
+// card_grid: { cards: [{ title, subtitle, image, action_type(internal/external), action_target }] }
+interface CardGridCard {
+  title: string
+  subtitle: string
+  image: string
   action_type: 'internal' | 'external'
   action_target: string
 }
+const emptyCard = (): CardGridCard => ({
+  title: '',
+  subtitle: '',
+  image: '',
+  action_type: 'internal',
+  action_target: HOME_ENTRY_ROUTES[0],
+})
+const emptyCardGridConfig = () => ({ cards: [emptyCard()] as CardGridCard[] })
 
-const emptyActionLink = (): ActionLink => ({ action_type: 'internal', action_target: HOME_ENTRY_ROUTES[0] })
+// business_recommend: { title, product_ids[]uint }
+const emptyBusinessRecommendConfig = () => ({ title: '', product_ids: [] as number[] })
+
+// announcement: { text, link_type, link_value }
+const emptyAnnouncementConfig = () => ({
+  text: '',
+  link_type: 'none' as 'none' | 'internal' | 'external',
+  link_value: '',
+})
+
+// external_link: { label, url, icon }
+const emptyExternalLinkConfig = () => ({ label: '', url: '', icon: '' })
+
+// category_entry: { category_ids[]uint }
+const emptyCategoryEntryConfig = () => ({ category_ids: [] as number[] })
 
 const emptyConfig = (type: DiscoveryBlockType): Record<string, any> => {
   switch (type) {
     case 'banner':
-      return { image: '', title: '', subtitle: '', ...emptyActionLink() }
+      return emptyBannerConfig()
     case 'card_grid':
-      return { cards: [] as any[] }
+      return emptyCardGridConfig()
     case 'business_recommend':
-      return { business_keys: [] as string[] }
+      return emptyBusinessRecommendConfig()
     case 'announcement':
-      return {}
+      return emptyAnnouncementConfig()
     case 'external_link':
-      return { title: '', subtitle: '', image: '', url: '' }
+      return emptyExternalLinkConfig()
     case 'category_entry':
-      return { entries: [] as any[] }
+      return emptyCategoryEntryConfig()
   }
 }
 
@@ -113,13 +151,19 @@ const openEdit = (block: DiscoveryBlock) => {
   form.title = block.title || ''
   form.enabled = Boolean(block.enabled)
   form.sort_order = Number(block.sort_order || 0)
-  form.config = JSON.parse(JSON.stringify(block.config || emptyConfig(block.type)))
-  // 保证 config 结构完整
+  // 以空配置为基底合并后端返回的 config，保证字段完整、类型正确
   const base = emptyConfig(block.type)
-  form.config = { ...base, ...form.config }
-  if (block.type === 'card_grid' && !Array.isArray(form.config.cards)) form.config.cards = []
-  if (block.type === 'category_entry' && !Array.isArray(form.config.entries)) form.config.entries = []
-  if (block.type === 'business_recommend' && !Array.isArray(form.config.business_keys)) form.config.business_keys = []
+  form.config = { ...base, ...JSON.parse(JSON.stringify(block.config || {})) }
+  if (block.type === 'card_grid') {
+    if (!Array.isArray(form.config.cards) || form.config.cards.length === 0) form.config.cards = [emptyCard()]
+    form.config.cards = (form.config.cards as any[]).map((c) => ({ ...emptyCard(), ...c }))
+  }
+  if (block.type === 'business_recommend') {
+    if (!Array.isArray(form.config.product_ids)) form.config.product_ids = []
+  }
+  if (block.type === 'category_entry') {
+    if (!Array.isArray(form.config.category_ids)) form.config.category_ids = []
+  }
   showModal.value = true
 }
 
@@ -132,21 +176,44 @@ const changeType = (type: DiscoveryBlockType) => {
   resetForm(type)
 }
 
-// ── card_grid / category_entry 动态数组操作 ──
-const addCard = () => {
-  form.config.cards.push({ image: '', title: '', description: '', ...emptyActionLink() })
-}
-const removeCard = (i: number) => form.config.cards.splice(i, 1)
-const addEntry = () => {
-  form.config.entries.push({ name: '', route: HOME_ENTRY_ROUTES[0], icon: HOME_ENTRY_ICONS[0] })
-}
-const removeEntry = (i: number) => form.config.entries.splice(i, 1)
+// ── 商品 / 分类选项（供 business_recommend / category_entry 多选） ──
+const productOptions = ref<AdminProduct[]>([])
+const categoryOptions = ref<AdminCategory[]>([])
 
-const toggleBusinessKey = (key: string) => {
-  const arr = form.config.business_keys as string[]
-  const idx = arr.indexOf(key)
+const fetchOptions = async () => {
+  const [pRes, cRes] = await Promise.allSettled([
+    adminAPI.getProducts({ page: 1, page_size: 100, is_active: 1 }),
+    adminAPI.getCategories(),
+  ])
+  if (pRes.status === 'fulfilled') {
+    productOptions.value = ((pRes.value.data?.data || []) as AdminProduct[]).filter(
+      (p) => p.is_active && p.slug,
+    )
+  }
+  if (cRes.status === 'fulfilled') {
+    categoryOptions.value = ((cRes.value.data?.data || []) as AdminCategory[]).filter((c) => c.is_active)
+  }
+}
+
+// ── card_grid 动态卡片 ──
+const addCard = () => {
+  if (((form.config.cards as any[]) || []).length >= 12) return
+  ;(form.config.cards as any[]).push(emptyCard())
+}
+const removeCard = (i: number) => (form.config.cards as any[]).splice(i, 1)
+
+// ── business_recommend / category_entry 多选 ──
+const toggleProduct = (id: number) => {
+  const arr = form.config.product_ids as number[]
+  const idx = arr.indexOf(id)
   if (idx >= 0) arr.splice(idx, 1)
-  else arr.push(key)
+  else if (arr.length < 20) arr.push(id)
+}
+const toggleCategory = (id: number) => {
+  const arr = form.config.category_ids as number[]
+  const idx = arr.indexOf(id)
+  if (idx >= 0) arr.splice(idx, 1)
+  else if (arr.length < 20) arr.push(id)
 }
 
 const validate = (): boolean => {
@@ -156,24 +223,78 @@ const validate = (): boolean => {
     return false
   }
   const cfg = form.config
-  const checkUrl = (v: string, label: string) => {
-    if (v && !isHttpUrl(v)) {
-      formError.value = `${label}：外链必须以 http:// 或 https:// 开头`
-      return false
+  // link_type = internal/external 时的 link_value 校验（对齐后端 validateLink）
+  const checkLink = (linkType: string, linkValue: string, label: string): boolean => {
+    if (linkType === 'internal') {
+      if (!String(linkValue || '').trim()) {
+        formError.value = `${label}：内部路由必选`
+        return false
+      }
+      return true
+    }
+    if (linkType === 'external') {
+      if (!isHttpUrl(String(linkValue || ''))) {
+        formError.value = `${label}：外链必须以 http:// 或 https:// 开头`
+        return false
+      }
+      return true
     }
     return true
   }
-  if (form.type === 'banner') {
-    if (cfg.action_type === 'external' && !checkUrl(cfg.action_target, '横幅跳转')) return false
-  }
-  if (form.type === 'card_grid') {
-    for (let i = 0; i < (cfg.cards || []).length; i++) {
-      const c = cfg.cards[i]
-      if (c.action_type === 'external' && !checkUrl(c.action_target, `卡片 ${i + 1} 跳转`)) return false
+  switch (form.type) {
+    case 'banner':
+      if (!String(cfg.image || '').trim()) {
+        formError.value = '横幅图片必填'
+        return false
+      }
+      return checkLink(String(cfg.link_type || 'none'), String(cfg.link_value || ''), '横幅跳转')
+    case 'card_grid': {
+      const cards = (Array.isArray(cfg.cards) ? cfg.cards : []) as CardGridCard[]
+      if (cards.length === 0) {
+        formError.value = '至少添加 1 张卡片'
+        return false
+      }
+      for (let i = 0; i < cards.length; i++) {
+        const c = cards[i]!
+        if (!String(c.title || '').trim()) {
+          formError.value = `卡片 ${i + 1}：标题必填`
+          return false
+        }
+        if (c.action_type === 'external' && !isHttpUrl(String(c.action_target || ''))) {
+          formError.value = `卡片 ${i + 1}：外链必须以 http:// 或 https:// 开头`
+          return false
+        }
+      }
+      return true
     }
-  }
-  if (form.type === 'external_link') {
-    if (!checkUrl(cfg.url, '链接地址')) return false
+    case 'business_recommend':
+      if (!Array.isArray(cfg.product_ids) || (cfg.product_ids as number[]).length === 0) {
+        formError.value = '请至少选择 1 个推荐商品'
+        return false
+      }
+      return true
+    case 'announcement':
+      if (!String(cfg.text || '').trim()) {
+        formError.value = '公告文本必填'
+        return false
+      }
+      return checkLink(String(cfg.link_type || 'none'), String(cfg.link_value || ''), '公告链接')
+    case 'external_link':
+      if (!String(cfg.label || '').trim()) {
+        formError.value = '链接名称必填'
+        return false
+      }
+      if (!isHttpUrl(String(cfg.url || ''))) {
+        formError.value = '链接地址必须以 http:// 或 https:// 开头'
+        return false
+      }
+      return true
+    case 'category_entry':
+      if (!Array.isArray(cfg.category_ids) || (cfg.category_ids as number[]).length === 0) {
+        formError.value = '请至少选择 1 个分类'
+        return false
+      }
+      return true
   }
   return true
 }
@@ -249,7 +370,10 @@ const move = async (index: number, direction: -1 | 1) => {
   }
 }
 
-onMounted(fetchBlocks)
+onMounted(() => {
+  void fetchBlocks()
+  void fetchOptions()
+})
 </script>
 
 <template>
@@ -329,98 +453,143 @@ onMounted(fetchBlocks)
             </div>
           </div>
 
-          <!-- banner -->
+          <!-- banner: { image, link_type, link_value, open_in_new_tab } -->
           <div v-if="form.type === 'banner'" class="space-y-4 rounded-lg border border-border p-4">
-            <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">图片</Label><MediaPicker v-model="form.config.image" scene="banner" /></div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">标题</Label><Input v-model="form.config.title" /></div>
-              <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">副标题</Label><Input v-model="form.config.subtitle" /></div>
-            </div>
-            <div class="flex gap-4">
-              <Label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" value="internal" v-model="form.config.action_type" /> 内部路由</Label>
-              <Label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" value="external" v-model="form.config.action_type" /> 外部链接</Label>
-            </div>
+            <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">横幅图片 *</Label><MediaPicker v-model="form.config.image" scene="banner" /></div>
             <div class="space-y-2">
-              <Label class="text-xs font-medium text-muted-foreground">跳转目标</Label>
-              <Select v-if="form.config.action_type === 'internal'" v-model="form.config.action_target">
+              <Label class="text-xs font-medium text-muted-foreground">跳转类型</Label>
+              <Select v-model="form.config.link_type">
+                <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">不跳转</SelectItem>
+                  <SelectItem value="internal">内部路由</SelectItem>
+                  <SelectItem value="external">外部链接</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div v-if="form.config.link_type === 'internal'" class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">内部路由 *</Label>
+              <Select v-model="form.config.link_value">
                 <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem></SelectContent>
               </Select>
-              <Input v-else v-model="form.config.action_target" placeholder="https://example.com" />
+            </div>
+            <div v-else-if="form.config.link_type === 'external'" class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">外部链接 *</Label>
+              <Input v-model="form.config.link_value" placeholder="https://example.com" />
+            </div>
+            <div v-if="form.config.link_type && form.config.link_type !== 'none'" class="flex items-center gap-2">
+              <Switch v-model="form.config.open_in_new_tab" />
+              <Label class="text-sm font-normal">在新标签页打开</Label>
             </div>
           </div>
 
-          <!-- card_grid -->
+          <!-- card_grid: { cards: [{ title, subtitle, image, action_type, action_target }] } -->
           <div v-else-if="form.type === 'card_grid'" class="space-y-4 rounded-lg border border-border p-4">
             <div v-for="(card, i) in form.config.cards" :key="i" class="space-y-3 rounded-lg border border-border bg-muted/10 p-3">
               <div class="flex justify-between"><span class="text-sm font-medium">卡片 {{ Number(i) + 1 }}</span><Button size="sm" variant="destructive" type="button" @click="removeCard(Number(i))">移除</Button></div>
               <MediaPicker v-model="card.image" scene="common" />
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <Input v-model="card.title" placeholder="标题" />
-                <Input v-model="card.description" placeholder="描述" />
+                <Input v-model="card.title" placeholder="标题 *" />
+                <Input v-model="card.subtitle" placeholder="副标题" />
               </div>
-              <div class="flex gap-4">
-                <Label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" value="internal" v-model="card.action_type" /> 内部</Label>
-                <Label class="flex items-center gap-2 text-sm cursor-pointer"><input type="radio" value="external" v-model="card.action_type" /> 外链</Label>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div class="space-y-1">
+                  <Label class="text-xs text-muted-foreground">跳转类型</Label>
+                  <Select v-model="card.action_type">
+                    <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="internal">内部路由</SelectItem>
+                      <SelectItem value="external">外部链接</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="space-y-1">
+                  <Label class="text-xs text-muted-foreground">跳转目标</Label>
+                  <Select v-if="card.action_type === 'internal'" v-model="card.action_target">
+                    <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem></SelectContent>
+                  </Select>
+                  <Input v-else v-model="card.action_target" placeholder="https://example.com" />
+                </div>
               </div>
-              <Select v-if="card.action_type === 'internal'" v-model="card.action_target">
-                <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem></SelectContent>
-              </Select>
-              <Input v-else v-model="card.action_target" placeholder="https://example.com" />
             </div>
-            <Button type="button" variant="outline" size="sm" @click="addCard">+ 添加卡片</Button>
+            <Button type="button" variant="outline" size="sm" :disabled="(form.config.cards || []).length >= 12" @click="addCard">+ 添加卡片</Button>
           </div>
 
-          <!-- business_recommend -->
+          <!-- business_recommend: { title, product_ids[]uint } -->
           <div v-else-if="form.type === 'business_recommend'" class="space-y-3 rounded-lg border border-border p-4">
-            <Label class="text-xs font-medium text-muted-foreground">选择要推荐的业务（多选）</Label>
-            <div class="flex flex-wrap gap-3">
-              <Label v-for="key in HOME_ENTRY_ROUTES" :key="key" class="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-sm cursor-pointer" :class="form.config.business_keys.includes(key) ? 'border-primary bg-primary/5 text-primary' : ''">
-                <input type="checkbox" :checked="form.config.business_keys.includes(key)" @change="toggleBusinessKey(key)" />
-                {{ key }}
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">区块副文案（可选）</Label>
+              <Input v-model="form.config.title" placeholder="留空则展示区块标题" />
+            </div>
+            <Label class="text-xs font-medium text-muted-foreground">选择推荐商品（可多选，最多 20）*</Label>
+            <div class="flex max-h-60 flex-wrap gap-2 overflow-y-auto">
+              <Label v-for="p in productOptions" :key="p.id" class="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-sm cursor-pointer" :class="(form.config.product_ids || []).includes(p.id) ? 'border-primary bg-primary/5 text-primary' : ''">
+                <input type="checkbox" :checked="(form.config.product_ids || []).includes(p.id)" @change="toggleProduct(p.id)" />
+                {{ getLocalizedText(p.title) }} (#{{ p.id }})
               </Label>
             </div>
           </div>
 
-          <!-- announcement -->
-          <div v-else-if="form.type === 'announcement'" class="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-            此区块直接使用「Banner / 公告」Tab 中配置的全局首页公告，无需额外字段。
+          <!-- announcement: { text, link_type, link_value } -->
+          <div v-else-if="form.type === 'announcement'" class="space-y-4 rounded-lg border border-border p-4">
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">公告文本 *</Label>
+              <Input v-model="form.config.text" placeholder="例如：全站充值限时 9 折" />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">跳转类型</Label>
+              <Select v-model="form.config.link_type">
+                <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">不跳转</SelectItem>
+                  <SelectItem value="internal">内部路由</SelectItem>
+                  <SelectItem value="external">外部链接</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div v-if="form.config.link_type === 'internal'" class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">内部路由 *</Label>
+              <Select v-model="form.config.link_value">
+                <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem></SelectContent>
+              </Select>
+            </div>
+            <div v-else-if="form.config.link_type === 'external'" class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">外部链接 *</Label>
+              <Input v-model="form.config.link_value" placeholder="https://example.com" />
+            </div>
           </div>
 
-          <!-- external_link -->
+          <!-- external_link: { label, url, icon } -->
           <div v-else-if="form.type === 'external_link'" class="space-y-4 rounded-lg border border-border p-4">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">标题</Label><Input v-model="form.config.title" /></div>
-              <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">副标题</Label><Input v-model="form.config.subtitle" /></div>
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">链接名称 *</Label>
+              <Input v-model="form.config.label" placeholder="例如：Telegram 频道" />
             </div>
-            <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">图片</Label><MediaPicker v-model="form.config.image" scene="common" /></div>
-            <div class="space-y-2"><Label class="text-xs font-medium text-muted-foreground">链接地址 (http/https)</Label><Input v-model="form.config.url" placeholder="https://example.com" /></div>
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">链接地址 (http/https) *</Label>
+              <Input v-model="form.config.url" placeholder="https://example.com" />
+            </div>
+            <div class="space-y-2">
+              <Label class="text-xs font-medium text-muted-foreground">图标（可选）</Label>
+              <Select v-model="form.config.icon">
+                <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem v-for="ic in HOME_ENTRY_ICONS" :key="ic" :value="ic">{{ ic }}</SelectItem></SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <!-- category_entry -->
-          <div v-else-if="form.type === 'category_entry'" class="space-y-4 rounded-lg border border-border p-4">
-            <div v-for="(entry, i) in form.config.entries" :key="i" class="space-y-3 rounded-lg border border-border bg-muted/10 p-3">
-              <div class="flex justify-between"><span class="text-sm font-medium">入口 {{ Number(i) + 1 }}</span><Button size="sm" variant="destructive" type="button" @click="removeEntry(Number(i))">移除</Button></div>
-              <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <div class="space-y-1"><Label class="text-xs text-muted-foreground">名称</Label><Input v-model="entry.name" /></div>
-                <div class="space-y-1">
-                  <Label class="text-xs text-muted-foreground">路由</Label>
-                  <Select v-model="entry.route">
-                    <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem v-for="r in HOME_ENTRY_ROUTES" :key="r" :value="r">{{ r }}</SelectItem></SelectContent>
-                  </Select>
-                </div>
-                <div class="space-y-1">
-                  <Label class="text-xs text-muted-foreground">图标</Label>
-                  <Select v-model="entry.icon">
-                    <SelectTrigger class="h-9 w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem v-for="ic in HOME_ENTRY_ICONS" :key="ic" :value="ic">{{ ic }}</SelectItem></SelectContent>
-                  </Select>
-                </div>
-              </div>
+          <!-- category_entry: { category_ids[]uint } -->
+          <div v-else-if="form.type === 'category_entry'" class="space-y-3 rounded-lg border border-border p-4">
+            <Label class="text-xs font-medium text-muted-foreground">选择分类（可多选，最多 20）*</Label>
+            <div class="flex max-h-60 flex-wrap gap-2 overflow-y-auto">
+              <Label v-for="c in categoryOptions" :key="c.id" class="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-sm cursor-pointer" :class="(form.config.category_ids || []).includes(c.id) ? 'border-primary bg-primary/5 text-primary' : ''">
+                <input type="checkbox" :checked="(form.config.category_ids || []).includes(c.id)" @change="toggleCategory(c.id)" />
+                {{ getLocalizedText(c.name) }} (#{{ c.id }})
+              </Label>
             </div>
-            <Button type="button" variant="outline" size="sm" @click="addEntry">+ 添加入口</Button>
           </div>
 
           <p v-if="formError" class="text-xs text-destructive">{{ formError }}</p>

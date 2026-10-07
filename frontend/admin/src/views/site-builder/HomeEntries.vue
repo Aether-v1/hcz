@@ -214,8 +214,10 @@ onMounted(fetchEntries)
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-foreground">手动配置首页核心入口。首页按排序展示前四个启用入口。</p>
-      <Button @click="openCreate">新建入口</Button>
+      <p class="text-sm text-muted-foreground">手动配置首页核心入口。首页按排序展示前四个启用入口，最多配置 4 个。</p>
+      <Button @click="openCreate" :disabled="entries.length >= 4">
+        {{ entries.length >= 4 ? '已达上限（4个）' : '新建入口' }}
+      </Button>
     </div>
 
     <div class="rounded-xl border border-border bg-card overflow-x-auto">

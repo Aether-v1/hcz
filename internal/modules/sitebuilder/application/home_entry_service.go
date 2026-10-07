@@ -16,7 +16,11 @@ type HomeEntryStore interface {
 	GetByID(id uint) (*sitebuilderdomain.HomeEntry, error)
 	List(enabledOnly bool) ([]sitebuilderdomain.HomeEntry, error)
 	Reorder(items []ReorderItem) error
+	Count() (int64, error)
 }
+
+// MaxHomeEntries 首页核心入口上限（固定 4 槽）。
+const MaxHomeEntries = 4
 
 // HomeEntryInput 创建/更新首页入口入参。
 type HomeEntryInput struct {
@@ -87,6 +91,13 @@ func (s *HomeEntryService) Get(id uint) (*sitebuilderdomain.HomeEntry, error) {
 
 // Create 新建入口。
 func (s *HomeEntryService) Create(input HomeEntryInput) (*sitebuilderdomain.HomeEntry, error) {
+	count, err := s.store.Count()
+	if err != nil {
+		return nil, err
+	}
+	if count >= MaxHomeEntries {
+		return nil, errors.New("home entries are limited to 4 slots")
+	}
 	entry := &sitebuilderdomain.HomeEntry{
 		Key:       strings.TrimSpace(input.Key),
 		SortOrder: input.SortOrder,

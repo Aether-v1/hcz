@@ -18,6 +18,14 @@ func RegisterAdminRoutes(authorized gin.IRoutes, handler *AdminHandler) {
 	authorized.PATCH("/site/home-entries/:id/toggle", handler.ToggleHomeEntry)
 	authorized.POST("/site/home-entries/reorder", handler.ReorderHomeEntries)
 
+	// 首页热门推荐分类
+	authorized.GET("/site/featured-categories", handler.ListFeaturedCategories)
+	authorized.POST("/site/featured-categories", handler.CreateFeaturedCategory)
+	authorized.PUT("/site/featured-categories/:id", handler.UpdateFeaturedCategory)
+	authorized.DELETE("/site/featured-categories/:id", handler.DeleteFeaturedCategory)
+	authorized.PATCH("/site/featured-categories/:id/toggle", handler.ToggleFeaturedCategory)
+	authorized.POST("/site/featured-categories/reorder", handler.ReorderFeaturedCategories)
+
 	// 发现页区块
 	authorized.GET("/site/discovery-blocks", handler.ListDiscoveryBlocks)
 	authorized.POST("/site/discovery-blocks", handler.CreateDiscoveryBlock)

@@ -80,3 +80,12 @@ func (s *HomeEntryStore) Reorder(items []sitebuilderapp.ReorderItem) error {
 		return nil
 	})
 }
+
+// Count 统计入口总数。
+func (s *HomeEntryStore) Count() (int64, error) {
+	var count int64
+	if err := s.db.Model(&sitebuilderdomain.HomeEntry{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}

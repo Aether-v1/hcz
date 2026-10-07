@@ -77,12 +77,13 @@ type ResellerOverlay interface {
 	ApplyPublicConfigOverlay(ctx context.Context, tenant reseller.TenantContext, base map[string]interface{}) (map[string]interface{}, error)
 }
 
-// SiteBuilderPublic 公开装修数据端口（首页入口 / 发现页区块 / Banner）。
+// SiteBuilderPublic 公开装修数据端口（首页入口 / 发现页区块 / Banner / 热门推荐分类）。
 // 实现方必须对 DB 失败做防御，返回空切片与默认值，不得让公开配置整体失败。
 type SiteBuilderPublic interface {
 	PublicHomeEntries() []map[string]interface{}
 	PublicDiscoveryBlocks() []map[string]interface{}
 	PublicBanners() []map[string]interface{}
+	PublicFeaturedCategories() []map[string]interface{}
 }
 
 // Handler 处理公开站点配置 HTTP 请求。
@@ -282,6 +283,7 @@ func (h *Handler) attachSiteBuilderPublicData(data map[string]interface{}) {
 		data["home_entries"] = defaultPublicHomeEntries()
 		data["banners"] = make([]map[string]interface{}, 0)
 		data["discovery_blocks"] = make([]map[string]interface{}, 0)
+		data["featured_categories"] = make([]map[string]interface{}, 0)
 		return
 	}
 
@@ -293,6 +295,7 @@ func (h *Handler) attachSiteBuilderPublicData(data map[string]interface{}) {
 
 	data["banners"] = h.siteBuilder.PublicBanners()
 	data["discovery_blocks"] = h.siteBuilder.PublicDiscoveryBlocks()
+	data["featured_categories"] = h.siteBuilder.PublicFeaturedCategories()
 }
 
 func resolveGoogleAuthPublicConfig(source GoogleAuthPublic, fallback GoogleAuthFallback) map[string]interface{} {
