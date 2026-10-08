@@ -1,15 +1,15 @@
 <template>
-  <div class="border-t bg-card p-3">
+  <div class="space-y-2 border-t bg-card p-3">
+    <Textarea
+      v-model="body"
+      :disabled="disabled"
+      :placeholder="t('support.write_reply')"
+      rows="3"
+      class="min-h-[72px] w-full"
+      @keydown.enter.exact.prevent="handleSend"
+    />
     <AttachmentUploader v-model="attachmentIds" :disabled="disabled || sending" />
-    <div class="mt-2 flex items-end gap-2">
-      <Textarea
-        v-model="body"
-        :disabled="disabled"
-        :placeholder="t('support.write_reply')"
-        rows="3"
-        class="min-h-[72px] flex-1"
-        @keydown.enter.exact.prevent="handleSend"
-      />
+    <div class="flex justify-end">
       <Button :disabled="disabled || sending || !body.trim()" @click="handleSend">
         <Loader2 v-if="sending" class="h-4 w-4 animate-spin" />
         {{ t('support.send') }}
