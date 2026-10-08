@@ -51,6 +51,30 @@ export default defineConfig(({ mode }) => ({
           { src: '/pwa-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // 长按应用图标的直达入口，对应当前一级信息架构；需要登录的入口由路由守卫接管。
+        shortcuts: [
+          {
+            name: '充值服务',
+            short_name: '充值',
+            description: '话费、流量、点卡等数字服务充值',
+            url: '/products',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: '我的订单',
+            short_name: '订单',
+            description: '查看充值与兑换订单',
+            url: '/me/orders',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: '工单客服',
+            short_name: '客服',
+            description: '提交并跟进客服工单',
+            url: '/support/tickets',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
