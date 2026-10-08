@@ -1,174 +1,172 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-20 pb-16">
-    <div class="container mx-auto px-4">
-      <!-- Header -->
-      <div class="mb-6 mt-8">
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.market.title') }}</h1>
-        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.market.subtitle') }}</p>
+  <div class="space-y-4 pb-8">
+    <!-- Header -->
+    <div class="mb-6 mt-8">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.market.title') }}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.market.subtitle') }}</p>
+    </div>
+
+    <!-- Wallet -->
+    <div class="grid grid-cols-3 gap-3 max-w-2xl">
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.available_balance ?? '0' }}</div>
       </div>
-
-      <!-- Wallet -->
-      <div class="grid grid-cols-3 gap-3 max-w-2xl">
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.available_balance ?? '0' }}</div>
-        </div>
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.frozen') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.frozen_balance ?? '0' }}</div>
-        </div>
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.total') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.total_balance ?? '0' }}</div>
-        </div>
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.frozen') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.frozen_balance ?? '0' }}</div>
       </div>
-
-      <!-- Filters -->
-      <div class="mt-6 flex flex-wrap items-end gap-3 max-w-3xl">
-        <div class="w-32">
-          <Label class="mb-2 block">{{ t('c2c.market.filterFiat') }}</Label>
-          <Input v-model="fiatFilter" class="h-10" @keyup.enter="applyFilter" />
-        </div>
-        <div class="flex-1 min-w-40">
-          <Label class="mb-2 block">{{ t('c2c.market.filterAmount') }}</Label>
-          <Input v-model="amountFilter" inputmode="decimal" class="h-10" :placeholder="t('c2c.market.filterAmount')" />
-        </div>
-        <Button variant="outline" class="h-10" @click="applyFilter">
-          {{ t('c2c.trade.refresh') }}
-        </Button>
-      </div>
-
-      <!-- Loading -->
-      <div v-if="c2cStore.marketLoading && filteredListings.length === 0" class="mt-6 space-y-3">
-        <div v-for="i in 5" :key="i" class="h-24 rounded-2xl border bg-muted/60 animate-pulse"></div>
-      </div>
-
-      <!-- Empty -->
-      <EmptyState
-        v-else-if="filteredListings.length === 0"
-        icon="inbox"
-        variant="soft"
-        size="lg"
-        class="mt-6"
-        :title="t('c2c.market.empty')"
-      />
-
-      <!-- List: PC table header (desktop) + rows -->
-      <div v-else class="mt-6">
-        <!-- desktop header -->
-        <div class="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-xs font-medium text-muted-foreground">
-          <div class="col-span-2">{{ t('c2c.market.seller') }}</div>
-          <div class="col-span-2">{{ t('c2c.market.price') }}</div>
-          <div class="col-span-2">{{ t('c2c.market.available') }}</div>
-          <div class="col-span-3">{{ t('c2c.market.minMax') }}</div>
-          <div class="col-span-2">{{ t('c2c.market.terms') }}</div>
-          <div class="col-span-1 text-right"></div>
-        </div>
-
-        <div
-          v-for="listing in filteredListings"
-          :key="listing.id"
-          class="mb-3 rounded-2xl border bg-card p-4 shadow-sm md:grid md:grid-cols-12 md:gap-3 md:items-center"
-        >
-          <!-- seller -->
-          <div class="md:col-span-2 flex items-center gap-2">
-            <span class="font-medium text-sm">{{ t('c2c.userPrefix') }}{{ listing.seller_user_id }}</span>
-            <Badge v-if="isOwnListing(listing)" size="sm" class="bg-primary/10 text-primary">{{ t('c2c.market.myListing') }}</Badge>
-          </div>
-          <!-- price -->
-          <div class="md:col-span-2 mt-2 md:mt-0">
-            <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.price') }}</div>
-            <div class="font-mono font-semibold">{{ listing.price }} {{ listing.fiat_currency }}</div>
-          </div>
-          <!-- available -->
-          <div class="md:col-span-2 mt-2 md:mt-0">
-            <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.available') }}</div>
-            <div class="font-mono text-sm">{{ formatUsdt(listing.available_usdt) }}</div>
-          </div>
-          <!-- min/max -->
-          <div class="md:col-span-3 mt-2 md:mt-0">
-            <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.minMax') }}</div>
-            <div class="font-mono text-sm">
-              {{ listing.min_fiat_amount }} ~ {{ listing.max_fiat_amount }} {{ listing.fiat_currency }}
-            </div>
-          </div>
-          <!-- terms -->
-          <div class="md:col-span-2 mt-2 md:mt-0">
-            <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.terms') }}</div>
-            <div class="text-xs text-muted-foreground truncate max-w-[160px]">{{ listing.terms || '-' }}</div>
-          </div>
-          <!-- action -->
-          <div class="md:col-span-1 mt-3 md:mt-0 md:text-right">
-            <Button size="sm" class="w-full md:w-auto" :disabled="isOwnListing(listing)" @click="openBuyPanel(listing)">
-              {{ t('c2c.market.buyButton') }}
-            </Button>
-          </div>
-        </div>
-
-        <!-- Load more -->
-        <div v-if="hasMore" class="mt-4 text-center">
-          <Button variant="outline" :disabled="loadingMore" @click="loadMore">
-            {{ loadingMore ? '...' : t('c2c.market.loadMore') }}
-          </Button>
-        </div>
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.total') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.total_balance ?? '0' }}</div>
       </div>
     </div>
 
-    <!-- Buy panel modal -->
-    <div v-if="selectedListing" class="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 p-0 md:p-4" @click.self="closeBuyPanel">
-      <div class="w-full md:max-w-md rounded-t-2xl md:rounded-2xl bg-card p-6 shadow-xl">
-        <h3 class="text-base font-semibold">{{ t('c2c.buyPanel.title') }}</h3>
+    <!-- Filters -->
+    <div class="mt-6 flex flex-wrap items-end gap-3 max-w-3xl">
+      <div class="w-32">
+        <Label class="mb-2 block">{{ t('c2c.market.filterFiat') }}</Label>
+        <Input v-model="fiatFilter" class="h-10" @keyup.enter="applyFilter" />
+      </div>
+      <div class="flex-1 min-w-40">
+        <Label class="mb-2 block">{{ t('c2c.market.filterAmount') }}</Label>
+        <Input v-model="amountFilter" inputmode="decimal" class="h-10" :placeholder="t('c2c.market.filterAmount')" />
+      </div>
+      <Button variant="outline" class="h-10" @click="applyFilter">
+        {{ t('c2c.trade.refresh') }}
+      </Button>
+    </div>
 
-        <div class="mt-4 space-y-2 text-sm rounded-xl bg-muted/50 p-4">
-          <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.seller') }}</span><span class="font-medium">{{ t('c2c.userPrefix') }}{{ selectedListing.seller_user_id }}</span></div>
-          <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.buyPanel.price') }}</span><span class="font-mono font-medium">{{ selectedListing.price }} {{ selectedListing.fiat_currency }}</span></div>
-          <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.minMax') }}</span><span class="font-mono text-xs">{{ selectedListing.min_fiat_amount }} ~ {{ selectedListing.max_fiat_amount }}</span></div>
+    <!-- Loading -->
+    <div v-if="c2cStore.marketLoading && filteredListings.length === 0" class="mt-6 space-y-3">
+      <div v-for="i in 5" :key="i" class="h-24 rounded-2xl border bg-muted/60 animate-pulse"></div>
+    </div>
+
+    <!-- Empty -->
+    <EmptyState
+      v-else-if="filteredListings.length === 0"
+      icon="inbox"
+      variant="soft"
+      size="lg"
+      class="mt-6"
+      :title="t('c2c.market.empty')"
+    />
+
+    <!-- List: PC table header (desktop) + rows -->
+    <div v-else class="mt-6">
+      <!-- desktop header -->
+      <div class="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-xs font-medium text-muted-foreground">
+        <div class="col-span-2">{{ t('c2c.market.seller') }}</div>
+        <div class="col-span-2">{{ t('c2c.market.price') }}</div>
+        <div class="col-span-2">{{ t('c2c.market.available') }}</div>
+        <div class="col-span-3">{{ t('c2c.market.minMax') }}</div>
+        <div class="col-span-2">{{ t('c2c.market.terms') }}</div>
+        <div class="col-span-1 text-right"></div>
+      </div>
+
+      <div
+        v-for="listing in filteredListings"
+        :key="listing.id"
+        class="mb-3 rounded-2xl border bg-card p-4 shadow-sm md:grid md:grid-cols-12 md:gap-3 md:items-center"
+      >
+        <!-- seller -->
+        <div class="md:col-span-2 flex items-center gap-2">
+          <span class="font-medium text-sm">{{ t('c2c.userPrefix') }}{{ listing.seller_user_id }}</span>
+          <Badge v-if="isOwnListing(listing)" size="sm" class="bg-primary/10 text-primary">{{ t('c2c.market.myListing') }}</Badge>
         </div>
-
-        <div class="mt-4 space-y-3">
-          <div>
-            <Label class="mb-2 block">{{ t('c2c.buyPanel.fiatAmount') }}（{{ selectedListing.fiat_currency }}）</Label>
-            <Input v-model="buyFiat" inputmode="decimal" class="h-11 font-mono" @input="onFiatInput" />
-          </div>
-          <div>
-            <Label class="mb-2 block">{{ t('c2c.buyPanel.usdtAmount') }}</Label>
-            <Input v-model="buyUsdt" inputmode="decimal" class="h-11 font-mono" @input="onUsdtInput" />
-          </div>
-          <p class="text-xs text-muted-foreground">{{ t('c2c.buyPanel.previewNote') }}</p>
+        <!-- price -->
+        <div class="md:col-span-2 mt-2 md:mt-0">
+          <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.price') }}</div>
+          <div class="font-mono font-semibold">{{ listing.price }} {{ listing.fiat_currency }}</div>
         </div>
-
-        <!-- 选择卖家收款方式 -->
-        <div v-if="sellerPaymentMethods.length" class="mt-4">
-          <Label class="mb-2 block">{{ t('paymentMethods.chooseSellerMethod') }}</Label>
-          <div class="space-y-2">
-            <button
-              v-for="pm in sellerPaymentMethods"
-              :key="pm.id"
-              type="button"
-              class="flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors"
-              :class="selectedPaymentMethodId === pm.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'"
-              @click="selectedPaymentMethodId = pm.id"
-            >
-              <span class="grid h-8 w-8 flex-none place-items-center rounded-lg bg-accent text-muted-foreground">
-                <component :is="sellerMethodIcon(pm.type)" :size="16" :stroke-width="1.8" />
-              </span>
-              <span class="min-w-0 flex-1 text-sm">
-                <span class="block truncate">{{ sellerMethodSummary(pm) }}</span>
-                <span v-if="pm.qr_code_url" class="block text-xs text-muted-foreground">{{ t('paymentMethods.qrBadge') }}</span>
-              </span>
-            </button>
+        <!-- available -->
+        <div class="md:col-span-2 mt-2 md:mt-0">
+          <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.available') }}</div>
+          <div class="font-mono text-sm">{{ formatUsdt(listing.available_usdt) }}</div>
+        </div>
+        <!-- min/max -->
+        <div class="md:col-span-3 mt-2 md:mt-0">
+          <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.minMax') }}</div>
+          <div class="font-mono text-sm">
+            {{ listing.min_fiat_amount }} ~ {{ listing.max_fiat_amount }} {{ listing.fiat_currency }}
           </div>
         </div>
-
-        <div class="mt-5 flex gap-3">
-          <Button variant="outline" class="flex-1" @click="closeBuyPanel">{{ t('c2c.buyPanel.cancel') }}</Button>
-          <Button class="flex-1" :disabled="!canConfirmBuy || submitting" @click="confirmBuy">
-            {{ submitting ? '...' : t('c2c.buyPanel.confirm') }}
+        <!-- terms -->
+        <div class="md:col-span-2 mt-2 md:mt-0">
+          <div class="md:hidden text-xs text-muted-foreground">{{ t('c2c.market.terms') }}</div>
+          <div class="text-xs text-muted-foreground truncate max-w-[160px]">{{ listing.terms || '-' }}</div>
+        </div>
+        <!-- action -->
+        <div class="md:col-span-1 mt-3 md:mt-0 md:text-right">
+          <Button size="sm" class="w-full md:w-auto" :disabled="isOwnListing(listing)" @click="openBuyPanel(listing)">
+            {{ t('c2c.market.buyButton') }}
           </Button>
         </div>
+      </div>
+
+      <!-- Load more -->
+      <div v-if="hasMore" class="mt-4 text-center">
+        <Button variant="outline" :disabled="loadingMore" @click="loadMore">
+          {{ loadingMore ? '...' : t('c2c.market.loadMore') }}
+        </Button>
       </div>
     </div>
   </div>
+
+  <!-- Buy panel modal -->
+  <div v-if="selectedListing" class="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 p-0 md:p-4" @click.self="closeBuyPanel">
+    <div class="w-full md:max-w-md rounded-t-2xl md:rounded-2xl bg-card p-6 shadow-xl">
+      <h3 class="text-base font-semibold">{{ t('c2c.buyPanel.title') }}</h3>
+
+      <div class="mt-4 space-y-2 text-sm rounded-xl bg-muted/50 p-4">
+        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.seller') }}</span><span class="font-medium">{{ t('c2c.userPrefix') }}{{ selectedListing.seller_user_id }}</span></div>
+        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.buyPanel.price') }}</span><span class="font-mono font-medium">{{ selectedListing.price }} {{ selectedListing.fiat_currency }}</span></div>
+        <div class="flex justify-between"><span class="text-muted-foreground">{{ t('c2c.market.minMax') }}</span><span class="font-mono text-xs">{{ selectedListing.min_fiat_amount }} ~ {{ selectedListing.max_fiat_amount }}</span></div>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <Label class="mb-2 block">{{ t('c2c.buyPanel.fiatAmount') }}（{{ selectedListing.fiat_currency }}）</Label>
+          <Input v-model="buyFiat" inputmode="decimal" class="h-11 font-mono" @input="onFiatInput" />
+        </div>
+        <div>
+          <Label class="mb-2 block">{{ t('c2c.buyPanel.usdtAmount') }}</Label>
+          <Input v-model="buyUsdt" inputmode="decimal" class="h-11 font-mono" @input="onUsdtInput" />
+        </div>
+        <p class="text-xs text-muted-foreground">{{ t('c2c.buyPanel.previewNote') }}</p>
+      </div>
+
+      <!-- 选择卖家收款方式 -->
+      <div v-if="sellerPaymentMethods.length" class="mt-4">
+        <Label class="mb-2 block">{{ t('paymentMethods.chooseSellerMethod') }}</Label>
+        <div class="space-y-2">
+          <button
+            v-for="pm in sellerPaymentMethods"
+            :key="pm.id"
+            type="button"
+            class="flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors"
+            :class="selectedPaymentMethodId === pm.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'"
+            @click="selectedPaymentMethodId = pm.id"
+          >
+            <span class="grid h-8 w-8 flex-none place-items-center rounded-lg bg-accent text-muted-foreground">
+              <component :is="sellerMethodIcon(pm.type)" :size="16" :stroke-width="1.8" />
+            </span>
+            <span class="min-w-0 flex-1 text-sm">
+              <span class="block truncate">{{ sellerMethodSummary(pm) }}</span>
+              <span v-if="pm.qr_code_url" class="block text-xs text-muted-foreground">{{ t('paymentMethods.qrBadge') }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-3">
+        <Button variant="outline" class="flex-1" @click="closeBuyPanel">{{ t('c2c.buyPanel.cancel') }}</Button>
+        <Button class="flex-1" :disabled="!canConfirmBuy || submitting" @click="confirmBuy">
+          {{ submitting ? '...' : t('c2c.buyPanel.confirm') }}
+        </Button>
+      </div>
+    </div>
+</div>
 </template>
 
 <script setup lang="ts">

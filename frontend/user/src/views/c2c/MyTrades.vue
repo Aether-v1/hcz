@@ -1,121 +1,119 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-20 pb-16">
-    <div class="container mx-auto px-4">
-      <!-- Header -->
-      <div class="mb-6 mt-8">
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.myTrades.title') }}</h1>
-        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.myTrades.subtitle') }}</p>
-      </div>
+  <div class="space-y-4 pb-8">
+    <!-- Header -->
+    <div class="mb-6 mt-8">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.myTrades.title') }}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.myTrades.subtitle') }}</p>
+    </div>
 
-      <!-- Status Filter Tabs -->
-      <div class="mb-6 flex flex-wrap gap-2">
-        <button
-          v-for="tab in statusTabs"
-          :key="tab.key"
-          class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-          :class="activeStatus === tab.key
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-card border text-muted-foreground hover:text-foreground'"
-          @click="onFilterChange(tab.key)"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
+    <!-- Status Filter Tabs -->
+    <div class="mb-6 flex flex-wrap gap-2">
+      <button
+        v-for="tab in statusTabs"
+        :key="tab.key"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+        :class="activeStatus === tab.key
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-card border text-muted-foreground hover:text-foreground'"
+        @click="onFilterChange(tab.key)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-      <!-- Loading skeleton -->
-      <div v-if="c2cStore.myTradesLoading && list.length === 0" class="space-y-3">
-        <div v-for="i in 4" :key="i" class="rounded-2xl border bg-muted/60 h-28 animate-pulse"></div>
-      </div>
+    <!-- Loading skeleton -->
+    <div v-if="c2cStore.myTradesLoading && list.length === 0" class="space-y-3">
+      <div v-for="i in 4" :key="i" class="rounded-2xl border bg-muted/60 h-28 animate-pulse"></div>
+    </div>
 
-      <!-- Empty state -->
-      <EmptyState
-        v-else-if="list.length === 0"
-        variant="soft"
-        size="lg"
-        :title="t('c2c.myTrades.empty')"
-      />
+    <!-- Empty state -->
+    <EmptyState
+      v-else-if="list.length === 0"
+      variant="soft"
+      size="lg"
+      :title="t('c2c.myTrades.empty')"
+    />
 
-      <!-- PC Table -->
-      <div v-else class="hidden md:block rounded-2xl border bg-card shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow class="bg-muted/40">
-              <TableHead>{{ t('c2c.myTrades.tradeNo') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.myRole') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.counterparty') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.fiatAmount') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.usdtAmount') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.unitPrice') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.status') }}</TableHead>
-              <TableHead>{{ t('c2c.myTrades.createdAt') }}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="trade in list" :key="trade.id" class="cursor-pointer" @click="goDetail(trade.id)">
-              <TableCell class="font-mono text-xs">{{ trade.trade_no }}</TableCell>
-              <TableCell>
-                <Badge size="xs" :class="myRole(trade) === 'buyer' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'">
-                  {{ myRole(trade) === 'buyer' ? t('c2c.myTrades.buyer') : t('c2c.myTrades.seller') }}
-                </Badge>
-              </TableCell>
-              <TableCell class="text-sm text-muted-foreground">{{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</TableCell>
-              <TableCell class="font-mono text-sm">
-                {{ trade.fiat_amount }} <span class="text-xs text-muted-foreground">{{ trade.fiat_currency }}</span>
-              </TableCell>
-              <TableCell class="font-mono text-sm">{{ trade.usdt_amount }}</TableCell>
-              <TableCell class="font-mono text-xs text-muted-foreground">{{ trade.price }}</TableCell>
-              <TableCell>
-                <Badge size="sm" :class="TRADE_STATUS_VARIANTS[trade.status]">
-                  {{ TRADE_STATUS_LABELS[trade.status] }}
-                </Badge>
-              </TableCell>
-              <TableCell class="text-xs text-muted-foreground">{{ formatTime(trade.created_at) }}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+    <!-- PC Table -->
+    <div v-else class="hidden md:block rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-muted/40">
+            <TableHead>{{ t('c2c.myTrades.tradeNo') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.myRole') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.counterparty') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.fiatAmount') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.usdtAmount') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.unitPrice') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.status') }}</TableHead>
+            <TableHead>{{ t('c2c.myTrades.createdAt') }}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="trade in list" :key="trade.id" class="cursor-pointer" @click="goDetail(trade.id)">
+            <TableCell class="font-mono text-xs">{{ trade.trade_no }}</TableCell>
+            <TableCell>
+              <Badge size="xs" :class="myRole(trade) === 'buyer' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'">
+                {{ myRole(trade) === 'buyer' ? t('c2c.myTrades.buyer') : t('c2c.myTrades.seller') }}
+              </Badge>
+            </TableCell>
+            <TableCell class="text-sm text-muted-foreground">{{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</TableCell>
+            <TableCell class="font-mono text-sm">
+              {{ trade.fiat_amount }} <span class="text-xs text-muted-foreground">{{ trade.fiat_currency }}</span>
+            </TableCell>
+            <TableCell class="font-mono text-sm">{{ trade.usdt_amount }}</TableCell>
+            <TableCell class="font-mono text-xs text-muted-foreground">{{ trade.price }}</TableCell>
+            <TableCell>
+              <Badge size="sm" :class="TRADE_STATUS_VARIANTS[trade.status]">
+                {{ TRADE_STATUS_LABELS[trade.status] }}
+              </Badge>
+            </TableCell>
+            <TableCell class="text-xs text-muted-foreground">{{ formatTime(trade.created_at) }}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
 
-      <!-- Mobile Cards -->
-      <div class="md:hidden space-y-3">
-        <div
-          v-for="trade in list"
-          :key="trade.id"
-          class="rounded-2xl border bg-card p-4 shadow-sm cursor-pointer"
-          @click="goDetail(trade.id)"
-        >
-          <div class="flex items-start justify-between gap-2">
-            <div class="font-mono text-xs text-muted-foreground">{{ trade.trade_no }}</div>
-            <Badge size="sm" :class="TRADE_STATUS_VARIANTS[trade.status]">
-              {{ TRADE_STATUS_LABELS[trade.status] }}
-            </Badge>
-          </div>
-          <div class="mt-3 flex items-end justify-between">
-            <div>
-              <div class="text-lg font-bold font-mono">{{ formatUsdt(trade.usdt_amount) }}</div>
-              <div class="mt-0.5 text-xs text-muted-foreground">
-                {{ trade.fiat_amount }} {{ trade.fiat_currency }} · @ {{ trade.price }}
-              </div>
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+      <div
+        v-for="trade in list"
+        :key="trade.id"
+        class="rounded-2xl border bg-card p-4 shadow-sm cursor-pointer"
+        @click="goDetail(trade.id)"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <div class="font-mono text-xs text-muted-foreground">{{ trade.trade_no }}</div>
+          <Badge size="sm" :class="TRADE_STATUS_VARIANTS[trade.status]">
+            {{ TRADE_STATUS_LABELS[trade.status] }}
+          </Badge>
+        </div>
+        <div class="mt-3 flex items-end justify-between">
+          <div>
+            <div class="text-lg font-bold font-mono">{{ formatUsdt(trade.usdt_amount) }}</div>
+            <div class="mt-0.5 text-xs text-muted-foreground">
+              {{ trade.fiat_amount }} {{ trade.fiat_currency }} · @ {{ trade.price }}
             </div>
-            <Badge size="xs" :class="myRole(trade) === 'buyer' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'">
-              {{ myRole(trade) === 'buyer' ? t('c2c.myTrades.buyer') : t('c2c.myTrades.seller') }}
-            </Badge>
           </div>
-          <div class="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{{ t('c2c.myTrades.counterparty') }} {{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</span>
-            <span>{{ formatTime(trade.created_at) }}</span>
-          </div>
+          <Badge size="xs" :class="myRole(trade) === 'buyer' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'">
+            {{ myRole(trade) === 'buyer' ? t('c2c.myTrades.buyer') : t('c2c.myTrades.seller') }}
+          </Badge>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{{ t('c2c.myTrades.counterparty') }} {{ t('c2c.userPrefix') }}{{ counterpartyId(trade) }}</span>
+          <span>{{ formatTime(trade.created_at) }}</span>
         </div>
       </div>
-
-      <!-- Load more -->
-      <div v-if="hasMore" class="mt-6 text-center">
-        <Button variant="outline" :disabled="loadingMore" @click="loadMore">
-          <Loader2 v-if="loadingMore" class="w-4 h-4 animate-spin" />
-          {{ loadingMore ? t('c2c.myTrades.loadingMore') : t('c2c.market.loadMore') }}
-        </Button>
-      </div>
     </div>
-  </div>
+
+    <!-- Load more -->
+    <div v-if="hasMore" class="mt-6 text-center">
+      <Button variant="outline" :disabled="loadingMore" @click="loadMore">
+        <Loader2 v-if="loadingMore" class="w-4 h-4 animate-spin" />
+        {{ loadingMore ? t('c2c.myTrades.loadingMore') : t('c2c.market.loadMore') }}
+      </Button>
+    </div>
+</div>
 </template>
 
 <script setup lang="ts">

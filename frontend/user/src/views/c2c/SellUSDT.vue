@@ -1,83 +1,81 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-20 pb-16">
-    <div class="container mx-auto px-4">
-      <!-- Header -->
-      <div class="mb-6 mt-8">
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.sell.title') }}</h1>
-        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.sell.subtitle') }}</p>
-      </div>
-
-      <!-- Wallet -->
-      <div class="grid grid-cols-3 gap-3 max-w-2xl">
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.available_balance ?? '0' }}</div>
-        </div>
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.frozen') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.frozen_balance ?? '0' }}</div>
-        </div>
-        <div class="rounded-2xl border bg-card p-4 shadow-sm">
-          <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.total') }}</div>
-          <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.total_balance ?? '0' }}</div>
-        </div>
-      </div>
-
-      <!-- No payment method guide -->
-      <div
-        v-if="!c2cStore.hasEnabledPaymentMethod"
-        class="mt-6 max-w-2xl rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6"
-      >
-        <p class="text-sm font-medium text-amber-700">{{ t('c2c.sell.noPaymentMethod') }}</p>
-        <Button class="mt-4" @click="goPaymentMethods">{{ t('c2c.sell.goAddPayment') }}</Button>
-      </div>
-
-      <!-- Form -->
-      <form
-        v-else
-        class="mt-6 max-w-2xl rounded-2xl border bg-card p-6 shadow-sm space-y-5"
-        @submit.prevent="handleSubmit"
-      >
-        <div>
-          <Label class="mb-2 block">{{ t('c2c.sell.fiatCurrency') }}</Label>
-          <Input v-model="form.fiat_currency" class="h-11" placeholder="CNY" />
-        </div>
-
-        <div>
-          <Label class="mb-2 block">{{ t('c2c.sell.price') }}</Label>
-          <Input v-model="form.price" inputmode="decimal" class="h-11 font-mono" />
-        </div>
-
-        <div>
-          <Label class="mb-2 block">{{ t('c2c.sell.totalUsdt') }}</Label>
-          <Input v-model="form.total_usdt" inputmode="decimal" class="h-11 font-mono" />
-          <p class="mt-1 text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}：{{ formatUsdt(wallet?.available_balance, wallet?.currency) }}</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <Label class="mb-2 block">{{ t('c2c.sell.minFiat') }}</Label>
-            <Input v-model="form.min_fiat_amount" inputmode="decimal" class="h-11 font-mono" />
-          </div>
-          <div>
-            <Label class="mb-2 block">{{ t('c2c.sell.maxFiat') }}</Label>
-            <Input v-model="form.max_fiat_amount" inputmode="decimal" class="h-11 font-mono" />
-          </div>
-        </div>
-
-        <div>
-          <Label class="mb-2 block">{{ t('c2c.sell.terms') }}</Label>
-          <Textarea v-model="form.terms" class="min-h-[80px]" />
-        </div>
-
-        <p v-if="errorMsg" class="text-sm text-destructive">{{ errorMsg }}</p>
-
-        <Button type="submit" class="h-12 w-full font-semibold" :disabled="submitting">
-          {{ submitting ? '...' : t('c2c.sell.submit') }}
-        </Button>
-      </form>
+  <div class="space-y-4 pb-8">
+    <!-- Header -->
+    <div class="mb-6 mt-8">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.sell.title') }}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.sell.subtitle') }}</p>
     </div>
-  </div>
+
+    <!-- Wallet -->
+    <div class="grid grid-cols-3 gap-3 max-w-2xl">
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.available_balance ?? '0' }}</div>
+      </div>
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.frozen') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.frozen_balance ?? '0' }}</div>
+      </div>
+      <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="text-xs text-muted-foreground">{{ t('c2c.wallet.total') }}</div>
+        <div class="mt-1 text-lg font-bold font-mono">{{ wallet?.total_balance ?? '0' }}</div>
+      </div>
+    </div>
+
+    <!-- No payment method guide -->
+    <div
+      v-if="!c2cStore.hasEnabledPaymentMethod"
+      class="mt-6 max-w-2xl rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6"
+    >
+      <p class="text-sm font-medium text-amber-700">{{ t('c2c.sell.noPaymentMethod') }}</p>
+      <Button class="mt-4" @click="goPaymentMethods">{{ t('c2c.sell.goAddPayment') }}</Button>
+    </div>
+
+    <!-- Form -->
+    <form
+      v-else
+      class="mt-6 max-w-2xl rounded-2xl border bg-card p-6 shadow-sm space-y-5"
+      @submit.prevent="handleSubmit"
+    >
+      <div>
+        <Label class="mb-2 block">{{ t('c2c.sell.fiatCurrency') }}</Label>
+        <Input v-model="form.fiat_currency" class="h-11" placeholder="CNY" />
+      </div>
+
+      <div>
+        <Label class="mb-2 block">{{ t('c2c.sell.price') }}</Label>
+        <Input v-model="form.price" inputmode="decimal" class="h-11 font-mono" />
+      </div>
+
+      <div>
+        <Label class="mb-2 block">{{ t('c2c.sell.totalUsdt') }}</Label>
+        <Input v-model="form.total_usdt" inputmode="decimal" class="h-11 font-mono" />
+        <p class="mt-1 text-xs text-muted-foreground">{{ t('c2c.wallet.available') }}：{{ formatUsdt(wallet?.available_balance, wallet?.currency) }}</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <Label class="mb-2 block">{{ t('c2c.sell.minFiat') }}</Label>
+          <Input v-model="form.min_fiat_amount" inputmode="decimal" class="h-11 font-mono" />
+        </div>
+        <div>
+          <Label class="mb-2 block">{{ t('c2c.sell.maxFiat') }}</Label>
+          <Input v-model="form.max_fiat_amount" inputmode="decimal" class="h-11 font-mono" />
+        </div>
+      </div>
+
+      <div>
+        <Label class="mb-2 block">{{ t('c2c.sell.terms') }}</Label>
+        <Textarea v-model="form.terms" class="min-h-[80px]" />
+      </div>
+
+      <p v-if="errorMsg" class="text-sm text-destructive">{{ errorMsg }}</p>
+
+      <Button type="submit" class="h-12 w-full font-semibold" :disabled="submitting">
+        {{ submitting ? '...' : t('c2c.sell.submit') }}
+      </Button>
+    </form>
+</div>
 </template>
 
 <script setup lang="ts">

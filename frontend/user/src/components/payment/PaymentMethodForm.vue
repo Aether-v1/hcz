@@ -27,7 +27,7 @@
             <!-- 第一步：选择类型 -->
             <div v-else-if="!form.type" class="grid grid-cols-2 gap-3">
               <button
-                v-for="opt in typeOptions"
+                v-for="opt in visibleTypeOptions"
                 :key="opt.value"
                 type="button"
                 class="flex flex-col items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-colors hover:border-primary/50"
@@ -47,7 +47,7 @@
             <form v-else class="space-y-4" @submit.prevent="onRequestSubmit">
               <!-- 非编辑态可返回换类型 -->
               <button
-                v-if="!isEditing"
+                v-if="!isEditing && !typeLocked"
                 type="button"
                 class="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                 @click="form.type = ''"
@@ -158,6 +158,8 @@ const props = defineProps<{
   open: boolean
   editingId: number | null
   twoFAEnabled?: boolean | null
+  presetType?: PaymentMethodType | ''
+  allowedTypes?: PaymentMethodType[]
 }>()
 
 const emit = defineEmits<{
@@ -191,6 +193,14 @@ const typeOptions = [
   { value: 'ALIPAY' as PaymentMethodType, icon: Wallet, label: t('paymentMethods.types.ALIPAY'), desc: t('paymentMethods.typesDesc.ALIPAY') },
   { value: 'WECHAT' as PaymentMethodType, icon: MessageCircle, label: t('paymentMethods.types.WECHAT'), desc: t('paymentMethods.typesDesc.WECHAT') },
 ]
+
+const visibleTypeOptions = computed(() => {
+  const allowed = props.allowedTypes
+  if (!allowed || allowed.length === 0) return typeOptions
+  return typeOptions.filter((opt) => allowed.includes(opt.value))
+})
+
+const typeLocked = computed(() => !isEditing.value && !!props.presetType)
 
 const titleText = computed(() => {
   if (isEditing.value) return t('paymentMethods.form.editTitle')
@@ -249,6 +259,8 @@ watch(
       resetForm()
       if (props.editingId) {
         void loadDetail(props.editingId)
+      } else if (props.presetType) {
+        form.type = props.presetType
       }
     }
   },

@@ -1,128 +1,126 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-20 pb-16">
-    <div class="container mx-auto px-4 max-w-3xl">
-      <!-- Header -->
-      <div class="mb-6 mt-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.paymentMethod.title') }}</h1>
-          <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.paymentMethod.subtitle') }}</p>
-        </div>
-        <Button @click="openCreate">
-          <Plus class="w-4 h-4" />
-          {{ t('c2c.paymentMethod.add') }}
-        </Button>
+  <div class="space-y-4 pb-8">
+    <!-- Header -->
+    <div class="mb-6 mt-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">{{ t('c2c.paymentMethod.title') }}</h1>
+        <p class="mt-1 text-sm text-muted-foreground">{{ t('c2c.paymentMethod.subtitle') }}</p>
       </div>
-
-      <!-- Loading -->
-      <div v-if="c2cStore.paymentMethodsLoading && list.length === 0" class="space-y-3">
-        <div v-for="i in 3" :key="i" class="rounded-2xl border bg-muted/60 h-24 animate-pulse"></div>
-      </div>
-
-      <!-- Empty state -->
-      <EmptyState
-        v-else-if="list.length === 0"
-        variant="soft"
-        size="lg"
-        :title="t('c2c.paymentMethod.empty')"
-        :action-label="t('c2c.paymentMethod.addFirst')"
-        @action="openCreate"
-      />
-
-      <!-- List -->
-      <div v-else class="space-y-3">
-        <div
-          v-for="pm in list"
-          :key="pm.id"
-          class="rounded-2xl border bg-card p-4 shadow-sm"
-          :class="pm.enabled ? '' : 'opacity-60'"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3 min-w-0 flex-1">
-              <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <component :is="typeIcon(pm.type)" class="h-5 w-5" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-semibold">{{ PAYMENT_METHOD_TYPE_LABELS[pm.type] || pm.type }}</span>
-                  <Badge size="xs" :variant="pm.enabled ? 'success' : 'neutral'">
-                    {{ pm.enabled ? t('c2c.paymentMethod.enabled') : t('c2c.paymentMethod.disabled') }}
-                  </Badge>
-                </div>
-                <div class="mt-1 text-sm text-foreground truncate">{{ pm.account_name || '—' }}</div>
-                <div class="mt-0.5 text-xs text-muted-foreground font-mono truncate">{{ pm.account_identifier }}</div>
-              </div>
-            </div>
-            <div class="flex flex-col items-end gap-2 flex-none">
-              <Switch
-                :model-value="pm.enabled"
-                @update:model-value="(val: any) => onToggleEnabled(pm, Boolean(val))"
-              />
-              <div class="flex gap-1">
-                <Button size="xs" variant="ghost" @click="openEdit(pm)">
-                  {{ t('c2c.paymentMethod.edit') }}
-                </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="text-destructive hover:text-destructive"
-                  @click="onDelete(pm)"
-                >
-                  {{ t('c2c.paymentMethod.delete') }}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form Modal -->
-      <Teleport to="body">
-        <div v-if="formModal.visible" class="fixed inset-0 z-[120] flex items-center justify-center p-4">
-          <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeForm"></div>
-          <div class="relative z-10 w-full max-w-md rounded-2xl bg-card border shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-lg font-bold">{{ editingId ? t('c2c.paymentMethod.edit') : t('c2c.paymentMethod.add') }}</h3>
-            <form class="mt-5 space-y-4" @submit.prevent="submitForm">
-              <div>
-                <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.type') }}</Label>
-                <Select v-model="form.type" :disabled="!!editingId">
-                  <SelectTrigger class="h-10">
-                    <SelectValue :placeholder="t('c2c.paymentMethod.selectType')" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
-                      {{ opt.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.accountName') }}</Label>
-                <Input v-model="form.account_name" />
-              </div>
-              <div>
-                <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.accountIdentifier') }}</Label>
-                <Input v-model="form.account_identifier" required />
-              </div>
-              <div>
-                <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.qrImage') }}</Label>
-                <Input v-model="form.qr_image" placeholder="https://..." />
-              </div>
-              <div>
-                <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.instructions') }}</Label>
-                <Textarea v-model="form.instructions" rows="3" />
-              </div>
-              <div class="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="secondary" @click="closeForm">{{ t('c2c.buyPanel.cancel') }}</Button>
-                <Button type="submit" :disabled="submitting">
-                  {{ submitting ? t('c2c.paymentMethod.saving') : t('c2c.paymentMethod.save') }}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </Teleport>
+      <Button @click="openCreate">
+        <Plus class="w-4 h-4" />
+        {{ t('c2c.paymentMethod.add') }}
+      </Button>
     </div>
-  </div>
+
+    <!-- Loading -->
+    <div v-if="c2cStore.paymentMethodsLoading && list.length === 0" class="space-y-3">
+      <div v-for="i in 3" :key="i" class="rounded-2xl border bg-muted/60 h-24 animate-pulse"></div>
+    </div>
+
+    <!-- Empty state -->
+    <EmptyState
+      v-else-if="list.length === 0"
+      variant="soft"
+      size="lg"
+      :title="t('c2c.paymentMethod.empty')"
+      :action-label="t('c2c.paymentMethod.addFirst')"
+      @action="openCreate"
+    />
+
+    <!-- List -->
+    <div v-else class="space-y-3">
+      <div
+        v-for="pm in list"
+        :key="pm.id"
+        class="rounded-2xl border bg-card p-4 shadow-sm"
+        :class="pm.enabled ? '' : 'opacity-60'"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3 min-w-0 flex-1">
+            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <component :is="typeIcon(pm.type)" class="h-5 w-5" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">{{ PAYMENT_METHOD_TYPE_LABELS[pm.type] || pm.type }}</span>
+                <Badge size="xs" :variant="pm.enabled ? 'success' : 'neutral'">
+                  {{ pm.enabled ? t('c2c.paymentMethod.enabled') : t('c2c.paymentMethod.disabled') }}
+                </Badge>
+              </div>
+              <div class="mt-1 text-sm text-foreground truncate">{{ pm.account_name || '—' }}</div>
+              <div class="mt-0.5 text-xs text-muted-foreground font-mono truncate">{{ pm.account_identifier }}</div>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-2 flex-none">
+            <Switch
+              :model-value="pm.enabled"
+              @update:model-value="(val: any) => onToggleEnabled(pm, Boolean(val))"
+            />
+            <div class="flex gap-1">
+              <Button size="xs" variant="ghost" @click="openEdit(pm)">
+                {{ t('c2c.paymentMethod.edit') }}
+              </Button>
+              <Button
+                size="xs"
+                variant="ghost"
+                class="text-destructive hover:text-destructive"
+                @click="onDelete(pm)"
+              >
+                {{ t('c2c.paymentMethod.delete') }}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Modal -->
+    <Teleport to="body">
+      <div v-if="formModal.visible" class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeForm"></div>
+        <div class="relative z-10 w-full max-w-md rounded-2xl bg-card border shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+          <h3 class="text-lg font-bold">{{ editingId ? t('c2c.paymentMethod.edit') : t('c2c.paymentMethod.add') }}</h3>
+          <form class="mt-5 space-y-4" @submit.prevent="submitForm">
+            <div>
+              <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.type') }}</Label>
+              <Select v-model="form.type" :disabled="!!editingId">
+                <SelectTrigger class="h-10">
+                  <SelectValue :placeholder="t('c2c.paymentMethod.selectType')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.accountName') }}</Label>
+              <Input v-model="form.account_name" />
+            </div>
+            <div>
+              <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.accountIdentifier') }}</Label>
+              <Input v-model="form.account_identifier" required />
+            </div>
+            <div>
+              <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.qrImage') }}</Label>
+              <Input v-model="form.qr_image" placeholder="https://..." />
+            </div>
+            <div>
+              <Label class="mb-1.5 block">{{ t('c2c.paymentMethod.instructions') }}</Label>
+              <Textarea v-model="form.instructions" rows="3" />
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="secondary" @click="closeForm">{{ t('c2c.buyPanel.cancel') }}</Button>
+              <Button type="submit" :disabled="submitting">
+                {{ submitting ? t('c2c.paymentMethod.saving') : t('c2c.paymentMethod.save') }}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+</div>
 </template>
 
 <script setup lang="ts">
