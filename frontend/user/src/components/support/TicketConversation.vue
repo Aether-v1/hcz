@@ -1,5 +1,5 @@
 <template>
-  <div ref="scrollRef" class="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5">
+  <div ref="scrollRef" class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-5">
     <template v-for="msg in messages" :key="msg.id">
       <!-- 系统消息：居中灰色文字 -->
       <div v-if="isSystem(msg)" class="text-center">

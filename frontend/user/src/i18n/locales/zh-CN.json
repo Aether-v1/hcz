@@ -356,6 +356,17 @@
     "user": "开发预览",
     "accountId": "DEV"
   },
+  "pwa": {
+    "offline_write_blocked": "当前处于离线状态，无法提交资金或账户相关操作",
+    "install": "添加到主屏幕",
+    "install_hint": "安装后可从主屏幕快速访问，全屏运行",
+    "ios_hint": "在 Safari 中点击“分享”按钮，选择“添加到主屏幕”即可安装",
+    "dismiss": "暂不",
+    "update_available": "发现新版本",
+    "refresh": "刷新更新",
+    "offline_ready": "离线可用内容已准备就绪",
+    "offline": "网络已断开，部分内容暂不可用"
+  },
   "personalCenter": {
     "myPage": {
       "title": "我的",

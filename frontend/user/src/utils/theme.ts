@@ -21,6 +21,15 @@ const resolveTheme = (t: Theme): 'light' | 'dark' => {
     return t === 'system' ? getSystemTheme() : t
 }
 
+// 同步 <meta name="theme-color"> 与当前生效主题，
+// 使 iOS Safari / standalone 顶部状态栏跟随浅色/深色（含手动切换，非仅系统偏好）。
+const THEME_COLOR_LIGHT = '#eef4fb'
+const THEME_COLOR_DARK = '#000000'
+const syncThemeColor = (effective: 'light' | 'dark') => {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', effective === 'dark' ? THEME_COLOR_DARK : THEME_COLOR_LIGHT)
+}
+
 const applyTheme = (t: Theme) => {
     const root = document.documentElement
     const effective = resolveTheme(t)
@@ -29,6 +38,7 @@ const applyTheme = (t: Theme) => {
     } else {
         root.classList.remove('dark')
     }
+    syncThemeColor(effective)
     localStorage.setItem(THEME_KEY, t)
 }
 

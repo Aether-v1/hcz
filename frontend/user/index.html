@@ -3,7 +3,14 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- PWA / iOS App Shell：theme-color 由 utils/theme.ts 随 .dark 动态同步，这里给首屏默认值 -->
+  <meta name="theme-color" content="#eef4fb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HCZ" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title></title>
   <script>
     // 首屏主题初始化：在 JS bundle 加载前应用主题，防止刷新时浅色闪烁（FOUC）

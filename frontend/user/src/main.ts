@@ -2,6 +2,9 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createHead } from '@unhead/vue/client'
 import './style.css'
+// 主题模块的 immediate watcher 在启动时解析浅色/深色并同步 html.dark 与 <meta name="theme-color">，
+// 否则未打开主题设置页时 theme-color 会停留在 index.html 的静态浅色值。
+import './utils/theme'
 import App from './App.vue'
 import router, { warmupCommonRoutes } from './router'
 import i18n, { detectLocale, setI18nLocale, warmupLocaleMessages } from './i18n'

@@ -153,6 +153,18 @@
   --ui-leading-title: 1.2;
   --ui-leading-body: 1.62;
 
+  /* 全局 safe-area 令牌：所有避让统一走 var(--safe-*)，页面不再自写 env()。
+     非刘海机型与桌面端 env() 解析为 0px，因此不会多出空白。 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* iOS Safari 的 100vh 按最大视口计算，固定高度容器会溢出可见区域。
+     双声明做回退：不支持 dvh 的浏览器仍使用 100vh。 */
+  --hcz-vh: 100vh;
+  --hcz-vh: 100dvh;
+
   /* Warm accent colors */
   --ui-accent-warm: #d97706;
   --ui-accent-warm-hover: #b45309;
@@ -363,9 +375,11 @@ html[data-telegram-mini-app="true"] body {
   }
 
   /* Navbar/BackBar 占位：由背景画布自己承担 padding-top，
-     让背景图从 y=0 开始覆盖 Navbar 区域，内容从 Navbar 下方开始。 */
+     让背景图从 y=0 开始覆盖 Navbar 区域，内容从 Navbar 下方开始。
+     叠加 --safe-top：standalone/刘海机型下 Navbar 被抬高，
+     内容同步下移；普通浏览器/桌面该值为 0，不影响既有间距。 */
   .hcz-page-background--with-top-bar {
-    padding-top: 57px;
+    padding-top: calc(57px + var(--safe-top));
   }
 
   .hcz-surface {
@@ -391,7 +405,7 @@ html[data-telegram-mini-app="true"] body {
     position: fixed;
     left: 14px;
     right: 14px;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(12px + var(--safe-bottom));
     z-index: 50;
     border-radius: 22px;
     background: color-mix(in oklab, var(--ui-bg-overlay-strong) 75%, transparent);
@@ -600,7 +614,7 @@ html[data-telegram-mini-app="true"] body {
 
   /* Safe area bottom padding for fixed elements */
   .theme-safe-bottom {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+    padding-bottom: max(var(--safe-bottom), 0px);
   }
 }
 
@@ -899,7 +913,7 @@ html[data-telegram-mini-app="true"] body {
     /* 底部留白挂在页面背景画布上，保证背景图/底色连续覆盖 BottomNav 后方，
        不在 main padding 区露出 #app 的 #f5f8fd 纯色断层。 */
     .hcz-shell-main--with-bottom-nav > .hcz-page-background {
-      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(5rem + var(--safe-bottom));
     }
   }
 
@@ -924,6 +938,17 @@ html[data-telegram-mini-app="true"] body {
 @layer utilities {
   #app.hcz-storefront .container {
     max-width: var(--ui-content-max);
+  }
+}
+
+/* 触控机型（iOS Safari 等）聚焦字号 < 16px 的表单控件会触发页面自动缩放。
+   只在 coarse pointer 下抬高到 16px，桌面端字体体系不变；
+   写在 @layer 之外，确保覆盖组件自身的 text-sm 工具类。 */
+@media (pointer: coarse) {
+  #app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  #app textarea,
+  #app select {
+    font-size: 1rem;
   }
 }
 

@@ -74,6 +74,15 @@ function createClient(injectAuth: boolean) {
             return Promise.reject(new Error(message))
         }
 
+        // 离线时阻止所有写操作（POST/PUT/PATCH/DELETE）。
+        // 资金类操作（充值/提现/转账/下单/兑换等）均为写请求，明确断网下不提交，
+        // 避免以旧缓存冒充实时结果或产生不可预期的重复提交。GET 仍走真实网络错误路径。
+        if (method !== 'GET' && typeof navigator !== 'undefined' && navigator.onLine === false) {
+            const message = t('pwa.offline_write_blocked')
+            toast.info(message)
+            return Promise.reject(new Error(message))
+        }
+
         let body: any = undefined
         let opts: RequestOptions = {}
 

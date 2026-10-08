@@ -25,7 +25,7 @@
     <!-- 详情卡片：头部 + 可滚动会话 + 回复框 -->
     <div
       v-else
-      class="mt-4 flex h-[calc(100vh-176px)] min-h-[520px] flex-col overflow-hidden rounded-2xl border bg-card shadow-sm"
+      class="mt-4 flex h-[calc(var(--hcz-vh)_-_176px)] min-h-[520px] flex-col overflow-hidden rounded-2xl border bg-card shadow-sm"
     >
       <!-- 头部 -->
       <div class="border-b px-5 py-4">

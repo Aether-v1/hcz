@@ -44,7 +44,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 <style scoped>
 /* Mobile: sit above bottom nav (h-14 = 3.5rem) + safe area, with breathing room */
 .back-to-top {
-  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 1rem);
+  bottom: calc(3.5rem + var(--safe-bottom) + 1rem);
 }
 @media (min-width: 1024px) {
   .back-to-top {

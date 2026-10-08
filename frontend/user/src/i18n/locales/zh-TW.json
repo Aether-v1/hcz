@@ -408,6 +408,17 @@
     "user": "開發預覽",
     "accountId": "DEV"
   },
+  "pwa": {
+    "offline_write_blocked": "當前處於離線狀態，無法提交資金或帳戶相關操作",
+    "install": "新增至主畫面",
+    "install_hint": "安裝後可從主畫面快速存取，並全螢幕執行",
+    "ios_hint": "在 Safari 中點擊「分享」按鈕，選擇「加入主畫面」即可安裝",
+    "dismiss": "暫不",
+    "update_available": "發現新版本",
+    "refresh": "重新整理更新",
+    "offline_ready": "離線可用內容已準備就緒",
+    "offline": "網路已中斷，部分內容暫不可用"
+  },
   "personalCenter": {
     "myPage": {
       "title": "我的",

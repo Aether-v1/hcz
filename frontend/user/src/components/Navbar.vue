@@ -1,7 +1,7 @@
 <template>
   <nav
     class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-white/70 to-white/0 backdrop-blur-sm dark:from-black/50 dark:to-black/0"
-    :style="{ transitionDuration: 'var(--ui-duration-normal)' }">
+    :style="{ transitionDuration: 'var(--ui-duration-normal)', paddingTop: 'var(--safe-top)' }">
     <div class="hcz-shell-container flex h-14 items-center justify-between gap-4">
       <!-- Back-only 模式：返回按钮 -->
       <template v-if="backOnly">

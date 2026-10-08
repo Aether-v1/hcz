@@ -408,6 +408,17 @@
     "user": "Development preview",
     "accountId": "DEV"
   },
+  "pwa": {
+    "offline_write_blocked": "You are offline, so payment and account actions cannot be submitted",
+    "install": "Add to home screen",
+    "install_hint": "Install for one-tap access from your home screen, in full screen",
+    "ios_hint": "Tap the Share button in Safari, then choose \"Add to Home Screen\"",
+    "dismiss": "Not now",
+    "update_available": "New version available",
+    "refresh": "Refresh to update",
+    "offline_ready": "Offline content is ready",
+    "offline": "You are offline. Some content is unavailable"
+  },
   "personalCenter": {
     "myPage": {
       "title": "My account",

@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 const cfAsyncModuleScriptPlugin = () => ({
   name: 'cfasync-module-script',
@@ -24,6 +25,56 @@ export default defineConfig(({ mode }) => ({
       dropMessageCompiler: true,
     }),
     cfAsyncModuleScriptPlugin(),
+    // PWA：可安装 App Shell + 保守缓存策略。
+    // - 静态资源(hash 后 JS/CSS/图片)：generateSW precache，cache-first（内容寻址，天然安全）
+    // - HTML 导航：navigateFallback 到 precached index.html，保证离线可打开页面壳
+    // - /api：NetworkOnly —— 余额/订单/佣金/C2C/钱包/积分等实时数据绝不以旧缓存冒充
+    // - /uploads：NetworkFirst —— 仅图片类静态资源，短超时回退缓存
+    // registerType: 'prompt' —— 新版本不静默替换，交由 UI 提示用户主动刷新
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon-16.png', 'favicon-32.png', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'HCZ · Digital Commerce Platform',
+        short_name: 'HCZ',
+        description: '充值、钱包、积分、分销与 C2C 交易的一站式数字商业平台。',
+        lang: 'zh-CN',
+        dir: 'ltr',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        scope: '/',
+        background_color: '#f5f8fd',
+        theme_color: '#eef4fb',
+        icons: [
+          { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
+        cleanupOutdatedCaches: true,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api'),
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/uploads'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'hcz-uploads',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {

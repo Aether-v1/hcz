@@ -298,7 +298,7 @@ onUnmounted(() => {
 
 .home-v2__container {
   padding-top: 0;
-  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(40px + var(--safe-bottom));
 }
 
 @media (min-width: 768px) {

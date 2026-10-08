@@ -3,7 +3,7 @@
       <div class="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside class="sticky top-16 min-w-0 rounded-2xl border bg-card p-2 sm:p-4" :aria-label="t('products.categories')">
         <h2 class="mb-3 px-1 text-sm font-semibold text-foreground">{{ t('products.chooseCategory') }}</h2>
-        <nav class="max-h-[calc(100vh-7rem)] space-y-1 overflow-y-auto">
+        <nav class="max-h-[calc(var(--hcz-vh)_-_7rem)] space-y-1 overflow-y-auto">
           <button type="button" class="w-full rounded-lg px-2 py-2.5 text-left text-xs font-semibold transition-colors sm:px-3 sm:text-sm"
             :class="selectedCategory === null ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
             @click="selectCategory(null)">{{ t('products.allCategories') }}</button>

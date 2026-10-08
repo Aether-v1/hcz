@@ -39,7 +39,7 @@ import { useToast, type ToastItem } from '../composables/useToast'
 
 const { toasts, removeToast } = useToast()
 
-const positionClass = 'bottom-6 left-1/2 -translate-x-1/2 md:bottom-auto md:top-6 flex flex-col items-center'
+const positionClass = 'bottom-[calc(1.5rem+var(--safe-bottom))] left-1/2 -translate-x-1/2 md:bottom-auto md:top-6 flex flex-col items-center'
 
 const typeClass = (type: string) => {
   switch (type) {
