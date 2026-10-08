@@ -488,11 +488,10 @@ onUnmounted(() => {
   padding: 12px 4px;
   border-radius: 14px;
   text-decoration: none;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s;
 }
 
 .home-entry:hover {
-  background: var(--accent, rgba(255,255,255,0.05));
   transform: translateY(-2px);
 }
 
@@ -577,7 +576,7 @@ onUnmounted(() => {
   background: var(--card, #16161e);
   border: 1px solid var(--border, rgba(255,255,255,0.06));
   text-decoration: none;
-  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s;
 }
 
 .home-featured__icon {
@@ -616,8 +615,6 @@ onUnmounted(() => {
 
 .home-featured__card:hover {
   transform: translateY(-3px);
-  border-color: var(--primary, #4F46E5);
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
 }
 
 .home-featured__icon-img {
