@@ -136,11 +136,14 @@
               v-for="item in group.items"
               :key="item.to"
               :to="item.to"
-              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors"
-              :class="isActive(item.to) ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
+              class="flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-semibold transition-colors"
+              :class="isActive(item.to) ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
               @click="drawerOpen = false"
             >
-              <component :is="item.icon" class="h-5 w-5 shrink-0" />
+              <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors"
+                :class="isActive(item.to) ? 'bg-primary/10 text-primary' : 'bg-accent text-muted-foreground'">
+                <component :is="item.icon" :size="16" :stroke-width="1.8" />
+              </span>
               <span class="truncate">{{ item.label }}</span>
             </RouterLink>
           </div>

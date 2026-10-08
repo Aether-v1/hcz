@@ -2,26 +2,33 @@
   <div class="min-h-screen bg-background">
     <ResellerConsoleTopbar :title="currentTitle" :nav-groups="navGroups" />
 
-    <!-- 水平 tab 导航 -->
-    <div class="sticky top-16 z-30 border-b bg-background/90 backdrop-blur">
-      <div class="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2">
-        <RouterLink
-          v-for="item in allNavItems"
-          :key="item.to"
-          :to="item.to"
-          class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors"
-          :class="isActive(item.to)
-            ? 'bg-accent text-foreground'
-            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'"
-        >
-          <component :is="item.icon" class="h-4 w-4 shrink-0" />
-          <span>{{ item.label }}</span>
-        </RouterLink>
-      </div>
-    </div>
+    <!-- 左：功能菜单栏（桌面端）｜右：内容 -->
+    <div class="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 lg:px-6">
+      <aside class="sticky top-20 hidden h-fit w-60 shrink-0 lg:block" :aria-label="t('resellerConsole.title')">
+        <nav class="space-y-4 rounded-2xl border bg-card p-3 shadow-sm">
+          <div v-for="group in navGroups" :key="group.key" class="space-y-1">
+            <p class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{{ group.title }}</p>
+            <RouterLink
+              v-for="item in group.items"
+              :key="item.to"
+              :to="item.to"
+              class="flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-semibold transition-colors"
+              :class="isActive(item.to)
+                ? 'bg-primary/5 text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'"
+            >
+              <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors"
+                :class="isActive(item.to) ? 'bg-primary/10 text-primary' : 'bg-accent text-muted-foreground'">
+                <component :is="item.icon" :size="16" :stroke-width="1.8" />
+              </span>
+              <span class="truncate">{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </nav>
+      </aside>
 
-    <!-- 主内容 -->
-    <main class="mx-auto max-w-5xl px-4 py-6">
+      <!-- 主内容 -->
+      <main class="min-w-0 flex-1">
       <ResellerPageState v-if="!profileReady || profileLoading" loading :title="t('resellerConsole.common.loading')" />
       <RouterView v-else-if="canRenderCurrentModule" />
       <Card v-else class="p-6 sm:p-8">
@@ -37,6 +44,7 @@
         </div>
       </Card>
     </main>
+    </div>
   </div>
 </template>
 
@@ -104,8 +112,6 @@ const navGroups = computed(() =>
     items: group.items.map((item) => ({ ...item, label: t(item.label) })),
   })),
 )
-
-const allNavItems = computed(() => navGroups.value.flatMap((g) => g.items))
 
 const isActive = (path: string) => {
   if (path === '/reseller') return route.path === path
