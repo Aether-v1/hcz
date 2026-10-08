@@ -1,14 +1,11 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-24 pb-16">
-    <div class="container mx-auto px-4">
-      <div class="mb-6 rounded-3xl bg-slate-950 p-7 text-white md:p-9">
-        <p class="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-sky-300">HCZ / {{ t('products.stepDetails') }}</p>
-        <h1 class="mb-2 text-3xl font-bold">{{ t('checkout.title') }}</h1>
-        <p class="text-sm text-slate-300">{{ t('checkout.subtitle') }}</p>
+  <div class="space-y-4 pb-8">
+      <div class="mb-1">
+        <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('checkout.title') }}</h1>
+        <p class="mt-1 text-sm text-muted-foreground">{{ t('checkout.subtitle') }}</p>
       </div>
 
       <CheckoutSteps
-        class="mb-8"
         current-step="checkout"
         :step-keys="['checkout', 'payment']"
       />
@@ -21,10 +18,10 @@
         action-to="/products"
       />
 
-      <div v-else class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div class="space-y-6 lg:col-span-2">
-          <div class="rounded-2xl border bg-card text-card-foreground p-6">
-            <h2 class="mb-4 text-lg font-bold text-foreground">{{ t('checkout.itemsTitle') }}</h2>
+      <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
+          <div class="rounded-2xl border bg-card p-5 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('checkout.itemsTitle') }}</h2>
             <div class="space-y-4">
               <div
                 v-for="item in cartItems"
@@ -98,8 +95,8 @@
             :manual-field-error="manualFieldError"
           />
 
-          <div v-if="!isResellerTenant" class="rounded-2xl border bg-card text-card-foreground p-6">
-            <h2 class="mb-4 text-lg font-bold text-foreground">{{ t('checkout.couponTitle') }}</h2>
+          <div v-if="!isResellerTenant" class="rounded-2xl border bg-card p-5 shadow-sm">
+            <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('checkout.couponTitle') }}</h2>
             <Input
               v-model="couponCode"
               type="text"
@@ -110,9 +107,9 @@
 
           <div
             v-if="!userAuthStore.isAuthenticated"
-            class="space-y-4 rounded-2xl border bg-card text-card-foreground p-6"
+            class="space-y-4 rounded-2xl border bg-card p-5 shadow-sm"
           >
-            <h2 class="text-lg font-bold text-foreground">{{ t('checkout.modeTitle') }}</h2>
+            <h2 class="text-sm font-semibold text-foreground">{{ t('checkout.modeTitle') }}</h2>
             <div class="flex flex-wrap gap-3">
               <Button
                 :variant="checkoutMode === 'guest' ? 'default' : 'secondary'"
@@ -172,8 +169,8 @@
           </div>
         </div>
 
-        <div class="h-fit rounded-2xl border bg-card text-card-foreground p-6 lg:sticky lg:top-24">
-          <h2 class="mb-4 text-lg font-bold text-foreground">{{ t('checkout.submitTitle') }}</h2>
+        <div class="h-fit rounded-2xl border bg-card p-5 shadow-sm lg:sticky lg:top-20">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('checkout.submitTitle') }}</h2>
           <div class="mb-4 rounded-lg border bg-secondary p-3 text-xs text-muted-foreground">
             {{ t('checkout.submitHint') }}
           </div>
@@ -239,7 +236,7 @@
 
           <!-- Payment Channel Selection -->
           <div class="mb-4 border-t pt-4">
-            <h3 class="mb-3 text-sm font-bold text-foreground">{{ t('checkout.paymentMethod') }}</h3>
+            <h3 class="mb-3 text-sm font-semibold text-foreground">{{ t('checkout.paymentMethod') }}</h3>
 
             <!-- Wallet Balance -->
             <div v-if="showBalanceOption" class="mb-3 rounded-lg border bg-secondary p-3">
@@ -310,7 +307,6 @@
           </Button>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

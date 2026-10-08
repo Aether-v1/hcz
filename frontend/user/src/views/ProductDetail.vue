@@ -1,38 +1,38 @@
 <template>
-  <div
-    class="product-detail-page min-h-screen bg-background text-foreground pt-24 pb-16">
-    <div class="container mx-auto px-4">
+  <div class="space-y-4 pb-8">
       <!-- Loading Skeleton -->
-      <div v-if="loading" class="space-y-8">
+      <div v-if="loading" class="space-y-4">
         <div class="h-5 w-48 rounded theme-skeleton"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 bg-card border rounded-3xl overflow-hidden">
-          <div class="p-8 bg-secondary border-r">
-            <div class="h-20 w-20 rounded-xl theme-skeleton"></div>
-            <div class="mt-8 h-8 w-2/3 rounded theme-skeleton"></div>
-          </div>
-          <div class="p-6 md:p-12 space-y-6">
-            <div class="h-3 w-24 rounded theme-skeleton"></div>
-            <div class="h-10 w-3/4 rounded theme-skeleton"></div>
-            <div class="flex gap-2">
-              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
-              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
-              <div class="h-6 w-16 rounded-full theme-skeleton"></div>
-            </div>
-            <div class="h-14 w-48 rounded theme-skeleton"></div>
-            <div class="h-4 w-full rounded theme-skeleton"></div>
-            <div class="h-4 w-2/3 rounded theme-skeleton"></div>
-            <div class="flex gap-4 mt-8">
-              <div class="h-14 flex-1 rounded-xl theme-skeleton"></div>
-              <div class="h-14 flex-1 rounded-xl theme-skeleton"></div>
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <div class="flex items-start gap-4">
+            <div class="h-16 w-16 shrink-0 rounded-xl theme-skeleton"></div>
+            <div class="flex-1 space-y-3">
+              <div class="h-3 w-24 rounded theme-skeleton"></div>
+              <div class="h-7 w-3/4 rounded theme-skeleton"></div>
+              <div class="flex gap-2">
+                <div class="h-6 w-16 rounded-full theme-skeleton"></div>
+                <div class="h-6 w-16 rounded-full theme-skeleton"></div>
+              </div>
             </div>
           </div>
+          <div class="mt-5 h-4 w-full rounded theme-skeleton"></div>
+          <div class="mt-2 h-4 w-2/3 rounded theme-skeleton"></div>
+        </div>
+        <div class="space-y-4 rounded-2xl border bg-card p-5 shadow-sm">
+          <div class="h-5 w-40 rounded theme-skeleton"></div>
+          <div class="h-10 w-48 rounded theme-skeleton"></div>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="h-12 rounded-xl theme-skeleton"></div>
+            <div class="h-12 rounded-xl theme-skeleton"></div>
+          </div>
+          <div class="h-12 w-full rounded-xl theme-skeleton"></div>
         </div>
       </div>
 
       <!-- Product Content -->
-      <div v-else-if="product">
+      <div v-else-if="product" class="space-y-4">
         <BreadcrumbNav
-          class="mb-8"
+          class="mb-1"
           :items="[
             { label: t('nav.home'), to: '/' },
             { label: t('nav.products'), to: '/products' },
@@ -40,315 +40,272 @@
           ]"
         />
 
-        <!-- Main Info Card -->
-        <div
-          class="mx-auto mb-8 max-w-6xl overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div class="grid grid-cols-1 gap-0 lg:grid-cols-[340px_minmax(0,1fr)]">
-            <!-- Service identity and guidance -->
-            <div class="flex flex-col gap-8 border-b border-sky-100 bg-[linear-gradient(160deg,#edf7fc_0%,#f6fafb_100%)] p-6 text-slate-900 dark:border-slate-700 dark:bg-[linear-gradient(160deg,#263747_0%,#22313b_100%)] dark:text-slate-100 md:p-8 lg:border-b-0 lg:border-r lg:p-9">
-              <div>
-                <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-sky-100 bg-white/80 p-3 dark:border-slate-600 dark:bg-slate-700/80">
-                  <img v-if="product.category?.icon || images[0]" :src="product.category?.icon ? getImageUrl(product.category.icon) : images[0]" :alt="getLocalizedText(product.title)" class="h-full w-full object-contain" />
-                  <component :is="getServiceIcon(product.category)" v-else class="h-8 w-8 text-slate-600 dark:text-slate-300" aria-hidden="true" />
-                </div>
-                <p class="mt-7 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-300">{{ t('productDetail.serviceLabel') }}</p>
-                <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ getLocalizedText(product.description) }}</p>
-              </div>
-              <div class="border-t border-sky-200/70 pt-6 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
-                <p class="font-semibold text-slate-900 dark:text-slate-100">{{ t('productDetail.flowTitle') }}</p>
-                <ol class="mt-4 space-y-4">
-                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">01</span>{{ t('products.stepChoose') }}</li>
-                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">02</span>{{ t('products.stepDetails') }}</li>
-                  <li class="flex gap-3"><span class="font-bold text-slate-800 dark:text-slate-200">03</span>{{ t('products.stepSubmit') }}</li>
-                </ol>
-                <p class="mt-5 text-xs leading-6 text-slate-500 dark:text-slate-400">{{ t('productDetail.flowDescription') }}</p>
-              </div>
+        <!-- Summary Card -->
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <div class="flex items-start gap-4">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted p-3">
+              <img v-if="product.category?.icon || images[0]" :src="product.category?.icon ? getImageUrl(product.category.icon) : images[0]" :alt="getLocalizedText(product.title)" class="h-full w-full object-contain" />
+              <component :is="getServiceIcon(product.category)" v-else class="h-8 w-8 text-muted-foreground" aria-hidden="true" />
             </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{{ t('productDetail.serviceLabel') }}</p>
+              <h1 class="mt-1 text-xl font-bold tracking-tight text-foreground md:text-2xl">
+                {{ getLocalizedText(product.title) }}
+              </h1>
+              <p v-if="categoryName" class="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+                {{ t('productDetail.categoryLabel') }} · {{ categoryName }}
+              </p>
+            </div>
+          </div>
 
-            <!-- Recharge options (Right) -->
-            <div class="flex flex-col justify-center p-6 md:p-8 lg:px-12 lg:py-10">
-              <p class="mb-5 text-sm font-semibold text-muted-foreground">{{ t('productDetail.rechargeOptions') }}</p>
-              <div class="mb-6">
-                <div v-if="categoryName" class="mb-3 text-xs uppercase tracking-wider text-muted-foreground">
-                  {{ t('productDetail.categoryLabel') }} · {{ categoryName }}
-                </div>
+          <div v-if="product.tags && product.tags.length > 0" class="mt-4 flex flex-wrap gap-2">
+            <Badge
+              v-for="(tag, index) in product.tags"
+              :key="index"
+              variant="neutral"
+            >
+              {{ tag }}
+            </Badge>
+          </div>
 
-                <div v-if="product.tags && product.tags.length > 0" class="mb-4 flex flex-wrap gap-2">
-                  <Badge
-                    v-for="(tag, index) in product.tags"
-                    :key="index"
-                    variant="neutral"
-                  >
-                    {{ tag }}
-                  </Badge>
-                </div>
+          <p class="mt-4 text-sm leading-relaxed text-muted-foreground">
+            {{ getLocalizedText(product.description) }}
+          </p>
+        </div>
 
-                <h1 class="mb-4 text-2xl md:text-3xl lg:text-5xl font-black leading-tight text-foreground">
-                  {{ getLocalizedText(product.title) }}
-                </h1>
+        <!-- Purchase Card -->
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <p class="text-sm font-semibold text-foreground">{{ t('productDetail.rechargeOptions') }}</p>
 
-                <div class="mb-6 flex flex-wrap items-center gap-2">
-                  <Badge :variant="product.purchase_type === 'guest' ? 'warning' : 'success'">
-                    <UserPlus v-if="product.purchase_type === 'guest'" class="h-3 w-3" />
-                    <Lock v-else class="h-3 w-3" />
-                    {{ getPurchaseTypeLabel(product.purchase_type) }}
-                  </Badge>
-
-                  <Badge :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
-                    <Zap v-if="product.fulfillment_type === 'auto'" class="h-3 w-3" />
-                    <Pencil v-else class="h-3 w-3" />
-                    {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
-                  </Badge>
-
-                </div>
-
-                <div class="mb-8 border-b pb-8" ref="priceSection">
-                  <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <span class="text-sm text-muted-foreground">{{ t('products.price') }}</span>
-                    <Badge v-if="(selectedSku && hasSkuPromotionPrice(selectedSku)) || (!selectedSku && hasPromotionPrice(product))" variant="danger">
-                      {{ t('products.promotionTag') }}
-                    </Badge>
-                    <Badge v-if="showSelectedSkuMemberBadge" variant="warning">
-                      {{ t('products.memberPriceTag') }}
-                    </Badge>
-                    <Badge v-if="hasSelectedSkuWholesalePrice" variant="success">
-                      {{ t('products.wholesaleTag') }}
-                    </Badge>
-                  </div>
-                  <div v-if="selectedSku && hasSelectedSkuWholesalePrice" class="space-y-2">
-                    <div class="flex flex-wrap items-end gap-4">
-                      <span
-                        class="text-3xl font-bold tracking-tight tabular-nums"
-                        :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
-                      >
-                        {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
-                      </span>
-                      <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
-                      </span>
-                    </div>
-                    <p
-                      class="text-sm font-medium"
-                      :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
-                    >
-                      {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }} ·
-                      {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuWholesaleFinalPrice), siteCurrency) }}
-                    </p>
-                  </div>
-                  <!-- 选中 SKU 且有促销价 -->
-                  <div v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)" class="space-y-2">
-                    <div class="flex flex-wrap items-end gap-4">
-                      <span v-if="selectedSkuPromotionFinalIsMember" class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
-                        {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
-                      </span>
-                      <span v-else class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
-                        {{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}
-                      </span>
-                      <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
-                      </span>
-                    </div>
-                    <p v-if="selectedSkuPromotionFinalIsMember" class="text-sm font-medium text-amber-600 dark:text-amber-300">
-                      {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuPromotionFinalPrice), siteCurrency) }}
-                    </p>
-                    <p v-else class="text-sm font-medium text-rose-500 dark:text-rose-300">
-                      {{ t('products.saveAmount') }} {{ formatPrice(getSkuPromotionSaveAmount(selectedSku), siteCurrency) }}
-                    </p>
-                  </div>
-                  <!-- 选中 SKU 有会员价但无促销价 -->
-                  <div v-else-if="selectedSku && hasMemberPrice" class="space-y-2">
-                    <div class="flex flex-wrap items-end gap-4">
-                      <span class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
-                        {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
-                      </span>
-                      <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
-                      </span>
-                    </div>
-                    <p class="text-sm font-medium text-amber-600 dark:text-amber-300">
-                      {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - selectedSkuMemberPrice!, siteCurrency) }}
-                    </p>
-                  </div>
-                  <!-- 选中 SKU 但无促销价也无会员价 -->
-                  <div v-else-if="selectedSku" class="flex items-end gap-4">
-                    <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
-                    </span>
-                  </div>
-                  <!-- 未选 SKU，产品级有促销价 -->
-                  <div v-else-if="hasPromotionPrice(product)" class="space-y-2">
-                    <div class="flex flex-wrap items-end gap-4">
-                      <span class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
-                        {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
-                      </span>
-                      <span class="theme-price-original">
-                        {{ formatPrice(product.price_amount, siteCurrency) }}
-                      </span>
-                    </div>
-                    <p class="text-sm font-medium text-rose-500 dark:text-rose-300">
-                      {{ t('products.saveAmount') }} {{ formatPrice(getPromotionSaveAmount(product), siteCurrency) }}
-                    </p>
-                  </div>
-                  <!-- 未选 SKU，无促销 -->
-                  <div v-else class="flex items-end gap-4">
-                    <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
-                      {{ formatPrice(product.price_amount, siteCurrency) }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- 批发价规则展示 -->
-                <div v-if="selectedSkuWholesaleRules.length" class="mb-8 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
-                  <h2 class="mb-2 flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                    {{ t('products.wholesaleRulesTitle') }}
-                  </h2>
-                  <div class="flex flex-wrap gap-2">
-                    <Badge v-for="tier in selectedSkuWholesaleRules" :key="`${tier.sku_id || tier.sku_code || 'all'}-${tier.min_quantity}`" variant="success" class="rounded-full px-3 py-1 font-medium">
-                      {{ formatWholesaleTier(tier) }}
-                    </Badge>
-                  </div>
-                </div>
-
-                <!-- 活动规则展示 -->
-                <div v-if="hasPromotionRules(product)" class="mb-8 rounded-xl border border-orange-200 dark:border-orange-800/50 bg-orange-50/50 dark:bg-orange-950/20 px-4 py-3">
-                  <h2 class="mb-2 text-sm font-bold text-orange-700 dark:text-orange-300 flex items-center gap-1.5">
-                    <Tag class="w-4 h-4" />
-                    {{ t('products.promotionRulesTitle') }}
-                  </h2>
-                  <ul class="space-y-1">
-                    <li v-for="rule in getPromotionRules(product)" :key="rule.id" class="text-sm text-orange-600 dark:text-orange-300/90 flex items-center gap-1.5">
-                      <span class="w-1 h-1 rounded-full bg-orange-400 dark:bg-orange-500 shrink-0"></span>
-                      <span>{{ formatPromotionRule(rule) }}</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div v-if="activeSkus.length" class="mb-8">
-                  <h2 class="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                    {{ t('productDetail.skuTitle') }}
-                  </h2>
-                  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <button
-                      v-for="sku in activeSkus"
-                      :key="sku.id"
-                      type="button"
-                      class="flex flex-col items-start rounded-xl border px-3 py-2 text-sm transition-all min-h-[44px]"
-                      :class="[
-                        normalizeSkuId(sku.id) === selectedSkuId ? 'border-primary/40 bg-primary/10 ring-1 ring-primary/30' : 'border bg-secondary text-foreground',
-                        isSkuPurchasable(sku) ? 'hover:-translate-y-0.5' : 'cursor-not-allowed opacity-55 border-dashed',
-                      ]"
-                      :disabled="!isSkuPurchasable(sku)"
-                      @click="selectedSkuId = normalizeSkuId(sku.id)"
-                    >
-                      <span class="font-semibold leading-tight">{{ skuDisplayText(sku) }}</span>
-                    </button>
-                  </div>
-                  <p v-if="requiresSKUSelection" class="mt-2 text-xs text-amber-500">
-                    {{ t('productDetail.skuRequired') }}
-                  </p>
-                </div>
-
-                <div class="mb-8">
-                  <h2 class="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                    {{ t('productDetail.description') }}
-                  </h2>
-                  <p class="text-lg leading-relaxed text-muted-foreground">
-                    {{ getLocalizedText(product.description) }}
-                  </p>
-                </div>
+          <div class="mb-6 mt-4 border-b pb-5" ref="priceSection">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <span class="text-sm text-muted-foreground">{{ t('products.price') }}</span>
+              <Badge v-if="(selectedSku && hasSkuPromotionPrice(selectedSku)) || (!selectedSku && hasPromotionPrice(product))" variant="danger">
+                {{ t('products.promotionTag') }}
+              </Badge>
+              <Badge v-if="showSelectedSkuMemberBadge" variant="warning">
+                {{ t('products.memberPriceTag') }}
+              </Badge>
+              <Badge v-if="hasSelectedSkuWholesalePrice" variant="success">
+                {{ t('products.wholesaleTag') }}
+              </Badge>
+            </div>
+            <div v-if="selectedSku && hasSelectedSkuWholesalePrice" class="space-y-2">
+              <div class="flex flex-wrap items-end gap-4">
+                <span
+                  class="text-3xl font-bold tracking-tight tabular-nums"
+                  :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
+                >
+                  {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
+                </span>
+                <span class="theme-price-original">
+                  {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                </span>
               </div>
-
-              <!-- Quantity Selector -->
-                <div class="mb-8">
-                  <h2 class="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                    {{ t('productDetail.quantity') }}
-                  </h2>
-                  <div class="flex items-center rounded-lg border overflow-hidden w-fit">
-                    <button
-                      type="button"
-                      class="w-10 h-10 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
-                      :disabled="quantity <= quantityEffectiveMin"
-                      @click="quantity = Math.max(quantityEffectiveMin, quantity - 1)"
-                    >
-                      <Minus class="w-4 h-4" :stroke-width="2.5" />
-                    </button>
-                    <input
-                      type="text"
-                      inputmode="numeric"
-                      class="w-14 h-10 text-center text-sm font-semibold text-foreground border-x bg-transparent outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      :value="quantity"
-                      @change="handleQuantityInput($event)"
-                      @keydown.enter.prevent="($event.target as HTMLInputElement)?.blur()"
-                    />
-                    <button
-                      type="button"
-                      class="w-10 h-10 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
-                      :disabled="quantityEffectiveLimit !== null && quantity >= quantityEffectiveLimit"
-                      @click="quantity = quantity + 1"
-                    >
-                      <Plus class="w-4 h-4" :stroke-width="2.5" />
-                    </button>
-                  </div>
-                </div>
-
-              <!-- Purchase Actions (Desktop + original position) -->
-              <div ref="purchaseActionsRef" class="mt-auto space-y-6">
-                <Alert v-if="cannotPurchaseReason" variant="destructive">
-                  <AlertDescription class="font-semibold">{{ cannotPurchaseReason }}</AlertDescription>
-                </Alert>
-                <Alert v-if="purchaseWarning" class="border-warning/40 text-warning">
-                  <AlertDescription class="font-semibold text-warning">{{ purchaseWarning }}</AlertDescription>
-                </Alert>
-
-                <div class="space-y-3">
-                  <Button v-if="requiresLogin" class="w-full h-12 font-bold" @click="goLogin">
-                    {{ t('productDetail.loginToBuy') }}
-                  </Button>
-                  <div v-else>
-                    <Button class="h-12 font-bold" :disabled="!canPurchase" @click="buyNow">
-                      {{ t('productDetail.buyNow') }}
-                    </Button>
-                  </div>
-                  <p class="text-xs leading-5 text-muted-foreground">{{ t('productDetail.accountAtCheckout') }}</p>
-                </div>
-
+              <p
+                class="text-sm font-medium"
+                :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
+              >
+                {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }} ·
+                {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuWholesaleFinalPrice), siteCurrency) }}
+              </p>
+            </div>
+            <!-- 选中 SKU 且有促销价 -->
+            <div v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)" class="space-y-2">
+              <div class="flex flex-wrap items-end gap-4">
+                <span v-if="selectedSkuPromotionFinalIsMember" class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
+                  {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
+                </span>
+                <span v-else class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
+                  {{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}
+                </span>
+                <span class="theme-price-original">
+                  {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                </span>
               </div>
+              <p v-if="selectedSkuPromotionFinalIsMember" class="text-sm font-medium text-amber-600 dark:text-amber-300">
+                {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuPromotionFinalPrice), siteCurrency) }}
+              </p>
+              <p v-else class="text-sm font-medium text-rose-500 dark:text-rose-300">
+                {{ t('products.saveAmount') }} {{ formatPrice(getSkuPromotionSaveAmount(selectedSku), siteCurrency) }}
+              </p>
+            </div>
+            <!-- 选中 SKU 有会员价但无促销价 -->
+            <div v-else-if="selectedSku && hasMemberPrice" class="space-y-2">
+              <div class="flex flex-wrap items-end gap-4">
+                <span class="text-3xl font-bold tracking-tight tabular-nums text-amber-600 dark:text-amber-300">
+                  {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
+                </span>
+                <span class="theme-price-original">
+                  {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                </span>
+              </div>
+              <p class="text-sm font-medium text-amber-600 dark:text-amber-300">
+                {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - selectedSkuMemberPrice!, siteCurrency) }}
+              </p>
+            </div>
+            <!-- 选中 SKU 但无促销价也无会员价 -->
+            <div v-else-if="selectedSku" class="flex items-end gap-4">
+              <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
+                {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+              </span>
+            </div>
+            <!-- 未选 SKU，产品级有促销价 -->
+            <div v-else-if="hasPromotionPrice(product)" class="space-y-2">
+              <div class="flex flex-wrap items-end gap-4">
+                <span class="text-3xl font-bold tracking-tight tabular-nums text-rose-600 dark:text-rose-300">
+                  {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
+                </span>
+                <span class="theme-price-original">
+                  {{ formatPrice(product.price_amount, siteCurrency) }}
+                </span>
+              </div>
+              <p class="text-sm font-medium text-rose-500 dark:text-rose-300">
+                {{ t('products.saveAmount') }} {{ formatPrice(getPromotionSaveAmount(product), siteCurrency) }}
+              </p>
+            </div>
+            <!-- 未选 SKU，无促销 -->
+            <div v-else class="flex items-end gap-4">
+              <span class="text-3xl font-bold tracking-tight tabular-nums text-foreground">
+                {{ formatPrice(product.price_amount, siteCurrency) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 批发价规则展示 -->
+          <div v-if="selectedSkuWholesaleRules.length" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+            <h2 class="mb-2 flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-300">
+              {{ t('products.wholesaleRulesTitle') }}
+            </h2>
+            <div class="flex flex-wrap gap-2">
+              <Badge v-for="tier in selectedSkuWholesaleRules" :key="`${tier.sku_id || tier.sku_code || 'all'}-${tier.min_quantity}`" variant="success" class="rounded-full px-3 py-1 font-medium">
+                {{ formatWholesaleTier(tier) }}
+              </Badge>
+            </div>
+          </div>
+
+          <!-- 活动规则展示 -->
+          <div v-if="hasPromotionRules(product)" class="mb-5 rounded-xl border border-orange-200 dark:border-orange-800/50 bg-orange-50/50 dark:bg-orange-950/20 px-4 py-3">
+            <h2 class="mb-2 text-sm font-bold text-orange-700 dark:text-orange-300 flex items-center gap-1.5">
+              <Tag class="w-4 h-4" />
+              {{ t('products.promotionRulesTitle') }}
+            </h2>
+            <ul class="space-y-1">
+              <li v-for="rule in getPromotionRules(product)" :key="rule.id" class="text-sm text-orange-600 dark:text-orange-300/90 flex items-center gap-1.5">
+                <span class="w-1 h-1 rounded-full bg-orange-400 dark:bg-orange-500 shrink-0"></span>
+                <span>{{ formatPromotionRule(rule) }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="activeSkus.length" class="mb-5">
+            <h2 class="mb-3 text-sm font-semibold text-foreground">
+              {{ t('productDetail.skuTitle') }}
+            </h2>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                v-for="sku in activeSkus"
+                :key="sku.id"
+                type="button"
+                class="flex flex-col items-start rounded-xl border px-3 py-2 text-sm transition-all min-h-[44px]"
+                :class="[
+                  normalizeSkuId(sku.id) === selectedSkuId ? 'border-primary/40 bg-primary/10 ring-1 ring-primary/30' : 'border bg-secondary text-foreground',
+                  isSkuPurchasable(sku) ? 'hover:-translate-y-0.5' : 'cursor-not-allowed opacity-55 border-dashed',
+                ]"
+                :disabled="!isSkuPurchasable(sku)"
+                @click="selectedSkuId = normalizeSkuId(sku.id)"
+              >
+                <span class="font-semibold leading-tight">{{ skuDisplayText(sku) }}</span>
+              </button>
+            </div>
+            <p v-if="requiresSKUSelection" class="mt-2 text-xs text-amber-500">
+              {{ t('productDetail.skuRequired') }}
+            </p>
+          </div>
+
+          <!-- Quantity Selector -->
+          <div class="mb-5">
+            <h2 class="mb-3 text-sm font-semibold text-foreground">
+              {{ t('productDetail.quantity') }}
+            </h2>
+            <div class="flex items-center rounded-lg border overflow-hidden w-fit">
+              <button
+                type="button"
+                class="w-10 h-10 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
+                :disabled="quantity <= quantityEffectiveMin"
+                @click="quantity = Math.max(quantityEffectiveMin, quantity - 1)"
+              >
+                <Minus class="w-4 h-4" :stroke-width="2.5" />
+              </button>
+              <input
+                type="text"
+                inputmode="numeric"
+                class="w-14 h-10 text-center text-sm font-semibold text-foreground border-x bg-transparent outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                :value="quantity"
+                @change="handleQuantityInput($event)"
+                @keydown.enter.prevent="($event.target as HTMLInputElement)?.blur()"
+              />
+              <button
+                type="button"
+                class="w-10 h-10 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30"
+                :disabled="quantityEffectiveLimit !== null && quantity >= quantityEffectiveLimit"
+                @click="quantity = quantity + 1"
+              >
+                <Plus class="w-4 h-4" :stroke-width="2.5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Purchase Actions -->
+          <div ref="purchaseActionsRef" class="space-y-4 border-t pt-5">
+            <Alert v-if="cannotPurchaseReason" variant="destructive">
+              <AlertDescription class="font-semibold">{{ cannotPurchaseReason }}</AlertDescription>
+            </Alert>
+            <Alert v-if="purchaseWarning" class="border-warning/40 text-warning">
+              <AlertDescription class="font-semibold text-warning">{{ purchaseWarning }}</AlertDescription>
+            </Alert>
+
+            <div class="space-y-3">
+              <Button v-if="requiresLogin" class="w-full h-12 font-bold" @click="goLogin">
+                {{ t('productDetail.loginToBuy') }}
+              </Button>
+              <Button v-else class="w-full h-12 font-bold" :disabled="!canPurchase" @click="buyNow">
+                {{ t('productDetail.buyNow') }}
+              </Button>
+              <p class="text-xs leading-5 text-muted-foreground">{{ t('productDetail.accountAtCheckout') }}</p>
             </div>
           </div>
         </div>
 
         <!-- Details Content Card -->
         <div v-if="product.content"
-          class="bg-card backdrop-blur-xl border rounded-3xl overflow-hidden mb-12 p-6 md:p-8 lg:p-12 relative">
-          <h2
-            class="text-2xl font-bold mb-8 text-foreground flex items-center gap-3 border-b pb-6">
-            <span class="w-1.5 h-8 bg-primary rounded-full"></span>
+          class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">
             {{ t('productDetail.details') }}
           </h2>
           <div v-html="sanitizeRichHtml(getLocalizedText(product.content))"
-            class="prose prose-gray dark:prose-invert prose-lg max-w-none theme-prose">
+            class="prose prose-gray dark:prose-invert max-w-none theme-prose">
           </div>
         </div>
 
         <!-- Related Posts -->
         <section v-if="relatedPosts.length"
-          class="bg-card backdrop-blur-xl border rounded-3xl overflow-hidden mb-12 p-6 md:p-8 lg:p-12 relative">
-          <h2 class="text-2xl font-bold text-foreground mb-8 flex items-center gap-3 border-b pb-6">
-            <span class="w-1.5 h-8 bg-primary rounded-full"></span>
+          class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">
             {{ t('productDetail.relatedPosts') }}
           </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             <router-link
               v-for="rp in relatedPosts"
               :key="rp.id"
               :to="`/news/${rp.slug}`"
-              class="group bg-card backdrop-blur-md border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all flex flex-col"
+              class="group flex flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40"
             >
               <div v-if="rp.thumbnail" class="h-32 overflow-hidden relative">
                 <img :src="getImageUrl(rp.thumbnail)" :alt="getLocalizedText(rp.title)" loading="lazy"
                   class="h-full w-full object-cover transition-transform group-hover:scale-110" />
               </div>
-              <div class="p-5 flex flex-col flex-1">
+              <div class="p-4 flex flex-col flex-1">
                 <h3 class="font-semibold text-foreground line-clamp-2 mb-2">{{ getLocalizedText(rp.title) }}</h3>
                 <p v-if="rp.summary" class="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">
                   {{ getLocalizedText(rp.summary) }}
@@ -362,7 +319,7 @@
         </section>
 
         <!-- Back Button -->
-        <div class="mb-12 text-center">
+        <div class="text-center">
           <router-link to="/products"
             class="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-current pb-1">
             <ArrowLeft class="w-5 h-5" />
@@ -406,14 +363,13 @@
           </Button>
         </template>
       </EmptyState>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, Lock, Minus, Pencil, Plus, RotateCw, Tag, UserPlus, Zap } from 'lucide-vue-next'
+import { ArrowLeft, Minus, Plus, RotateCw, Tag } from 'lucide-vue-next'
 import { getImageUrl } from '../utils/image'
 import { getServiceIcon } from '../utils/serviceIcon'
 import { sanitizeRichHtml } from '../utils/content'
@@ -450,7 +406,6 @@ const setupMobileBarObserver = () => {
 // 全部业务逻辑由 useProductDetail 提供（与 vault 模板共用，保证功能一致）
 const {
   getLocalizedText, siteCurrency, formatPrice,
-  getPurchaseTypeLabel, getFulfillmentTypeLabel,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,
   hasPromotionRules, getPromotionRules,
@@ -480,4 +435,3 @@ onUnmounted(() => {
   }
 })
 </script>
-

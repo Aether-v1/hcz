@@ -1,24 +1,8 @@
 <template>
-  <div class="min-h-screen bg-background pb-16 pt-20 text-foreground">
-    <div class="container mx-auto px-4">
-      <section class="mt-7 overflow-hidden rounded-3xl bg-slate-950 text-white">
-        <div class="grid gap-8 p-7 md:p-10 lg:grid-cols-[minmax(0,1fr)_370px] lg:items-end">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-sky-300">HCZ / {{ t('nav.products') }}</p>
-            <h1 class="mt-4 text-3xl font-bold tracking-tight md:text-4xl">{{ t('products.serviceHeroTitle') }}</h1>
-            <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-300">{{ t('products.serviceHeroDescription') }}</p>
-          </div>
-          <div class="grid grid-cols-3 gap-2 border-t border-white/15 pt-5 text-xs text-slate-300 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
-            <div><span class="mb-2 block text-lg font-bold text-sky-300">01</span>{{ t('products.stepChoose') }}</div>
-            <div><span class="mb-2 block text-lg font-bold text-sky-300">02</span>{{ t('products.stepDetails') }}</div>
-            <div><span class="mb-2 block text-lg font-bold text-sky-300">03</span>{{ t('products.stepSubmit') }}</div>
-          </div>
-        </div>
-      </section>
-
-      <div class="mt-9 grid grid-cols-[104px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside class="sticky top-20 min-w-0 rounded-2xl border bg-card p-2 sm:top-24 sm:p-4" :aria-label="t('products.categories')">
-        <h2 class="mb-3 px-1 text-sm font-bold sm:text-lg">{{ t('products.chooseCategory') }}</h2>
+  <div class="space-y-4 pb-8">
+      <div class="grid grid-cols-[104px_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <aside class="sticky top-16 min-w-0 rounded-2xl border bg-card p-2 sm:p-4" :aria-label="t('products.categories')">
+        <h2 class="mb-3 px-1 text-sm font-semibold text-foreground">{{ t('products.chooseCategory') }}</h2>
         <nav class="max-h-[calc(100vh-7rem)] space-y-1 overflow-y-auto">
           <button type="button" class="w-full rounded-lg px-2 py-2.5 text-left text-xs font-semibold transition-colors sm:px-3 sm:text-sm"
             :class="selectedCategory === null ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
@@ -49,7 +33,7 @@
       <section class="min-w-0">
         <div class="mb-5 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 class="text-xl font-bold">{{ t('products.availableServices') }}</h2>
+            <h2 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('products.availableServices') }}</h2>
             <p class="mt-1 text-sm text-muted-foreground">{{ t('products.listHint') }}</p>
           </div>
           <div class="flex w-full items-center gap-2 md:max-w-xs">
@@ -60,10 +44,10 @@
           </div>
         </div>
 
-        <div v-if="loading" class="grid gap-3 lg:grid-cols-2">
+        <div v-if="loading" class="grid gap-3">
           <div v-for="i in 6" :key="i" class="h-24 animate-pulse rounded-xl border bg-card" />
         </div>
-        <div v-else-if="products.length" class="grid gap-3 lg:grid-cols-2">
+        <div v-else-if="products.length" class="grid gap-3">
           <ProductListItem v-for="(product, index) in products" :key="product.id" :product="product" :index="index" compact
             @click="goToProduct" />
         </div>
@@ -77,7 +61,6 @@
         <PaginationNav :current-page="currentPage" :total-pages="totalPages" :loading="loading" @change-page="changePage" />
       </section>
       </div>
-    </div>
   </div>
 </template>
 

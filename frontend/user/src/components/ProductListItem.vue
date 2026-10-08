@@ -12,11 +12,10 @@
     <div class="min-w-0 flex-1">
       <p v-if="product.category?.name" class="truncate text-xs text-muted-foreground">{{ getLocalizedText(product.category.name) }}</p>
       <h3 class="truncate text-sm font-semibold">{{ getLocalizedText(product.title) }}</h3>
-      <p class="truncate text-xs text-muted-foreground">{{ getFulfillmentTypeLabel(product.fulfillment_type) }} · {{ getLocalizedText(product.description) }}</p>
+      <p class="truncate text-xs text-muted-foreground">{{ getLocalizedText(product.description) }}</p>
     </div>
     <div class="shrink-0 text-right" :class="compact ? 'max-sm:w-full' : ''">
       <p class="text-sm font-semibold tabular-nums">{{ formatPrice(hasPromotionPrice(product) ? getPromotionPriceAmount(product) : product.price_amount, siteCurrency) }}{{ t('products.startingAt') }}</p>
-      <p class="mt-1 text-xs font-medium text-primary">{{ t('products.enterService') }} →</p>
     </div>
   </Card>
 </template>
@@ -37,7 +36,7 @@ const props = withDefaults(defineProps<{ product: any; index?: number; animation
 defineEmits<{ click: [slug: string]; quickBuy: [product: any] }>()
 const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
-const { getFulfillmentTypeLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
+const { isSoldOut, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
 const serviceIcon = computed(() => {
   const icon = props.product?.category?.icon
   return icon ? getImageUrl(icon) : getFirstImageUrl(props.product?.images)

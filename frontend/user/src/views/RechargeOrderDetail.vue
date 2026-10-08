@@ -1,38 +1,38 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground pt-24 pb-16">
-    <div class="container mx-auto px-4">
-      <div class="mb-8 flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-black text-foreground mb-2">{{ t('rechargeOrder.title') }}</h1>
-          <p class="text-muted-foreground text-sm">{{ t('rechargeOrder.subtitle') }}</p>
-        </div>
-        <router-link to="/me/orders" class="text-muted-foreground transition-colors hover:text-foreground text-sm">{{ t('rechargeOrder.backList') }}</router-link>
+  <div class="space-y-4 pb-8">
+    <!-- 页面标题 -->
+    <div class="mb-2 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-xl font-bold tracking-tight text-foreground md:text-2xl">{{ t('rechargeOrder.title') }}</h1>
+        <p class="mt-1 text-sm text-muted-foreground">{{ t('rechargeOrder.subtitle') }}</p>
       </div>
+      <RouterLink to="/me/orders" class="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground">{{ t('rechargeOrder.backList') }}</RouterLink>
+    </div>
 
-      <div v-if="loading" class="h-40 border bg-muted rounded-2xl animate-pulse"></div>
+    <div v-if="loading" class="h-40 animate-pulse rounded-2xl border bg-muted"></div>
 
-      <EmptyState
-        v-else-if="!recharge"
-        icon="alert"
-        :title="t('rechargeOrder.notFound')"
-        :action-label="t('errorBoundary.retry')"
-        @action="loadDetail()"
-      />
+    <EmptyState
+      v-else-if="!recharge"
+      icon="alert"
+      :title="t('rechargeOrder.notFound')"
+      :action-label="t('errorBoundary.retry')"
+      @action="loadDetail()"
+    />
 
-      <div v-else class="space-y-6">
+    <template v-else>
         <!-- 头部信息 -->
-        <div class="rounded-2xl border bg-card shadow-sm p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div class="text-xs uppercase tracking-wider text-muted-foreground">{{ t('personalCenter.wallet.rechargeNoLabel') }}</div>
-              <div class="text-sm font-semibold text-foreground mt-1">{{ recharge.recharge_no }}</div>
-              <div class="text-xs text-muted-foreground mt-2">{{ t('rechargeOrder.createdAtLabel') }}：{{ formatDate(recharge.created_at) }}</div>
-            </div>
-            <div class="flex flex-col items-start md:items-end gap-2">
-              <div class="text-xs uppercase tracking-wider text-muted-foreground">{{ t('rechargeOrder.rechargeAmount') }}</div>
-              <div class="text-lg font-bold text-foreground">{{ formatMoney(recharge.amount, recharge.currency) }}</div>
+              <div class="mt-1 text-sm font-semibold text-foreground">{{ recharge.recharge_no }}</div>
+              <div class="mt-2 text-xs text-muted-foreground">{{ t('rechargeOrder.createdAtLabel') }}：{{ formatDate(recharge.created_at) }}</div>
             </div>
             <div class="flex items-center gap-3">
+              <div class="flex flex-col items-start md:items-end">
+                <div class="text-xs uppercase tracking-wider text-muted-foreground">{{ t('rechargeOrder.rechargeAmount') }}</div>
+                <div class="mt-1 text-lg font-bold tabular-nums text-foreground">{{ formatMoney(recharge.amount, recharge.currency) }}</div>
+              </div>
               <Badge :variant="rechargeStatusVariant(recharge.status)" size="sm">
                 {{ rechargeStatusText(recharge.status) }}
               </Badge>
@@ -41,8 +41,8 @@
         </div>
 
         <!-- 金额明细 -->
-        <div class="rounded-2xl border bg-card shadow-sm p-6">
-          <h2 class="text-lg font-bold mb-4">{{ t('rechargeOrder.amountTitle') }}</h2>
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('rechargeOrder.amountTitle') }}</h2>
           <div class="grid grid-cols-1 gap-4 text-sm" :class="customerFeeApplied ? 'md:grid-cols-3' : 'md:grid-cols-2'">
             <div class="border rounded-xl p-4">
               <div class="text-xs text-muted-foreground">{{ t('rechargeOrder.rechargeAmount') }}</div>
@@ -60,9 +60,9 @@
         </div>
 
         <!-- 时间信息 -->
-        <div class="rounded-2xl border bg-card shadow-sm p-6">
-          <h2 class="text-lg font-bold mb-4">{{ t('rechargeOrder.timeTitle') }}</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('rechargeOrder.timeTitle') }}</h2>
+          <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
             <div class="border rounded-xl p-4">
               <div class="text-xs text-muted-foreground">{{ t('rechargeOrder.createdAtLabel') }}</div>
               <div class="text-foreground font-mono mt-1">{{ formatDate(recharge.created_at) }}</div>
@@ -79,14 +79,14 @@
         </div>
 
         <!-- 备注 -->
-        <div v-if="recharge.remark" class="rounded-2xl border bg-card shadow-sm p-6">
-          <h2 class="text-lg font-bold mb-2">{{ t('rechargeOrder.remarkLabel') }}</h2>
+        <div v-if="recharge.remark" class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-2 text-sm font-semibold text-foreground">{{ t('rechargeOrder.remarkLabel') }}</h2>
           <p class="text-sm text-muted-foreground">{{ recharge.remark }}</p>
         </div>
 
         <!-- 支付区域（仅待支付状态） -->
-        <div v-if="isPending" class="rounded-2xl border bg-card shadow-sm p-6">
-          <h2 class="text-lg font-bold mb-4">{{ t('rechargeOrder.paymentTitle') }}</h2>
+        <div v-if="isPending" class="rounded-2xl border bg-card p-5 shadow-sm">
+          <h2 class="mb-3 text-sm font-semibold text-foreground">{{ t('rechargeOrder.paymentTitle') }}</h2>
           <div v-if="isPending" class="mb-3 text-xs text-muted-foreground">
             {{ t('personalCenter.wallet.pendingHint') }}
           </div>
@@ -137,11 +137,10 @@
         </div>
 
         <!-- 支付成功提示 -->
-        <div v-if="recharge.status === 'success'" class="rounded-2xl border bg-card shadow-sm p-6 border-l-4 border-green-500">
+        <div v-if="recharge.status === 'success'" class="rounded-2xl border bg-card p-5 shadow-sm border-l-4 border-green-500">
           <p class="text-sm font-semibold text-foreground">{{ t('personalCenter.wallet.rechargeSuccess') }}</p>
         </div>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
