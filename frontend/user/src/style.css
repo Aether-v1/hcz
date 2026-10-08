@@ -444,7 +444,7 @@ html[data-telegram-mini-app="true"] body {
   }
 
   .hcz-bottom-nav__item.is-active {
-    color: var(--ui-accent);
+    color: #60a5fa;
   }
 
   .hcz-bottom-nav__icon {

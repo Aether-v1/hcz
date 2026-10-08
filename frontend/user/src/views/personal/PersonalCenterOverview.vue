@@ -59,26 +59,26 @@
         <section class="mt-4">
           <div class="grid grid-cols-4 gap-1 rounded-2xl border bg-card p-2.5 shadow-sm">
             <RouterLink to="/c2c" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <ArrowLeftRight :size="18" :stroke-width="1.8" />
+              <div class="grid h-10 w-10 place-items-center rounded-[14px] bg-info-soft text-info">
+                <ArrowLeftRight :size="21" :stroke-width="2" />
               </div>
               <span class="text-xs font-medium text-foreground">C2C</span>
             </RouterLink>
             <RouterLink to="/me/invitation" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Share2 :size="18" :stroke-width="1.8" />
+              <div class="grid h-10 w-10 place-items-center rounded-[14px] bg-success-soft text-success">
+                <UserRoundPlus :size="21" :stroke-width="2" />
               </div>
               <span class="text-xs font-medium text-foreground">邀请中心</span>
             </RouterLink>
             <RouterLink to="/me/reseller" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <BadgeDollarSign :size="18" :stroke-width="1.8" />
+              <div class="grid h-10 w-10 place-items-center rounded-[14px] bg-violet-500/10 text-violet-700 dark:bg-violet-400/20 dark:text-violet-300">
+                <Store :size="21" :stroke-width="2" />
               </div>
               <span class="text-xs font-medium text-foreground">分销中心</span>
             </RouterLink>
             <RouterLink to="/me/points" class="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Coins :size="18" :stroke-width="1.8" />
+              <div class="grid h-10 w-10 place-items-center rounded-[14px] bg-warm-soft text-warm">
+                <Coins :size="21" :stroke-width="2" />
               </div>
               <span class="text-xs font-medium text-foreground">积分</span>
             </RouterLink>
@@ -89,16 +89,16 @@
         <section class="mt-4">
           <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
             <RouterLink to="/me/gift-cards" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Gift :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-warm-soft text-warm">
+                <Gift :size="19" :stroke-width="2" />
               </div>
               <span class="flex-1 text-sm font-medium text-foreground">礼品卡兑换</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <div class="h-px bg-border/60"></div>
             <RouterLink to="/me/api" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Code2 :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-info-soft text-info">
+                <Code2 :size="19" :stroke-width="2" />
               </div>
               <span class="flex-1 text-sm font-medium text-foreground">API 对接</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
@@ -110,29 +110,29 @@
         <section class="mt-4">
           <div class="menu-group overflow-hidden rounded-2xl border border-border/60 bg-card">
             <RouterLink to="/me/security" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <LockKeyhole :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-success-soft text-success">
+                <LockKeyhole :size="19" :stroke-width="2" />
               </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('personalCenter.tabs.security') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/support" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <CircleHelp :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+                <CircleHelp :size="19" :stroke-width="2" />
               </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.help_center') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/support/tickets" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Ticket :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-700 dark:bg-violet-400/20 dark:text-violet-300">
+                <Ticket :size="19" :stroke-width="2" />
               </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.tickets_entry') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/me/settings" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
-                <Settings :size="18" :stroke-width="1.8" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-soft text-ink-secondary">
+                <Settings :size="19" :stroke-width="2" />
               </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('personalCenter.tabs.settings') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
@@ -147,7 +147,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronRight, CircleHelp, Coins, Gift, Code2, LockKeyhole, Share2, Settings, Ticket, UserRound, ArrowLeftRight, BadgeDollarSign } from 'lucide-vue-next'
+import { ChevronRight, CircleHelp, Coins, Gift, Code2, LockKeyhole, UserRoundPlus, Settings, Ticket, UserRound, ArrowLeftRight, Store } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
 import type { WalletAccountData } from '../../api/types'
 import { Button } from '@/components/ui/button'
