@@ -13,38 +13,43 @@
         </div>
       </div>
 
-      <!-- Available Balance -->
+      <!-- Available Balance + Points -->
       <div class="user-summary-card__balance">
-        <span class="user-summary-card__balance-label">{{ t('homeV2.userSummary.availableBalance') }}</span>
-        <div class="user-summary-card__balance-value">
-          <template v-if="walletLoading">
-            <span class="user-summary-card__skeleton user-summary-card__skeleton--balance" />
-          </template>
-          <template v-else-if="walletError || !isAuthenticated">
-            <span class="user-summary-card__balance-error">-- USDT</span>
-          </template>
-          <template v-else>
-            <span class="user-summary-card__balance-amount">{{ formattedBalance }}</span>
-            <span class="user-summary-card__balance-currency">USDT</span>
-          </template>
+        <div class="user-summary-card__balance-col">
+          <span class="user-summary-card__balance-label">{{ t('homeV2.userSummary.availableBalance') }}</span>
+          <div class="user-summary-card__balance-value">
+            <template v-if="walletLoading">
+              <span class="user-summary-card__skeleton user-summary-card__skeleton--balance" />
+            </template>
+            <template v-else-if="walletError || !isAuthenticated">
+              <span class="user-summary-card__balance-error">-- USDT</span>
+            </template>
+            <template v-else>
+              <span class="user-summary-card__balance-amount">{{ formattedBalance }}</span>
+              <span class="user-summary-card__balance-currency">USDT</span>
+            </template>
+          </div>
+        </div>
+        <div class="user-summary-card__balance-col user-summary-card__points">
+          <span class="user-summary-card__balance-label">{{ t('homeV2.userSummary.points') }}</span>
+          <div class="user-summary-card__balance-value">
+            <template v-if="pointsLoading">
+              <span class="user-summary-card__skeleton user-summary-card__skeleton--balance" />
+            </template>
+            <template v-else-if="pointsError || !isAuthenticated">
+              <span class="user-summary-card__balance-error">--</span>
+            </template>
+            <template v-else>
+              <span class="user-summary-card__balance-amount">{{ formattedPoints }}</span>
+            </template>
+          </div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="user-summary-card__quick">
-        <RouterLink to="/me/orders" class="user-summary-card__quick-item">
-          <component :is="ReceiptText" :size="18" :stroke-width="1.6" aria-hidden="true" />
-          <span>{{ t('homeV2.userSummary.orders') }}</span>
-        </RouterLink>
-        <RouterLink to="/me/invite" class="user-summary-card__quick-item">
-          <component :is="Gift" :size="18" :stroke-width="1.6" aria-hidden="true" />
-          <span>{{ t('homeV2.userSummary.invite') }}</span>
-        </RouterLink>
-        <RouterLink to="/me" class="user-summary-card__quick-item">
-          <component :is="UserRound" :size="18" :stroke-width="1.6" aria-hidden="true" />
-          <span>{{ t('homeV2.userSummary.profile') }}</span>
-        </RouterLink>
-      </div>
+      <!-- Invite CTA -->
+      <RouterLink to="/me/invitation" class="user-summary-card__cta">
+        {{ t('homeV2.userSummary.invite') }}
+      </RouterLink>
     </div>
   </div>
 </template>
@@ -53,9 +58,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
-import { ReceiptText, Gift, UserRound } from 'lucide-vue-next'
+import { UserRound } from 'lucide-vue-next'
 import { useUserAuthStore } from '../../stores/userAuth'
-import { walletAPI } from '../../api'
+import { walletAPI, pointsAPI } from '../../api'
 
 const { t } = useI18n()
 const auth = useUserAuthStore()
@@ -98,16 +103,49 @@ const fetchWallet = async () => {
   }
 }
 
+// ===== Points =====
+const pointsLoading = ref(false)
+const pointsError = ref(false)
+const pointsBalance = ref('')
+
+const formattedPoints = computed(() => {
+  const raw = pointsBalance.value
+  if (!raw) return '0'
+  const num = Number(raw)
+  if (Number.isNaN(num)) return raw
+  return num.toLocaleString()
+})
+
+const fetchPoints = async () => {
+  if (!isAuthenticated.value) return
+  pointsLoading.value = true
+  pointsError.value = false
+  try {
+    const res = await pointsAPI.account()
+    pointsBalance.value = String(res.data?.data?.balance ?? '0')
+  } catch {
+    pointsError.value = true
+  } finally {
+    pointsLoading.value = false
+  }
+}
+
 onMounted(() => {
-  if (isAuthenticated.value) fetchWallet()
+  if (isAuthenticated.value) {
+    fetchWallet()
+    fetchPoints()
+  }
 })
 
 watch(isAuthenticated, (val) => {
   if (val) {
     fetchWallet()
+    fetchPoints()
   } else {
     availableBalance.value = ''
     walletError.value = false
+    pointsBalance.value = ''
+    pointsError.value = false
   }
 })
 </script>
@@ -190,11 +228,29 @@ watch(isAuthenticated, (val) => {
 
 .user-summary-card__balance {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   padding: 14px 16px;
   border-radius: var(--radius-md, 10px);
   background: var(--color-surface-soft, rgba(255, 255, 255, 0.04));
+}
+
+.user-summary-card__balance-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.user-summary-card__points {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.user-summary-card__points .user-summary-card__balance-value {
+  justify-content: flex-end;
 }
 
 .user-summary-card__balance-label {
@@ -211,7 +267,7 @@ watch(isAuthenticated, (val) => {
 }
 
 .user-summary-card__balance-amount {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-ink-primary, #fff);
   font-variant-numeric: tabular-nums;
@@ -224,34 +280,37 @@ watch(isAuthenticated, (val) => {
 }
 
 .user-summary-card__balance-error {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-ink-muted, rgba(255, 255, 255, 0.35));
 }
 
-.user-summary-card__quick {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: auto;
-}
-
-.user-summary-card__quick-item {
+.user-summary-card__cta {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px 4px;
-  border-radius: var(--radius-sm, 8px);
+  justify-content: center;
+  margin-top: auto;
+  padding: 13px 16px;
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(135deg, var(--brand-primary, #4f46e5), var(--brand-primary-dark, #7c3aed));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   text-decoration: none;
-  color: var(--color-ink-secondary, rgba(255, 255, 255, 0.7));
-  font-size: 12px;
-  transition: background 0.15s, color 0.15s;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
-.user-summary-card__quick-item:hover {
-  background: var(--color-surface-soft, rgba(255, 255, 255, 0.06));
-  color: var(--color-ink-primary, #fff);
+.user-summary-card__cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.38);
+}
+
+.user-summary-card__cta:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
 }
 
 /* ===== Skeleton ===== */
@@ -269,8 +328,8 @@ watch(isAuthenticated, (val) => {
 }
 
 .user-summary-card__skeleton--balance {
-  width: 100px;
-  height: 24px;
+  width: 72px;
+  height: 20px;
 }
 
 @keyframes user-summary-shimmer {

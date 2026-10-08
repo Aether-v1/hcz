@@ -162,8 +162,7 @@ const router = createRouter({
         {
             path: '/me',
             name: 'personal-center',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'overview' },
+            component: () => import('../views/personal/PersonalCenterOverview.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -175,8 +174,7 @@ const router = createRouter({
         {
             path: '/me/settings',
             name: 'personal-center-profile',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'profile' },
+            component: () => import('../views/personal/ProfilePanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
@@ -332,15 +330,19 @@ const router = createRouter({
         {
             path: '/me/points/mall',
             name: 'personal-center-points-mall',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'pointsMall' },
+            component: () => import('../views/personal/PointsMallPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {
             path: '/me/points/orders',
             name: 'personal-center-points-orders',
-            component: () => import('../views/PersonalCenter.vue'),
-            props: { section: 'pointsOrders' },
+            component: () => import('../views/personal/PointsExchangeOrdersPanel.vue'),
+            meta: { requiresUserAuth: true }
+        },
+        {
+            path: '/me/points/history',
+            name: 'personal-center-points-history',
+            component: () => import('../views/personal/PointsHistoryPanel.vue'),
             meta: { requiresUserAuth: true }
         },
         {

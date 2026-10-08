@@ -399,14 +399,14 @@ html[data-telegram-mini-app="true"] body {
     backdrop-filter: blur(16px);
   }
 
-  /* 桌面端：同一组件切换为居中浮动药囊，不铺满浏览器宽度 */
+  /* 桌面端：同一组件切换为居中浮动药囊，宽度随页面内容列自动适配 */
   @media (min-width: 1024px) {
     .hcz-bottom-nav {
       left: 50%;
       right: auto;
       transform: translateX(-50%);
       bottom: 22px;
-      width: min(340px, calc(100vw - 48px));
+      width: min(var(--ui-content-max), calc(100vw - 48px));
       border-radius: 26px;
     }
   }

@@ -85,58 +85,28 @@
       </RouterLink>
     </div>
 
-    <!-- 积分流水 -->
-    <div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <div class="border-b px-5 py-3">
-        <p class="text-sm font-semibold text-foreground">{{ t('personalCenter.points.history') }}</p>
-      </div>
-
-      <div v-if="ledgerLoading" class="space-y-3 px-5 py-4">
-        <div v-for="i in 3" :key="i" class="h-12 animate-pulse rounded-xl bg-muted/60"></div>
-      </div>
-
-      <div v-else-if="ledger.length === 0" class="px-5 py-8 text-center text-sm text-muted-foreground">
-        {{ t('personalCenter.points.noRecords') }}
-      </div>
-
-      <div v-else class="divide-y divide-border">
-        <div v-for="entry in ledger" :key="entry.id" class="flex items-center justify-between px-5 py-3">
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium text-foreground">{{ pointsLedgerLabel(t, entry.action_type, entry.reason) }}</p>
-            <p class="mt-0.5 text-xs text-muted-foreground">{{ formatDate(entry.created_at) }}</p>
-          </div>
-          <span
-            class="shrink-0 font-mono text-sm font-semibold tabular-nums"
-            :class="entry.amount >= 0 ? 'text-success' : 'text-muted-foreground'"
-          >
-            {{ entry.amount >= 0 ? '+' : '' }}{{ entry.amount }}
-          </span>
-        </div>
-      </div>
-
-      <div v-if="!ledgerLoading && ledgerPagination.total_page > 1" class="border-t px-5 py-2.5">
-        <PaginationNav
-          :current-page="ledgerPagination.page"
-          :total-pages="ledgerPagination.total_page"
-          :loading="ledgerLoading"
-          :scroll-top="false"
-          @change-page="loadLedger"
-        />
-      </div>
-    </div>
+    <!-- 积分记录入口 -->
+    <RouterLink
+      to="/me/points/history"
+      class="flex min-w-0 items-center gap-2.5 rounded-2xl border bg-card px-4 py-3.5 text-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
+    >
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+        <History :size="18" aria-hidden="true" />
+      </span>
+      <span class="min-w-0 flex-1 truncate text-sm font-semibold">{{ t('personalCenter.points.history') }}</span>
+      <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
+    </RouterLink>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Check, CalendarCheck, Coins, ShoppingBag, ReceiptText, ChevronRight } from 'lucide-vue-next'
-import { checkinAPI, pointsAPI, type PointsAccountData, type PointsLedgerEntry, type CheckinStatusData } from '../../api'
-import { pointsLedgerLabel } from '../../utils/status'
+import { Check, CalendarCheck, Coins, ShoppingBag, ReceiptText, ChevronRight, History } from 'lucide-vue-next'
+import { checkinAPI, pointsAPI, type PointsAccountData, type CheckinStatusData } from '../../api'
 import { toast } from '../../composables/useToast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import PaginationNav from '../../components/PaginationNav.vue'
 
 const { t } = useI18n()
 
@@ -150,10 +120,6 @@ const account = ref<PointsAccountData>({ balance: 0, total_earned: 0, total_spen
 const checkinStatus = ref<CheckinStatusData | null>(null)
 const checkinHistory = ref<string[]>([])
 const checkinSubmitting = ref(false)
-
-const ledger = ref<PointsLedgerEntry[]>([])
-const ledgerLoading = ref(true)
-const ledgerPagination = ref({ page: 1, page_size: 20, total: 0, total_page: 1 })
 
 const loadAccount = async () => {
   try {
@@ -177,19 +143,6 @@ const loadCheckin = async () => {
   }
 }
 
-const loadLedger = async (page = 1) => {
-  ledgerLoading.value = true
-  try {
-    const response = await pointsAPI.ledger({ page, page_size: ledgerPagination.value.page_size })
-    ledger.value = response.data.data || []
-    ledgerPagination.value = response.data.pagination || ledgerPagination.value
-  } catch {
-    ledger.value = []
-  } finally {
-    ledgerLoading.value = false
-  }
-}
-
 const doCheckin = async () => {
   if (checkinSubmitting.value) return
   checkinSubmitting.value = true
@@ -200,7 +153,7 @@ const doCheckin = async () => {
       toast.success(t('personalCenter.points.checkinSuccess', { points: result.points_awarded }))
     }
     account.value = { ...account.value, balance: result?.current_balance ?? account.value.balance }
-    await Promise.all([loadCheckin(), loadLedger(1)])
+    await loadCheckin()
   } catch (err: any) {
     toast.error(err?.message || t('personalCenter.points.checkinFailed'))
   } finally {
@@ -210,14 +163,7 @@ const doCheckin = async () => {
 
 const formatCheckinDay = (date: string) => date.slice(8)
 
-const formatDate = (raw?: string) => {
-  if (!raw) return ''
-  const date = new Date(raw)
-  if (Number.isNaN(date.getTime())) return raw
-  return date.toLocaleString()
-}
-
 onMounted(() => {
-  void Promise.all([loadAccount(), loadCheckin(), loadLedger(1)])
+  void Promise.all([loadAccount(), loadCheckin()])
 })
 </script>

@@ -1,6 +1,5 @@
 <template>
   <div class="discovery-page">
-    <div class="hcz-shell-container discovery-page__inner">
       <!-- 页头 -->
       <header class="disc-hero" aria-labelledby="disc-title">
         <span class="disc-hero__eyebrow">HCZ · {{ t('discover.title') }}</span>
@@ -265,7 +264,6 @@
         </div>
       </section>
       </template>
-    </div>
   </div>
 </template>
 
@@ -428,10 +426,7 @@ watch(hasDynamicBlocks, (v) => {
 <style scoped>
 .discovery-page {
   min-width: 0;
-  padding-top: 104px;
   padding-bottom: 56px;
-  background: var(--ui-bg-page);
-  color: var(--ui-text-primary);
 }
 
 /* ===== 页头 ===== */
@@ -551,7 +546,7 @@ watch(hasDynamicBlocks, (v) => {
 .disc-state button { border-radius: 10px; padding: 8px 16px; background: var(--ui-accent-soft); color: var(--ui-accent); font-weight: 700; }
 
 @media (max-width: 767px) {
-  .discovery-page { padding-top: 88px; padding-bottom: 40px; }
+  .discovery-page { padding-bottom: 40px; }
   .disc-section { margin-top: 36px; }
   .disc-section__head { margin-bottom: 14px; }
   .disc-cat-grid { gap: 10px; }

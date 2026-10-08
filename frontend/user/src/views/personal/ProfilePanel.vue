@@ -75,7 +75,7 @@
     <!-- 退出登录 -->
     <button
       type="button"
-      class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 bg-card px-5 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+      class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
       @click="handleLogout"
     >
       <LogOut :size="17" :stroke-width="1.8" />

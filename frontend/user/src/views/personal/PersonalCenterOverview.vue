@@ -110,22 +110,30 @@
         <section class="mt-4">
           <div class="menu-group overflow-hidden rounded-2xl border border-border/60 bg-card">
             <RouterLink to="/me/security" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <LockKeyhole :size="18" :stroke-width="1.8" class="shrink-0 text-primary" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <LockKeyhole :size="18" :stroke-width="1.8" />
+              </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('personalCenter.tabs.security') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/support" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <CircleHelp :size="18" :stroke-width="1.8" class="shrink-0 text-primary" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <CircleHelp :size="18" :stroke-width="1.8" />
+              </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.help_center') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/support/tickets" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <CircleHelp :size="18" :stroke-width="1.8" class="shrink-0 text-primary" />
-              <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.my_tickets') }}</span>
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Ticket :size="18" :stroke-width="1.8" />
+              </div>
+              <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('support.tickets_entry') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
             <RouterLink to="/me/settings" class="menu-item flex min-h-[52px] items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/40">
-              <UserRound :size="18" :stroke-width="1.8" class="shrink-0 text-primary" />
+              <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-muted-foreground">
+                <Settings :size="18" :stroke-width="1.8" />
+              </div>
               <span class="min-w-0 flex-1 text-sm font-medium text-foreground">{{ t('personalCenter.tabs.settings') }}</span>
               <ChevronRight :size="16" class="shrink-0 text-muted-foreground/50" />
             </RouterLink>
@@ -139,7 +147,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronRight, CircleHelp, Coins, Gift, Code2, LockKeyhole, Share2, UserRound, ArrowLeftRight, BadgeDollarSign } from 'lucide-vue-next'
+import { ChevronRight, CircleHelp, Coins, Gift, Code2, LockKeyhole, Share2, Settings, Ticket, UserRound, ArrowLeftRight, BadgeDollarSign } from 'lucide-vue-next'
 import { walletAPI } from '../../api'
 import type { WalletAccountData } from '../../api/types'
 import { Button } from '@/components/ui/button'
